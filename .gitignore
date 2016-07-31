@@ -29,5 +29,5 @@
 *.app
 
 # Compile folders
-*.mk
-makefile
+*.cgns
+*.txt
