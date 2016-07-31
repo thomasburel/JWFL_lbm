@@ -1,0 +1,40 @@
+/*
+ * NodeArray.h
+ *
+ *  Created on: 9 Dec 2015
+ *      Author: thomas
+ */
+
+#ifndef MESH_SINGLEBLOCK_NODEARRAYS_H_
+#define MESH_SINGLEBLOCK_NODEARRAYS_H_
+#include "Node2D.h"
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/map.hpp>
+class NodeArrays {
+public:
+	NodeArrays();
+	virtual ~NodeArrays();
+    std::map<int,NodeType> TypeOfNode;
+    std::map<int,int> NodeIndexByType;
+
+};
+
+class NodeArrays2D: public NodeArrays{
+public:
+	NodeArrays2D();
+	virtual ~NodeArrays2D();
+	//std::vector<NodeInterior2D>::iterator itBc;
+	std::vector<NodeInterior2D> NodeInterior;
+	std::vector<NodeSolid2D> NodeSolid;
+	std::vector<NodeGhost2D> NodeGhost;
+	std::vector<NodeCorner2D> NodeCorner;
+	std::vector<NodeCorner2D> NodeGlobalCorner; //Special treatment must be applied for BC of the domain as symmetry-pressure
+	std::vector<NodeWall2D> NodeWall;
+	std::vector<NodeWall2D> NodeSpecialWall; //Special treatment must be applied for wall on the domain as Wall-Symmetry
+	std::vector<NodePeriodic2D> NodePeriodic;
+	std::vector<NodeVelocity2D> NodeVelocity;
+	std::vector<NodePressure2D> NodePressure;
+	std::vector<NodeSymmetry2D> NodeSymmetry;
+	int Get_sizeInterior(){return NodeInterior.size();};
+};
+#endif /* MESH_SINGLEBLOCK_NODEARRAYS_H_ */
