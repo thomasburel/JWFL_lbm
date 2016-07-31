@@ -36,7 +36,7 @@ private:
 	bool checknode(int x, int y);
 	void checkcomm();
 
-private:
+protected:
 	// Multiphase member functions
 	void TwoPhase_Collision();
 	double Convert_Alpha_To_Rho(double alpha);
@@ -119,7 +119,7 @@ private:
 	void SyncMacroVarToGhost();
 
 
-private:
+protected:
 //Multiphase variables
 	double *Rhor, *Rhob;
 

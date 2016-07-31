@@ -1,4 +1,6 @@
-#/Debug/
+
 # Compile folders
-*.mk
-makefile
+*.cgns
+*.txt
+*.d
+LBM
