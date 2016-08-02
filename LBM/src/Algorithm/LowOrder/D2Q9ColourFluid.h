@@ -1,0 +1,47 @@
+/*
+ * D2Q9ColourFluid.h
+ *
+ *  Created on: 31 Jul 2016
+ *      Author: Thomas Burel
+ *
+ *  Solver for the colour fluid model
+ */
+
+#ifndef SRC_ALGORITHM_LOWORDER_D2Q9COLOURFLUID_H_
+#define SRC_ALGORITHM_LOWORDER_D2Q9COLOURFLUID_H_
+
+#include "D2Q9_TwoPhases.h"
+
+class D2Q9ColourFluid: public D2Q9TwoPhases {
+public:
+	D2Q9ColourFluid();
+	virtual ~D2Q9ColourFluid();
+	D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini);
+	virtual void run();
+
+private:
+	void InitMultiphase(InitLBM& ini);
+	void UpdateMacroVariables();
+	void MacroVariables(int& idx);
+	// Multiphase member functions
+	void ColourFluid_Collision();
+	void Colour_gradient(int & nodenumber, double* F);
+	double TwoPhase_Collision_operator(int & nodenumber, int & direction, double & Ak, double* F, double & F_Norm);
+	double Convert_Alpha_To_Rho(double alpha);
+	double Convert_Rho_To_Alpha(double Rho);
+	double Cal_RhoR_Corner(NodeCorner2D& Node);
+	double Cal_RhoB_Corner(NodeCorner2D& Node);
+
+// Boundary conditions depend of the model. Some functions has to be rewrited.
+	void ApplyBc();
+	void ApplyGlobalCorner(NodeCorner2D& NodeIn);
+	void ApplyBounceBack(NodeWall2D& Node);
+	void ApplyCorner(NodeCorner2D& Node);
+	void ApplyBounceBack(NodeCorner2D& Node);
+	void ApplySymmetryPressureOnNode(NodeSymmetry2D& NodeIn);
+
+//Multiphase variables
+	double *Rhor, *Rhob;
+};
+
+#endif /* SRC_ALGORITHM_LOWORDER_D2Q9COLOURFLUID_H_ */

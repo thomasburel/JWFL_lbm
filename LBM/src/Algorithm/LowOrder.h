@@ -12,5 +12,6 @@
 
 #include "LowOrder/D2Q9.h"
 #include "LowOrder/D2Q9_TwoPhases.h"
+#include "LowOrder/D2Q9ColourFluid.h"
 
 #endif /* MESH_SINGLEBLOCK_SINGLEBLOCK_H_ */

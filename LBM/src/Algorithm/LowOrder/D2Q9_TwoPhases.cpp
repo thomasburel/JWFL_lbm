@@ -17,7 +17,8 @@ D2Q9TwoPhases::D2Q9TwoPhases() {
 	nbvelo=9;
 	nbnode=0;
 	ftmp=0;
-	tmp=0;
+	tmpDistribution=0;
+	f_tmp=0;
 	tmpreturn=0;
 	intTmpReturn=0;
 	doubleTmpReturn=0;
@@ -30,12 +31,12 @@ D2Q9TwoPhases::D2Q9TwoPhases() {
 	buf_MacroRecv=0;
 	size_MacroBuf=0;
 	Nd_MacroVariables_sync=0;
-	Rhor=0;Rhob=0;
+//	Rhor=0;Rhob=0;
 }
-D2Q9TwoPhases::D2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini) {
+void D2Q9TwoPhases::InitD2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini) {
 
 	// TODO Auto-generated constructor stub	Ptrvariabletest=&f[0]->f[1][0];
-
+	f_tmp=new double[9];
 	f=new DistriFunct*[2];
 	f[0]=new DistriFunct(MultiBlock__->Get_nnodes(),Parameters_->Get_NbVelocities());
 	f[1]=new DistriFunct(MultiBlock__->Get_nnodes(),Parameters_->Get_NbVelocities());
@@ -122,13 +123,13 @@ D2Q9TwoPhases::~D2Q9TwoPhases() {
 		delete [] buf_send[i];
 		delete [] buf_recv[i];
 	}
-	delete [] Rhor;
-	delete [] Rhob;
+//	delete [] Rhor;
+//	delete [] Rhob;
 }
 void D2Q9TwoPhases::init(InitLBM& ini){
 	// Multiphase variables
-	Rhor=new double [nbnodes_total];
-	Rhob=new double [nbnodes_total];
+//	Rhor=new double [nbnodes_total];
+//	Rhob=new double [nbnodes_total];
 	double alpha=0;
 	double* pos =new double[2];
 	double* U_=new double[2];
@@ -138,8 +139,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		pos[1]=NodeArrays->NodeInterior[j].get_y();
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeInterior[j],0, NodeArrays->NodeInterior[j].Get_index(),pos,Rho[NodeArrays->NodeInterior[j].Get_index()],U_,alpha);
 //		Rho[NodeArrays->NodeInterior[j].Get_index()]=Convert_Alpha_To_Rho(alpha);
-		Rhor[NodeArrays->NodeInterior[j].Get_index()]=alpha*Rho[NodeArrays->NodeInterior[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeInterior[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeInterior[j].Get_index()];//PtrParameters->Get_Rho_2();
+
+//		Rhor[NodeArrays->NodeInterior[j].Get_index()]=alpha*Rho[NodeArrays->NodeInterior[j].Get_index()];//PtrParameters->Get_Rho_1();
+//		Rhob[NodeArrays->NodeInterior[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeInterior[j].Get_index()];//PtrParameters->Get_Rho_2();
 		U[0][NodeArrays->NodeInterior[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeInterior[j].Get_index()]=U_[1];
 	}
@@ -149,8 +151,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		pos[1]=NodeArrays->NodeCorner[j].get_y();
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_,alpha);
 //		Rho[NodeArrays->NodeCorner[j].Get_index()]=Convert_Alpha_To_Rho(alpha);
-		Rhor[NodeArrays->NodeCorner[j].Get_index()]=alpha*Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeCorner[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_2();
+
+//		Rhor[NodeArrays->NodeCorner[j].Get_index()]=alpha*Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_1();
+//		Rhob[NodeArrays->NodeCorner[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_2();
 		U[0][NodeArrays->NodeCorner[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeCorner[j].Get_index()]=U_[1];
 	}
@@ -160,8 +163,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		pos[1]=NodeArrays->NodeGlobalCorner[j].get_y();
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, NodeArrays->NodeGlobalCorner[j].Get_index(),pos,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U_,alpha);
 //		Rho[NodeArrays->NodeGlobalCorner[j].Get_index()]=Convert_Alpha_To_Rho(alpha);
-		Rhor[NodeArrays->NodeGlobalCorner[j].Get_index()]=alpha*Rho[NodeArrays->NodeGlobalCorner[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeGlobalCorner[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeGlobalCorner[j].Get_index()];//PtrParameters->Get_Rho_2();
+
+//		Rhor[NodeArrays->NodeGlobalCorner[j].Get_index()]=alpha*Rho[NodeArrays->NodeGlobalCorner[j].Get_index()];//PtrParameters->Get_Rho_1();
+//		Rhob[NodeArrays->NodeGlobalCorner[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeGlobalCorner[j].Get_index()];//PtrParameters->Get_Rho_2();
 		U[0][NodeArrays->NodeGlobalCorner[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeGlobalCorner[j].Get_index()]=U_[1];
 		NodeArrays->NodeGlobalCorner[j].Set_UDef(U_[0],U_[1]);
@@ -174,8 +178,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		pos[1]=NodeArrays->NodeVelocity[j].get_y();
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeVelocity[j],0, NodeArrays->NodeVelocity[j].Get_index(),pos,Rho[NodeArrays->NodeVelocity[j].Get_index()],U_,alpha);
 //		Rho[NodeArrays->NodeVelocity[j].Get_index()]=Convert_Alpha_To_Rho(alpha);
-		Rhor[NodeArrays->NodeVelocity[j].Get_index()]=alpha*Rho[NodeArrays->NodeVelocity[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeVelocity[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeVelocity[j].Get_index()];//PtrParameters->Get_Rho_2();
+
+//		Rhor[NodeArrays->NodeVelocity[j].Get_index()]=alpha*Rho[NodeArrays->NodeVelocity[j].Get_index()];//PtrParameters->Get_Rho_1();
+//		Rhob[NodeArrays->NodeVelocity[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeVelocity[j].Get_index()];//PtrParameters->Get_Rho_2();
 		U[0][NodeArrays->NodeVelocity[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeVelocity[j].Get_index()]=U_[1];
 		NodeArrays->NodeVelocity[j].Set_UDef(U_[0],U_[1]);
@@ -187,8 +192,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		pos[1]=NodeArrays->NodePressure[j].get_y();
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodePressure[j],0, NodeArrays->NodePressure[j].Get_index(),pos,Rho[NodeArrays->NodePressure[j].Get_index()],U_,alpha);
 //		Rho[NodeArrays->NodePressure[j].Get_index()]=Convert_Alpha_To_Rho(alpha);
-		Rhor[NodeArrays->NodePressure[j].Get_index()]=alpha*Rho[NodeArrays->NodePressure[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodePressure[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodePressure[j].Get_index()];//PtrParameters->Get_Rho_2();
+
+//		Rhor[NodeArrays->NodePressure[j].Get_index()]=alpha*Rho[NodeArrays->NodePressure[j].Get_index()];//PtrParameters->Get_Rho_1();
+//		Rhob[NodeArrays->NodePressure[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodePressure[j].Get_index()];//PtrParameters->Get_Rho_2();
 		U[0][NodeArrays->NodePressure[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodePressure[j].Get_index()]=U_[1];
 		NodeArrays->NodePressure[j].Set_RhoDef(Rho[NodeArrays->NodePressure[j].Get_index()]);
@@ -200,8 +206,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		pos[1]=NodeArrays->NodeWall[j].get_y();
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeWall[j],0, NodeArrays->NodeWall[j].Get_index(),pos,Rho[NodeArrays->NodeWall[j].Get_index()],U_,alpha);
 //		Rho[NodeArrays->NodeWall[j].Get_index()]=Convert_Alpha_To_Rho(alpha);
-		Rhor[NodeArrays->NodeWall[j].Get_index()]=alpha*Rho[NodeArrays->NodeWall[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeWall[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeWall[j].Get_index()];//PtrParameters->Get_Rho_2();
+
+//		Rhor[NodeArrays->NodeWall[j].Get_index()]=alpha*Rho[NodeArrays->NodeWall[j].Get_index()];//PtrParameters->Get_Rho_1();
+//		Rhob[NodeArrays->NodeWall[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeWall[j].Get_index()];//PtrParameters->Get_Rho_2();
 		U[0][NodeArrays->NodeWall[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeWall[j].Get_index()]=U_[1];
 	}
@@ -211,8 +218,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, NodeArrays->NodeSpecialWall[j].Get_index(),pos,Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U_,alpha);
 //		Rho[NodeArrays->NodeSpecialWall[j].Get_index()]=Convert_Alpha_To_Rho(alpha);
-		Rhor[NodeArrays->NodeSpecialWall[j].Get_index()]=alpha*Rho[NodeArrays->NodeSpecialWall[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeSpecialWall[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSpecialWall[j].Get_index()];//PtrParameters->Get_Rho_2();
+
+//		Rhor[NodeArrays->NodeSpecialWall[j].Get_index()]=alpha*Rho[NodeArrays->NodeSpecialWall[j].Get_index()];//PtrParameters->Get_Rho_1();
+//		Rhob[NodeArrays->NodeSpecialWall[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSpecialWall[j].Get_index()];//PtrParameters->Get_Rho_2();
 		U[0][NodeArrays->NodeSpecialWall[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSpecialWall[j].Get_index()]=U_[1];
 	}
@@ -222,8 +230,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		pos[1]=NodeArrays->NodeSymmetry[j].get_y();
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, NodeArrays->NodeSymmetry[j].Get_index(),pos,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U_,alpha);
 //		Rho[NodeArrays->NodeSymmetry[j].Get_index()]=Convert_Alpha_To_Rho(alpha);
-		Rhor[NodeArrays->NodeSymmetry[j].Get_index()]=alpha*Rho[NodeArrays->NodeSymmetry[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeSymmetry[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSymmetry[j].Get_index()];//PtrParameters->Get_Rho_2();
+
+//		Rhor[NodeArrays->NodeSymmetry[j].Get_index()]=alpha*Rho[NodeArrays->NodeSymmetry[j].Get_index()];//PtrParameters->Get_Rho_1();
+//		Rhob[NodeArrays->NodeSymmetry[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSymmetry[j].Get_index()];//PtrParameters->Get_Rho_2();
 		U[0][NodeArrays->NodeSymmetry[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSymmetry[j].Get_index()]=U_[1];
 	}
@@ -233,8 +242,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		pos[1]=NodeArrays->NodeGhost[j].get_y();
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeGhost[j],0, NodeArrays->NodeGhost[j].Get_index(),pos,Rho[NodeArrays->NodeGhost[j].Get_index()],U_,alpha);
 //		Rho[NodeArrays->NodeGhost[j].Get_index()]=Convert_Alpha_To_Rho(alpha);
-		Rhor[NodeArrays->NodeGhost[j].Get_index()]=alpha*Rho[NodeArrays->NodeGhost[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeGhost[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeGhost[j].Get_index()];//PtrParameters->Get_Rho_2();
+
+//		Rhor[NodeArrays->NodeGhost[j].Get_index()]=alpha*Rho[NodeArrays->NodeGhost[j].Get_index()];//PtrParameters->Get_Rho_1();
+//		Rhob[NodeArrays->NodeGhost[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeGhost[j].Get_index()];//PtrParameters->Get_Rho_2();
 		U[0][NodeArrays->NodeGhost[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeGhost[j].Get_index()]=U_[1];
 	}
@@ -244,12 +254,14 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		pos[1]=NodeArrays->NodeSolid[j].get_y();
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_,alpha);
 //		Rho[NodeArrays->NodeSolid[j].Get_index()]=Convert_Alpha_To_Rho(alpha);
-		Rhor[NodeArrays->NodeSolid[j].Get_index()]=alpha*Rho[NodeArrays->NodeSolid[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeSolid[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSolid[j].Get_index()];//PtrParameters->Get_Rho_2();
+
+//		Rhor[NodeArrays->NodeSolid[j].Get_index()]=alpha*Rho[NodeArrays->NodeSolid[j].Get_index()];//PtrParameters->Get_Rho_1();
+//		Rhob[NodeArrays->NodeSolid[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSolid[j].Get_index()];//PtrParameters->Get_Rho_2();
 		U[0][NodeArrays->NodeSolid[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSolid[j].Get_index()]=U_[1];
 	}
-	for (int i=0;i<nbvelo;i++)
+
+/*	for (int i=0;i<nbvelo;i++)
 	{
 		for (int j=0;j<nbnode;j++)
 		{
@@ -257,12 +269,10 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 			f[1]->f[i][j]=CollideLowOrder::EquiDistriFunct2D(Rhob[j], U[0][j], U[1][j], &Ei[i][0], omega[i]);
 		}
 	}
-/*	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
-	{
-		Rho[NodeArrays->NodeSolid[j].Get_index()]=NULL;;
-		U[0][NodeArrays->NodeSolid[j].Get_index()]=NAN;
-		U[1][NodeArrays->NodeSolid[j].Get_index()]=NAN;
-	}*/
+*/
+
+
+
 
 	Set_BcType();
 	if(PtrParameters->Get_Verbous())
@@ -270,40 +280,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		{
 			std::cout<<"Processor: "<<parallel->getRank()<<" corner number: "<<j<<" Node index: "<<NodeArrays->NodeCorner[j].Get_index() <<" x: "<<NodeArrays->NodeCorner[j].get_x()<<" y: "<<NodeArrays->NodeCorner[j].get_y()<<" orientation: "<<NodeArrays->NodeCorner[j].Get_BcNormal()<<std::endl;
 		}
-	/*if(parallel->getRank()==0){
-	 int testindexcorner;
-	testindexcorner=4;
-	std::cout<<"Processor: "<<parallel->getRank()<<" Node index: "<<NodeArrays->NodeCorner[testindexcorner].Get_index()<<std::endl;
-	for(unsigned int j=0;j<(unsigned int)nbvelo;j++)
-	  {
-		std::cout<<" streaming: "<<NodeArrays->NodeCorner[testindexcorner].stream()[j]<<" in direction: "<<j<<std::endl;
-	  }
-	std::cout<<"x Velocity: "<<U[0][NodeArrays->NodeCorner[testindexcorner].Get_index()]<<std::endl;
-	testindexcorner=8;
-	std::cout<<"Processor: "<<parallel->getRank()<<" Node index: "<<NodeArrays->NodeCorner[testindexcorner].Get_index()<<std::endl;
-	for(unsigned int j=0;j<(unsigned int)nbvelo;j++)
-	  {
-		std::cout<<" streaming: "<<NodeArrays->NodeCorner[testindexcorner].stream()[j]<<" in direction: "<<j<<std::endl;
-	  }
-	std::cout<<"x Velocity: "<<U[0][NodeArrays->NodeCorner[testindexcorner].Get_index()]<<std::endl;
-	testindexcorner=5;
-	std::cout<<"Processor: "<<parallel->getRank()<<" Node index: "<<NodeArrays->NodeCorner[testindexcorner].Get_index()<<std::endl;
-	for(unsigned int j=0;j<(unsigned int)nbvelo;j++)
-	  {
-		std::cout<<" streaming: "<<NodeArrays->NodeCorner[testindexcorner].stream()[j]<<" in direction: "<<j<<std::endl;
-	  }
-	std::cout<<"x Velocity: "<<U[0][NodeArrays->NodeCorner[testindexcorner].Get_index()]<<std::endl;
-	testindexcorner=9;
-	std::cout<<"Processor: "<<parallel->getRank()<<" Node index: "<<NodeArrays->NodeCorner[testindexcorner].Get_index()<<std::endl;
-	for(unsigned int j=0;j<(unsigned int)nbvelo;j++)
-	  {
-		std::cout<<" streaming: "<<NodeArrays->NodeCorner[testindexcorner].stream()[j]<<" in direction: "<<j<<std::endl;
-	  }
-	std::cout<<"x Velocity: "<<U[0][NodeArrays->NodeCorner[testindexcorner].Get_index()]<<std::endl;
 
-
-	  }*/
-	//std::cout<<std::endl;
 	delete [] pos;
 	delete [] U_;
 	Writer->Set_solution(PtrVariablesOutput,PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
@@ -311,7 +288,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 
 }
 
-void D2Q9TwoPhases::run(){
+/*void D2Q9TwoPhases::run(){
 
 	int NbStep=PtrParameters->Get_NbStep();
 	int OutPutNStep=PtrParameters->Get_OutPutNSteps();
@@ -379,7 +356,7 @@ void D2Q9TwoPhases::run(){
 		}
 	}
 	Writer->Write_breakpoint(*PtrParameters);
-}
+}*/
 
 void D2Q9TwoPhases::StreamD2Q9() {
 
@@ -462,7 +439,7 @@ void D2Q9TwoPhases::StreamD2Q9() {
 	}
 	}
 }
-void D2Q9TwoPhases::CollideD2Q9(){
+/*void D2Q9TwoPhases::CollideD2Q9(){
 	double wtmp=0;
 	double *fi_tmp,*U_tmp, *V_tmp, *F_tmp;
 	double Rhoi_tmp;
@@ -532,68 +509,15 @@ void D2Q9TwoPhases::CollideD2Q9(){
 	//		f[0]->f[i][j]=f[0]->f[i][j]-InvTau*(f[0]->f[i][j]-CollideLowOrder::EquiDistriFunct2D(Rho[j], U[0][j], U[1][j], &Ei[i][0], omega[i]));
 	}
 	delete [] fi_tmp;
-}
-void D2Q9TwoPhases::UpdateMacroVariables(){
-	//for (int i=0;i<nbvelo;i++)
-	//{
-		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
-		{
-			MacroVariables(NodeArrays->NodeInterior[j].Get_index());
-		}
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
-		{
-			MacroVariables(NodeArrays->NodeCorner[j].Get_index());
-		}
-		for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
-		{
-			MacroVariables(NodeArrays->NodeGlobalCorner[j].Get_index());
-		}
-		for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
-		{
-			MacroVariables(NodeArrays->NodeVelocity[j].Get_index());
-		}
-		for (int j=0;j<NodeArrays->NodePressure.size();j++)
-		{
-			MacroVariables(NodeArrays->NodePressure[j].Get_index());
-		}
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
-		{
-			MacroVariables(NodeArrays->NodeWall[j].Get_index());
-		}
-		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
-		{
-			MacroVariables(NodeArrays->NodeSymmetry[j].Get_index());
-		}
-	//	for (int j=0;j<nbnodes_real;j++)
-	//		f[0]->f[i][j]=f[0]->f[i][j]-InvTau*(f[0]->f[i][j]-CollideLowOrder::EquiDistriFunct2D(Rho[j], U[0][j], U[1][j], &Ei[i][0], omega[i]));
-	//}
-}
-void D2Q9TwoPhases::MacroVariables(int& idx){
+}*/
 
-		U[0][idx]=0;
-		U[1][idx]=0;
-		Rhor[idx]=0,Rhob[idx]=0;
-		//Rho[idx]=0;
-		for (int k=0; k<nbvelo;k++)
-		{
-			Rhor[idx]+=f[0]->f[k][idx];
-			Rhob[idx]+=f[1]->f[k][idx];
-			for (int j=0;j<2;j++)
-			{
-				U[j][idx]+=(f[0]->f[k][idx]+f[1]->f[k][idx])*Ei[k][j];
-			}
-		}
-		Rho[idx]=Rhor[idx]+Rhob[idx];
-		U[0][idx]=U[0][idx]/Rho[idx];
-		U[1][idx]=U[1][idx]/Rho[idx];
 
-}
 void D2Q9TwoPhases::TmptoDistri(unsigned int& direction, int& IdDistri){
-	tmp= f[IdDistri]->f[direction];
+	tmpDistribution= f[IdDistri]->f[direction];
 	f[IdDistri]->f[direction]=ftmp;
-	ftmp=tmp;
+	ftmp=tmpDistribution;
 }
-void D2Q9TwoPhases::TwoPhase_Collision()
+/*void D2Q9TwoPhases::TwoPhase_Collision()
 {
 	double Ak=0.65;
 	double F[2];
@@ -729,7 +653,7 @@ void D2Q9TwoPhases::Colour_gradient(int & nodenumber, double* F){
 double D2Q9TwoPhases::TwoPhase_Collision_operator(int & nodenumber, int & i, double & Ak, double* F, double & F_Norm){
  return Ak*0.5*F_Norm*(((F[0]*Ei[i][0]+F[1]*Ei[i][1])/F_Norm)*((F[0]*Ei[i][0]+F[1]*Ei[i][1])/F_Norm)-3/4);
 }
-
+*/
 void D2Q9TwoPhases::Set_BcType(){
 	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
@@ -804,7 +728,7 @@ void D2Q9TwoPhases::Set_PressureType(NodePressure2D& NodeIn){
 
 
 ///Select and apply boundary conditions
-void D2Q9TwoPhases::ApplyBc(){
+/*void D2Q9TwoPhases::ApplyBc(){
 	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		ApplyHeZou_U(NodeArrays->NodeVelocity[j]);
@@ -860,39 +784,64 @@ void D2Q9TwoPhases::ApplyBc(){
 	}
    parallel->barrier();
 
-}
+}*/
+
 /// Impose velocity by HeZou
-void D2Q9TwoPhases::ApplyHeZou_U(NodeVelocity2D& NodeIn){
-	double* fi=new double [9];
+/*void D2Q9TwoPhases::ApplyHeZou_U(NodeVelocity2D& NodeIn){
+
 	for(int j=0;j<2;j++)
 	{
 		for (int i=0;i<9;i++)
-		fi[i]=f[j]->f[i][NodeIn.Get_index()];
+		f_tmp[i]=f[j]->f[i][NodeIn.Get_index()];
 
-		BC_HeZou_U(NodeIn.Get_BcNormal(),fi, NodeIn.Get_UDef()[0],NodeIn.Get_UDef()[1]);
+		BC_HeZou_U(NodeIn.Get_BcNormal(),f_tmp, NodeIn.Get_UDef()[0],NodeIn.Get_UDef()[1]);
 
 		for (int i=0;i<9;i++)
-		f[j]->f[i][NodeIn.Get_index()]=fi[i];
+		f[j]->f[i][NodeIn.Get_index()]=f_tmp[i];
 	}
-	delete [] fi;
+
+}*/
+void D2Q9TwoPhases::ApplyHeZou_U(NodeVelocity2D& NodeIn, int distID, double &U, double &V){
+
+
+	for (int i=0;i<9;i++)
+	f_tmp[i]=f[distID]->f[i][NodeIn.Get_index()];
+
+	BC_HeZou_U(NodeIn.Get_BcNormal(),f_tmp, U,V);
+
+	for (int i=0;i<9;i++)
+	f[distID]->f[i][NodeIn.Get_index()]=f_tmp[i];
+
+
 }
-void D2Q9TwoPhases::ApplyHeZou_U(NodeCorner2D& NodeIn, int normal){
-	double* fi=new double [9];
+/*void D2Q9TwoPhases::ApplyHeZou_U(NodeCorner2D& NodeIn, int normal){
+
 	for(int j=0;j<2;j++)
 	{
 		for (int i=0;i<9;i++)
-		fi[i]=f[j]->f[i][NodeIn.Get_index()];
+		f_tmp[i]=f[j]->f[i][NodeIn.Get_index()];
 
-		BC_HeZou_U(normal,fi, NodeIn.Get_UDef()[0],NodeIn.Get_UDef()[1]);
+		BC_HeZou_U(normal,f_tmp, NodeIn.Get_UDef()[0],NodeIn.Get_UDef()[1]);
 
 		for (int i=0;i<9;i++)
-		f[j]->f[i][NodeIn.Get_index()]=fi[i];
+		f[j]->f[i][NodeIn.Get_index()]=f_tmp[i];
 	}
-	delete [] fi;
+
+}*/
+void D2Q9TwoPhases::ApplyHeZou_U(NodeCorner2D& NodeIn, int normal, int distID, double &U, double &V){
+
+		for (int i=0;i<9;i++)
+		f_tmp[i]=f[distID]->f[i][NodeIn.Get_index()];
+
+		BC_HeZou_U(normal,f_tmp, U,V);
+
+		for (int i=0;i<9;i++)
+		f[distID]->f[i][NodeIn.Get_index()]=f_tmp[i];
+
 }
 /// Impose pressure by HeZou
-void D2Q9TwoPhases::ApplyHeZou_P(NodePressure2D& NodeIn){
-	double* fi=new double [9];
+/*void D2Q9TwoPhases::ApplyHeZou_P(NodePressure2D& NodeIn){
+
 
 	if(NodeIn.Get_AlphaDef()==0)
 	{
@@ -902,10 +851,10 @@ void D2Q9TwoPhases::ApplyHeZou_P(NodePressure2D& NodeIn){
 	else
 	{
 		for (int i=0;i<9;i++)
-			fi[i]=f[0]->f[i][NodeIn.Get_index()];
-		BC_HeZou_P(NodeIn.Get_BcNormal(),fi,NodeIn.Get_AlphaDef()*NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
+			f_tmp[i]=f[0]->f[i][NodeIn.Get_index()];
+		BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,NodeIn.Get_AlphaDef()*NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 		for (int i=0;i<9;i++)
-			f[0]->f[i][NodeIn.Get_index()]=fi[i];
+			f[0]->f[i][NodeIn.Get_index()]=f_tmp[i];
 	}
 	if(NodeIn.Get_AlphaDef()==1)
 	{
@@ -915,17 +864,33 @@ void D2Q9TwoPhases::ApplyHeZou_P(NodePressure2D& NodeIn){
 	else
 	{
 		for (int i=0;i<9;i++)
-			fi[i]=f[1]->f[i][NodeIn.Get_index()];
-		BC_HeZou_P(NodeIn.Get_BcNormal(),fi,(1-NodeIn.Get_AlphaDef())*NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
+			f_tmp[i]=f[1]->f[i][NodeIn.Get_index()];
+		BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,(1-NodeIn.Get_AlphaDef())*NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 		for (int i=0;i<9;i++)
-			f[1]->f[i][NodeIn.Get_index()]=fi[i];
+			f[1]->f[i][NodeIn.Get_index()]=f_tmp[i];
 	}
 
-	delete [] fi;
+}*/
+void D2Q9TwoPhases::ApplyHeZou_P(NodePressure2D& NodeIn, int distID, double Mass, double &U, double &V){
+
+	if(Mass==0)
+	{
+		for (int i=0;i<9;i++)
+					f[distID]->f[i][NodeIn.Get_index()]=0;
+	}
+	else
+	{
+		for (int i=0;i<9;i++)
+			f_tmp[i]=f[distID]->f[i][NodeIn.Get_index()];
+		BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,Mass, U,V);
+		for (int i=0;i<9;i++)
+			f[distID]->f[i][NodeIn.Get_index()]=f_tmp[i];
+	}
+
 }
 /// Impose pressure by HeZou
-void D2Q9TwoPhases::ApplyHeZou_P(NodeCorner2D& NodeIn, int normal){
-	double* fi=new double [9];
+/*void D2Q9TwoPhases::ApplyHeZou_P(NodeCorner2D& NodeIn, int normal){
+
 	if(NodeIn.Get_AlphaDef()==0)
 	{
 		for (int i=0;i<9;i++)
@@ -934,10 +899,10 @@ void D2Q9TwoPhases::ApplyHeZou_P(NodeCorner2D& NodeIn, int normal){
 	else
 	{
 		for (int i=0;i<9;i++)
-			fi[i]=f[0]->f[i][NodeIn.Get_index()];
-		BC_HeZou_P(normal,fi,NodeIn.Get_AlphaDef()*NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
+			f_tmp[i]=f[0]->f[i][NodeIn.Get_index()];
+		BC_HeZou_P(normal,f_tmp,NodeIn.Get_AlphaDef()*NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 		for (int i=0;i<9;i++)
-			f[0]->f[i][NodeIn.Get_index()]=fi[i];
+			f[0]->f[i][NodeIn.Get_index()]=f_tmp[i];
 	}
 	if(NodeIn.Get_AlphaDef()==1)
 	{
@@ -947,12 +912,29 @@ void D2Q9TwoPhases::ApplyHeZou_P(NodeCorner2D& NodeIn, int normal){
 	else
 	{
 		for (int i=0;i<9;i++)
-			fi[i]=f[1]->f[i][NodeIn.Get_index()];
-		BC_HeZou_P(normal,fi,(1-NodeIn.Get_AlphaDef())*NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
+			f_tmp[i]=f[1]->f[i][NodeIn.Get_index()];
+		BC_HeZou_P(normal,f_tmp,(1-NodeIn.Get_AlphaDef())*NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 		for (int i=0;i<9;i++)
-			f[1]->f[i][NodeIn.Get_index()]=fi[i];
+			f[1]->f[i][NodeIn.Get_index()]=f_tmp[i];
 	}
-	delete [] fi;
+
+}*/
+void D2Q9TwoPhases::ApplyHeZou_P(NodeCorner2D& NodeIn, int normal, int distID, double Mass, double &U, double &V){
+
+	if(Mass==0)
+	{
+		for (int i=0;i<9;i++)
+					f[distID]->f[i][NodeIn.Get_index()]=0;
+	}
+	else
+	{
+		for (int i=0;i<9;i++)
+			f_tmp[i]=f[distID]->f[i][NodeIn.Get_index()];
+		BC_HeZou_P(normal,f_tmp,Mass, U,V);
+		for (int i=0;i<9;i++)
+			f[distID]->f[i][NodeIn.Get_index()]=f_tmp[i];
+	}
+
 }
 //Symmetry treatment on node
 void D2Q9TwoPhases::ApplySymmetryOnNode(NodeSymmetry2D& NodeIn){
@@ -999,9 +981,9 @@ void D2Q9TwoPhases::ApplySymmetryOnNode(NodeSymmetry2D& NodeIn){
 				break;
 			}
 }
-
+/*
 void D2Q9TwoPhases::ApplySymmetryPressureOnNode(NodeSymmetry2D& NodeIn){
-	double* fi=new double [9];
+
 	double rhosym=0;
 	double rhoadd=0;
 	switch(NodeIn.Get_BcNormal())
@@ -1010,85 +992,87 @@ void D2Q9TwoPhases::ApplySymmetryPressureOnNode(NodeSymmetry2D& NodeIn){
 				for(int j=0;j<2;j++)
 				{
 					//Applying symmetry
-					fi[0]=f[j]->f[0][NodeIn.Get_index()];
-					fi[1]=f[j]->f[1][NodeIn.Get_index()];
-					fi[2]=f[j]->f[4][NodeIn.Get_index()];
-					fi[3]=f[j]->f[3][NodeIn.Get_index()];
-					fi[4]=f[j]->f[4][NodeIn.Get_index()];
-					fi[5]=f[j]->f[8][NodeIn.Get_index()];
-					fi[6]=f[j]->f[7][NodeIn.Get_index()];
-					fi[7]=f[j]->f[7][NodeIn.Get_index()];
-					fi[8]=f[j]->f[8][NodeIn.Get_index()];
+					f_tmp[0]=f[j]->f[0][NodeIn.Get_index()];
+					f_tmp[1]=f[j]->f[1][NodeIn.Get_index()];
+					f_tmp[2]=f[j]->f[4][NodeIn.Get_index()];
+					f_tmp[3]=f[j]->f[3][NodeIn.Get_index()];
+					f_tmp[4]=f[j]->f[4][NodeIn.Get_index()];
+					f_tmp[5]=f[j]->f[8][NodeIn.Get_index()];
+					f_tmp[6]=f[j]->f[7][NodeIn.Get_index()];
+					f_tmp[7]=f[j]->f[7][NodeIn.Get_index()];
+					f_tmp[8]=f[j]->f[8][NodeIn.Get_index()];
 					//Applying He Zou Pressure
-					BC_HeZou_P(NodeIn.Get_BcNormal(),fi,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
+					BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 					for (int i=0;i<9;i++)
-						f[j]->f[i][NodeIn.Get_index()]=fi[i];
+						f[j]->f[i][NodeIn.Get_index()]=f_tmp[i];
 				}
 				break;
 			case 4:
 				for(int j=0;j<2;j++)
 				{
 					//Applying symmetry
-					fi[0]=f[j]->f[0][NodeIn.Get_index()];
-					fi[1]=f[j]->f[1][NodeIn.Get_index()];
-					fi[2]=f[j]->f[2][NodeIn.Get_index()];
-					fi[3]=f[j]->f[3][NodeIn.Get_index()];
-					fi[4]=f[j]->f[2][NodeIn.Get_index()];
-					fi[5]=f[j]->f[5][NodeIn.Get_index()];
-					fi[6]=f[j]->f[6][NodeIn.Get_index()];
-					fi[7]=f[j]->f[6][NodeIn.Get_index()];
-					fi[8]=f[j]->f[5][NodeIn.Get_index()];
+					f_tmp[0]=f[j]->f[0][NodeIn.Get_index()];
+					f_tmp[1]=f[j]->f[1][NodeIn.Get_index()];
+					f_tmp[2]=f[j]->f[2][NodeIn.Get_index()];
+					f_tmp[3]=f[j]->f[3][NodeIn.Get_index()];
+					f_tmp[4]=f[j]->f[2][NodeIn.Get_index()];
+					f_tmp[5]=f[j]->f[5][NodeIn.Get_index()];
+					f_tmp[6]=f[j]->f[6][NodeIn.Get_index()];
+					f_tmp[7]=f[j]->f[6][NodeIn.Get_index()];
+					f_tmp[8]=f[j]->f[5][NodeIn.Get_index()];
 					//Applying He Zou Pressure
-					BC_HeZou_P(NodeIn.Get_BcNormal(),fi,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
+					BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 					for (int i=0;i<9;i++)
-						f[j]->f[i][NodeIn.Get_index()]=fi[i];
+						f[j]->f[i][NodeIn.Get_index()]=f_tmp[i];
 				}
 				break;
 			case 1:
 				for(int j=0;j<2;j++)
 				{
 					//Applying symmetry
-					fi[0]=f[j]->f[0][NodeIn.Get_index()];
-					fi[1]=f[j]->f[3][NodeIn.Get_index()];
-					fi[2]=f[j]->f[2][NodeIn.Get_index()];
-					fi[3]=f[j]->f[3][NodeIn.Get_index()];
-					fi[4]=f[j]->f[4][NodeIn.Get_index()];
-					fi[5]=f[j]->f[6][NodeIn.Get_index()];
-					fi[6]=f[j]->f[6][NodeIn.Get_index()];
-					fi[7]=f[j]->f[7][NodeIn.Get_index()];
-					fi[8]=f[j]->f[7][NodeIn.Get_index()];
+					f_tmp[0]=f[j]->f[0][NodeIn.Get_index()];
+					f_tmp[1]=f[j]->f[3][NodeIn.Get_index()];
+					f_tmp[2]=f[j]->f[2][NodeIn.Get_index()];
+					f_tmp[3]=f[j]->f[3][NodeIn.Get_index()];
+					f_tmp[4]=f[j]->f[4][NodeIn.Get_index()];
+					f_tmp[5]=f[j]->f[6][NodeIn.Get_index()];
+					f_tmp[6]=f[j]->f[6][NodeIn.Get_index()];
+					f_tmp[7]=f[j]->f[7][NodeIn.Get_index()];
+					f_tmp[8]=f[j]->f[7][NodeIn.Get_index()];
 					//Applying He Zou Pressure
-					BC_HeZou_P(NodeIn.Get_BcNormal(),fi,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
+					BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 					for (int i=0;i<9;i++)
-						f[j]->f[i][NodeIn.Get_index()]=fi[i];
+						f[j]->f[i][NodeIn.Get_index()]=f_tmp[i];
 				}
 				break;
 			case 3:
 				for(int j=0;j<2;j++)
 				{
 					//Applying symmetry
-					fi[0]=f[j]->f[0][NodeIn.Get_index()];
-					fi[1]=f[j]->f[1][NodeIn.Get_index()];
-					fi[2]=f[j]->f[2][NodeIn.Get_index()];
-					fi[3]=f[j]->f[1][NodeIn.Get_index()];
-					fi[4]=f[j]->f[4][NodeIn.Get_index()];
-					fi[5]=f[j]->f[5][NodeIn.Get_index()];
-					fi[6]=f[j]->f[5][NodeIn.Get_index()];
-					fi[7]=f[j]->f[8][NodeIn.Get_index()];
-					fi[8]=f[j]->f[8][NodeIn.Get_index()];
+					f_tmp[0]=f[j]->f[0][NodeIn.Get_index()];
+					f_tmp[1]=f[j]->f[1][NodeIn.Get_index()];
+					f_tmp[2]=f[j]->f[2][NodeIn.Get_index()];
+					f_tmp[3]=f[j]->f[1][NodeIn.Get_index()];
+					f_tmp[4]=f[j]->f[4][NodeIn.Get_index()];
+					f_tmp[5]=f[j]->f[5][NodeIn.Get_index()];
+					f_tmp[6]=f[j]->f[5][NodeIn.Get_index()];
+					f_tmp[7]=f[j]->f[8][NodeIn.Get_index()];
+					f_tmp[8]=f[j]->f[8][NodeIn.Get_index()];
 					//Applying He Zou Pressure
-					BC_HeZou_P(NodeIn.Get_BcNormal(),fi,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
+					BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 					for (int i=0;i<9;i++)
-						f[j]->f[i][NodeIn.Get_index()]=fi[i];
+						f[j]->f[i][NodeIn.Get_index()]=f_tmp[i];
 				}
 				break;
 			default:
 				std::cerr<<"Direction symmetry not found"<<std::endl;
 				break;
 			}
-	delete [] fi;
+
 }
+*/
 ///Bounceback Wall treatment
+/*
 void D2Q9TwoPhases::ApplyBounceBack(NodeWall2D& NodeIn){
 
 	switch(NodeIn.Get_BcNormal())
@@ -1134,6 +1118,7 @@ void D2Q9TwoPhases::ApplyBounceBack(NodeWall2D& NodeIn){
 				break;
 			}
 }
+*/
 void D2Q9TwoPhases::ApplyBounceBackSymmetry(NodeWall2D& NodeIn){
 
 	switch(NodeIn.Get_BcNormal())
@@ -1205,6 +1190,7 @@ void D2Q9TwoPhases::ApplyBounceBackSymmetry(NodeWall2D& NodeIn){
 				break;
 			}
 }
+/*
 void D2Q9TwoPhases::ApplyBounceBack(NodeCorner2D& NodeIn){
 	double tmp=0;
 	switch(NodeIn.Get_BcNormal())
@@ -1331,7 +1317,7 @@ void D2Q9TwoPhases::ApplyBounceBack(NodeCorner2D& NodeIn){
 				break;
 			}
 }
-
+*/
 ///Diffuse Wall treatment
 void D2Q9TwoPhases::ApplyDiffuseWall(NodeWall2D& NodeIn){
 
@@ -1601,21 +1587,23 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 
 /// Corner treat by Chih-Fung Ho, Cheng Chang, Kuen-Hau Lin and Chao-An Lin
 /// Consistent Boundary Conditions for 2D and 3D Lattice Boltzmann Simulations
-void D2Q9TwoPhases::ApplyCorner(NodeCorner2D& NodeIn){
-	double* fi=new double [9];
-	for (int i=0;i<9;i++)
-		fi[i]=f[0]->f[i][NodeIn.Get_index()];
-	BC_corner(NodeIn.Get_BcNormal(),fi,Cal_RhoR_Corner(NodeIn) , NodeIn.Get_UDef()[0],NodeIn.Get_UDef()[1]);
-	for (int i=0;i<9;i++)
-	f[0]->f[i][NodeIn.Get_index()]=fi[i];
+/*void D2Q9TwoPhases::ApplyCorner(NodeCorner2D& NodeIn){
 
 	for (int i=0;i<9;i++)
-		fi[i]=f[1]->f[i][NodeIn.Get_index()];
-	BC_corner(NodeIn.Get_BcNormal(),fi,Cal_RhoB_Corner(NodeIn) , NodeIn.Get_UDef()[0],NodeIn.Get_UDef()[1]);
+		f_tmp[i]=f[0]->f[i][NodeIn.Get_index()];
+	BC_corner(NodeIn.Get_BcNormal(),f_tmp,Cal_RhoR_Corner(NodeIn) , NodeIn.Get_UDef()[0],NodeIn.Get_UDef()[1]);
 	for (int i=0;i<9;i++)
-		f[1]->f[i][NodeIn.Get_index()]=fi[i];
-	delete [] fi;
+	f[0]->f[i][NodeIn.Get_index()]=f_tmp[i];
+
+	for (int i=0;i<9;i++)
+		f_tmp[i]=f[1]->f[i][NodeIn.Get_index()];
+	BC_corner(NodeIn.Get_BcNormal(),f_tmp,Cal_RhoB_Corner(NodeIn) , NodeIn.Get_UDef()[0],NodeIn.Get_UDef()[1]);
+	for (int i=0;i<9;i++)
+		f[1]->f[i][NodeIn.Get_index()]=f_tmp[i];
+
 }
+*/
+/*
 void D2Q9TwoPhases::ApplyGlobalCorner(NodeCorner2D& NodeIn){
 	NodeType NodeTypeTmp1;
 	NodeType NodeTypeTmp2;
@@ -1640,9 +1628,7 @@ void D2Q9TwoPhases::ApplyGlobalCorner(NodeCorner2D& NodeIn){
 						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]+omega[i]*Ei[i][0]*0.00007;
 					//if(NodeTypeTmp1!=Symmetry)
 					//	{
-					/*normal=1;
-					ApplyHeZou_P(NodeIn,normal);
-					+0.00007/3*/
+
 				}
 	//				std::cerr<<"Symmetry-Symmetry BC not yet implemented"<<std::endl;
 				else
@@ -1717,8 +1703,7 @@ void D2Q9TwoPhases::ApplyGlobalCorner(NodeCorner2D& NodeIn){
 					f[j]->f[7][NodeIn.Get_index()]=f[j]->f[8][NodeIn.Get_index()];//-0.00007/3;
 					for (int i=0;i<9;i++)
 						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]-omega[i]*Ei[i][0]*0.00007;
-					/*normal=3;
-					ApplyHeZou_P(NodeIn,normal);*/
+
 				}
 					//std::cerr<<"Symmetry-Symmetry BC not yet implemented"<<std::endl;
 				else
@@ -1793,8 +1778,7 @@ void D2Q9TwoPhases::ApplyGlobalCorner(NodeCorner2D& NodeIn){
 					f[j]->f[8][NodeIn.Get_index()]=f[j]->f[5][NodeIn.Get_index()];
 					for (int i=0;i<9;i++)
 						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]-omega[i]*Ei[i][0]*0.00007;
-					/*normal=3;
-					ApplyHeZou_P(NodeIn,normal);*/
+
 				}
 				//	std::cerr<<"Symmetry-Symmetry BC not yet implemented"<<std::endl;
 				else
@@ -1868,8 +1852,7 @@ void D2Q9TwoPhases::ApplyGlobalCorner(NodeCorner2D& NodeIn){
 					f[j]->f[7][NodeIn.Get_index()]=f[j]->f[6][NodeIn.Get_index()];
 					for (int i=0;i<9;i++)
 						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]+omega[i]*Ei[i][0]*0.00007;
-					/*normal=1;
-					ApplyHeZou_P(NodeIn,normal);*/
+
 				}
 				//	std::cerr<<"Symmetry-Symmetry BC not yet implemented"<<std::endl;
 				else
@@ -1934,7 +1917,7 @@ void D2Q9TwoPhases::ApplyGlobalCorner(NodeCorner2D& NodeIn){
 			std::cerr<<"Direction: "<< NodeIn.Get_BcNormal()<<" not found for Global Corner"<<std::endl;
 		}
 	}
-}
+}*/
 double D2Q9TwoPhases::Cal_RhoCorner(NodeCorner2D& nodeIn){
 
 	unsigned int direction1,direction2;
@@ -1964,64 +1947,7 @@ double D2Q9TwoPhases::Cal_RhoCorner(NodeCorner2D& nodeIn){
 
 	return doubleTmpReturn;
 }
-double D2Q9TwoPhases::Cal_RhoR_Corner(NodeCorner2D& nodeIn){
 
-	unsigned int direction1,direction2;
-	switch(nodeIn.Get_BcNormal())
-	{
-	case 5:
-		direction1=1;
-		direction2=2;
-		doubleTmpReturn=(Rhor[nodeIn.Get_connect()[direction1]]+Rhor[nodeIn.Get_connect()[direction2]])*0.5;//Connect(nodenumber,direction1)]+Rho[Connect(nodenumber,direction2)])*0.5;
-		break;
-	case 6:
-		direction1=2;
-		direction2=3;
-		doubleTmpReturn=(Rhor[nodeIn.Get_connect()[direction1]]+Rhor[nodeIn.Get_connect()[direction2]])*0.5;//(Rho[Connect(nodenumber,direction1)]+Rho[Connect(nodenumber,direction2)])*0.5;
-		break;
-	case 7:
-		direction1=3;
-		direction2=4;
-		doubleTmpReturn=(Rhor[nodeIn.Get_connect()[direction1]]+Rhor[nodeIn.Get_connect()[direction2]])*0.5;//(Rho[Connect(nodenumber,direction1)]+Rho[Connect(nodenumber,direction2)])*0.5;
-		break;
-	case 8:
-		direction1=1;
-		direction2=4;
-		doubleTmpReturn=(Rhor[nodeIn.Get_connect()[direction1]]+Rhor[nodeIn.Get_connect()[direction2]])*0.5;//(Rho[Connect(nodenumber,direction1)]+Rho[Connect(nodenumber,direction2)])*0.5;
-		break;
-	}
-
-	return doubleTmpReturn;
-}
-double D2Q9TwoPhases::Cal_RhoB_Corner(NodeCorner2D& nodeIn){
-
-	unsigned int direction1,direction2;
-	switch(nodeIn.Get_BcNormal())
-	{
-	case 5:
-		direction1=1;
-		direction2=2;
-		doubleTmpReturn=(Rhob[nodeIn.Get_connect()[direction1]]+Rhob[nodeIn.Get_connect()[direction2]])*0.5;//Connect(nodenumber,direction1)]+Rho[Connect(nodenumber,direction2)])*0.5;
-		break;
-	case 6:
-		direction1=2;
-		direction2=3;
-		doubleTmpReturn=(Rhob[nodeIn.Get_connect()[direction1]]+Rhob[nodeIn.Get_connect()[direction2]])*0.5;//(Rho[Connect(nodenumber,direction1)]+Rho[Connect(nodenumber,direction2)])*0.5;
-		break;
-	case 7:
-		direction1=3;
-		direction2=4;
-		doubleTmpReturn=(Rhob[nodeIn.Get_connect()[direction1]]+Rhob[nodeIn.Get_connect()[direction2]])*0.5;//(Rho[Connect(nodenumber,direction1)]+Rho[Connect(nodenumber,direction2)])*0.5;
-		break;
-	case 8:
-		direction1=1;
-		direction2=4;
-		doubleTmpReturn=(Rhob[nodeIn.Get_connect()[direction1]]+Rhob[nodeIn.Get_connect()[direction2]])*0.5;//(Rho[Connect(nodenumber,direction1)]+Rho[Connect(nodenumber,direction2)])*0.5;
-		break;
-	}
-
-	return doubleTmpReturn;
-}
 void D2Q9TwoPhases::StreamingOrientation(NodeGhost2D& nodeIn, bool Streaming[9]){
 	Streaming[0]=false;
 	for (unsigned int i=1;i<(unsigned int)nbvelo;i++)

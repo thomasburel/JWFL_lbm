@@ -109,7 +109,7 @@ void Simulation::SelectSolver()
 			break;
 		case ColourFluid:
 			//SolverD2Q9=new D2Q9(MultiBlock_,parrallel,Writer,PtrParameters,InitSimu());
-			SolverD2Q9TwoPhases=new D2Q9TwoPhases(MultiBlock_,parallel,Writer,PtrParameters,InitSimu());
+			SolverD2Q9TwoPhases=new D2Q9ColourFluid(MultiBlock_,parallel,Writer,PtrParameters,InitSimu());
 			Solver_= SolverD2Q9TwoPhases;
 			break;
 		default:

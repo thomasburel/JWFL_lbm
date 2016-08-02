@@ -17,33 +17,34 @@
 class D2Q9TwoPhases: public SolverTwoPhasesLowOrder2D, public Boundaries, public CollideD2Q9Colour {
 public:
 	D2Q9TwoPhases();
-	D2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini);
+//	D2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini);
 	virtual ~D2Q9TwoPhases();
-	virtual void init(InitLBM& ini);
-	virtual void run();
+//	virtual void init(InitLBM& ini);
+//	virtual void run();
 
-	void check_fi();
+//	void check_fi();
 
-private:
-	template <typename T>
-	void Collide(T node);
-	void CollideD2Q9();
-
+protected:
+//	template <typename T>
+//	void Collide(T node);
+//	void CollideD2Q9();
+	void InitD2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini);
+	void init(InitLBM& ini);
 	void StreamD2Q9();
 
-	void UpdateMacroVariables();
-	void MacroVariables(int& idx);
-	bool checknode(int x, int y);
-	void checkcomm();
+//	void UpdateMacroVariables();
+//	void MacroVariables(int& idx);
+//	bool checknode(int x, int y);
+//	void checkcomm();
 
 protected:
 	// Multiphase member functions
-	void TwoPhase_Collision();
 	double Convert_Alpha_To_Rho(double alpha);
 	double Convert_Rho_To_Alpha(double Rho);
+/*	void TwoPhase_Collision();
 	void Colour_gradient(int & nodenumber, double* F);
 	double TwoPhase_Collision_operator(int & nodenumber, int & direction, double & Ak, double* F, double & F_Norm);
-
+*/
 	//Streaming by type of node
 	void SelectStream(int & nodenumber, unsigned int& direction);
 	void TmptoDistri(unsigned int& direction, int& IdDistri);
@@ -82,31 +83,36 @@ protected:
 	void StreamingOrientation(NodeSymmetry2D& Node, bool SymmetryStreaming[9]);
 
 	//Apply boundary conditions
-	void ApplyBc();
-	void ApplyHeZou_U(int & nodenumber);
-	void ApplyHeZou_P(int & nodenumber);
-	void ApplyBounceBack(int & nodenumber);
-	void ApplyCorner(int & nodenumber);
-	void ApplyHeZou_U(NodeVelocity2D& Node);
-	void ApplyHeZou_U(NodeCorner2D& Node,int normal);//Use for Global Corners
-	void ApplyHeZou_P(NodePressure2D& Node);
-	void ApplyHeZou_P(NodeCorner2D& Node,int normal);//Use for Global Corners
-	void ApplyBounceBack(NodeWall2D& Node);
-	void ApplyBounceBackSymmetry(NodeWall2D& Node);//Use for special wall
-	void ApplyBounceBack(NodeCorner2D& Node);
+//	void ApplyBc();
+
+//	void ApplyHeZou_U(int & nodenumber);
+//	void ApplyHeZou_P(int & nodenumber);
+//	void ApplyBounceBack(int & nodenumber);
+//	void ApplyCorner(int & nodenumber);
+//	void ApplyHeZou_U(NodeVelocity2D& Node);
+//	void ApplyHeZou_U(NodeCorner2D& Node,int normal);//Use for Global Corners
+//	void ApplyHeZou_P(NodePressure2D& Node);
+//	void ApplyHeZou_P(NodeCorner2D& Node,int normal);//Use for Global Corners
+	void ApplyHeZou_U(NodeVelocity2D& Node, int distID, double &U, double &V);
+	void ApplyHeZou_U(NodeCorner2D& Node,int normal, int distID, double &U, double &V);//Use for Global Corners
+	void ApplyHeZou_P(NodePressure2D& Node, int distID, double Mass, double &U, double &V);
+	void ApplyHeZou_P(NodeCorner2D& Node,int normal, int distID, double Mass, double &U, double &V);//Use for Global Corners
+//	void ApplyBounceBack(NodeWall2D& Node);
+	void ApplyBounceBackSymmetry(NodeWall2D& Node);//Use for special wall (Symmetry-Wall connection)
+//	void ApplyBounceBack(NodeCorner2D& Node);
 	void ApplyDiffuseWall(NodeWall2D& Node);
 	void ApplyDiffuseWallSymmetry(NodeWall2D& Node);
 	void ApplyDiffuseWall(NodeCorner2D& Node);
-	void ApplyCorner(NodeCorner2D& Node);
-	void ApplyGlobalCorner(NodeCorner2D& Node);
+//	void ApplyCorner(NodeCorner2D& Node);
+//	void ApplyGlobalCorner(NodeCorner2D& Node);
 	void ApplySymmetryOnNode(NodeSymmetry2D& Node);
-	void ApplySymmetryPressureOnNode(NodeSymmetry2D& Node);
+//	void ApplySymmetryPressureOnNode(NodeSymmetry2D& Node);
 	unsigned int& Connect (int &NodeNumber,unsigned int& direction);
 	//void Set_Connect(int &NodeNumber,unsigned int& direction);
 	double Cal_RhoCorner(int &normalBc, int &nodenumber);
 	double Cal_RhoCorner(NodeCorner2D& Node);
-	double Cal_RhoR_Corner(NodeCorner2D& Node);
-	double Cal_RhoB_Corner(NodeCorner2D& Node);
+//	double Cal_RhoR_Corner(NodeCorner2D& Node);
+//	double Cal_RhoB_Corner(NodeCorner2D& Node);
 
 	//Communications
 	void IniComVariables();
@@ -121,13 +127,13 @@ protected:
 
 protected:
 //Multiphase variables
-	double *Rhor, *Rhob;
+	double Rho1, Rho2;
 
 
 //Common variables
-	double* tmp;// variable to copy tmp to distribution function
-//	double Ei[9][2]; //Velocity in the distribution function
-//	double omega[9];//Weight in the distribution function
+	double* tmpDistribution;// variable to move the temporary distribution function to the distribution function without copy (memory moving)
+	double* f_tmp;// variable to temporary copy the local distribution (for one node)
+
 	unsigned int Opposite[9]; //opposite direction in the distribution function
 
 	int** DiagConnect; //not use

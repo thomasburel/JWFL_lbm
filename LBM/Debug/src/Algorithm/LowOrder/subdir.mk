@@ -7,6 +7,7 @@ CPP_SRCS += \
 ../src/Algorithm/LowOrder/Boundaries.cpp \
 ../src/Algorithm/LowOrder/CollideLowOrder.cpp \
 ../src/Algorithm/LowOrder/D2Q9.cpp \
+../src/Algorithm/LowOrder/D2Q9ColourFluid.cpp \
 ../src/Algorithm/LowOrder/D2Q9_TwoPhases.cpp \
 ../src/Algorithm/LowOrder/Gradients.cpp \
 ../src/Algorithm/LowOrder/GradientsDEF.cpp \
@@ -16,6 +17,7 @@ OBJS += \
 ./src/Algorithm/LowOrder/Boundaries.o \
 ./src/Algorithm/LowOrder/CollideLowOrder.o \
 ./src/Algorithm/LowOrder/D2Q9.o \
+./src/Algorithm/LowOrder/D2Q9ColourFluid.o \
 ./src/Algorithm/LowOrder/D2Q9_TwoPhases.o \
 ./src/Algorithm/LowOrder/Gradients.o \
 ./src/Algorithm/LowOrder/GradientsDEF.o \
@@ -25,6 +27,7 @@ CPP_DEPS += \
 ./src/Algorithm/LowOrder/Boundaries.d \
 ./src/Algorithm/LowOrder/CollideLowOrder.d \
 ./src/Algorithm/LowOrder/D2Q9.d \
+./src/Algorithm/LowOrder/D2Q9ColourFluid.d \
 ./src/Algorithm/LowOrder/D2Q9_TwoPhases.d \
 ./src/Algorithm/LowOrder/Gradients.d \
 ./src/Algorithm/LowOrder/GradientsDEF.d \
