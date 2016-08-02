@@ -31,3 +31,5 @@
 # Compile folders
 *.cgns
 *.txt
+*.xml
+LBM
