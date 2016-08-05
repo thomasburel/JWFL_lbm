@@ -20,6 +20,7 @@ D2Q9ColourFluid::~D2Q9ColourFluid() {
 D2Q9ColourFluid::D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini){
 	InitD2Q9TwoPhases(MultiBlock__,parallel__,Writer__, Parameters__, ini);
 	InitMultiphase(ini);
+	Set_Colour_gradient();
 }
 
 void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
@@ -32,6 +33,9 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 // Loops for all kind of nodes
 	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
 	{
+// Get position
+		pos[0]=NodeArrays->NodeInterior[j].get_x();
+		pos[1]=NodeArrays->NodeInterior[j].get_y();
 // Get initialise value from the user
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeInterior[j],0, NodeArrays->NodeInterior[j].Get_index(),pos,Rho[NodeArrays->NodeInterior[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
@@ -40,13 +44,20 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	}
 	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
+// Get position
+		pos[0]=NodeArrays->NodeCorner[j].get_x();
+		pos[1]=NodeArrays->NodeCorner[j].get_y();
 // Get initialise value from the user
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_,alpha);
+// Initialise the blue and red densities
 		Rhor[NodeArrays->NodeCorner[j].Get_index()]=alpha*Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeCorner[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_2();
 	}
 	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
+// Get position
+		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
+		pos[1]=NodeArrays->NodeGlobalCorner[j].get_y();
 // Get initialise values from the user
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, NodeArrays->NodeGlobalCorner[j].Get_index(),pos,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
@@ -55,6 +66,9 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	}
 	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
+// Get position
+		pos[0]=NodeArrays->NodeVelocity[j].get_x();
+		pos[1]=NodeArrays->NodeVelocity[j].get_y();
 // Get initialise values from the user
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeVelocity[j],0, NodeArrays->NodeVelocity[j].Get_index(),pos,Rho[NodeArrays->NodeVelocity[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
@@ -64,6 +78,9 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 
 	for (int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
+// Get position
+		pos[0]=NodeArrays->NodePressure[j].get_x();
+		pos[1]=NodeArrays->NodePressure[j].get_y();
 // Get initialise values from the user
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodePressure[j],0, NodeArrays->NodePressure[j].Get_index(),pos,Rho[NodeArrays->NodePressure[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
@@ -72,6 +89,9 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	}
 	for (int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
+// Get position
+		pos[0]=NodeArrays->NodeWall[j].get_x();
+		pos[1]=NodeArrays->NodeWall[j].get_y();
 // Get initialise values from the user
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeWall[j],0, NodeArrays->NodeWall[j].Get_index(),pos,Rho[NodeArrays->NodeWall[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
@@ -80,6 +100,9 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	}
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
+// Get position
+		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
+		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
 // Get initialise values from the user
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, NodeArrays->NodeSpecialWall[j].Get_index(),pos,Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
@@ -88,6 +111,9 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	}
 	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
+// Get position
+		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
+		pos[1]=NodeArrays->NodeSymmetry[j].get_y();
 // Get initialise values from the user
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, NodeArrays->NodeSymmetry[j].Get_index(),pos,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
@@ -96,6 +122,9 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	}
 	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
+// Get position
+		pos[0]=NodeArrays->NodeGhost[j].get_x();
+		pos[1]=NodeArrays->NodeGhost[j].get_y();
 // Get initialise values from the user
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeGhost[j],0, NodeArrays->NodeGhost[j].Get_index(),pos,Rho[NodeArrays->NodeGhost[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
@@ -104,6 +133,9 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	}
 	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
 	{
+// Get position
+		pos[0]=NodeArrays->NodeSolid[j].get_x();
+		pos[1]=NodeArrays->NodeSolid[j].get_y();
 // Get initialise values from the user
 		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
@@ -206,7 +238,7 @@ void D2Q9ColourFluid::ColourFluid_Collision()
 	// Common variables
 		idx_tmp=NodeArrays->NodeInterior[j].Get_index();
 	// Calculate gradients
-		Colour_gradient(idx_tmp,&F[0]);
+		(this->*PtrColourGrad)(idx_tmp,&F[0]);
 	//Calculate Norms
 		F_Norm=std::sqrt(F[0]*F[0]+F[1]*F[1]);
 	//Model
@@ -314,6 +346,21 @@ void D2Q9ColourFluid::ColourFluid_Collision()
 		}
 	}
 }
+
+void D2Q9ColourFluid::Set_Colour_gradient(){
+	switch(PtrParameters->Get_ColourGradType())
+	{
+	case Gunstensen:
+		PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_Gunstensen;
+		break;
+	case DensityGrad:
+		PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityGrad;
+		break;
+	case DensityNormalGrad:
+		PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
+		break;
+	}
+}
 void D2Q9ColourFluid::Colour_gradient(int & nodenumber, double* F){
 	for (int k=0; k<nbvelo;k++)
 	{
@@ -323,9 +370,25 @@ void D2Q9ColourFluid::Colour_gradient(int & nodenumber, double* F){
 		}
 	}
 }
+void D2Q9ColourFluid::Colour_gradient_Gunstensen(int & nodenumber, double* F){
+	for (int k=0; k<nbvelo;k++)
+	{
+		for (int j=0;j<2;j++)
+		{
+			F[j]=(Rhor[nodenumber]-Rhob[nodenumber])*Ei[k][j];
+		}
+	}
+}
+void D2Q9ColourFluid::Colour_gradient_DensityGrad(int & nodenumber, double* F){
+
+}
+void D2Q9ColourFluid::Colour_gradient_DensityNormalGrad(int & nodenumber, double* F){
+
+}
 double D2Q9ColourFluid::TwoPhase_Collision_operator(int & nodenumber, int & i, double & Ak, double* F, double & F_Norm){
  return Ak*0.5*F_Norm*(((F[0]*Ei[i][0]+F[1]*Ei[i][1])/F_Norm)*((F[0]*Ei[i][0]+F[1]*Ei[i][1])/F_Norm)-3/4);
 }
+///Select and apply boundary conditions
 void D2Q9ColourFluid::ApplyBc(){
 
 	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)

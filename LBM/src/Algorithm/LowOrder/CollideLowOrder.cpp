@@ -25,7 +25,7 @@ void CollideLowOrder::Collide_SinglePhase(double &fi,double &rho, double &u, dou
 
 CollideD2Q9Colour::CollideD2Q9Colour(){
 //	Ei=new double [9][2];
-	Ak=0;
+	Ak=0.01;
 }
 CollideD2Q9Colour::~CollideD2Q9Colour(){
 

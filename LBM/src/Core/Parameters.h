@@ -44,7 +44,57 @@ enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular};
 
 enum OutputFormat {CGNSFormat,TecplotFormat};
 
+enum ColourGradType{Gunstensen,DensityGrad,DensityNormalGrad};
+enum RecolouringType{LatvaKokkoRothman};
+enum ColourOperatorType {Grunau};
 
+class ColourFluid{
+private:
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive &ar, const unsigned int version)
+	{
+		ar & BOOST_SERIALIZATION_NVP(beta)
+		 & BOOST_SERIALIZATION_NVP(A1)
+		 & BOOST_SERIALIZATION_NVP(A2);
+	}
+public:
+	void Set_Beta(double beta_=0.7){beta=beta_;};
+	double Get_Beta() const{return beta;};
+	void Set_A1(double A_=0){A2=A_;};
+	double Get_A1() const{return A2;};
+	void Set_A2(double A_=0){A1=A_;};
+	double Get_A2() const{return A1;};
+	void Set_ColourGradType(ColourGradType type){ColourGrad=type;};
+	ColourGradType Get_ColourGradType(){return ColourGrad;};
+	void Set_RecolouringType(RecolouringType type){Recolouring=type;};
+	RecolouringType Get_RecolouringType(){return Recolouring;};
+	void Set_ColourOperatorType(ColourOperatorType type){ColourOperator=type;};
+	ColourOperatorType Get_ColourOperatorType(){return ColourOperator;};
+protected:
+	double beta;
+	double A1,A2;
+	ColourGradType ColourGrad;
+	RecolouringType Recolouring;
+	ColourOperatorType ColourOperator;
+
+};
+
+class MultiphaseModels: public ColourFluid{
+private:
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive &ar, const unsigned int version)
+	{
+		ar & BOOST_SERIALIZATION_NVP(tension)
+		 & BOOST_SERIALIZATION_BASE_OBJECT_NVP(ColourFluid);
+	}
+public:
+	void Set_SurfaceTension(double tension_=0){tension=tension_;};
+	double Get_SurfaceTension() const{return tension;};
+protected:
+	double tension;
+};
 class MeshParameters {
 private:
 	friend class boost::serialization::access;
@@ -76,8 +126,14 @@ protected:
 	int NbNodes;
 };
 
-class ModelsParameters {
+class ModelsParameters:public MultiphaseModels {
 public:
+//Single phase
+	void Set_Rho(double Rho_=1){Rho_1=Rho_;};
+	double Get_Rho() const{return Rho_1;};
+	void Set_Tau(double Tau_=1){Tau_1=Tau_;};
+	double Get_Tau() const{return Tau_1;};
+//multiphase
 	void Set_Rho_1(double Rho){Rho_1=Rho;};
 	double Get_Rho_1() const {return Rho_1;};
 	void Set_Rho_2(double Rho){Rho_2=Rho;};
@@ -94,7 +150,8 @@ private:
 		ar & BOOST_SERIALIZATION_NVP(Rho_1)
 		   & BOOST_SERIALIZATION_NVP(Rho_2)
 		   & BOOST_SERIALIZATION_NVP(Tau_1)
-		   & BOOST_SERIALIZATION_NVP(Tau_2);
+		   & BOOST_SERIALIZATION_NVP(Tau_2)
+		   & BOOST_SERIALIZATION_BASE_OBJECT_NVP(MultiphaseModels);
 	}
 
 protected:
@@ -194,8 +251,8 @@ private:
 	void serialize(Archive &ar, const unsigned int version)
 	{
 		ar & BOOST_SERIALIZATION_NVP(scheme)
-		   & BOOST_SERIALIZATION_NVP(NbVelocities)
-		   & BOOST_SERIALIZATION_NVP(Tau);
+		   & BOOST_SERIALIZATION_NVP(NbVelocities);
+
 	}
 
 public:
@@ -205,14 +262,13 @@ public:
 	void Set_Model(modeltype model_);
 	modeltype Get_Model() const;
 	int Get_NbVelocities() const;
-	void Set_Tau(double Tau_=1);
-	double Get_Tau() const;
+
 
 protected:
 	schemetype scheme;
 	modeltype model;
 	int NbVelocities;
-	double Tau;
+
 };
 
 class CalculationParameters {

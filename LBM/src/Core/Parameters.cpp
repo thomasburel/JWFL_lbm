@@ -22,7 +22,6 @@ Parameters::Parameters()
 	VariablesOutput=0;
 	SolverParameters::set_SolverParameters();
 	Set_VariablesOutput(true,true);//export Rho and U by default
-	Tau=1;
 	NbGlobalBcType=4;
 	GlobalBcType=new NodeType [NbGlobalBcType];// Bottom: Wall, Outlet: Pressure, Top: Wall, Inlet: Velocity
 	GlobalBcType[0]=Wall;
@@ -34,6 +33,17 @@ Parameters::Parameters()
 	OutputFileName="output";
 	Rho_1=1;
 	Rho_2=1;
+	Tau_1=1;
+	Tau_2=1;
+	tension=0;
+	beta=0.7;
+	A1=0; A2=0;
+	U_ini=0;V_ini=0;W_ini=0;
+	Re=1;
+	l=1;t=1;dx=1;dt=1;
+	ColourGrad=Gunstensen;
+	Recolouring=LatvaKokkoRothman;
+	ColourOperator=Grunau;
 
 }
 
@@ -204,12 +214,7 @@ void CalculationParameters::Set_OutPutNSteps(int NbSteps_){
 int CalculationParameters::Get_OutPutNSteps() const{
 	return IntervalOutput;
 }
-void SolverParameters::Set_Tau(double Tau_){
-	Tau=Tau_;
-}
-double SolverParameters::Get_Tau() const {
-	return Tau;
-}
+
 void CalculationParameters::Set_VariablesOutput(int nbvar, std::string * strinput)
 {
 	NbVariablesOutput=nbvar;

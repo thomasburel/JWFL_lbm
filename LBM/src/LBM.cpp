@@ -92,7 +92,7 @@ int main(int argc, char *argv[]) {
 // Set User Parameters
 	Param.Set_UserParameters(Umax,H,L,Pmax,Pmin);
 // Set delta x for output
-	Param.Set_deltax(0.001/L);
+	Param.Set_deltax(1/L);
 
 // Relaxation time for single phase
 	Param.Set_Tau(tau);
@@ -105,9 +105,9 @@ int main(int argc, char *argv[]) {
 	Param.Set_WallType(BounceBack);
 
 /// Number of maximum timestep
-	Param.Set_NbStep(100);
+	Param.Set_NbStep(10);
 /// Interval for output
-	Param.Set_OutPutNSteps(10);// interval
+	Param.Set_OutPutNSteps(1);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(500);
 
@@ -120,13 +120,27 @@ int main(int argc, char *argv[]) {
 	// Multiphase model (SinglePhase or ColourFluid)
 	Param.Set_Model(ColourFluid);
 
+
+/// Singlephase Parameters
+	Param.Set_Rho(1.0);
+	Param.Set_Tau(tau);
+
 /// Multiphase Parameters
 	//Density of each fluid
-	Param.Set_Rho_1(1);
+	Param.Set_Rho_1(1.001);
 	Param.Set_Rho_2(1);
 	//Relaxation time for each fluid
 	Param.Set_Tau_1(tau);
 	Param.Set_Tau_2(tau);
+	//Surface tension
+	Param.Set_SurfaceTension(0.01);
+		//Colour fluid Parameters
+		Param.Set_A1(0.01);
+		Param.Set_A2(Param.Get_A1());
+		Param.Set_Beta(0.7);
+		Param.Set_ColourGradType(Gunstensen);
+		Param.Set_RecolouringType(LatvaKokkoRothman);
+		Param.Set_ColourOperatorType(Grunau);
 
 
 /// Initialise the simulation with parameters

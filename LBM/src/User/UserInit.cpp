@@ -92,6 +92,9 @@ void UserInit::UserBc(UserParameters& PtrUserParameters, int elem, int nodenumbe
 			U[0]=0;
 		U[1]=0.0;
 		Rho=Pmin;*/
+
+	Rho=1;
+	alpha=0;
 }
 
 void UserInit::UserIc (UserParameters& PtrUserParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U, double& alpha){
@@ -106,12 +109,12 @@ void UserInit::UserIc (UserParameters& PtrUserParameters, int elem, int nodenumb
 	Rho=Pmin;
 	if((pos[0]>=L/2-4&&pos[0]<=L/2+4)&&(pos[1]>=H/2-4&&pos[1]<=H/2+4))
 	{
-		alpha=0;
-		Rho=1.001;
+		alpha=1;
+		Rho=2;
 	}
 	else
 	{
-		alpha=1;
+		alpha=0;
 		Rho=1;
 	}
 
