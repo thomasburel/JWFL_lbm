@@ -4,3 +4,4 @@
 *.txt
 *.d
 LBM
+/Debug/
