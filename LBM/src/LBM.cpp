@@ -65,7 +65,8 @@ int main(int argc, char *argv[]) {
 	tau=1.0/omega;
 	nu=(2.0*tau-1.0)/6.0 ;
 //	nu=Kn*sqrt(2.0/pi);
-//	tau=(6.0*nu+1.0)*0.5;
+	nu=0.1667;
+	tau=(6.0*nu+1.0)*0.5;
 	re=Umax*(H/2+1)/nu;
 	//Umax=re*nu/(H+1);
 	cout<<"Reynolds: "<<re<< " Tau: "<<tau<< " Nu: "<<nu<<" U: "<<Umax<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<endl;
@@ -94,20 +95,21 @@ int main(int argc, char *argv[]) {
 // Set delta x for output
 	Param.Set_deltax(1/L);
 
-// Relaxation time for single phase
+// Single phase Parameters
 	Param.Set_Tau(tau);
+	Param.Set_Rho(1.0);
 
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity and Symmetry
-/// Order Bottom, Right, Top, Left, (Front, Back for 3D)
+/// Order Bottom, Right, Top, Left, (Front, Back for 3D)0.1667
 	Param.Set_BcType(Wall,Wall,Wall,Wall);
 /// Wall boundary condition type (Implemented BounceBack and Diffuse)
 	Param.Set_WallType(BounceBack);
 
 /// Number of maximum timestep
-	Param.Set_NbStep(10);
+	Param.Set_NbStep(100);
 /// Interval for output
-	Param.Set_OutPutNSteps(1);// interval
+	Param.Set_OutPutNSteps(10);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(500);
 
@@ -127,8 +129,8 @@ int main(int argc, char *argv[]) {
 
 /// Multiphase Parameters
 	//Density of each fluid
-	Param.Set_Rho_1(1.001);
-	Param.Set_Rho_2(1);
+	Param.Set_Rho_1(2);
+	Param.Set_Rho_2(1.0);
 	//Relaxation time for each fluid
 	Param.Set_Tau_1(tau);
 	Param.Set_Tau_2(tau);
@@ -143,11 +145,12 @@ int main(int argc, char *argv[]) {
 		Param.Set_ColourOperatorType(Grunau);
 
 
+
 /// Initialise the simulation with parameters
 	simu.InitSimu(Param, true);
 	simu.barrier();
+
 /// Run the simulation
 	simu.RunSimu();
-
 }
 

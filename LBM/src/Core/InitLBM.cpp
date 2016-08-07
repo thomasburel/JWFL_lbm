@@ -27,8 +27,11 @@ InitLBM::~InitLBM() {
 void InitLBM::Set_Parameters(Parameters *Parameters) {
 	PtrParameters=Parameters;
 }
-
-void InitLBM::IniDomain(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U,double alpha){
+void InitLBM::IniDomain(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U){
+	double alpha=0;
+	IniDomain(rank,Node,elem,nodenumber, pos,Rho,U,alpha);
+}
+void InitLBM::IniDomain(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U,double & alpha){
 //	if (nodenumber==3 &&Node.get_NodeType()==0 )
 //	if(Node.get_NodeType()!=Interior)
 //		std::cout<<"Processor ID: "<<rank<<" Node number: "<<nodenumber<<" Type of node is : "<<Node.get_NodeType()<<std::endl;

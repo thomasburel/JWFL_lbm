@@ -60,7 +60,8 @@ private:
 	double TwoPhase_Collision_operator(int & i, double* F, double & F_Norm);
 };
 inline 	double CollideD2Q9Colour::TwoPhase_Collision_operator(int & i, double* F, double & F_Norm){
-	 return Ak*0.5*F_Norm*(((F[0]* Ei[i][0]+F[1]* Ei[i][1])/F_Norm)*((F[0]* Ei[i][0]+F[1]* Ei[i][1])/F_Norm)-3/4);
+	double EiGperGNorm=(F[0]* Ei[i][0]+F[1]* Ei[i][1])/F_Norm;
+	 return Ak*0.5*F_Norm*(EiGperGNorm*EiGperGNorm-3/4);
 }
 inline void CollideD2Q9Colour::Recoloring(double & f, double & fr, double & fb, double & Rho, double & Rho_r, double & Rho_b)
 {

@@ -44,6 +44,8 @@ enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular};
 
 enum OutputFormat {CGNSFormat,TecplotFormat};
 
+enum DensityExport{Density,NormalDensity,BothDensity};
+
 enum ColourGradType{Gunstensen,DensityGrad,DensityNormalGrad};
 enum RecolouringType{LatvaKokkoRothman};
 enum ColourOperatorType {Grunau};

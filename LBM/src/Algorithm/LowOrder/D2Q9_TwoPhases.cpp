@@ -224,7 +224,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 
 	delete [] pos;
 	delete [] U_;
-	Writer->Set_solution(PtrVariablesOutput,PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
+//	Writer->Set_solution(PtrVariablesOutput,PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
 	parallel->barrier();
 
 }

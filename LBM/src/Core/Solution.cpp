@@ -20,6 +20,8 @@ Solution2D::Solution2D() {
 	PtrVariablesBreakpoint=0;
 	Ptrvariabletest=0;
 	NodeArrays=0;
+	RhoN=0;
+	Rhor=0;Rhob=0;
 }
 
 Solution2D::~Solution2D() {
@@ -28,7 +30,7 @@ Solution2D::~Solution2D() {
 		for (int j=0;j<nbnodes_total;j++)
 			delete U[i];
 	}
-	delete U,Rho,NodeArrays;
+	delete U,Rho,NodeArrays,RhoN,Rhor,Rhob;
 }
 
 
@@ -58,6 +60,12 @@ void Solution2D::Set_output(std::string *str, int nbvar){
 	for (int i=0;i<nbvar;i++)
 		if(str[i]=="Rho")
 			PtrVariablesOutput[i]=&Rho[0];
+		else if(str[i]=="RhoN")
+			PtrVariablesOutput[i]=&RhoN[0];
+		else if(str[i]=="RhoRed")
+			PtrVariablesOutput[i]=&Rhor[0];
+		else if(str[i]=="RhoBlue")
+			PtrVariablesOutput[i]=&Rhob[0];
 		else if (str[i]=="VelocityX")
 			PtrVariablesOutput[i]=&U[0][0];//Ptrvariabletest;//&U[0][0];
 		else if(str[i]=="VelocityY")
@@ -76,6 +84,12 @@ void Solution2D::Set_breakpoint(std::string *str, int nbvar,double **f_ini){
 		std::string str_tmp=sstm.str();
 		if(str[i]=="Rho")
 			PtrVariablesBreakpoint[i]=&Rho[0];
+		else if(str[i]=="RhoN")
+			PtrVariablesBreakpoint[i]=&RhoN[0];
+		else if(str[i]=="RhoRed")
+			PtrVariablesBreakpoint[i]=&Rhor[0];
+		else if(str[i]=="RhoBlue")
+			PtrVariablesBreakpoint[i]=&Rhob[0];
 		else if (str[i]=="VelocityX")
 			PtrVariablesBreakpoint[i]=&U[0][0];
 		else if (str[i]=="VelocityY")
@@ -91,7 +105,7 @@ void Solution2D::Set_breakpoint(std::string *str, int nbvar,double **f_ini){
 			sstm<<"f_"<<i_tmp;
 		}
 		else
-			std::cout<< "Problem in breakpoint setup" << std::endl;
+			std::cout<< "Problem in breakpoint setup. Name: "<< str[i]<<" not found." << std::endl;
 	}
 
 
