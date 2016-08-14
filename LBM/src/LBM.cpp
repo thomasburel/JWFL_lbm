@@ -65,7 +65,7 @@ int main(int argc, char *argv[]) {
 	tau=1.0/omega;
 	nu=(2.0*tau-1.0)/6.0 ;
 //	nu=Kn*sqrt(2.0/pi);
-	nu=0.1667;
+	nu=0.01667;
 	tau=(6.0*nu+1.0)*0.5;
 	re=Umax*(H/2+1)/nu;
 	//Umax=re*nu/(H+1);
@@ -92,6 +92,8 @@ int main(int argc, char *argv[]) {
 
 // Set User Parameters
 	Param.Set_UserParameters(Umax,H,L,Pmax,Pmin);
+// Set User Force type
+	Param.Set_UserForceType(None);
 // Set delta x for output
 	Param.Set_deltax(1/L);
 
@@ -107,9 +109,9 @@ int main(int argc, char *argv[]) {
 	Param.Set_WallType(BounceBack);
 
 /// Number of maximum timestep
-	Param.Set_NbStep(100);
+	Param.Set_NbStep(2000);
 /// Interval for output
-	Param.Set_OutPutNSteps(10);// interval
+	Param.Set_OutPutNSteps(1000);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(500);
 
@@ -122,12 +124,16 @@ int main(int argc, char *argv[]) {
 	// Multiphase model (SinglePhase or ColourFluid)
 	Param.Set_Model(ColourFluid);
 
+	//Gradient definition
+	Param.Set_GradientType(LBMStencil); //FD or LBMStencil
 
 /// Singlephase Parameters
 	Param.Set_Rho(1.0);
 	Param.Set_Tau(tau);
 
 /// Multiphase Parameters
+	// Normal density output
+	Param.Set_NormalDensityOutput(true);
 	//Density of each fluid
 	Param.Set_Rho_1(2);
 	Param.Set_Rho_2(1.0);
@@ -137,12 +143,12 @@ int main(int argc, char *argv[]) {
 	//Surface tension
 	Param.Set_SurfaceTension(0.01);
 		//Colour fluid Parameters
-		Param.Set_A1(0.01);
+		Param.Set_A1(0.00001);
 		Param.Set_A2(Param.Get_A1());
-		Param.Set_Beta(0.7);
-		Param.Set_ColourGradType(Gunstensen);
+		Param.Set_Beta(0.7);// Between 0 and 1
+		Param.Set_ColourGradType(DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
 		Param.Set_RecolouringType(LatvaKokkoRothman);
-		Param.Set_ColourOperatorType(Grunau);
+		Param.Set_ColourOperatorType(SurfaceForce);//Grunau or SurfaceForce
 
 
 

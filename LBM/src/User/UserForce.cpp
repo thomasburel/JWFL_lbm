@@ -15,13 +15,12 @@ UserForce::UserForce() {
 UserForce::~UserForce() {
 	// TODO Auto-generated destructor stub
 }
-
-double UserForce::LocalForce(int & direction, double & Rho, double & U, double & V, double & W)
+double UserForce::LocalForce(int const direction, double const Rho, double const U, double const V, double const W)
 {
 	return 0;
 }
 
-double UserForce::BodyForce(double & Rho, double * U)
+double UserForce::BodyForce(int const direction_xyz, double const Rho, double const U, double const  V, double const W)
 {
 	return 0;
 }

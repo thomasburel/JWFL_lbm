@@ -13,7 +13,7 @@
 #include "D2Q9_TwoPhases.h"
 
 
-//#define CallRecoloring(objet,pointer)  ((objet).*(pointer))
+#define Callfunction(pointer)  (this->*(pointer))
 
 class D2Q9ColourFluid: public D2Q9TwoPhases {
 public:
@@ -40,10 +40,14 @@ private:
 	double CosPhi(int & direction, double* F,double & F_Norm);
 // Colour gradient definition
 	void Set_Colour_gradient();
-	void Colour_gradient(int & nodenumber, int* connect, double* F);
-	void Colour_gradient_Gunstensen(int & nodenumber, int* connect, double* F);
-	void Colour_gradient_DensityGrad(int & nodenumber, int* connect, double* F);
-	void Colour_gradient_DensityNormalGrad(int & nodenumber, int* connect, double* F);
+	void Colour_gradient();
+	void Colour_gradient_Gunstensen(int & nodenumber, int* connect,int & normal, double* F);
+	void Colour_gradient_DensityGrad(int & nodenumber, int* connect,int & normal, double* F);
+	void Colour_gradient_DensityGradBc(int & nodenumber, int* connect,int & normal, double* F);
+	void Colour_gradient_DensityGradCorner(int & nodenumber, int* connect,int & normal, double* F);
+	void Colour_gradient_DensityNormalGrad(int & nodenumber, int* connect,int & normal, double* F);
+	void Colour_gradient_DensityNormalGradBc(int & nodenumber, int* connect,int & normal, double* F);
+	void Colour_gradient_DensityNormalGradCorner(int & nodenumber, int* connect,int & normal, double* F);
 
 // Recolouring definition
 	void Set_Recolouring();
@@ -53,6 +57,9 @@ private:
 	void CollideD2Q9ColourFluid(int & direction, double & fi,double &rho,double*  F,double & F_Norm, double & InvTau_, double &u, double &v);
 	void Set_Collide();
 	double TwoPhase_Collision_operator(int & i, double* F, double & F_Norm);
+	double* SurfaceForce(int & nodenumber, int* connect,int & normal, double & F_Norm);
+	double Curvature(int & nodenumber, int* connect,int & normal);
+	double* TwoPhase_Collision_BodyForce(int & nodenumber, int & i, double & InvTau_tmp, double* F_tmp, double & F_Norm);
 
 	double TwoPhase_Collision_operator(int & nodenumber, int & direction, double & Ak, double* F, double & F_Norm);
 	double Convert_Alpha_To_Rho(double alpha);
@@ -68,20 +75,26 @@ private:
 	void ApplyBounceBack(NodeCorner2D& Node);
 	void ApplySymmetryPressureOnNode(NodeSymmetry2D& NodeIn);
 
-	void checkRho();
+
 private:
 //Multiphase variables
-//	double *Rhor, *Rhob;
+	double **F, **G;//Surface Force and Colour gradient/density gradient
+	double tension;
 	double beta,A1,A2;
 	double Rho_limiter;
+	double D_tmp;// Temporary double
+	double* PtrD_tmp;// Temporary pointer for a double
+	double DVec_2D_tmp[2];// Temporary vector 2D for a double
 // Pointers on function
 	//Simplify notation for pointer on member functions
-	typedef void(D2Q9ColourFluid::*ColourGrad)(int & nodenumber, int* connect, double* F);
+	typedef void(D2Q9ColourFluid::*ColourGrad)(int & nodenumber, int* connect,int & normal, double* F);
 	typedef void(D2Q9ColourFluid::*Recolour)(int & nodenumber,int & i, double & ftmp, double* F,double & F_Norm);
 	typedef void(D2Q9ColourFluid::*Macro)(int & nodenumber);
 	typedef void(D2Q9ColourFluid::*TwoPhaseOperator)(int & nodenumber, int & direction, double & Ak, double* F, double & F_Norm);
 	//Define name for pointers on functions
 	ColourGrad PtrColourGrad;
+	ColourGrad PtrColourGradBc;
+	ColourGrad PtrColourGradCorner;
 	Recolour PtrRecolour;
 	Macro PtrMacro;
 	TwoPhaseOperator PtrTwoPhaseOperator;

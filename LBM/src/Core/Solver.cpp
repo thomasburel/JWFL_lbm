@@ -147,6 +147,7 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 	//InvTau=1.0/PtrParameters->Get_Tau();
 	nbvelo=PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
+//	Gradients::initGradients(2,nbvelo,PtrParameters->Get_GradientType());
 	Set_Solution();
 	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()];
 	PtrVariablesBreakpoint=new double* [nbvelo+3];
@@ -161,7 +162,7 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 }
 SolverTwoPhasesLowOrder2D::SolverTwoPhasesLowOrder2D() {
 	PtrParameters=0;
-	Gradients(2);
+
 
 }
 
@@ -185,6 +186,7 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	//InvTau=1.0/PtrParameters->Get_Tau();
 	nbvelo=PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
+	Gradients::initGradients(2,nbvelo,PtrParameters->Get_GradientType());
 	Set_Solution();
 	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()+3];
 	PtrVariablesBreakpoint=new double* [2*nbvelo+3];

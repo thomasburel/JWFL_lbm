@@ -17,34 +17,28 @@
 
 #include "GradientsDEF.h"
 
-enum GradientType{FD};
-
 class Gradients {
 public:
 	Gradients();
-	Gradients(int dimension);
+	void initGradients(int dimension, int nb_vel,GradientType Type_);
 	virtual ~Gradients();
 	void SelectGradientType(GradientType Type_);
 
 //Scalar gradients
-	double* Grad (double *Var, NodeInterior2D& Node);
-	double* Grad (double *Var, NodeWall2D& Node);
-	double* Grad (double *Var, NodeCorner2D& Node);
-	double* Grad (double *Var, NodeVelocity2D& Node);
-	double* Grad (double *Var, NodePressure2D& Node);
-	double* Grad (double *Var, NodeSymmetry2D& Node);
+	double* Grad (double *Var, int * Connect, int & normal);
+	double* GradBc (double *Var, int * Connect, int & normal);
+	double* GradCorner (double *Var, int * Connect, int & normal);
+
 //Vector gradients
-	double** Grad (double *Var_x, double *Var_y, NodeInterior2D& Node);
-	double** Grad (double *Var_x, double *Var_y, NodeWall2D& Node);
-	double** Grad (double *Var_x, double *Var_y, NodeCorner2D& Node);
-	double** Grad (double *Var_x, double *Var_y, NodeVelocity2D& Node);
-	double** Grad (double *Var_x, double *Var_y, NodePressure2D& Node);
-	double** Grad (double *Var_x, double *Var_y, NodeSymmetry2D& Node);
+	double** Grad (double *Var_x, double *Var_y, int * Connect, int & normal);
+	double** GradBc (double *Var_x, double *Var_y, int * Connect, int & normal);
+	double** GradCorner (double *Var_x, double *Var_y, int * Connect, int & normal);
+
 
 private:
  // Gradient object to be able to select different kind of gradient automatically
  GradientsDEF* grad;
  GradientType Type;
- int dimension;
+ int dimension, nb_Vel;
 };
 #endif /* ALGORITHM_LOWORDER_GRADIENTS_H_ */

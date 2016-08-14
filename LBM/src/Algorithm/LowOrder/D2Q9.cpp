@@ -127,7 +127,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeInterior[j].get_x();
 		pos[1]=NodeArrays->NodeInterior[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeInterior[j],0, NodeArrays->NodeInterior[j].Get_index(),pos,Rho[NodeArrays->NodeInterior[j].Get_index()],U_);
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeInterior[j],0, NodeArrays->NodeInterior[j].Get_index(),pos,Rho[NodeArrays->NodeInterior[j].Get_index()],U_);
 		U[0][NodeArrays->NodeInterior[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeInterior[j].Get_index()]=U_[1];
 		if(Rho[j]==0)
@@ -145,7 +145,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeCorner[j].get_x();
 		pos[1]=NodeArrays->NodeCorner[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_);
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_);
 		U[0][NodeArrays->NodeCorner[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeCorner[j].Get_index()]=U_[1];
 		if(PtrParameters->Get_Verbous())
@@ -160,7 +160,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
 		pos[1]=NodeArrays->NodeGlobalCorner[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, NodeArrays->NodeGlobalCorner[j].Get_index(),pos,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U_);
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, NodeArrays->NodeGlobalCorner[j].Get_index(),pos,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U_);
 		U[0][NodeArrays->NodeGlobalCorner[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeGlobalCorner[j].Get_index()]=U_[1];
 		NodeArrays->NodeGlobalCorner[j].Set_UDef(U_[0],U_[1]);
@@ -170,7 +170,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeVelocity[j].get_x();
 		pos[1]=NodeArrays->NodeVelocity[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeVelocity[j],0, NodeArrays->NodeVelocity[j].Get_index(),pos,Rho[NodeArrays->NodeVelocity[j].Get_index()],U_);
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeVelocity[j],0, NodeArrays->NodeVelocity[j].Get_index(),pos,Rho[NodeArrays->NodeVelocity[j].Get_index()],U_);
 		U[0][NodeArrays->NodeVelocity[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeVelocity[j].Get_index()]=U_[1];
 	}
@@ -179,7 +179,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodePressure[j].get_x();
 		pos[1]=NodeArrays->NodePressure[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodePressure[j],0, NodeArrays->NodePressure[j].Get_index(),pos,Rho[NodeArrays->NodePressure[j].Get_index()],U_);
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodePressure[j],0, NodeArrays->NodePressure[j].Get_index(),pos,Rho[NodeArrays->NodePressure[j].Get_index()],U_);
 		U[0][NodeArrays->NodePressure[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodePressure[j].Get_index()]=U_[1];
 	}
@@ -187,7 +187,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeWall[j].get_x();
 		pos[1]=NodeArrays->NodeWall[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeWall[j],0, NodeArrays->NodeWall[j].Get_index(),pos,Rho[NodeArrays->NodeWall[j].Get_index()],U_);
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeWall[j],0, NodeArrays->NodeWall[j].Get_index(),pos,Rho[NodeArrays->NodeWall[j].Get_index()],U_);
 		U[0][NodeArrays->NodeWall[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeWall[j].Get_index()]=U_[1];
 		if(PtrParameters->Get_Verbous())
@@ -202,7 +202,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
 		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, NodeArrays->NodeSpecialWall[j].Get_index(),pos,Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U_);
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, NodeArrays->NodeSpecialWall[j].Get_index(),pos,Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U_);
 		U[0][NodeArrays->NodeSpecialWall[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSpecialWall[j].Get_index()]=U_[1];
 		if(PtrParameters->Get_Verbous())
@@ -217,7 +217,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
 		pos[1]=NodeArrays->NodeSymmetry[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, NodeArrays->NodeSymmetry[j].Get_index(),pos,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U_);
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, NodeArrays->NodeSymmetry[j].Get_index(),pos,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U_);
 		U[0][NodeArrays->NodeSymmetry[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSymmetry[j].Get_index()]=U_[1];
 	}
@@ -225,7 +225,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeGhost[j].get_x();
 		pos[1]=NodeArrays->NodeGhost[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeGhost[j],0, NodeArrays->NodeGhost[j].Get_index(),pos,Rho[NodeArrays->NodeGhost[j].Get_index()],U_);
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeGhost[j],0, NodeArrays->NodeGhost[j].Get_index(),pos,Rho[NodeArrays->NodeGhost[j].Get_index()],U_);
 		U[0][NodeArrays->NodeGhost[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeGhost[j].Get_index()]=U_[1];
 	}
@@ -233,7 +233,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeSolid[j].get_x();
 		pos[1]=NodeArrays->NodeSolid[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_);
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_);
 		U[0][NodeArrays->NodeSolid[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSolid[j].Get_index()]=U_[1];
 	}

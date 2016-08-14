@@ -52,7 +52,7 @@ all: LBM
 LBM: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	mpic++ -lcgns -lhdf5 -lboost_serialization -o "LBM" $(OBJS) $(USER_OBJS) $(LIBS)
+	mpic++ -o "LBM" $(OBJS) $(USER_OBJS) $(LIBS) -lcgns -lhdf5 -lboost_serialization
 	@echo 'Finished building target: $@'
 	@echo ' '
 

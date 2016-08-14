@@ -2579,6 +2579,7 @@ void Block2D::Set_Connect(Parameters& Param){
 	tmpConnect=new int[Param.Get_NbVelocities()];
 	for(int i=0;i<NbTotalNodes;i++)
 	{
+		tmpConnect[0]=i;
 		for (unsigned int j=1;j<Param.Get_NbVelocities();j++)
 			tmpConnect[j]=Connect_lowOrder(i,j);
 		switch(NodeArrays.TypeOfNode[i])
