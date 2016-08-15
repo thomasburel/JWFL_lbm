@@ -61,7 +61,7 @@ int main(int argc, char *argv[]) {
 	double Kn=0.01; //Knudsen number
 	double pi=atan(1)*4 ;
 	double dt=1.0/(L)/sqrt(3.0);
-	double omega = dt /(Kn*sqrt(2.0/pi)+0.50*dt);
+	double omega = dt /(Kn*sqrt(6.0/pi)+0.50*dt);
 	tau=1.0/omega;
 	nu=(2.0*tau-1.0)/6.0 ;
 //	nu=Kn*sqrt(2.0/pi);
