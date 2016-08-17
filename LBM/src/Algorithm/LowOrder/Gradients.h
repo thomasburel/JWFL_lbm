@@ -25,14 +25,14 @@ public:
 	void SelectGradientType(GradientType Type_);
 
 //Scalar gradients
-	double* Grad (double *Var, int * Connect, int & normal);
-	double* GradBc (double *Var, int * Connect, int & normal);
-	double* GradCorner (double *Var, int * Connect, int & normal);
+	void Grad (double* grad_, double *Var, int * Connect, int & normal);
+	void GradBc (double* grad_, double *Var, int * Connect, int & normal);
+	void GradCorner (double* grad_, double *Var, int * Connect, int & normal);
 
 //Vector gradients
-	double** Grad (double *Var_x, double *Var_y, int * Connect, int & normal);
-	double** GradBc (double *Var_x, double *Var_y, int * Connect, int & normal);
-	double** GradCorner (double *Var_x, double *Var_y, int * Connect, int & normal);
+	void Grad (double** grad_,double *Var_x, double *Var_y, int * Connect, int & normal);
+	void GradBc (double** grad_,double *Var_x, double *Var_y, int * Connect, int & normal);
+	void GradCorner (double** grad_,double *Var_x, double *Var_y, int * Connect, int & normal);
 
 
 private:

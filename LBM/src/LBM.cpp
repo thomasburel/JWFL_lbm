@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
 	L=532;//820
 	H=854;
 	L=1064;
-	H=100;
-	L=100;
+	H=399;
+	L=399;
 	//H=re*nu/Umax-1;
 	//H=round(H);
 	//L=H;
@@ -91,7 +91,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 
 // Set User Parameters
-	Param.Set_UserParameters(Umax,H,L,Pmax,Pmin);
+	Param.Set_UserParameters(Umax,H+1,L+1,Pmax,Pmin);
 // Set User Force type
 	Param.Set_UserForceType(None);
 // Set delta x for output
@@ -109,9 +109,9 @@ int main(int argc, char *argv[]) {
 	Param.Set_WallType(BounceBack);
 
 /// Number of maximum timestep
-	Param.Set_NbStep(2000);
+	Param.Set_NbStep(10000);
 /// Interval for output
-	Param.Set_OutPutNSteps(1000);// interval
+	Param.Set_OutPutNSteps(100);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(500);
 
@@ -125,7 +125,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_Model(ColourFluid);
 
 	//Gradient definition
-	Param.Set_GradientType(LBMStencil); //FD or LBMStencil
+	Param.Set_GradientType(FD); //FD or LBMStencil
 
 /// Singlephase Parameters
 	Param.Set_Rho(1.0);
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_Tau_1(tau);
 	Param.Set_Tau_2(tau);
 	//Surface tension
-	Param.Set_SurfaceTension(0.01);
+	Param.Set_SurfaceTension(0.1);
 		//Colour fluid Parameters
 		Param.Set_A1(0.00001);
 		Param.Set_A2(Param.Get_A1());

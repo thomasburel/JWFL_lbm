@@ -22,8 +22,8 @@ Gradients::~Gradients(){
 	delete grad;
 }
 void Gradients::SelectGradientType(GradientType Type_){
-	if(Type_!=Type)
-	{
+//	if(Type_!=Type)
+//	{
 		delete grad;
 		Type=Type_;
 	// Add new gradient type here
@@ -38,29 +38,29 @@ void Gradients::SelectGradientType(GradientType Type_){
 		default:
 			std::cerr<<" Gradient type not found"<<std::endl;
 		}
-	}
+//	}
 }
 
 //Scalar gradients
-double* Gradients::Grad (double *Var, int * Connect, int & normal){
-	return grad->Grad(Var,Connect,normal);
+void Gradients::Grad (double* grad_, double *Var, int * Connect, int & normal){
+	grad->Grad(grad_,Var,Connect,normal);
 }
-double* Gradients::GradBc (double *Var, int * Connect, int & normal){
-	return grad->Grad(Var,Connect,normal);
+void Gradients::GradBc (double* grad_, double *Var, int * Connect, int & normal){
+	grad->GradBc(grad_,Var,Connect,normal);
 }
-double* Gradients::GradCorner (double *Var, int * Connect, int & normal){
-	return grad->Grad(Var,Connect,normal);
+void Gradients::GradCorner (double* grad_, double *Var, int * Connect, int & normal){
+	grad->GradCorner(grad_,Var,Connect,normal);
 }
 
 //Vector gradients
-double** Gradients::Grad (double *Var_x, double *Var_y, int * Connect, int & normal){
-	return grad->Grad(Var_x,Var_y,Connect,normal);
+void Gradients::Grad (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal){
+	grad->Grad(grad_,Var_x,Var_y,Connect,normal);
 }
-double** Gradients::GradBc (double *Var_x, double *Var_y, int * Connect, int & normal){
-	return grad->Grad(Var_x,Var_y,Connect,normal);
+void Gradients::GradBc (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal){
+	grad->GradBc(grad_,Var_x,Var_y,Connect,normal);
 }
-double** Gradients::GradCorner (double *Var_x, double *Var_y, int * Connect, int & normal){
-	return grad->Grad(Var_x,Var_y,Connect,normal);
+void Gradients::GradCorner (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal){
+	grad->GradCorner(grad_,Var_x,Var_y,Connect,normal);
 }
 
 

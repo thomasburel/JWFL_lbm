@@ -20,7 +20,7 @@ UserParameters::~UserParameters() {
 	// TODO Auto-generated destructor stub
 }
 
-void UserParameters::Set_UserParameters(double & Umax_,double & H_,double & L_,double & Pmax_,double & Pmin_){
+void UserParameters::Set_UserParameters(double  Umax_,double  H_,double  L_,double  Pmax_,double  Pmin_){
 	Umax=Umax_;
 	H=H_;
 	L=L_;

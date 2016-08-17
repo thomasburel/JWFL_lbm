@@ -25,7 +25,7 @@ public:
 	UserParameters();
 	virtual ~UserParameters();
 	void Get_UserParameters(double & Umax_,double & H_,double & L_,double & Pmax_,double & Pmin_);
-	void Set_UserParameters(double & Umax_,double & H_,double & L_,double & Pmax_,double & Pmin_);
+	void Set_UserParameters(double  Umax_,double  H_,double  L_,double  Pmax_,double  Pmin_);
 
 private:
 	double Umax,H,L,Pmax,Pmin;

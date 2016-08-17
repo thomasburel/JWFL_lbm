@@ -14,22 +14,22 @@
 class GradientsDEF {
 public:
 	GradientsDEF();
-//	virtual GradientsDEF(int dimension, int nb_vel)=0;
+	GradientsDEF(int dimension, int nb_vel);
 	virtual ~GradientsDEF();
 //Scalar gradient
-	virtual double* Grad (double *Var, int * Connect, int & normal)=0;
-	virtual double* GradBc (double *Var, int * Connect, int & normal)=0;
-	virtual double* GradCorner (double *Var, int * Connect, int & normal)=0;
+	virtual void Grad (double* grad_,double *Var, int * Connect, int & normal)=0;
+	virtual void GradBc (double* grad_,double *Var, int * Connect, int & normal)=0;
+	virtual void GradCorner (double* grad_,double *Var, int * Connect, int & normal)=0;
 
 //Vector gradient
-	virtual double** Grad (double *Var_x, double *Var_y, int * Connect, int & normal)=0;
-	virtual double** GradBc (double *Var_x, double *Var_y, int * Connect, int & normal)=0;
-	virtual double** GradCorner (double *Var_x, double *Var_y, int * Connect, int & normal)=0;
+	virtual void Grad (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal)=0;
+	virtual void GradBc (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal)=0;
+	virtual void GradCorner (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal)=0;
 
 
 protected:
-	double* gradient_scalar;
-	double** gradient_vector;
+//	double* gradient_scalar;
+//	double** gradient_vector;
 	int dimension,nb_Vel;
 };
 class GradientsFD: public GradientsDEF {
@@ -38,14 +38,14 @@ public:
 	GradientsFD(int dimension, int nb_vel);
 	virtual ~GradientsFD();
 //Scalar gradient
-	double* Grad (double *Var, int * Connect, int & normal);
-	double* GradBc (double *Var, int * Connect, int & normal);
-	double* GradCorner (double *Var, int * Connect, int & normal);
+	void Grad (double* grad_,double *Var, int * Connect, int & normal);
+	void GradBc (double* grad_,double *Var, int * Connect, int & normal);
+	void GradCorner (double* grad_,double *Var, int * Connect, int & normal);
 
 //Vector gradient
-	double** Grad (double *Var_x, double *Var_y, int * Connect, int & normal);
-	double** GradBc (double *Var_x, double *Var_y, int * Connect, int & normal);
-	double** GradCorner (double *Var_x, double *Var_y, int * Connect, int & normal);
+	void Grad (double** grad_,double *Var_x, double *Var_y, int * Connect, int & normal);
+	void GradBc (double** grad_,double *Var_x, double *Var_y, int * Connect, int & normal);
+	void GradCorner (double** grad_,double *Var_x, double *Var_y, int * Connect, int & normal);
 };
 class GradientsLBMStencil: public GradientsDEF {
 public:
@@ -53,14 +53,14 @@ public:
 	GradientsLBMStencil(int dimension, int nb_vel);
 	virtual ~GradientsLBMStencil();
 //Scalar gradient
-	double* Grad (double *Var, int * Connect, int & normal);
-	double* GradBc (double *Var, int * Connect, int & normal);
-	double* GradCorner (double *Var, int * Connect, int & normal);
+	void Grad (double* grad_,double *Var, int * Connect, int & normal);
+	void GradBc (double* grad_,double *Var, int * Connect, int & normal);
+	void GradCorner (double* grad_,double *Var, int * Connect, int & normal);
 
 //Vector gradient
-	double** Grad (double *Var_x, double *Var_y, int * Connect, int & normal);
-	double** GradBc (double *Var_x, double *Var_y, int * Connect, int & normal);
-	double** GradCorner (double *Var_x, double *Var_y, int * Connect, int & normal);
+	void Grad (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal);
+	void GradBc (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal);
+	void GradCorner (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal);
 
 private:
 	double **Ei;//Ei[dimension][nb_velocity]
