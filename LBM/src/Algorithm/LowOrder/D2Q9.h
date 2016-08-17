@@ -111,8 +111,8 @@ private:
 
 private:
 	double* tmp;// variable to copy tmp to distribution function
-	double Ei[9][2]; //Velocity in the distribution function
-	double omega[9];//Weight in the distribution function
+//	double Ei[9][2]; //Velocity in the distribution function
+//	double omega[9];//Weight in the distribution function
 	unsigned int Opposite[9]; //opposite direction in the distribution function
 
 	int** DiagConnect; //not use

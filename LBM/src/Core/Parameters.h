@@ -38,15 +38,22 @@ enum schemetype {Q9,Q16};
 
 enum modeltype {SinglePhase, ColourFluid};
 
+enum FluidType{Newtonian};
+
+enum UserForceType{None,LocalForce,BodyForce};
+
 enum parralleltype {Serial,Mpi,Openmp,Hybrid};
 
 enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular};
 
 enum OutputFormat {CGNSFormat,TecplotFormat};
 
+enum DensityExport{Density,NormalDensity,BothDensity};
+enum GradientType{FD,LBMStencil};
+
 enum ColourGradType{Gunstensen,DensityGrad,DensityNormalGrad};
 enum RecolouringType{LatvaKokkoRothman};
-enum ColourOperatorType {Grunau};
+enum ColourOperatorType {Grunau,SurfaceForce};
 
 class ColourFluid{
 private:
@@ -56,7 +63,10 @@ private:
 	{
 		ar & BOOST_SERIALIZATION_NVP(beta)
 		 & BOOST_SERIALIZATION_NVP(A1)
-		 & BOOST_SERIALIZATION_NVP(A2);
+		 & BOOST_SERIALIZATION_NVP(A2)
+		 & BOOST_SERIALIZATION_NVP(ColourGrad)
+		 & BOOST_SERIALIZATION_NVP(Recolouring)
+		 & BOOST_SERIALIZATION_NVP(ColourOperator);
 	}
 public:
 	void Set_Beta(double beta_=0.7){beta=beta_;};
@@ -87,12 +97,16 @@ private:
 	void serialize(Archive &ar, const unsigned int version)
 	{
 		ar & BOOST_SERIALIZATION_NVP(tension)
+		 & BOOST_SERIALIZATION_NVP(NormalDensityOutput)
 		 & BOOST_SERIALIZATION_BASE_OBJECT_NVP(ColourFluid);
 	}
 public:
 	void Set_SurfaceTension(double tension_=0){tension=tension_;};
 	double Get_SurfaceTension() const{return tension;};
+	void Set_NormalDensityOutput(bool NormalDensityOutput_=0){NormalDensityOutput=NormalDensityOutput_;};
+	bool Get_NormalDensityOutput() const{return NormalDensityOutput;};
 protected:
+	bool NormalDensityOutput;
 	double tension;
 };
 class MeshParameters {
@@ -251,7 +265,12 @@ private:
 	void serialize(Archive &ar, const unsigned int version)
 	{
 		ar & BOOST_SERIALIZATION_NVP(scheme)
+		   & BOOST_SERIALIZATION_NVP(model)
+		   & BOOST_SERIALIZATION_NVP(fluid)
+		   & BOOST_SERIALIZATION_NVP(Gradient)
+		   & BOOST_SERIALIZATION_NVP(UserForce)
 		   & BOOST_SERIALIZATION_NVP(NbVelocities);
+
 
 	}
 
@@ -261,13 +280,24 @@ public:
 	schemetype Get_Scheme() const;
 	void Set_Model(modeltype model_);
 	modeltype Get_Model() const;
+	void Set_FluidType(FluidType fluidtype_){fluid=fluidtype_;};
+	FluidType Get_FluidType() const{return fluid;};
+	void Set_UserForceType(UserForceType UserForceType_){UserForce=UserForceType_;};
+	UserForceType Get_UserForceType() const{return UserForce;};
+	void Set_GradientType(GradientType GradientType_){Gradient=GradientType_;};
+	GradientType Get_GradientType() const{return Gradient;};
 	int Get_NbVelocities() const;
 
 
 protected:
 	schemetype scheme;
 	modeltype model;
+	FluidType fluid;
+	GradientType Gradient;
+	UserForceType UserForce;
 	int NbVelocities;
+
+
 
 };
 

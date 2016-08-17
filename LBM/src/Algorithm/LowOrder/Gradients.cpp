@@ -10,67 +10,58 @@ Gradients::Gradients(){
 	grad=0;
 	Type=FD;
 	dimension=0;
+	nb_Vel=0;
 }
-Gradients::Gradients(int dimension_){
+void Gradients::initGradients(int dimension_, int nb_vel,GradientType Type_){
 	Type=FD;
 	dimension=dimension_;
-	grad=new GradientsFD(dimension);
+	nb_Vel=nb_vel;
+	SelectGradientType(Type_);
 }
 Gradients::~Gradients(){
 	delete grad;
 }
 void Gradients::SelectGradientType(GradientType Type_){
-	if(Type_!=Type)
-	{
+//	if(Type_!=Type)
+//	{
 		delete grad;
 		Type=Type_;
 	// Add new gradient type here
 		switch(Type)
 		{
 		case FD:
-			grad=new GradientsFD(dimension);
+			grad=new GradientsFD(dimension, nb_Vel);
 			break;
+		case LBMStencil:
+			grad=new GradientsLBMStencil(dimension, nb_Vel);
+			break;
+		default:
+			std::cerr<<" Gradient type not found"<<std::endl;
 		}
-	}
+//	}
 }
 
 //Scalar gradients
-double* Gradients::Grad (double *Var, NodeInterior2D& Node){
-	return grad->Grad(Var,Node);
+void Gradients::Grad (double* grad_, double *Var, int * Connect, int & normal){
+	grad->Grad(grad_,Var,Connect,normal);
 }
-double* Gradients::Grad (double *Var, NodeWall2D& Node){
-	return grad->Grad(Var,Node);
+void Gradients::GradBc (double* grad_, double *Var, int * Connect, int & normal){
+	grad->GradBc(grad_,Var,Connect,normal);
 }
-double* Gradients::Grad (double *Var, NodeCorner2D& Node){
-	return grad->Grad(Var,Node);
+void Gradients::GradCorner (double* grad_, double *Var, int * Connect, int & normal){
+	grad->GradCorner(grad_,Var,Connect,normal);
 }
-double* Gradients::Grad (double *Var, NodeVelocity2D& Node){
-	return grad->Grad(Var,Node);
-}
-double* Gradients::Grad (double *Var, NodePressure2D& Node){
-	return grad->Grad(Var,Node);
-}
-double* Gradients::Grad (double *Var, NodeSymmetry2D& Node){
-	return grad->Grad(Var,Node);
-}
+
 //Vector gradients
-double** Gradients::Grad (double *Var_x, double *Var_y, NodeInterior2D& Node){
-	return grad->Grad(Var_x,Var_y,Node);
+void Gradients::Grad (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal){
+	grad->Grad(grad_,Var_x,Var_y,Connect,normal);
 }
-double** Gradients::Grad (double *Var_x, double *Var_y, NodeWall2D& Node){
-	return grad->Grad(Var_x,Var_y,Node);
+void Gradients::GradBc (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal){
+	grad->GradBc(grad_,Var_x,Var_y,Connect,normal);
 }
-double** Gradients::Grad (double *Var_x, double *Var_y, NodeCorner2D& Node){
-	return grad->Grad(Var_x,Var_y,Node);
+void Gradients::GradCorner (double** grad_, double *Var_x, double *Var_y, int * Connect, int & normal){
+	grad->GradCorner(grad_,Var_x,Var_y,Connect,normal);
 }
-double** Gradients::Grad (double *Var_x, double *Var_y, NodeVelocity2D& Node){
-	return grad->Grad(Var_x,Var_y,Node);
-}
-double** Gradients::Grad (double *Var_x, double *Var_y, NodePressure2D& Node){
-	return grad->Grad(Var_x,Var_y,Node);
-}
-double** Gradients::Grad (double *Var_x, double *Var_y, NodeSymmetry2D& Node){
-	return grad->Grad(Var_x,Var_y,Node);
-}
+
 
 

@@ -30,7 +30,8 @@ public:
 	virtual ~InitLBM();
 	void Set_Parameters(Parameters *Parameters_);
 	void IniMPI(ParallelManager* parallel_,int *argc, char ***argv, bool verbous_=false);
-	void IniDomain(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U,double alpha=1);
+	void IniDomainSinglePhase(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U);
+	void IniDomainTwoPhases(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U,double & alpha);
 
 
 private:

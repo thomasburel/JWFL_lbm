@@ -28,10 +28,11 @@ public:
 
 protected:
 	/// Call for initialise boundary conditions
-	void UserBc(UserParameters& PtrUserParameters,int elem, int nodenumber, double* pos,double& Rho, double* U,double& alpha);
+//	void UserBc(UserParameters& PtrUserParameters,int elem, int nodenumber, double* pos,double& Rho, double* U,double& alpha);
+	void UserBc(Parameters& PtrParameters,int elem, int nodenumber, double* pos,double& Rho, double* U,double& alpha);
 	/// Call for initialise internal conditions
-	void UserIc (UserParameters& PtrUserParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U,double& alpha);
-
+//	void UserIc (UserParameters& PtrUserParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U,double& alpha);
+	void UserIc (Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U,double& alpha);
 
 
 private:

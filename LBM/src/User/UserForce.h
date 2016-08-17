@@ -13,8 +13,8 @@ public:
 	UserForce();
 	virtual ~UserForce();
 protected:
-	double LocalForce(int & direction, double & Rho, double & U, double & V, double & W);
-	double BodyForce(double & Rho, double * U);
+	double LocalForce(int const direction, double const Rho, double const U, double const V, double const W=0);
+	double BodyForce(int const direction_xyz, double const Rho, double const U, double const  V, double const W=0);
 };
 
 #endif /* USER_USERFORCE_H_ */

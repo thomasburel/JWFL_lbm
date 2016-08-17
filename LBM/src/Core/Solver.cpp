@@ -95,6 +95,9 @@ void SolverTwoPhases::set_f_name(){
 		delete f_name;
 	f_name=new std::string[2*nbvelo+3];
 	f_name[0]="Rho";
+/*	f_name[1]="RhoN";
+	f_name[2]="RhoRed";
+	f_name[3]="RhoBlue";*/
 	f_name[1]="VelocityX";
 	f_name[2]="VelocityY";
 	for (int i=3;i<2*nbvelo+3;i++)
@@ -144,6 +147,7 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 	//InvTau=1.0/PtrParameters->Get_Tau();
 	nbvelo=PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
+//	Gradients::initGradients(2,nbvelo,PtrParameters->Get_GradientType());
 	Set_Solution();
 	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()];
 	PtrVariablesBreakpoint=new double* [nbvelo+3];
@@ -158,7 +162,7 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 }
 SolverTwoPhasesLowOrder2D::SolverTwoPhasesLowOrder2D() {
 	PtrParameters=0;
-	Gradients(2);
+
 
 }
 
@@ -182,16 +186,41 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	//InvTau=1.0/PtrParameters->Get_Tau();
 	nbvelo=PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
+	Gradients::initGradients(2,nbvelo,PtrParameters->Get_GradientType());
 	Set_Solution();
-	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()];
+	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()+7];
 	PtrVariablesBreakpoint=new double* [2*nbvelo+3];
-	Solution2D::Set_output(PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
+	std::string* TmpPtrVarOut=new std::string [PtrParameters->Get_NbVariablesOutput()+7];
+	for(int i=0;i<PtrParameters->Get_NbVariablesOutput();i++)
+		TmpPtrVarOut[i]=PtrParameters->Get_PtrVariablesOutput()[i];
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()]="RhoN";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+1]="RhoRed";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+2]="RhoBlue";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+3]="ColourGradX";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+4]="ColourGradY";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+5]="InterfaceForceX";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+6]="InterfaceForceY";
+	Rhor=new double [nbnodes_total];
+	Rhob=new double [nbnodes_total];
+	RhoN=new double [nbnodes_total];
+	V1=new double* [2];
+	V1[0]=new double [nbnodes_total];
+	V1[1]=new double [nbnodes_total];
+
+	V2=new double* [2];
+	V2[0]=new double [nbnodes_total];
+	V2[1]=new double [nbnodes_total];
+
+	Solution2D::Set_output(TmpPtrVarOut,PtrParameters->Get_NbVariablesOutput()+7);
+//	Solution2D::Set_output(PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
 	SolverTwoPhases::set_f_name();///save name of variables (distribution function and macroscopic variables)
 	SolverTwoPhases::set_f_ini();///save pointers of the distribution function
 	///Set the variables names and the variable pointers for breakpoints in solution (the set of solution and writer are separated due to macroscopic variables are not set in the same class)
 	Solution2D::Set_breakpoint(get_f_name(),2*nbvelo+3,get_f_ini()); //add macroscopic variables to save it
 ///Set the variables names and the variable pointers for breakpoints in writer
 	Writer->Set_breakpoint(PtrVariablesBreakpoint, get_f_name(),  2*nbvelo+3);
+	Writer->Set_solution(PtrVariablesOutput,TmpPtrVarOut,PtrParameters->Get_NbVariablesOutput()+7);
+//	Writer->Set_solution(PtrVariablesOutput,PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
 
 }
 

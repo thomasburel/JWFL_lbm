@@ -35,6 +35,8 @@ protected:
 	//double InvTau;
 	int nbvelo;
 	int nbnode;
+//	double **Ei;//Ei[dimension][nb_velocity]
+//	double *omega;//omega[nb_velocity]
 private:
 	friend class boost::serialization::access;
     template<class Archive>
@@ -115,7 +117,7 @@ private:
        ar & boost::serialization::base_object<CollideLowOrder>(*this);
     }
 };
-class SolverTwoPhasesLowOrder: public SolverTwoPhases, public StreamLowOrder {
+class SolverTwoPhasesLowOrder: public SolverTwoPhases, public StreamLowOrder, public CollideLowOrder {
 public:
 	SolverTwoPhasesLowOrder();
 	virtual ~SolverTwoPhasesLowOrder();

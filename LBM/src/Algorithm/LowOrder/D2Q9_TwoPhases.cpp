@@ -131,7 +131,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeInterior[j].get_x();
 		pos[1]=NodeArrays->NodeInterior[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeInterior[j],0, NodeArrays->NodeInterior[j].Get_index(),pos,Rho[NodeArrays->NodeInterior[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeInterior[j],0, NodeArrays->NodeInterior[j].Get_index(),pos,Rho[NodeArrays->NodeInterior[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeInterior[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeInterior[j].Get_index()]=U_[1];
 	}
@@ -139,7 +139,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeCorner[j].get_x();
 		pos[1]=NodeArrays->NodeCorner[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeCorner[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeCorner[j].Get_index()]=U_[1];
 	}
@@ -147,7 +147,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
 		pos[1]=NodeArrays->NodeGlobalCorner[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, NodeArrays->NodeGlobalCorner[j].Get_index(),pos,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, NodeArrays->NodeGlobalCorner[j].Get_index(),pos,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeGlobalCorner[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeGlobalCorner[j].Get_index()]=U_[1];
 		NodeArrays->NodeGlobalCorner[j].Set_UDef(U_[0],U_[1]);
@@ -158,7 +158,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeVelocity[j].get_x();
 		pos[1]=NodeArrays->NodeVelocity[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeVelocity[j],0, NodeArrays->NodeVelocity[j].Get_index(),pos,Rho[NodeArrays->NodeVelocity[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeVelocity[j],0, NodeArrays->NodeVelocity[j].Get_index(),pos,Rho[NodeArrays->NodeVelocity[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeVelocity[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeVelocity[j].Get_index()]=U_[1];
 		NodeArrays->NodeVelocity[j].Set_UDef(U_[0],U_[1]);
@@ -168,7 +168,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodePressure[j].get_x();
 		pos[1]=NodeArrays->NodePressure[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodePressure[j],0, NodeArrays->NodePressure[j].Get_index(),pos,Rho[NodeArrays->NodePressure[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodePressure[j],0, NodeArrays->NodePressure[j].Get_index(),pos,Rho[NodeArrays->NodePressure[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodePressure[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodePressure[j].Get_index()]=U_[1];
 		NodeArrays->NodePressure[j].Set_RhoDef(Rho[NodeArrays->NodePressure[j].Get_index()]);
@@ -178,7 +178,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeWall[j].get_x();
 		pos[1]=NodeArrays->NodeWall[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeWall[j],0, NodeArrays->NodeWall[j].Get_index(),pos,Rho[NodeArrays->NodeWall[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeWall[j],0, NodeArrays->NodeWall[j].Get_index(),pos,Rho[NodeArrays->NodeWall[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeWall[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeWall[j].Get_index()]=U_[1];
 	}
@@ -186,7 +186,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
 		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, NodeArrays->NodeSpecialWall[j].Get_index(),pos,Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, NodeArrays->NodeSpecialWall[j].Get_index(),pos,Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeSpecialWall[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSpecialWall[j].Get_index()]=U_[1];
 	}
@@ -194,7 +194,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
 		pos[1]=NodeArrays->NodeSymmetry[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, NodeArrays->NodeSymmetry[j].Get_index(),pos,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, NodeArrays->NodeSymmetry[j].Get_index(),pos,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeSymmetry[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSymmetry[j].Get_index()]=U_[1];
 	}
@@ -202,7 +202,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeGhost[j].get_x();
 		pos[1]=NodeArrays->NodeGhost[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeGhost[j],0, NodeArrays->NodeGhost[j].Get_index(),pos,Rho[NodeArrays->NodeGhost[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeGhost[j],0, NodeArrays->NodeGhost[j].Get_index(),pos,Rho[NodeArrays->NodeGhost[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeGhost[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeGhost[j].Get_index()]=U_[1];
 	}
@@ -210,7 +210,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 	{
 		pos[0]=NodeArrays->NodeSolid[j].get_x();
 		pos[1]=NodeArrays->NodeSolid[j].get_y();
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeSolid[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSolid[j].Get_index()]=U_[1];
 	}
@@ -224,7 +224,7 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 
 	delete [] pos;
 	delete [] U_;
-	Writer->Set_solution(PtrVariablesOutput,PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
+//	Writer->Set_solution(PtrVariablesOutput,PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
 	parallel->barrier();
 
 }
@@ -1130,7 +1130,7 @@ void D2Q9TwoPhases::IniComVariables(){
 	size_buf[2]=IdNodeS.size();
 	size_buf[3]=IdNodeN.size();
 // Macro sync
-	Nd_MacroVariables_sync=3;
+	Nd_MacroVariables_sync=6;
 	buf_MacroSend=new double** [Nd_MacroVariables_sync];
 	buf_MacroRecv=new double** [Nd_MacroVariables_sync];
 	for (int i=0;i<Nd_MacroVariables_sync;i++)
@@ -1562,22 +1562,38 @@ void D2Q9TwoPhases::SyncMacroVarToGhost(){
 	for (unsigned int i=0;i<IdRNodeW.size();i++)
 	{
 		buf_MacroSend[0][1][i]=Rho[IdRNodeW[i]];
-//		buf_MacroSend[1][1][i]=U[0][IdRNodeW[i]];
-//		buf_MacroSend[2][1][i]=U[0][IdRNodeW[i]];
+		buf_MacroSend[1][1][i]=Rhor[IdRNodeW[i]];
+		buf_MacroSend[2][1][i]=Rhob[IdRNodeW[i]];
+		buf_MacroSend[3][1][i]=RhoN[IdRNodeW[i]];
+		buf_MacroSend[4][1][i]=V1[0][IdRNodeW[i]];
+		buf_MacroSend[5][1][i]=V1[1][IdRNodeW[i]];
 	}
 	for (unsigned int i=0;i<IdRNodeS.size();i++)
 	{
 		buf_MacroSend[0][2][i]=Rho[IdRNodeS[i]];
-//		buf_MacroSend[1][2][i]=U[0][IdRNodeS[i]];
-//		buf_MacroSend[2][2][i]=U[1][IdRNodeS[i]];
+		buf_MacroSend[1][2][i]=Rhor[IdRNodeS[i]];
+		buf_MacroSend[2][2][i]=Rhob[IdRNodeS[i]];
+		buf_MacroSend[3][2][i]=RhoN[IdRNodeS[i]];
+		buf_MacroSend[4][2][i]=V1[0][IdRNodeS[i]];
+		buf_MacroSend[5][2][i]=V1[1][IdRNodeS[i]];
 	}
 	for (unsigned int i=0;i<IdRNodeE.size();i++)
 	{
 		buf_MacroSend[0][0][i]=Rho[IdRNodeE[i]];
+		buf_MacroSend[1][0][i]=Rhor[IdRNodeE[i]];
+		buf_MacroSend[2][0][i]=Rhob[IdRNodeE[i]];
+		buf_MacroSend[3][0][i]=RhoN[IdRNodeE[i]];
+		buf_MacroSend[4][0][i]=V1[0][IdRNodeE[i]];
+		buf_MacroSend[5][0][i]=V1[1][IdRNodeE[i]];
 	}
 	for (unsigned int i=0;i<IdRNodeN.size();i++)
 	{
 		buf_MacroSend[0][3][i]=Rho[IdRNodeN[i]];
+		buf_MacroSend[1][3][i]=Rhor[IdRNodeN[i]];
+		buf_MacroSend[2][3][i]=Rhob[IdRNodeN[i]];
+		buf_MacroSend[3][3][i]=RhoN[IdRNodeN[i]];
+		buf_MacroSend[4][3][i]=V1[0][IdRNodeN[i]];
+		buf_MacroSend[5][3][i]=V1[1][IdRNodeN[i]];
 	}
 //		MultiBlock_->Communication(buf_MacroSend[0],buf_MacroRecv[0],size_MacroBuf);
 	int tag_x_r=1;
@@ -1588,68 +1604,189 @@ void D2Q9TwoPhases::SyncMacroVarToGhost(){
 	if(IdRNodeE.size()>=1)
 	{
 		MultiBlock_->Send(&buf_MacroSend[0][0][0],IdRNodeE.size(),1,tag_x_r);
-		//MultiBlock_->Send(&buf_MacroSend[1][0][0],IdRNodeE.size(),1,tag_x_r);
-		//MultiBlock_->Send(&buf_MacroSend[2][0][0],IdRNodeE.size(),1,tag_x_r);
+		MultiBlock_->Send(&buf_MacroSend[1][0][0],IdRNodeE.size(),1,tag_x_r);
+		MultiBlock_->Send(&buf_MacroSend[2][0][0],IdRNodeE.size(),1,tag_x_r);
+		MultiBlock_->Send(&buf_MacroSend[3][0][0],IdRNodeE.size(),1,tag_x_r);
+		MultiBlock_->Send(&buf_MacroSend[4][0][0],IdRNodeE.size(),1,tag_x_r);
+		MultiBlock_->Send(&buf_MacroSend[5][0][0],IdRNodeE.size(),1,tag_x_r);
 	}
 	if(IdGNodeW.size()>=1)
 	{
 		MultiBlock_->Recv(&buf_MacroRecv[0][0][0],IdGNodeW.size(),3,tag_x_r,status);
-	//	MultiBlock_->Recv(&buf_MacroRecv[1][0][0],IdGNodeW.size(),3,tag_x_r,status);
-	//	MultiBlock_->Recv(&buf_MacroRecv[2][0][0],IdGNodeW.size(),3,tag_x_r,status);
+		MultiBlock_->Recv(&buf_MacroRecv[1][0][0],IdGNodeW.size(),3,tag_x_r,status);
+		MultiBlock_->Recv(&buf_MacroRecv[2][0][0],IdGNodeW.size(),3,tag_x_r,status);
+		MultiBlock_->Recv(&buf_MacroRecv[3][0][0],IdGNodeW.size(),3,tag_x_r,status);
+		MultiBlock_->Recv(&buf_MacroRecv[4][0][0],IdGNodeW.size(),3,tag_x_r,status);
+		MultiBlock_->Recv(&buf_MacroRecv[5][0][0],IdGNodeW.size(),3,tag_x_r,status);
 	}
 
 	if(IdRNodeW.size()>=1)
 	{
 		MultiBlock_->Send(&buf_MacroSend[0][1][0],IdRNodeW.size(),3,tag_x_l);
-	//	MultiBlock_->Send(&buf_MacroSend[1][1][0],IdRNodeW.size(),3,tag_x_l);
-	//	MultiBlock_->Send(&buf_MacroSend[2][1][0],IdRNodeW.size(),3,tag_x_l);
+		MultiBlock_->Send(&buf_MacroSend[1][1][0],IdRNodeW.size(),3,tag_x_l);
+		MultiBlock_->Send(&buf_MacroSend[2][1][0],IdRNodeW.size(),3,tag_x_l);
+		MultiBlock_->Send(&buf_MacroSend[3][1][0],IdRNodeW.size(),3,tag_x_l);
+		MultiBlock_->Send(&buf_MacroSend[4][1][0],IdRNodeW.size(),3,tag_x_l);
+		MultiBlock_->Send(&buf_MacroSend[5][1][0],IdRNodeW.size(),3,tag_x_l);
 	}
 	if(IdGNodeE.size()>=1)
 	{
 		MultiBlock_->Recv(&buf_MacroRecv[0][1][0],IdGNodeE.size(),1,tag_x_l,status);
-	//	MultiBlock_->Recv(&buf_MacroRecv[1][1][0],IdGNodeE.size(),1,tag_x_l,status);
-	//	MultiBlock_->Recv(&buf_MacroRecv[2][1][0],IdGNodeE.size(),1,tag_x_l,status);
+		MultiBlock_->Recv(&buf_MacroRecv[1][1][0],IdGNodeE.size(),1,tag_x_l,status);
+		MultiBlock_->Recv(&buf_MacroRecv[2][1][0],IdGNodeE.size(),1,tag_x_l,status);
+		MultiBlock_->Recv(&buf_MacroRecv[3][1][0],IdGNodeE.size(),1,tag_x_l,status);
+		MultiBlock_->Recv(&buf_MacroRecv[4][1][0],IdGNodeE.size(),1,tag_x_l,status);
+		MultiBlock_->Recv(&buf_MacroRecv[5][1][0],IdGNodeE.size(),1,tag_x_l,status);
 	}
 		if(IdRNodeN.size()>=1)
 	{
 		MultiBlock_->Send(&buf_MacroSend[0][3][0],IdRNodeN.size(),0,tag_y_t);
-	//	MultiBlock_->Send(&buf_MacroSend[1][3][0],IdRNodeN.size(),0,tag_y_t);
-	//	MultiBlock_->Send(&buf_MacroSend[2][3][0],IdRNodeN.size(),0,tag_y_t);
+		MultiBlock_->Send(&buf_MacroSend[1][3][0],IdRNodeN.size(),0,tag_y_t);
+		MultiBlock_->Send(&buf_MacroSend[2][3][0],IdRNodeN.size(),0,tag_y_t);
+		MultiBlock_->Send(&buf_MacroSend[3][3][0],IdRNodeN.size(),0,tag_y_t);
+		MultiBlock_->Send(&buf_MacroSend[4][3][0],IdRNodeN.size(),0,tag_y_t);
+		MultiBlock_->Send(&buf_MacroSend[5][3][0],IdRNodeN.size(),0,tag_y_t);
 	}
 	if(IdGNodeS.size()>=1)
 	{
 		MultiBlock_->Recv(&buf_MacroRecv[0][3][0],IdGNodeS.size(),2,tag_y_t,status);
-	//	MultiBlock_->Recv(&buf_MacroRecv[1][3][0],IdGNodeS.size(),2,tag_y_t,status);
-	//	MultiBlock_->Recv(&buf_MacroRecv[2][3][0],IdGNodeS.size(),2,tag_y_t,status);
+		MultiBlock_->Recv(&buf_MacroRecv[1][3][0],IdGNodeS.size(),2,tag_y_t,status);
+		MultiBlock_->Recv(&buf_MacroRecv[2][3][0],IdGNodeS.size(),2,tag_y_t,status);
+		MultiBlock_->Recv(&buf_MacroRecv[3][3][0],IdGNodeS.size(),2,tag_y_t,status);
+		MultiBlock_->Recv(&buf_MacroRecv[4][3][0],IdGNodeS.size(),2,tag_y_t,status);
+		MultiBlock_->Recv(&buf_MacroRecv[5][3][0],IdGNodeS.size(),2,tag_y_t,status);
 	}
 	if(IdRNodeS.size()>=1)
 	{
 		MultiBlock_->Send(&buf_MacroSend[0][2][0],IdRNodeS.size(),2,tag_y_b);
-	//	MultiBlock_->Send(&buf_MacroSend[1][2][0],IdRNodeS.size(),2,tag_y_b);
-	//	MultiBlock_->Send(&buf_MacroSend[2][2][0],IdRNodeS.size(),2,tag_y_b);
+		MultiBlock_->Send(&buf_MacroSend[1][2][0],IdRNodeS.size(),2,tag_y_b);
+		MultiBlock_->Send(&buf_MacroSend[2][2][0],IdRNodeS.size(),2,tag_y_b);
+		MultiBlock_->Send(&buf_MacroSend[3][2][0],IdRNodeS.size(),2,tag_y_b);
+		MultiBlock_->Send(&buf_MacroSend[4][2][0],IdRNodeS.size(),2,tag_y_b);
+		MultiBlock_->Send(&buf_MacroSend[5][2][0],IdRNodeS.size(),2,tag_y_b);
 	}
 	if(IdGNodeN.size()>=1)
 	{
 		MultiBlock_->Recv(&buf_MacroRecv[0][2][0],IdGNodeN.size(),0,tag_y_b,status);
-	//	MultiBlock_->Recv(&buf_MacroRecv[1][2][0],IdGNodeN.size(),0,tag_y_b,status);
-	//	MultiBlock_->Recv(&buf_MacroRecv[2][2][0],IdGNodeN.size(),0,tag_y_b,status);
+		MultiBlock_->Recv(&buf_MacroRecv[1][2][0],IdGNodeN.size(),0,tag_y_b,status);
+		MultiBlock_->Recv(&buf_MacroRecv[2][2][0],IdGNodeN.size(),0,tag_y_b,status);
+		MultiBlock_->Recv(&buf_MacroRecv[3][2][0],IdGNodeN.size(),0,tag_y_b,status);
+		MultiBlock_->Recv(&buf_MacroRecv[4][2][0],IdGNodeN.size(),0,tag_y_b,status);
+		MultiBlock_->Recv(&buf_MacroRecv[5][2][0],IdGNodeN.size(),0,tag_y_b,status);
 	}
 	for (unsigned int i=0;i<IdGNodeE.size();i++)
 	{
 		Rho[IdGNodeE[i]]=buf_MacroRecv[0][1][i];
+		Rhor[IdGNodeE[i]]=buf_MacroRecv[1][1][i];
+		Rhob[IdGNodeE[i]]=buf_MacroRecv[2][1][i];
+		RhoN[IdGNodeE[i]]=buf_MacroRecv[3][1][i];
+		V1[0][IdGNodeE[i]]=buf_MacroRecv[4][1][i];
+		V1[1][IdGNodeE[i]]=buf_MacroRecv[5][1][i];
 	}
 	for (unsigned int i=0;i<IdGNodeN.size();i++)
 	{
 		Rho[IdGNodeN[i]]=buf_MacroRecv[0][2][i];
+		Rhor[IdGNodeN[i]]=buf_MacroRecv[1][2][i];
+		Rhob[IdGNodeN[i]]=buf_MacroRecv[2][2][i];
+		RhoN[IdGNodeN[i]]=buf_MacroRecv[3][2][i];
+		V1[0][IdGNodeN[i]]=buf_MacroRecv[4][2][i];
+		V1[1][IdGNodeN[i]]=buf_MacroRecv[5][2][i];
 	}
 	for (unsigned int i=0;i<IdGNodeW.size();i++)
 	{
 		Rho[IdGNodeW[i]]=buf_MacroRecv[0][0][i];
+		Rhor[IdGNodeW[i]]=buf_MacroRecv[1][0][i];
+		Rhob[IdGNodeW[i]]=buf_MacroRecv[2][0][i];
+		RhoN[IdGNodeW[i]]=buf_MacroRecv[3][0][i];
+		V1[0][IdGNodeW[i]]=buf_MacroRecv[4][0][i];
+		V1[1][IdGNodeW[i]]=buf_MacroRecv[5][0][i];
 	}
 
 	for (unsigned int i=0;i<IdGNodeS.size();i++)
 	{
 		Rho[IdGNodeS[i]]=buf_MacroRecv[0][3][i];
+		Rhor[IdGNodeS[i]]=buf_MacroRecv[1][3][i];
+		Rhob[IdGNodeS[i]]=buf_MacroRecv[2][3][i];
+		RhoN[IdGNodeS[i]]=buf_MacroRecv[3][3][i];
+		V1[0][IdGNodeS[i]]=buf_MacroRecv[4][3][i];
+		V1[1][IdGNodeS[i]]=buf_MacroRecv[5][3][i];
+	}
+
+	 int tag_d_bl=3;
+	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;
+//	MPI_Status status;
+
+	if(IdRNodeSE.size()>=1)
+	{
+		MultiBlock_->Send(&Rho[IdRNodeSE[0]],1,5,tag_x_l);
+		MultiBlock_->Send(&Rhor[IdRNodeSE[0]],1,5,tag_x_l);
+		MultiBlock_->Send(&Rhob[IdRNodeSE[0]],1,5,tag_x_l);
+		MultiBlock_->Send(&RhoN[IdRNodeSE[0]],1,5,tag_x_l);
+		MultiBlock_->Send(&V1[0][IdRNodeSE[0]],1,5,tag_x_l);
+		MultiBlock_->Send(&V1[1][IdRNodeSE[0]],1,5,tag_x_l);
+	}
+	if(IdGNodeNW.size()>=1)
+	{
+		MultiBlock_->Recv(&Rho[IdGNodeNW[0]],1,6,tag_x_l,status);
+		MultiBlock_->Recv(&Rhor[IdGNodeNW[0]],1,6,tag_x_l,status);
+		MultiBlock_->Recv(&Rhob[IdGNodeNW[0]],1,6,tag_x_l,status);
+		MultiBlock_->Recv(&RhoN[IdGNodeNW[0]],1,6,tag_x_l,status);
+		MultiBlock_->Recv(&V1[0][IdGNodeNW[0]],1,6,tag_x_l,status);
+		MultiBlock_->Recv(&V1[1][IdGNodeNW[0]],1,6,tag_x_l,status);
+	}
+	if(IdRNodeSW.size()>=1)
+	{
+		MultiBlock_->Send(&Rho[IdRNodeSW[0]],1,7,tag_x_l);
+		MultiBlock_->Send(&Rhor[IdRNodeSW[0]],1,7,tag_x_l);
+		MultiBlock_->Send(&Rhob[IdRNodeSW[0]],1,7,tag_x_l);
+		MultiBlock_->Send(&RhoN[IdRNodeSW[0]],1,7,tag_x_l);
+		MultiBlock_->Send(&V1[0][IdRNodeSW[0]],1,7,tag_x_l);
+		MultiBlock_->Send(&V1[1][IdRNodeSW[0]],1,7,tag_x_l);
+	}
+	if(IdGNodeNE.size()>=1)
+	{
+		MultiBlock_->Recv(&Rho[IdGNodeNE[0]],1,4,tag_x_l,status);
+		MultiBlock_->Recv(&Rhor[IdGNodeNE[0]],1,4,tag_x_l,status);
+		MultiBlock_->Recv(&Rhob[IdGNodeNE[0]],1,4,tag_x_l,status);
+		MultiBlock_->Recv(&RhoN[IdGNodeNE[0]],1,4,tag_x_l,status);
+		MultiBlock_->Recv(&V1[0][IdGNodeNE[0]],1,4,tag_x_l,status);
+		MultiBlock_->Recv(&V1[1][IdGNodeNE[0]],1,4,tag_x_l,status);
+	}
+	if(IdRNodeNE.size()>=1)
+	{
+		MultiBlock_->Send(&Rho[IdRNodeNE[0]],1,4,tag_x_l);
+		MultiBlock_->Send(&Rhor[IdRNodeNE[0]],1,4,tag_x_l);
+		MultiBlock_->Send(&Rhob[IdRNodeNE[0]],1,4,tag_x_l);
+		MultiBlock_->Send(&RhoN[IdRNodeNE[0]],1,4,tag_x_l);
+		MultiBlock_->Send(&V1[0][IdRNodeNE[0]],1,4,tag_x_l);
+		MultiBlock_->Send(&V1[1][IdRNodeNE[0]],1,4,tag_x_l);
+	}
+	if(IdGNodeSW.size()>=1)
+	{
+		MultiBlock_->Recv(&Rho[IdGNodeSW[0]],1,7,tag_x_l,status);
+		MultiBlock_->Recv(&Rhor[IdGNodeSW[0]],1,7,tag_x_l,status);
+		MultiBlock_->Recv(&Rhob[IdGNodeSW[0]],1,7,tag_x_l,status);
+		MultiBlock_->Recv(&RhoN[IdGNodeSW[0]],1,7,tag_x_l,status);
+		MultiBlock_->Recv(&V1[0][IdGNodeSW[0]],1,7,tag_x_l,status);
+		MultiBlock_->Recv(&V1[1][IdGNodeSW[0]],1,7,tag_x_l,status);
+	}
+	if(IdRNodeNW.size()>=1)
+	{
+		MultiBlock_->Send(&Rho[IdRNodeNW[0]],1,6,tag_d_bl);
+		MultiBlock_->Send(&Rhor[IdRNodeNW[0]],1,6,tag_d_bl);
+		MultiBlock_->Send(&Rhob[IdRNodeNW[0]],1,6,tag_d_bl);
+		MultiBlock_->Send(&RhoN[IdRNodeNW[0]],1,6,tag_d_bl);
+		MultiBlock_->Send(&V1[0][IdRNodeNW[0]],1,6,tag_d_bl);
+		MultiBlock_->Send(&V1[1][IdRNodeNW[0]],1,6,tag_d_bl);
+	}
+	if(IdGNodeSE.size()>=1)
+	{
+		MultiBlock_->Recv(&Rho[IdGNodeSE[0]],1,5,tag_d_bl,status);
+		MultiBlock_->Recv(&Rhor[IdGNodeSE[0]],1,5,tag_d_bl,status);
+		MultiBlock_->Recv(&Rhob[IdGNodeSE[0]],1,5,tag_d_bl,status);
+		MultiBlock_->Recv(&RhoN[IdGNodeSE[0]],1,5,tag_d_bl,status);
+		MultiBlock_->Recv(&V1[0][IdGNodeSE[0]],1,5,tag_d_bl,status);
+		MultiBlock_->Recv(&V1[1][IdGNodeSE[0]],1,5,tag_d_bl,status);
 	}
 /*	 int tag_x_l=1;
 	 int tag_y_b=2;
