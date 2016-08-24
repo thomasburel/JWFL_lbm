@@ -70,20 +70,71 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 		Rho=Pmin;*/
 
 //*********** Poiseuille ini***************
-
-/*	if(pos[1]>0.1&&pos[1]<H-0.1)
-		U[0]=Umax;
+//Left side of the domain
+/*	if(pos[0]<=0)
+	// Global Corner at the bottom left side
+ 		if(pos[1]<=0)
+  		{
+  			U[0]=0;
+  			U[1]=0;
+  			Rho=Pmax;
+  		}
+  		else
+ 	// Global Corner at the Top left side
+ 		if(pos[1]>=H)
+  		{
+  			U[0]=0;
+  			U[1]=0;
+  			Rho=Pmax;
+  		}
+  	//Left side of the domain and excluding the two Global Corners
+  		else
+  		{
+   			U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));;
+  			U[1]=0;
+  			Rho=Pmax;
+ 		}
 	else
-		U[0]=0;
-	if(pos[1]>3 && pos[1]<6 && pos[0]>3 && pos[0]<6)
-	{
-		U[0]=0;
-	}*/
-
-	/*U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));///pos[0];;
-
-	U[1]=0.0;
-	Rho=Pmax-pos[0]*(Pmax-Pmin)/L;*/
+//Right side of the domain
+ 	if(pos[0]>=L)
+	// Global Corner at the bottom right side
+  		if(pos[1]<=0)
+  		{
+  			U[0]=0;
+  			U[1]=0;
+  			Rho=Pmin;
+  		}
+  		else
+  	// Global Corner at the Top right side
+  		if(pos[1]>=H)
+  		{
+  			U[0]=0;
+  			U[1]=0;
+  			Rho=Pmin;
+  		}
+  	//Right side of the domain and excluding the two Global Corner
+  		else
+  		{
+    		U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));;
+  			U[1]=0;
+  			Rho=Pmin;
+  		}
+  	else
+//Bottom side of the domain
+ 	if(pos[1]<=0)
+  	{
+  		U[0]=0;
+  		U[1]=0;
+  		Rho=Pmax-pos[0]*(Pmax-Pmin)/L
+  	}
+	//Top side of the domain
+  	else
+  	{
+  		U[0]=0;
+  		U[1]=0;
+  		Rho=Pmax-pos[0]*(Pmax-Pmin)/L
+  	}
+*/
 
 //*********** Driven Cavity***************
 /*	if(pos[1]>0.1 )
@@ -107,10 +158,12 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 	U[1]=0.0;
 	//Rho=(Pmax+Pmin)/2.0;
 	Rho=Pmin;
-	if((pos[0]>=L/2-4&&pos[0]<=L/2+4)&&(pos[1]>=H/2-4&&pos[1]<=H/2+4))
+	int dx=15;
+	if((pos[0]>=L/2-dx&&pos[0]<=L/2+dx)&&(pos[1]>=H/2-dx&&pos[1]<=H/2+dx))
 	{
 		alpha=1;
 		Rho=PtrParameters.Get_Rho_1();
+//		std::cout<<" Node number fluid 1 are: "<<nodenumber<<" x: "<<pos[0]<<" y: "<<pos[1]<<std::endl;
 	}
 	else
 	{
@@ -118,6 +171,7 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 		Rho=PtrParameters.Get_Rho_2();
 	}
 
+//	Rho=PtrParameters.Get_Rho_2();
 //	Rho=1;
 	//Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
 

@@ -14,7 +14,7 @@
 #include <iostream>
 #include <cmath>
 
-class D2Q9TwoPhases: public SolverTwoPhasesLowOrder2D, public Boundaries, public CollideD2Q9Colour {
+class D2Q9TwoPhases: public SolverTwoPhasesLowOrder2D, public Boundaries {
 public:
 	D2Q9TwoPhases();
 	virtual ~D2Q9TwoPhases();

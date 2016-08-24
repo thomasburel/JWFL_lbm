@@ -11,12 +11,22 @@ D2Q9ColourFluid::D2Q9ColourFluid() {
 	Rhor=0;
 	Rhob=0;
 	PtrColourGrad=0;
+	PtrColourGradBc=0;
+	PtrColourGradCorner=0;
+	PtrCollision=0;
+	D_tmp=0;
+	PtrD_tmp=0;
 	PtrRecolour=0;
 	PtrMacro=0;
 	beta=0.7;
 	Rho_limiter=1.E-8;
 	A1=0;
 	A2=0;
+	F=0;
+	G=0;
+	G_Norm=0;
+	tension=0;
+
 
 }
 
@@ -31,18 +41,158 @@ D2Q9ColourFluid::D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* paral
 	Set_PointersOnFunctions();
 }
 void D2Q9ColourFluid::Set_PointersOnFunctions(){
+	Set_Collide();
 	Set_Colour_gradient();
 	Set_Recolouring();
 	Set_Macro();
+}
+//Std2D,Std2DLocal,Std2DBody,Std2DNonCstTau,Std2DNonCstTauLocal,Std2DNonCstTauBody
+void D2Q9ColourFluid::Select_Colour_Operator(ColourOperatorType OperatorType_){
+	switch(OperatorType_)
+	{
+	case ::SurfaceForce:
+		PtrCollision=&D2Q9ColourFluid::Collision_SurfaceForce;
+		break;
+	case ::Grunau:
+		PtrCollision=&D2Q9ColourFluid::Collision_Grunau;
+		break;
+	case ::Reis:
+		PtrCollision=&D2Q9ColourFluid::Collision_Reis;
+		break;
+	default:
+		std::cerr<<" Colour operator not found."<<std::endl;
+		break;
+	}
+}
+void D2Q9ColourFluid::Set_Collide(){
+if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce && PtrParameters->Get_UserForceType()== ::LocalForce)
+{
+	std::cout<<" Warming: The local user force will be ignored. The colour model with the surface force is incompatible with a local user force"<<std::endl;
+}
+	if(PtrParameters->Get_FluidType()==Newtonian)
+	{
+		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
+			{Select_Collide_2D(Std2DBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+		else if(PtrParameters->Get_UserForceType()== ::LocalForce)
+			{Select_Collide_2D(Std2DLocal);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
+			{Select_Collide_2D(Std2DBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+		else
+			{Select_Collide_2D(Std2D);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+	}
+	else
+	{
+		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
+			{Select_Collide_2D(Std2DNonCstTauBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+		else if(PtrParameters->Get_UserForceType()== ::LocalForce)
+			{Select_Collide_2D(Std2DNonCstTauLocal);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
+			{Select_Collide_2D(Std2DNonCstTauBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+		else
+			{Select_Collide_2D(Std2DNonCstTau);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+	}
+
+}
+void D2Q9ColourFluid::Set_Colour_gradient(){
+
+		switch(PtrParameters->Get_ColourGradType())
+		{
+		case Gunstensen:
+			if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
+			{
+				std::cout<<" Force colour gradient to Density Normal gradient due to Surface force model."<<std::endl;
+				PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
+				PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradBc;
+				PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradCorner;
+			}
+			else
+			{
+			PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_Gunstensen;
+			PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_Gunstensen;
+			PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_Gunstensen;
+			}
+			break;
+		case DensityGrad:
+			PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityGrad;
+			PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_DensityGradBc;
+			PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_DensityGradCorner;
+			break;
+		case DensityNormalGrad:
+			PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
+			PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradBc;
+			PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradCorner;
+			break;
+		}
+}
+void D2Q9ColourFluid::Set_Macro(){
+	switch(PtrParameters->Get_ColourGradType())
+	{
+	case Gunstensen:
+		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce )
+			PtrMacro=&D2Q9ColourFluid::MacroVariablesWithNormalDensityAndForce;
+		else
+			if(PtrParameters->Get_NormalDensityOutput())
+				PtrMacro=&D2Q9ColourFluid::MacroVariablesWithNormalDensity;
+			else
+				PtrMacro=&D2Q9ColourFluid::MacroVariables;
+		break;
+	case DensityGrad:
+		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
+			PtrMacro=&D2Q9ColourFluid::MacroVariablesWithNormalDensityAndForce;
+		else
+			if(PtrParameters->Get_NormalDensityOutput())
+				PtrMacro=&D2Q9ColourFluid::MacroVariablesWithNormalDensity;
+			else
+				PtrMacro=&D2Q9ColourFluid::MacroVariables;
+		break;
+	case DensityNormalGrad:
+		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
+			PtrMacro=&D2Q9ColourFluid::MacroVariablesWithNormalDensityAndForce;
+		else
+			PtrMacro=&D2Q9ColourFluid::MacroVariablesWithNormalDensity;
+		break;
+	}
+//	PtrMacro=&D2Q9ColourFluid::MacroVariables;
+//	PtrMacro=&D2Q9ColourFluid::MacroVariablesWithNormalDensity;
+}
+void D2Q9ColourFluid::Set_Recolouring(){
+	PtrRecolour=&D2Q9ColourFluid::Recolouring_Latva;
 }
 void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 //Initialise parameters
 	beta=PtrParameters->Get_Beta();
 	A1=PtrParameters->Get_A1();
 	A2=PtrParameters->Get_A2();
+	tension=PtrParameters->Get_SurfaceTension();
 
 // Initialise only the Colour Fluid part.
+/*	G[0]=V1[0];
+	G[1]=V1[1];
+	F[0]=V2[0];
+	F[1]=V2[1];*/
+	Bi[0]=-4/27;
+	for(int i=1;i<5;i++) Bi[i]=2/27;
+	for(int i=5;i<9;i++) Bi[i]=5/108;
+	G=V1;
+	F=V2;
+	G_Norm=new double [nbnodes_total];
+/*	G=new double* [2];
+	G[0]=new double [nbnodes_total];
+	G[1]=new double [nbnodes_total];*/
+	for(int i=0;i<nbnodes_total;i++)
+	{
+		G[0][i]=0;
+		G[1][i]=0;
+		G_Norm[i]=0;
+	}
 
+//	F=new double* [nbnodes_total];
+	for(int i=0;i<nbnodes_total;i++)
+	{
+//		F[i]=new double [2];
+		F[0][i]=0;
+		F[1][i]=0;
+	}
 	double alpha=0;
 	double* pos =new double[2];
 	double* U_=new double[2];
@@ -53,24 +203,20 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 		pos[0]=NodeArrays->NodeInterior[j].get_x();
 		pos[1]=NodeArrays->NodeInterior[j].get_y();
 // Get initialise value from the user
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeInterior[j],0, NodeArrays->NodeInterior[j].Get_index(),pos,Rho[NodeArrays->NodeInterior[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeInterior[j],0, NodeArrays->NodeInterior[j].Get_index(),pos,Rho[NodeArrays->NodeInterior[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodeInterior[j].Get_index()]=alpha*Rho[NodeArrays->NodeInterior[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeInterior[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeInterior[j].Get_index()];//PtrParameters->Get_Rho_2();
 		RhoN[NodeArrays->NodeInterior[j].Get_index()]=(Rhor[NodeArrays->NodeInterior[j].Get_index()]-Rhob[NodeArrays->NodeInterior[j].Get_index()])/Rho[NodeArrays->NodeInterior[j].Get_index()];
-		if(NodeArrays->NodeInterior[j].get_x()==50&&NodeArrays->NodeInterior[j].get_y()==50)
-			std::cout<<"alpha= "<<alpha<<std::endl;
-		if(NodeArrays->NodeInterior[j].get_x()==20&&NodeArrays->NodeInterior[j].get_y()==50)
-			std::cout<<"alpha= "<<alpha<<std::endl;
 	}
-//	checkRho();
+
 	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 // Get position
 		pos[0]=NodeArrays->NodeCorner[j].get_x();
 		pos[1]=NodeArrays->NodeCorner[j].get_y();
 // Get initialise value from the user
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodeCorner[j].Get_index()]=alpha*Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeCorner[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_2();
@@ -81,7 +227,7 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
 		pos[1]=NodeArrays->NodeGlobalCorner[j].get_y();
 // Get initialise values from the user
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, NodeArrays->NodeGlobalCorner[j].Get_index(),pos,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, NodeArrays->NodeGlobalCorner[j].Get_index(),pos,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodeGlobalCorner[j].Get_index()]=alpha*Rho[NodeArrays->NodeGlobalCorner[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeGlobalCorner[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeGlobalCorner[j].Get_index()];//PtrParameters->Get_Rho_2();
@@ -92,7 +238,7 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 		pos[0]=NodeArrays->NodeVelocity[j].get_x();
 		pos[1]=NodeArrays->NodeVelocity[j].get_y();
 // Get initialise values from the user
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeVelocity[j],0, NodeArrays->NodeVelocity[j].Get_index(),pos,Rho[NodeArrays->NodeVelocity[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeVelocity[j],0, NodeArrays->NodeVelocity[j].Get_index(),pos,Rho[NodeArrays->NodeVelocity[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodeVelocity[j].Get_index()]=alpha*Rho[NodeArrays->NodeVelocity[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeVelocity[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeVelocity[j].Get_index()];//PtrParameters->Get_Rho_2();
@@ -104,7 +250,7 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 		pos[0]=NodeArrays->NodePressure[j].get_x();
 		pos[1]=NodeArrays->NodePressure[j].get_y();
 // Get initialise values from the user
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodePressure[j],0, NodeArrays->NodePressure[j].Get_index(),pos,Rho[NodeArrays->NodePressure[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodePressure[j],0, NodeArrays->NodePressure[j].Get_index(),pos,Rho[NodeArrays->NodePressure[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodePressure[j].Get_index()]=alpha*Rho[NodeArrays->NodePressure[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodePressure[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodePressure[j].Get_index()];//PtrParameters->Get_Rho_2();
@@ -115,7 +261,7 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 		pos[0]=NodeArrays->NodeWall[j].get_x();
 		pos[1]=NodeArrays->NodeWall[j].get_y();
 // Get initialise values from the user
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeWall[j],0, NodeArrays->NodeWall[j].Get_index(),pos,Rho[NodeArrays->NodeWall[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeWall[j],0, NodeArrays->NodeWall[j].Get_index(),pos,Rho[NodeArrays->NodeWall[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodeWall[j].Get_index()]=alpha*Rho[NodeArrays->NodeWall[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeWall[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeWall[j].Get_index()];//PtrParameters->Get_Rho_2();
@@ -126,7 +272,7 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
 		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
 // Get initialise values from the user
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, NodeArrays->NodeSpecialWall[j].Get_index(),pos,Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, NodeArrays->NodeSpecialWall[j].Get_index(),pos,Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodeSpecialWall[j].Get_index()]=alpha*Rho[NodeArrays->NodeSpecialWall[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeSpecialWall[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSpecialWall[j].Get_index()];//PtrParameters->Get_Rho_2();
@@ -137,7 +283,7 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
 		pos[1]=NodeArrays->NodeSymmetry[j].get_y();
 // Get initialise values from the user
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, NodeArrays->NodeSymmetry[j].Get_index(),pos,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, NodeArrays->NodeSymmetry[j].Get_index(),pos,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodeSymmetry[j].Get_index()]=alpha*Rho[NodeArrays->NodeSymmetry[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeSymmetry[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSymmetry[j].Get_index()];//PtrParameters->Get_Rho_2();
@@ -148,7 +294,7 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 		pos[0]=NodeArrays->NodeGhost[j].get_x();
 		pos[1]=NodeArrays->NodeGhost[j].get_y();
 // Get initialise values from the user
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeGhost[j],0, NodeArrays->NodeGhost[j].Get_index(),pos,Rho[NodeArrays->NodeGhost[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeGhost[j],0, NodeArrays->NodeGhost[j].Get_index(),pos,Rho[NodeArrays->NodeGhost[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodeGhost[j].Get_index()]=alpha*Rho[NodeArrays->NodeGhost[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeGhost[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeGhost[j].Get_index()];//PtrParameters->Get_Rho_2();
@@ -159,7 +305,7 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 		pos[0]=NodeArrays->NodeSolid[j].get_x();
 		pos[1]=NodeArrays->NodeSolid[j].get_y();
 // Get initialise values from the user
-		ini.IniDomain(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_,alpha);
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodeSolid[j].Get_index()]=alpha*Rho[NodeArrays->NodeSolid[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeSolid[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSolid[j].Get_index()];//PtrParameters->Get_Rho_2();
@@ -177,17 +323,7 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	delete [] U_;
 
 }
-void D2Q9ColourFluid::checkRho(){
-	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
-	{
-// Get position
-		if(NodeArrays->NodeInterior[j].get_x()==50&&NodeArrays->NodeInterior[j].get_y()==50)
-			std::cout<<"Rho= "<<Rho[NodeArrays->NodeInterior[j].Get_index()]<<" RhoN= "<<RhoN[NodeArrays->NodeInterior[j].Get_index()]<<" Rhor= "<<Rhor[NodeArrays->NodeInterior[j].Get_index()]<<" Rhob= "<<Rhob[NodeArrays->NodeInterior[j].Get_index()]<<std::endl;
-		if(NodeArrays->NodeInterior[j].get_x()==20&&NodeArrays->NodeInterior[j].get_y()==50)
-			std::cout<<"Rho= "<<Rho[NodeArrays->NodeInterior[j].Get_index()]<<" RhoN= "<<RhoN[NodeArrays->NodeInterior[j].Get_index()]<<" Rhor= "<<Rhor[NodeArrays->NodeInterior[j].Get_index()]<<" Rhob= "<<Rhob[NodeArrays->NodeInterior[j].Get_index()]<<std::endl;
 
-	}
-}
 void D2Q9ColourFluid::run(){
 	int NbStep=PtrParameters->Get_NbStep();
 	int OutPutNStep=PtrParameters->Get_OutPutNSteps();
@@ -200,13 +336,17 @@ void D2Q9ColourFluid::run(){
 		SyncToGhost();
 	ApplyBc();
 	UpdateMacroVariables();
+	if(parallel->getSize()>1)
+		SyncMacroVarToGhost();
+	Colour_gradient();
+	ColourFluid_Collision();
 	Writer->Write_Output(it);
 
 	if(parallel->getSize()>1)
 	{
 		for (int i=1;i<NbStep+1;i++)
 		{
-
+			Colour_gradient();
 			ColourFluid_Collision();
 			SyncToGhost();
 			StreamD2Q9();;
@@ -234,7 +374,7 @@ void D2Q9ColourFluid::run(){
 	{
 		for (int i=1;i<NbStep+1;i++)
 		{
-
+			Colour_gradient();
 			ColourFluid_Collision();
 			StreamD2Q9();
 			ApplyBc();
@@ -256,206 +396,332 @@ void D2Q9ColourFluid::run(){
 	}
 	Writer->Write_breakpoint(*PtrParameters);
 }
-void D2Q9ColourFluid::ColourFluid_Collision()
-{
-	double Ak=0.65;
-	double F[2];
-	double F_Norm=0;
-	int idx_tmp;
-	double wtmp=0;
-//	double *U_tmp, *V_tmp, *F_tmp;
-	double  InvTau_,fi_tmp;
-	InvTau_=InvTau; //Tmp
-
+///Calculate the colour gradient by Gunstensen formulation, density gradient or normal density gradient
+void D2Q9ColourFluid::Colour_gradient(){
+	int idx_tmp;int normal_interior=0;
 	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
 	{
 	// Common variables
 		idx_tmp=NodeArrays->NodeInterior[j].Get_index();
 	// Calculate gradients
-		(this->*PtrColourGrad)(idx_tmp,NodeArrays->NodeInterior[j].Get_connect(),&F[0]);
-	//Calculate Norms
-		F_Norm=std::sqrt(F[0]*F[0]+F[1]*F[1]);
-	//Model
-		for (int i=0;i<9;i++)
-		{
-			fi_tmp=f[0]->f[i][idx_tmp]+f[1]->f[i][idx_tmp];
-			CollideD2Q9ColourFluid(i,fi_tmp,Rho[idx_tmp],&F[0],F_Norm,InvTau_, U[0][idx_tmp], U[1][idx_tmp]);
-			(this->*PtrRecolour)(idx_tmp,i,fi_tmp,&F[0],F_Norm);
-		}
+		(this->*PtrColourGrad)(idx_tmp,NodeArrays->NodeInterior[j].Get_connect(),normal_interior);
 	}
+
 	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 	// Common variables
 		idx_tmp=NodeArrays->NodeCorner[j].Get_index();
 	// Calculate gradients
-		(this->*PtrColourGrad)(idx_tmp,NodeArrays->NodeCorner[j].Get_connect(),&F[0]);
-	//Calculate Norms
-		F_Norm=std::sqrt(F[0]*F[0]+F[1]*F[1]);
-	//Model
-		for (int i=0;i<9;i++)
-		{
-			fi_tmp=f[0]->f[i][idx_tmp]+f[1]->f[i][idx_tmp];
-			CollideD2Q9ColourFluid(i,fi_tmp,Rho[idx_tmp],&F[0],F_Norm,InvTau_, U[0][idx_tmp], U[1][idx_tmp]);
-			(this->*PtrRecolour)(idx_tmp,i,fi_tmp,&F[0],F_Norm);
-		}
+		(this->*PtrColourGradCorner)(idx_tmp,NodeArrays->NodeCorner[j].Get_connect(),NodeArrays->NodeCorner[j].Get_BcNormal());
 	}
+
 	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
 	// Common variables
 		idx_tmp=NodeArrays->NodeGlobalCorner[j].Get_index();
 	// Calculate gradients
-		(this->*PtrColourGrad)(idx_tmp,NodeArrays->NodeGlobalCorner[j].Get_connect(),&F[0]);
-	//Calculate Norms
-		F_Norm=std::sqrt(F[0]*F[0]+F[1]*F[1]);
-	//Model
-		for (int i=0;i<9;i++)
-		{
-			fi_tmp=f[0]->f[i][idx_tmp]+f[1]->f[i][idx_tmp];
-			CollideD2Q9ColourFluid(i,fi_tmp,Rho[idx_tmp],&F[0],F_Norm,InvTau_, U[0][idx_tmp], U[1][idx_tmp]);
-			(this->*PtrRecolour)(idx_tmp,i,fi_tmp,&F[0],F_Norm);
-		}
+		(this->*PtrColourGradBc)(idx_tmp,NodeArrays->NodeGlobalCorner[j].Get_connect(),NodeArrays->NodeGlobalCorner[j].Get_BcNormal());
 	}
+
 	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 	// Common variables
 		idx_tmp=NodeArrays->NodeVelocity[j].Get_index();
 	// Calculate gradients
-		(this->*PtrColourGrad)(idx_tmp,NodeArrays->NodeVelocity[j].Get_connect(),&F[0]);
-	//Calculate Norms
-		F_Norm=std::sqrt(F[0]*F[0]+F[1]*F[1]);
-	//Model
-		for (int i=0;i<9;i++)
-		{
-			CollideD2Q9ColourFluid(i,fi_tmp,Rho[idx_tmp],&F[0],F_Norm,InvTau_, U[0][idx_tmp], U[1][idx_tmp]);
-			(this->*PtrRecolour)(idx_tmp,i,fi_tmp,&F[0],F_Norm);
-		}
+		(this->*PtrColourGradBc)(idx_tmp,NodeArrays->NodeVelocity[j].Get_connect(),NodeArrays->NodeVelocity[j].Get_BcNormal());
 	}
+
 	for (int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
 	// Common variables
 		idx_tmp=NodeArrays->NodePressure[j].Get_index();
 	// Calculate gradients
-		(this->*PtrColourGrad)(idx_tmp,NodeArrays->NodePressure[j].Get_connect(),&F[0]);
-	//Calculate Norms
-		F_Norm=std::sqrt(F[0]*F[0]+F[1]*F[1]);
-	//Model
-		for (int i=0;i<9;i++)
-		{
-			fi_tmp=f[0]->f[i][idx_tmp]+f[1]->f[i][idx_tmp];
-			CollideD2Q9ColourFluid(i,fi_tmp,Rho[idx_tmp],&F[0],F_Norm,InvTau_, U[0][idx_tmp], U[1][idx_tmp]);
-			(this->*PtrRecolour)(idx_tmp,i,fi_tmp,&F[0],F_Norm);
-		}
+		(this->*PtrColourGradBc)(idx_tmp,NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_BcNormal());
 	}
+
 	for (int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 	// Common variables
 		idx_tmp=NodeArrays->NodeWall[j].Get_index();
 	// Calculate gradients
-		(this->*PtrColourGrad)(idx_tmp,NodeArrays->NodeWall[j].Get_connect(),&F[0]);
-	//Calculate Norms
-		F_Norm=std::sqrt(F[0]*F[0]+F[1]*F[1]);
-	//Model
-		for (int i=0;i<9;i++)
-		{
-			fi_tmp=f[0]->f[i][idx_tmp]+f[1]->f[i][idx_tmp];
-			CollideD2Q9ColourFluid(i,fi_tmp,Rho[idx_tmp],&F[0],F_Norm,InvTau_, U[0][idx_tmp], U[1][idx_tmp]);
-			(this->*PtrRecolour)(idx_tmp,i,fi_tmp,&F[0],F_Norm);
-		}
+		(this->*PtrColourGradBc)(idx_tmp,NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal());
 	}
+
 	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 	// Common variables
 		idx_tmp=NodeArrays->NodeSymmetry[j].Get_index();
 	// Calculate gradients
-		(this->*PtrColourGrad)(idx_tmp,NodeArrays->NodeSymmetry[j].Get_connect(),&F[0]);
-	//Calculate Norms
-		F_Norm=std::sqrt(F[0]*F[0]+F[1]*F[1]);
+		(this->*PtrColourGradBc)(idx_tmp,NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_BcNormal());
+	}
+}
+void D2Q9ColourFluid::ColourFluid_Collision()
+{
+	double Ak=0.65;
+//	double F_tmp[2];
+//	double G_Norm=0;
+	int idx_tmp;
+	double wtmp=0;
+	int normal_interior=0;
+//	double *U_tmp, *V_tmp, *F_tmp;
+	double  InvTau_;
+	double fi_tmp[9];
+	InvTau_=InvTau; //Tmp
+//	std::cout<<" Nd Interior: "<<NodeArrays->NodeInterior.size()<<std::endl;
+	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	{
+	// Common variables
+		idx_tmp=NodeArrays->NodeInterior[j].Get_index();
 	//Model
-		for (int i=0;i<9;i++)
-		{
-			fi_tmp=f[0]->f[i][idx_tmp]+f[1]->f[i][idx_tmp];
-			CollideD2Q9ColourFluid(i,fi_tmp,Rho[idx_tmp],&F[0],F_Norm,InvTau_, U[0][idx_tmp], U[1][idx_tmp]);
-			(this->*PtrRecolour)(idx_tmp,i,fi_tmp,&F[0],F_Norm);
-		}
+		(this->*PtrCollision)(idx_tmp, NodeArrays->NodeInterior[j].Get_connect(),normal_interior,&fi_tmp[0]);
+		(this->*PtrRecolour)(idx_tmp,&fi_tmp[0]);
+	}
+
+	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	{
+	// Common variables
+		idx_tmp=NodeArrays->NodeCorner[j].Get_index();
+	//Model
+		(this->*PtrCollision)(idx_tmp, NodeArrays->NodeCorner[j].Get_connect(),NodeArrays->NodeCorner[j].Get_BcNormal(),&fi_tmp[0]);
+		(this->*PtrRecolour)(idx_tmp,&fi_tmp[0]);
+	}
+
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+	// Common variables
+		idx_tmp=NodeArrays->NodeGlobalCorner[j].Get_index();
+	//Calculate Norms
+		G_Norm[idx_tmp]=0;
+//		G_Norm=std::sqrt(G[idx_tmp][0]*G[idx_tmp][0]+G[idx_tmp][1]*G[idx_tmp][1]);
+	//Model
+		(this->*PtrCollision)(idx_tmp, NodeArrays->NodeGlobalCorner[j].Get_connect(),NodeArrays->NodeGlobalCorner[j].Get_BcNormal(),&fi_tmp[0]);
+		(this->*PtrRecolour)(idx_tmp,&fi_tmp[0]);
+	}
+
+	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	{
+	// Common variables
+		idx_tmp=NodeArrays->NodeVelocity[j].Get_index();
+	//Model
+		(this->*PtrCollision)(idx_tmp, NodeArrays->NodeVelocity[j].Get_connect(),NodeArrays->NodeVelocity[j].Get_BcNormal(),&fi_tmp[0]);
+		(this->*PtrRecolour)(idx_tmp,&fi_tmp[0]);
+	}
+
+	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	{
+	// Common variables
+		idx_tmp=NodeArrays->NodePressure[j].Get_index();
+
+		(this->*PtrCollision)(idx_tmp, NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_BcNormal(),&fi_tmp[0]);
+	//Model
+		(this->*PtrRecolour)(idx_tmp,&fi_tmp[0]);
+	}
+
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+	// Common variables
+		idx_tmp=NodeArrays->NodeWall[j].Get_index();
+	//Calculate Norms
+		G_Norm[idx_tmp]=0;
+//		G_Norm=std::sqrt(G[idx_tmp][0]*G[idx_tmp][0]+G[idx_tmp][1]*G[idx_tmp][1]);
+	//Model
+		(this->*PtrCollision)(idx_tmp, NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal(),&fi_tmp[0]);
+		(this->*PtrRecolour)(idx_tmp,&fi_tmp[0]);
+	}
+
+	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	{
+	// Common variables
+		idx_tmp=NodeArrays->NodeSymmetry[j].Get_index();
+
+	//Model
+		(this->*PtrCollision)(idx_tmp, NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_BcNormal(),&fi_tmp[0]);
+		(this->*PtrRecolour)(idx_tmp,&fi_tmp[0]);
+
 	}
 }
-void D2Q9ColourFluid::CollideD2Q9ColourFluid(int & direction, double & fi,double &rho,double*  F,double & F_Norm, double & InvTau_, double &u, double &v){
-	CollideLowOrder::Collide_SinglePhase(fi,rho, u, v, Ei[direction], omega[direction]);
+/*void D2Q9ColourFluid::CollideD2Q9ColourFluid(int & direction, double & fi,double &rho,double*  F_tmp,double & F_Norm, double & InvTau_, double &u, double &v){
+	CollideLowOrder::Collide_2D(direction,fi,rho, u, v,F_tmp,F_Norm);
 	if(F_Norm>0)
-		fi+=TwoPhase_Collision_operator(direction, F, F_Norm);
-}
-double D2Q9ColourFluid::TwoPhase_Collision_operator(int & i, double* F, double & F_Norm){
-	double EiGperGNorm=(F[0]* Ei[i][0]+F[1]* Ei[i][1])/F_Norm;
+		fi+=TwoPhase_Collision_operator(direction, F_tmp, F_Norm);
+}*/
+/*double D2Q9ColourFluid::TwoPhase_Collision_operator(int & i, double* F_tmp, double & F_Norm){
+	double EiGperGNorm=(F_tmp[0]* Ei[i][0]+F_tmp[1]* Ei[i][1])/F_Norm;
 	 return A1*0.5*F_Norm*(EiGperGNorm*EiGperGNorm-3/4);
-}
-double D2Q9ColourFluid::CosPhi(int & direction, double* F,double & F_Norm){
-	if(F_Norm==0||direction==0)
-		return 0;
-	else
-		return (F[0]* Ei[direction][0]+F[1]* Ei[direction][1])/(F_Norm*std::sqrt(Ei[direction][0]*Ei[direction][0]+Ei[direction][1]*Ei[direction][1]));
-}
-void D2Q9ColourFluid::Set_Colour_gradient(){
-	switch(PtrParameters->Get_ColourGradType())
-	{
-	case Gunstensen:
-		PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_Gunstensen;
-		break;
-	case DensityGrad:
-		PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityGrad;
-		break;
-	case DensityNormalGrad:
-		PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
-		break;
-	}
-}
-void D2Q9ColourFluid::Colour_gradient(int & nodenumber, int* connect, double* F){
-	for (int k=0; k<nbvelo;k++)
-	{
-		for (int j=0;j<2;j++)
-		{
-			F[j]=(Rhor[nodenumber]-Rhob[nodenumber])*Ei[k][j];
-		}
-	}
-}
-void D2Q9ColourFluid::Colour_gradient_Gunstensen(int & nodenumber, int* connect, double* F){
+}*/
+
+
+
+void D2Q9ColourFluid::Colour_gradient_Gunstensen(int & nodenumber, int* connect,int & normal){
 
 	for (int j=0;j<2;j++)
 	{
 		//F[j]=0;
-		F[j]=(Rhor[nodenumber]-Rhob[nodenumber])*Ei[0][j];
+		G[j][nodenumber]=(Rhor[nodenumber]-Rhob[nodenumber])*Ei[0][j];
 
 		for (int k=1; k<nbvelo;k++)
 		{
-			F[j]+=(Rhor[connect[k]]-Rhob[connect[k]])*Ei[k][j];
+			G[j][nodenumber]+=(Rhor[connect[k]]-Rhob[connect[k]])*Ei[k][j];
 		}
 	}
+	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
 }
-void D2Q9ColourFluid::Colour_gradient_DensityGrad(int & nodenumber, int* connect, double* F){
-//	F=Grad(&Rho[0],nodenumber);
+void D2Q9ColourFluid::Colour_gradient_DensityGrad(int & nodenumber, int* connect,int & normal){
+	double tmp[2];
+	Grad(&tmp[0],&Rho[0],connect,normal);
+	G[0][nodenumber]=tmp[0];G[1][nodenumber]=tmp[1];
+	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
 }
-void D2Q9ColourFluid::Colour_gradient_DensityNormalGrad(int & nodenumber, int* connect, double* F){
+void D2Q9ColourFluid::Colour_gradient_DensityGradBc(int & nodenumber, int* connect,int & normal){
+	double tmp[2];
+	GradBc(&tmp[0],&Rho[0],connect,normal);
+	G[0][nodenumber]=tmp[0];G[1][nodenumber]=tmp[1];
+	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
+}
+void D2Q9ColourFluid::Colour_gradient_DensityGradCorner(int & nodenumber, int* connect,int & normal){
+	double tmp[2];
+	GradCorner(&tmp[0],&Rho[0],connect,normal);
+	G[0][nodenumber]=tmp[0];G[1][nodenumber]=tmp[1];
+	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
+}
+void D2Q9ColourFluid::Colour_gradient_DensityNormalGrad(int & nodenumber, int* connect,int & normal){
+	double tmp[2];
+//	if(nodenumber==4600)
+//		std::cout<<"G Norm is: "<<G_Norm[nodenumber]<<std::endl;
+	Grad(&tmp[0],&RhoN[0],connect,normal);
+	G[0][nodenumber]=tmp[0];G[1][nodenumber]=tmp[1];
+	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
 
+	//Normalise grad(RhoN)
+	if(G_Norm[nodenumber]>0)
+	{
+		G[0][nodenumber]=G[0][nodenumber]/G_Norm[nodenumber];
+		G[1][nodenumber]=G[1][nodenumber]/G_Norm[nodenumber];
+	}
 }
-
-void D2Q9ColourFluid::Set_Recolouring(){
-	PtrRecolour=&D2Q9ColourFluid::Recolouring_Latva;
+void D2Q9ColourFluid::Colour_gradient_DensityNormalGradBc(int & nodenumber, int* connect,int & normal){
+	double tmp[2];
+	GradBc(&tmp[0],&RhoN[0],connect,normal);
+	G[0][nodenumber]=tmp[0];G[1][nodenumber]=tmp[1];
+	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
+	//Normalise grad(RhoN)
+	if(G_Norm[nodenumber]>0)
+	{
+		G[0][nodenumber]=G[0][nodenumber]/G_Norm[nodenumber];
+		G[1][nodenumber]=G[1][nodenumber]/G_Norm[nodenumber];
+	}
 }
-void D2Q9ColourFluid::Recolouring_Latva(int & nodenumber,int & i, double & ftmp, double* F,double & F_Norm){
+void D2Q9ColourFluid::Colour_gradient_DensityNormalGradCorner(int & nodenumber, int* connect,int & normal){
+	double tmp[2];
+	GradCorner(&tmp[0],&RhoN[0],connect,normal);
+	G[0][nodenumber]=tmp[0];G[1][nodenumber]=tmp[1];
+	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
+	//Normalise grad(RhoN)
+	if(G_Norm[nodenumber]>0)
+	{
+		G[0][nodenumber]=G[0][nodenumber]/G_Norm[nodenumber];
+		G[1][nodenumber]=G[1][nodenumber]/G_Norm[nodenumber];
+	}
+}
+//(idx_tmp,i,fi_tmp[i],&G[idx_tmp][0]);
+void D2Q9ColourFluid::Recolouring_Latva(int & nodenumber, double * fi_tmp){
 //(idx_tmp,i,fi_tmp,&F[0],F_Norm)
 /*	if(CosPhi(i,F,F_Norm)<-1 ||CosPhi(i,F,F_Norm)>1)
 		std::cout<<"CosPhi: "<<CosPhi(i,F,F_Norm)<<std::endl;*/
-		f[0]->f[i][nodenumber]=Rhor[nodenumber]*ftmp/Rho[nodenumber]+beta*omega[i]*Rhor[nodenumber]*Rhob[nodenumber]*CosPhi(i,F,F_Norm)/Rho[nodenumber];
+
+		f[0]->f[0][nodenumber]=Rhor[nodenumber]*fi_tmp[0]/Rho[nodenumber];
+		for(int i=1;i<nbvelo;i++)
+		{
+		f[0]->f[i][nodenumber]=Rhor[nodenumber]*fi_tmp[i]/Rho[nodenumber]
+								+beta*omega[i]*Rhor[nodenumber]*Rhob[nodenumber]*CosPhi(nodenumber,i,G_Norm[nodenumber])/Rho[nodenumber];
+		}
+		for(int i=0;i<nbvelo;i++)
+		{
 		if(Rhor[nodenumber]<=Rho_limiter)
 			f[0]->f[i][nodenumber]=0;
 		if(Rhob[nodenumber]<=Rho_limiter)
-			f[0]->f[i][nodenumber]=ftmp;
-		f[1]->f[i][nodenumber]=ftmp-f[0]->f[i][nodenumber];
+		{
+			f[0]->f[i][nodenumber]=fi_tmp[i];
+			f[1]->f[i][nodenumber]=0;
+		}
+		else
+			f[1]->f[i][nodenumber]=fi_tmp[i]-f[0]->f[i][nodenumber];
+		}
+
+}
+//CosPhi(nodenumber,i,G_Norm[nodenumber])
+double D2Q9ColourFluid::CosPhi(int nodenumber, int & direction,double & F_Norm){
+		return (G[0][nodenumber]* Ei[direction][0]+G[1][nodenumber]* Ei[direction][1]);///(F_Norm*std::sqrt(Ei[direction][0]*Ei[direction][0]+Ei[direction][1]*Ei[direction][1]));
+}
+/*double D2Q9ColourFluid::TwoPhase_Collision_operator(int & nodenumber, int & i, double & Ak, double* F_tmp, double & F_Norm){
+ return Ak*0.5*F_Norm*(((F_tmp[0]*Ei[i][0]+F_tmp[1]*Ei[i][1])/F_Norm)*((F_tmp[0]*Ei[i][0]+F_tmp[1]*Ei[i][1])/F_Norm)-3/4);
+}*/
+double& D2Q9ColourFluid::Collision_operator_Grunau(int & i, int & nodenumber, double Ak){
+	if(G_Norm[nodenumber]>0)
+		D_tmp=Ak*0.5*G_Norm[nodenumber]*(((G[0][nodenumber]*Ei[i][0]+G[1][nodenumber]*Ei[i][1])/G_Norm[nodenumber])*((G[0][nodenumber]*Ei[i][0]+G[1][nodenumber]*Ei[i][1])/G_Norm[nodenumber])-3/4);
+	return D_tmp;
+}
+double& D2Q9ColourFluid::Collision_operator_Reis(int & i, int & nodenumber, double Ak){
+	if(G_Norm[nodenumber]>0)
+		D_tmp=Ak*0.5*G_Norm[nodenumber]*((omega[i]*(G[0][nodenumber]*Ei[i][0]+G[1][nodenumber]*Ei[i][1])/G_Norm[nodenumber])*((G[0][nodenumber]*Ei[i][0]+G[1][nodenumber]*Ei[i][1])/G_Norm[nodenumber])-Bi[i]);
+	return D_tmp;
+}
+void D2Q9ColourFluid::Collision_Grunau(int & nodenumber, int* connect,int & normal,double* fi){
+	double InvTau_tmp=InvTau; int i0=0;
+	fi[0]=f[0]->f[0][nodenumber]+f[1]->f[0][nodenumber];
+	DVec_2D_tmp[0]=0;DVec_2D_tmp[1]=0;
+	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], InvTau_tmp);
+	for (int i=1;i<9;i++)
+	{
+		//Save the mixture distribution for recolouring
+		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Grunau(i, nodenumber, A1),DVec_2D_tmp[1], InvTau_tmp);
+	}
+}
+void D2Q9ColourFluid::Collision_Reis(int & nodenumber, int* connect,int & normal,double* fi){
+	double InvTau_tmp=InvTau; int i0=0;
+	fi[0]=f[0]->f[0][nodenumber]+f[1]->f[0][nodenumber];
+	DVec_2D_tmp[0]=0;DVec_2D_tmp[1]=0;
+	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], InvTau_tmp);
+	for (int i=1;i<9;i++)
+	{
+		//Save the mixture distribution for recolouring
+		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Reis(i, nodenumber, A1),DVec_2D_tmp[1], InvTau_tmp);
+	}
+}
+void D2Q9ColourFluid::Collision_SurfaceForce(int & nodenumber, int* connect,int & normal,double* fi){
+	double InvTau_tmp=InvTau;
+
+	if(G_Norm[nodenumber]>0)
+	{
+		SurfaceForce(nodenumber,connect,normal,F[0][nodenumber],F[1][nodenumber]);
+	}
+	else
+		{F[0][nodenumber]=0;F[1][nodenumber]=0;}
+	for (int i=0;i<9;i++)
+	{
+		//Save the mixture distribution for recolouring
+		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], F[0][nodenumber],F[1][nodenumber], InvTau_tmp);
+	}
+}
+
+void D2Q9ColourFluid::SurfaceForce(int & nodenumber, int* connect,int & normal,double & Fx,double & Fy){
+	D_tmp=0.5*tension*Curvature(nodenumber,connect,normal)*G_Norm[nodenumber]; //G_Norm is to get back the density gradient and not the normalise one
+	Fx=D_tmp*G[0][nodenumber];
+	Fy=D_tmp*G[1][nodenumber];
+
+}
+double D2Q9ColourFluid::Curvature(int & nodenumber, int* connect,int & normal){
+	double tmp_0[2],tmp_1[2];
+	Grad(&tmp_0[0],&G[0][0],connect,normal);//d(Gx)/d(x)
+	Grad(&tmp_1[0],&G[1][0],connect,normal);//d(Gy)/d(y)
+	return -(tmp_0[0]+tmp_1[1]);//Dot product
 
 }
 
-double D2Q9ColourFluid::TwoPhase_Collision_operator(int & nodenumber, int & i, double & Ak, double* F, double & F_Norm){
- return Ak*0.5*F_Norm*(((F[0]*Ei[i][0]+F[1]*Ei[i][1])/F_Norm)*((F[0]*Ei[i][0]+F[1]*Ei[i][1])/F_Norm)-3/4);
-}
+
 ///Select and apply boundary conditions
 void D2Q9ColourFluid::ApplyBc(){
 
@@ -541,7 +807,7 @@ void D2Q9ColourFluid::ApplyGlobalCorner(NodeCorner2D& NodeIn){
 					f[j]->f[5][NodeIn.Get_index()]=f[j]->f[7][NodeIn.Get_index()];//+0.00007/3;
 //					for (int i=0;i<9;i++)
 //						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]+omega[i]*Ei[i][0]*0.00007;
-					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
+//					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
 				}
 
 				else
@@ -632,7 +898,7 @@ void D2Q9ColourFluid::ApplyGlobalCorner(NodeCorner2D& NodeIn){
 					f[j]->f[7][NodeIn.Get_index()]=f[j]->f[8][NodeIn.Get_index()];//-0.00007/3;
 //					for (int i=0;i<9;i++)
 //						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]-omega[i]*Ei[i][0]*0.00007;
-					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
+//					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
 				}
 				else
 				{
@@ -722,7 +988,7 @@ void D2Q9ColourFluid::ApplyGlobalCorner(NodeCorner2D& NodeIn){
 					f[j]->f[8][NodeIn.Get_index()]=f[j]->f[5][NodeIn.Get_index()];
 //					for (int i=0;i<9;i++)
 //						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]-omega[i]*Ei[i][0]*0.00007;
-					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
+//					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
 				}
 				else
 				{
@@ -811,7 +1077,7 @@ void D2Q9ColourFluid::ApplyGlobalCorner(NodeCorner2D& NodeIn){
 					f[j]->f[7][NodeIn.Get_index()]=f[j]->f[6][NodeIn.Get_index()];
 //					for (int i=0;i<9;i++)
 //						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]+omega[i]*Ei[i][0]*0.00007;
-					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
+//					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
 				}
 				else
 				{
@@ -1013,10 +1279,7 @@ void D2Q9ColourFluid::UpdateMacroVariables(){
 		}
 
 }
-void D2Q9ColourFluid::Set_Macro(){
-//	PtrMacro=&D2Q9ColourFluid::MacroVariables;
-	PtrMacro=&D2Q9ColourFluid::MacroVariablesWithNormalDensity;
-}
+
 void D2Q9ColourFluid::MacroVariables(int& idx){
 
 		U[0][idx]=0;
@@ -1054,6 +1317,25 @@ void D2Q9ColourFluid::MacroVariablesWithNormalDensity(int& idx){
 	U[0][idx]=U[0][idx]/Rho[idx];
 	U[1][idx]=U[1][idx]/Rho[idx];
 }
+void D2Q9ColourFluid::MacroVariablesWithNormalDensityAndForce(int& idx){
+	U[0][idx]=0;
+	U[1][idx]=0;
+	Rhor[idx]=0,Rhob[idx]=0;
+	for (int k=0; k<nbvelo;k++)
+	{
+		Rhor[idx]+=f[0]->f[k][idx];
+		Rhob[idx]+=f[1]->f[k][idx];
+		for (int j=0;j<2;j++)
+		{
+			U[j][idx]+=(f[0]->f[k][idx]+f[1]->f[k][idx])*Ei[k][j];
+		}
+	}
+	Rho[idx]=Rhor[idx]+Rhob[idx];
+	RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+	U[0][idx]=(U[0][idx]+0.5*F[0][idx])/Rho[idx];
+	U[1][idx]=(U[1][idx]+0.5*F[1][idx])/Rho[idx];
+}
+
 double D2Q9ColourFluid::Cal_RhoR_Corner(NodeCorner2D& nodeIn){
 
 	unsigned int direction1,direction2;
@@ -1297,7 +1579,8 @@ void D2Q9ColourFluid::ApplyBounceBack(NodeWall2D& NodeIn){
 
 				f[1]->f[3][NodeIn.Get_index()]=f[1]->f[Opposite[3]][NodeIn.Get_index()];
 				f[1]->f[6][NodeIn.Get_index()]=f[1]->f[Opposite[6]][NodeIn.Get_index()];
-				f[1]->f[7][NodeIn.Get_index()]=f[1]->f[Opposite[7]][NodeIn.Get_index()];				break;
+				f[1]->f[7][NodeIn.Get_index()]=f[1]->f[Opposite[7]][NodeIn.Get_index()];
+				break;
 			default:
 				std::cerr<<"Direction wall bounce back not found. Index: "<<NodeIn.Get_index()<<" x: "<<NodeIn.get_x()<<" y: "<<NodeIn.get_y()<<" direction not found: "<<NodeIn.Get_BcNormal()<<std::endl;
 				break;
