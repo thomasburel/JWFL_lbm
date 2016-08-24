@@ -1,5 +1,8 @@
 
 # Compile folders
+.cproject
+.project
+language.settings.xml
 *.cgns
 *.txt
 *.d
