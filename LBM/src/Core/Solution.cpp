@@ -70,6 +70,14 @@ void Solution2D::Set_output(std::string *str, int nbvar){
 			PtrVariablesOutput[i]=&U[0][0];//Ptrvariabletest;//&U[0][0];
 		else if(str[i]=="VelocityY")
 			PtrVariablesOutput[i]=&U[1][0];
+		else if(str[i]=="ColourGradX")
+			PtrVariablesOutput[i]=&V1[0][0];
+		else if(str[i]=="ColourGradY")
+			PtrVariablesOutput[i]=&V1[1][0];
+		else if(str[i]=="InterfaceForceX")
+			PtrVariablesOutput[i]=&V2[0][0];
+		else if(str[i]=="InterfaceForceY")
+			PtrVariablesOutput[i]=&V2[1][0];
 		else
 			std::cout<< "Problem in output setup" << std::endl;
 

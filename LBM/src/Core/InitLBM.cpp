@@ -27,17 +27,11 @@ InitLBM::~InitLBM() {
 void InitLBM::Set_Parameters(Parameters *Parameters) {
 	PtrParameters=Parameters;
 }
-void InitLBM::IniDomain(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U){
+void InitLBM::IniDomainSinglePhase(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U){
 	double alpha=0;
-	IniDomain(rank,Node,elem,nodenumber, pos,Rho,U,alpha);
+	IniDomainTwoPhases(rank,Node,elem,nodenumber, pos,Rho,U,alpha);
 }
-void InitLBM::IniDomain(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U,double & alpha){
-//	if (nodenumber==3 &&Node.get_NodeType()==0 )
-//	if(Node.get_NodeType()!=Interior)
-//		std::cout<<"Processor ID: "<<rank<<" Node number: "<<nodenumber<<" Type of node is : "<<Node.get_NodeType()<<std::endl;
-//	std::cout<<" connect is : "<<Node.Get_connect()<<std::endl;
-//	if(nodenumber==24)
-//		std::cout<<"test iniProcessor ID: "<<rank<<" Node number: "<<nodenumber<<" Type of node is : "<<Node.get_NodeType()<<std::endl;
+void InitLBM::IniDomainTwoPhases(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U,double & alpha){
 	switch(Node.get_NodeType())
 	{
 	case Interior:

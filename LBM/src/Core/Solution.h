@@ -42,6 +42,7 @@ protected:
 	double **U, *Rho;
 	//Pointers for export solution
 	double *RhoN,*Rhor,*Rhob; // Rho normal, Rho red fluid and Rho Blue fluid
+	double **V1,**V2;
 
 //Mesh variables
 	//std::vector<Node2D*> *Node;

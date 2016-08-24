@@ -15,6 +15,8 @@ Parameters::Parameters()
 	dimension_=D2;
 	scheme=Q9;
 	model=SinglePhase;
+	fluid=Newtonian;
+	UserForce=None;
 	argc=0;
 	argv=0;
 	verbous=false;

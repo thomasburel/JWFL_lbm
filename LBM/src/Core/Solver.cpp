@@ -147,6 +147,7 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 	//InvTau=1.0/PtrParameters->Get_Tau();
 	nbvelo=PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
+//	Gradients::initGradients(2,nbvelo,PtrParameters->Get_GradientType());
 	Set_Solution();
 	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()];
 	PtrVariablesBreakpoint=new double* [nbvelo+3];
@@ -161,7 +162,7 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 }
 SolverTwoPhasesLowOrder2D::SolverTwoPhasesLowOrder2D() {
 	PtrParameters=0;
-	Gradients(2);
+
 
 }
 
@@ -185,19 +186,32 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	//InvTau=1.0/PtrParameters->Get_Tau();
 	nbvelo=PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
+	Gradients::initGradients(2,nbvelo,PtrParameters->Get_GradientType());
 	Set_Solution();
-	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()+3];
+	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()+7];
 	PtrVariablesBreakpoint=new double* [2*nbvelo+3];
-	std::string* TmpPtrVarOut=new std::string [PtrParameters->Get_NbVariablesOutput()+3];
+	std::string* TmpPtrVarOut=new std::string [PtrParameters->Get_NbVariablesOutput()+7];
 	for(int i=0;i<PtrParameters->Get_NbVariablesOutput();i++)
 		TmpPtrVarOut[i]=PtrParameters->Get_PtrVariablesOutput()[i];
 	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()]="RhoN";
 	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+1]="RhoRed";
 	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+2]="RhoBlue";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+3]="ColourGradX";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+4]="ColourGradY";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+5]="InterfaceForceX";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+6]="InterfaceForceY";
 	Rhor=new double [nbnodes_total];
 	Rhob=new double [nbnodes_total];
 	RhoN=new double [nbnodes_total];
-	Solution2D::Set_output(TmpPtrVarOut,PtrParameters->Get_NbVariablesOutput()+3);
+	V1=new double* [2];
+	V1[0]=new double [nbnodes_total];
+	V1[1]=new double [nbnodes_total];
+
+	V2=new double* [2];
+	V2[0]=new double [nbnodes_total];
+	V2[1]=new double [nbnodes_total];
+
+	Solution2D::Set_output(TmpPtrVarOut,PtrParameters->Get_NbVariablesOutput()+7);
 //	Solution2D::Set_output(PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
 	SolverTwoPhases::set_f_name();///save name of variables (distribution function and macroscopic variables)
 	SolverTwoPhases::set_f_ini();///save pointers of the distribution function
@@ -205,7 +219,7 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	Solution2D::Set_breakpoint(get_f_name(),2*nbvelo+3,get_f_ini()); //add macroscopic variables to save it
 ///Set the variables names and the variable pointers for breakpoints in writer
 	Writer->Set_breakpoint(PtrVariablesBreakpoint, get_f_name(),  2*nbvelo+3);
-	Writer->Set_solution(PtrVariablesOutput,TmpPtrVarOut,PtrParameters->Get_NbVariablesOutput()+3);
+	Writer->Set_solution(PtrVariablesOutput,TmpPtrVarOut,PtrParameters->Get_NbVariablesOutput()+7);
 //	Writer->Set_solution(PtrVariablesOutput,PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
 
 }

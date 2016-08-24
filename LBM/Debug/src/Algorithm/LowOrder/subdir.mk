@@ -11,7 +11,8 @@ CPP_SRCS += \
 ../src/Algorithm/LowOrder/D2Q9_TwoPhases.cpp \
 ../src/Algorithm/LowOrder/Gradients.cpp \
 ../src/Algorithm/LowOrder/GradientsDEF.cpp \
-../src/Algorithm/LowOrder/StreamLowOrder.cpp 
+../src/Algorithm/LowOrder/StreamLowOrder.cpp \
+../src/Algorithm/LowOrder/Tau.cpp 
 
 OBJS += \
 ./src/Algorithm/LowOrder/Boundaries.o \
@@ -21,7 +22,8 @@ OBJS += \
 ./src/Algorithm/LowOrder/D2Q9_TwoPhases.o \
 ./src/Algorithm/LowOrder/Gradients.o \
 ./src/Algorithm/LowOrder/GradientsDEF.o \
-./src/Algorithm/LowOrder/StreamLowOrder.o 
+./src/Algorithm/LowOrder/StreamLowOrder.o \
+./src/Algorithm/LowOrder/Tau.o 
 
 CPP_DEPS += \
 ./src/Algorithm/LowOrder/Boundaries.d \
@@ -31,14 +33,15 @@ CPP_DEPS += \
 ./src/Algorithm/LowOrder/D2Q9_TwoPhases.d \
 ./src/Algorithm/LowOrder/Gradients.d \
 ./src/Algorithm/LowOrder/GradientsDEF.d \
-./src/Algorithm/LowOrder/StreamLowOrder.d 
+./src/Algorithm/LowOrder/StreamLowOrder.d \
+./src/Algorithm/LowOrder/Tau.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes
 src/Algorithm/LowOrder/%.o: ../src/Algorithm/LowOrder/%.cpp
 	@echo 'Building file: $<'
 	@echo 'Invoking: GCC C++ Compiler'
-	mpic++ -O0 -g3 -Wall -c -fmessage-length=0 -lcgns -lhdf5 -lboost_serialization -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)" -o "$@" "$<"
+	mpic++ -o "$@" "$<" -O0 -g3 -Wall -c -fmessage-length=0 -lcgns -lhdf5 -lboost_serialization -MMD -MP -MF"$(@:%.o=%.d)" -MT"$(@)"
 	@echo 'Finished building: $<'
 	@echo ' '
 

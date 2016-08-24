@@ -53,7 +53,11 @@ enum GradientType{FD,LBMStencil};
 
 enum ColourGradType{Gunstensen,DensityGrad,DensityNormalGrad};
 enum RecolouringType{LatvaKokkoRothman};
+<<<<<<< HEAD
 enum ColourOperatorType {Grunau,Reis,SurfaceForce};
+=======
+enum ColourOperatorType {Grunau,SurfaceForce};
+>>>>>>> 067dd4d81cf764bc173544061a4988cbbae681ec
 
 class ColourFluid{
 private:
