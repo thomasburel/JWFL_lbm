@@ -57,6 +57,7 @@ private:
 //Collide definition
 //	void CollideD2Q9ColourFluid(int & direction, double & fi,double &rho,double*  F,double & F_Norm, double & InvTau_, double &u, double &v);
 	void Set_Collide();
+	void Select_Colour_Operator(ColourOperatorType OperatorType_);
 	double TwoPhase_Collision_operator(int & i, double* F);
 	void SurfaceForce(int & nodenumber, int* connect,int & normal,double & Fx,double & Fy);
 	double Curvature(int & nodenumber, int* connect,int & normal);

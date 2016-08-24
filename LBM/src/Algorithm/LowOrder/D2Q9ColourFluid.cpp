@@ -47,28 +47,46 @@ void D2Q9ColourFluid::Set_PointersOnFunctions(){
 	Set_Macro();
 }
 //Std2D,Std2DLocal,Std2DBody,Std2DNonCstTau,Std2DNonCstTauLocal,Std2DNonCstTauBody
+void D2Q9ColourFluid::Select_Colour_Operator(ColourOperatorType OperatorType_){
+	switch(OperatorType_)
+	{
+	case ::SurfaceForce:
+		PtrCollision=&D2Q9ColourFluid::Collision_SurfaceForce;
+		break;
+	case ::Gunstensen:
+		PtrCollision=&D2Q9ColourFluid::Collision_Gunstensen;
+		break;
+	default:
+		std::cerr<<" Colour operator not found."<<std::endl;
+		break;
+	}
+}
 void D2Q9ColourFluid::Set_Collide(){
+if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce && PtrParameters->Get_UserForceType()== ::LocalForce)
+{
+	std::cout<<" Warming: The local user force will be ignored. The colour model with the surface force is incompatible with a local user force"<<std::endl;
+}
 	if(PtrParameters->Get_FluidType()==Newtonian)
 	{
 		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
-			{Select_Collide_2D(Std2DBody);PtrCollision=&D2Q9ColourFluid::Collision_SurfaceForce;}
+			{Select_Collide_2D(Std2DBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::LocalForce)
-			{Select_Collide_2D(Std2DLocal);PtrCollision=&D2Q9ColourFluid::Collision_Gunstensen;}
+			{Select_Collide_2D(Std2DLocal);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			{Select_Collide_2D(Std2DBody);PtrCollision=&D2Q9ColourFluid::Collision_Gunstensen;}
+			{Select_Collide_2D(Std2DBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else
-			{Select_Collide_2D(Std2D);PtrCollision=&D2Q9ColourFluid::Collision_Gunstensen;}
+			{Select_Collide_2D(Std2D);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 	}
 	else
 	{
 		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
-			Select_Collide_2D(Std2DNonCstTauBody);
+			{Select_Collide_2D(Std2DNonCstTauBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::LocalForce)
-			Select_Collide_2D(Std2DNonCstTauLocal);
+			{Select_Collide_2D(Std2DNonCstTauLocal);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			Select_Collide_2D(Std2DNonCstTauBody);
+			{Select_Collide_2D(Std2DNonCstTauBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else
-			Select_Collide_2D(Std2DNonCstTau);
+			{Select_Collide_2D(Std2DNonCstTau);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 	}
 
 }
@@ -79,6 +97,7 @@ void D2Q9ColourFluid::Set_Colour_gradient(){
 		case Gunstensen:
 			if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
 			{
+				std::cout<<" Force colour gradient to Density Normal gradient due to Surface force model."<<std::endl;
 				PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
 				PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradBc;
 				PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradCorner;
