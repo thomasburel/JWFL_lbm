@@ -45,8 +45,8 @@ int main(int argc, char *argv[]) {
 	L=532;//820
 	H=854;
 	L=1064;
-	H=399;
-	L=399;
+	H=99;
+	L=99;
 	//H=re*nu/Umax-1;
 	//H=round(H);
 	//L=H;
@@ -104,12 +104,12 @@ int main(int argc, char *argv[]) {
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)0.1667
-	Param.Set_BcType(Wall,Wall,Wall,Wall);
+	Param.Set_BcType(Symmetry,Symmetry,Symmetry,Symmetry);
 /// Wall boundary condition type (Implemented BounceBack and Diffuse)
 	Param.Set_WallType(BounceBack);
 
 /// Number of maximum timestep
-	Param.Set_NbStep(10000);
+	Param.Set_NbStep(1000);
 /// Interval for output
 	Param.Set_OutPutNSteps(100);// interval
 ///Display information during the calculation every N iteration

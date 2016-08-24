@@ -53,16 +53,11 @@ void D2Q9ColourFluid::Select_Colour_Operator(ColourOperatorType OperatorType_){
 	case ::SurfaceForce:
 		PtrCollision=&D2Q9ColourFluid::Collision_SurfaceForce;
 		break;
-<<<<<<< HEAD
 	case ::Grunau:
 		PtrCollision=&D2Q9ColourFluid::Collision_Grunau;
 		break;
 	case ::Reis:
 		PtrCollision=&D2Q9ColourFluid::Collision_Reis;
-=======
-	case ::Gunstensen:
-		PtrCollision=&D2Q9ColourFluid::Collision_Gunstensen;
->>>>>>> 067dd4d81cf764bc173544061a4988cbbae681ec
 		break;
 	default:
 		std::cerr<<" Colour operator not found."<<std::endl;
@@ -175,12 +170,9 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	G[1]=V1[1];
 	F[0]=V2[0];
 	F[1]=V2[1];*/
-<<<<<<< HEAD
 	Bi[0]=-4/27;
 	for(int i=1;i<5;i++) Bi[i]=2/27;
 	for(int i=5;i<9;i++) Bi[i]=5/108;
-=======
->>>>>>> 067dd4d81cf764bc173544061a4988cbbae681ec
 	G=V1;
 	F=V2;
 	G_Norm=new double [nbnodes_total];
@@ -591,7 +583,6 @@ void D2Q9ColourFluid::Colour_gradient_DensityGradCorner(int & nodenumber, int* c
 	GradCorner(&tmp[0],&Rho[0],connect,normal);
 	G[0][nodenumber]=tmp[0];G[1][nodenumber]=tmp[1];
 	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
-<<<<<<< HEAD
 }
 void D2Q9ColourFluid::Colour_gradient_DensityNormalGrad(int & nodenumber, int* connect,int & normal){
 	double tmp[2];
@@ -608,24 +599,6 @@ void D2Q9ColourFluid::Colour_gradient_DensityNormalGrad(int & nodenumber, int* c
 		G[1][nodenumber]=G[1][nodenumber]/G_Norm[nodenumber];
 	}
 }
-=======
-}
-void D2Q9ColourFluid::Colour_gradient_DensityNormalGrad(int & nodenumber, int* connect,int & normal){
-	double tmp[2];
-//	if(nodenumber==4600)
-//		std::cout<<"G Norm is: "<<G_Norm[nodenumber]<<std::endl;
-	Grad(&tmp[0],&RhoN[0],connect,normal);
-	G[0][nodenumber]=tmp[0];G[1][nodenumber]=tmp[1];
-	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
-
-	//Normalise grad(RhoN)
-	if(G_Norm[nodenumber]>0)
-	{
-		G[0][nodenumber]=G[0][nodenumber]/G_Norm[nodenumber];
-		G[1][nodenumber]=G[1][nodenumber]/G_Norm[nodenumber];
-	}
-}
->>>>>>> 067dd4d81cf764bc173544061a4988cbbae681ec
 void D2Q9ColourFluid::Colour_gradient_DensityNormalGradBc(int & nodenumber, int* connect,int & normal){
 	double tmp[2];
 	GradBc(&tmp[0],&RhoN[0],connect,normal);
@@ -674,7 +647,6 @@ void D2Q9ColourFluid::Recolouring_Latva(int & nodenumber, double * fi_tmp){
 		else
 			f[1]->f[i][nodenumber]=fi_tmp[i]-f[0]->f[i][nodenumber];
 		}
-<<<<<<< HEAD
 
 }
 //CosPhi(nodenumber,i,G_Norm[nodenumber])
@@ -749,65 +721,6 @@ double D2Q9ColourFluid::Curvature(int & nodenumber, int* connect,int & normal){
 
 }
 
-=======
-
-}
-//CosPhi(nodenumber,i,G_Norm[nodenumber])
-double D2Q9ColourFluid::CosPhi(int nodenumber, int & direction,double & F_Norm){
-		return (G[0][nodenumber]* Ei[direction][0]+G[1][nodenumber]* Ei[direction][1]);///(F_Norm*std::sqrt(Ei[direction][0]*Ei[direction][0]+Ei[direction][1]*Ei[direction][1]));
-}
-/*double D2Q9ColourFluid::TwoPhase_Collision_operator(int & nodenumber, int & i, double & Ak, double* F_tmp, double & F_Norm){
- return Ak*0.5*F_Norm*(((F_tmp[0]*Ei[i][0]+F_tmp[1]*Ei[i][1])/F_Norm)*((F_tmp[0]*Ei[i][0]+F_tmp[1]*Ei[i][1])/F_Norm)-3/4);
-}*/
-double& D2Q9ColourFluid::Collision_operator_Gunstensen(int & i, int & nodenumber, double Ak){
-	if(G_Norm[nodenumber]>0)
-		D_tmp=Ak*0.5*G_Norm[nodenumber]*(((G[0][nodenumber]*Ei[i][0]+G[1][nodenumber]*Ei[i][1])/G_Norm[nodenumber])*((G[0][nodenumber]*Ei[i][0]+G[1][nodenumber]*Ei[i][1])/G_Norm[nodenumber])-3/4);
-	return D_tmp;
-}
-void D2Q9ColourFluid::Collision_Gunstensen(int & nodenumber, int* connect,int & normal,double* fi){
-	double InvTau_tmp=InvTau; int i0=0;
-	fi[0]=f[0]->f[0][nodenumber]+f[1]->f[0][nodenumber];
-	DVec_2D_tmp[0]=0;DVec_2D_tmp[1]=0;
-	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], InvTau_tmp);
-	for (int i=1;i<9;i++)
-	{
-		//Save the mixture distribution for recolouring
-		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
-		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Gunstensen(i, nodenumber, A1),DVec_2D_tmp[1], InvTau_tmp);
-	}
-}
-void D2Q9ColourFluid::Collision_SurfaceForce(int & nodenumber, int* connect,int & normal,double* fi){
-	double InvTau_tmp=InvTau;
-
-	if(G_Norm[nodenumber]>0)
-	{
-		SurfaceForce(nodenumber,connect,normal,F[0][nodenumber],F[1][nodenumber]);
-	}
-	else
-		{F[0][nodenumber]=0;F[1][nodenumber]=0;}
-	for (int i=0;i<9;i++)
-	{
-		//Save the mixture distribution for recolouring
-		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
-		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], F[0][nodenumber],F[1][nodenumber], InvTau_tmp);
-	}
-}
-
-void D2Q9ColourFluid::SurfaceForce(int & nodenumber, int* connect,int & normal,double & Fx,double & Fy){
-	D_tmp=0.5*tension*Curvature(nodenumber,connect,normal)*G_Norm[nodenumber]; //G_Norm is to get back the density gradient and not the normalise one
-	Fx=D_tmp*G[0][nodenumber];
-	Fy=D_tmp*G[1][nodenumber];
-
-}
-double D2Q9ColourFluid::Curvature(int & nodenumber, int* connect,int & normal){
-	double tmp_0[2],tmp_1[2];
-	Grad(&tmp_0[0],&G[0][0],connect,normal);//d(Gx)/d(x)
-	Grad(&tmp_1[0],&G[1][0],connect,normal);//d(Gy)/d(y)
-	return -(tmp_0[0]+tmp_1[1]);//Dot product
-
-}
-
->>>>>>> 067dd4d81cf764bc173544061a4988cbbae681ec
 
 ///Select and apply boundary conditions
 void D2Q9ColourFluid::ApplyBc(){

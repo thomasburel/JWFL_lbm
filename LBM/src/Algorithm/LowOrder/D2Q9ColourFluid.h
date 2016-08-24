@@ -61,8 +61,10 @@ private:
 	double TwoPhase_Collision_operator(int & i, double* F);
 	void SurfaceForce(int & nodenumber, int* connect,int & normal,double & Fx,double & Fy);
 	double Curvature(int & nodenumber, int* connect,int & normal);
-	double& Collision_operator_Gunstensen(int & i, int & nodenumber, double Ak);
-	void Collision_Gunstensen(int & nodenumber, int* connect,int & normal,double* fi);
+	double& Collision_operator_Grunau(int & i, int & nodenumber, double Ak);
+	double& Collision_operator_Reis(int & i, int & nodenumber, double Ak);
+	void Collision_Grunau(int & nodenumber, int* connect,int & normal,double* fi);
+	void Collision_Reis(int & nodenumber, int* connect,int & normal,double* fi);
 	void Collision_SurfaceForce(int & nodenumber, int* connect,int & normal,double* fi);
 
 	double TwoPhase_Collision_operator(int & nodenumber, int & direction, double & Ak, double* F, double & F_Norm);
@@ -86,6 +88,7 @@ private:
 	double *G_Norm;//Norm of the colour gradient
 	double tension;
 	double beta,A1,A2;
+	double Bi[9];
 	double Rho_limiter;
 	double D_tmp;// Temporary double
 	double* PtrD_tmp;// Temporary pointer for a double
