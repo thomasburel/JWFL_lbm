@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/Core/Dictionary.cpp \
 ../src/Core/GlobalDef.cpp \
 ../src/Core/InitLBM.cpp \
 ../src/Core/Parameters.cpp \
@@ -12,6 +13,7 @@ CPP_SRCS += \
 ../src/Core/Solver.cpp 
 
 OBJS += \
+./src/Core/Dictionary.o \
 ./src/Core/GlobalDef.o \
 ./src/Core/InitLBM.o \
 ./src/Core/Parameters.o \
@@ -20,6 +22,7 @@ OBJS += \
 ./src/Core/Solver.o 
 
 CPP_DEPS += \
+./src/Core/Dictionary.d \
 ./src/Core/GlobalDef.d \
 ./src/Core/InitLBM.d \
 ./src/Core/Parameters.d \

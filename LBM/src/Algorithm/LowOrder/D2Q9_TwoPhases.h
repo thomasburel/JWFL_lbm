@@ -114,6 +114,7 @@ protected:
 	int *size_buf; // size of buffers
 
 	int Nd_MacroVariables_sync;//number of variable has to be synchronise
+	std::vector<double*> SyncVar;
 	double ***buf_MacroSend, ***buf_MacroRecv; //buffers to send and receive
 	int *size_MacroBuf; // size of buffers
 

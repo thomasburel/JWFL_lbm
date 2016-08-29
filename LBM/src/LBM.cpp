@@ -122,7 +122,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_OutputFileName("Two_colour");
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(ColourFluid);
+	Param.Set_Model(SinglePhase);
 
 	//Gradient definition
 	Param.Set_GradientType(FD); //FD or LBMStencil

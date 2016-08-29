@@ -36,17 +36,30 @@ D2Q9ColourFluid::~D2Q9ColourFluid() {
 }
 
 D2Q9ColourFluid::D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini){
+//Initialise the common variables for the two phase models.
 	InitD2Q9TwoPhases(MultiBlock__,parallel__,Writer__, Parameters__, ini);
-	InitMultiphase(ini);
+//Initialise variables of the colour fluid model.
+	InitColourFluid(ini);
+//Initialise communication between processors
+	IniComVariables();
+//Set Pointers On Functions for selecting the right model dynamically
 	Set_PointersOnFunctions();
+//Set the variables names and the variable pointers for output in solution
+	Solution2D::Set_output();
+//Set the variables names and the variable pointers for breakpoints in solution
+	Solution2D::Set_breakpoint();
 }
 void D2Q9ColourFluid::Set_PointersOnFunctions(){
+// Select the model for two-phase operator in the collision step
 	Set_Collide();
+// Select the model for the colour gradient
 	Set_Colour_gradient();
+// Select the method for recolouring
 	Set_Recolouring();
+// Select the macrocospic function for the colour fluid model depending of the output variables and models
 	Set_Macro();
 }
-//Std2D,Std2DLocal,Std2DBody,Std2DNonCstTau,Std2DNonCstTauLocal,Std2DNonCstTauBody
+
 void D2Q9ColourFluid::Select_Colour_Operator(ColourOperatorType OperatorType_){
 	switch(OperatorType_)
 	{
@@ -158,7 +171,7 @@ void D2Q9ColourFluid::Set_Macro(){
 void D2Q9ColourFluid::Set_Recolouring(){
 	PtrRecolour=&D2Q9ColourFluid::Recolouring_Latva;
 }
-void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
+void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 //Initialise parameters
 	beta=PtrParameters->Get_Beta();
 	A1=PtrParameters->Get_A1();
@@ -173,9 +186,18 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	Bi[0]=-4/27;
 	for(int i=1;i<5;i++) Bi[i]=2/27;
 	for(int i=5;i<9;i++) Bi[i]=5/108;
-	G=V1;
+	G=new double*[2];
+	F=new double*[2];
+	Dic->AddSync("Rho",Rho);
+	Dic->AddVar(Vector,"ColourGrad",true,true,true,G[0],G[1]);
+	Dic->AddVar(Scalar,"ColourGrad_Norm",true,true,true,G_Norm);
+	Dic->AddVar(Vector,"SurfaceForce",true,true,true,F[0],F[1]);
+	Dic->AddVar(Scalar,"RhoRed",true,true,true,Rhor);
+	Dic->AddVar(Scalar,"RhoBlue",true,true,true,Rhob);
+	Dic->AddVar(Scalar,"RhoN",true,true,true,RhoN);
+/*	G=V1;
 	F=V2;
-	G_Norm=new double [nbnodes_total];
+	G_Norm=new double [nbnodes_total];*/
 /*	G=new double* [2];
 	G[0]=new double [nbnodes_total];
 	G[1]=new double [nbnodes_total];*/

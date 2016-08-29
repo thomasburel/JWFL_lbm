@@ -404,7 +404,7 @@ public:
 	char*** Get_Argv() const;
 	bool Get_Verbous() const;
 
-	void Set_VariablesOutput(bool Rho, bool U);
+	void Set_VariablesOutput(bool Rho, bool U){density=Rho;velocity=U;};
 
 	//void Save_Parameters();
 	//void Load_Parameters();

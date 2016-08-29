@@ -13,15 +13,11 @@ Solution2D::Solution2D() {
 	Writer=0;
 	U=0;
 	Rho=0;
-	//Node=0;
 	nbnodes_total=0;
 	nbnodes_real=0;
-	PtrVariablesOutput=0;
-	PtrVariablesBreakpoint=0;
-	Ptrvariabletest=0;
 	NodeArrays=0;
-	RhoN=0;
-	Rhor=0;Rhob=0;
+	Dic=0;
+
 }
 
 Solution2D::~Solution2D() {
@@ -30,23 +26,27 @@ Solution2D::~Solution2D() {
 		for (int j=0;j<nbnodes_total;j++)
 			delete U[i];
 	}
-	delete U,Rho,NodeArrays,RhoN,Rhor,Rhob;
+	delete U,Rho,NodeArrays,Dic;
+
 }
 
 
-void Solution2D::Set_Solution() {
+void Solution2D::Set_Solution(Parameters *Param) {
 	//std::cout<<"number of node: "<<Node->size()<<std::endl;
 	nbnodes_total=NodeArrays->TypeOfNode.size();
 	nbnodes_real=MultiBlock_->Get_End_Nodes()-MultiBlock_->Get_Start_Nodes()+1;//nbnodes_total;
 //	std::cout<<"Processor: "<<parrallel->getRank()<<" Number of total node is: "<<nbnodes_total<<" Number of real node is: "<<nbnodes_real<<std::endl;
 	U=new double* [2];
-	for (int i=0;i<2;i++)
+
+	Dic->AddVar(Vector,"Velocity",Param->Get_output_velocity(), true,false,U[0],U[1]);//No synchronisation between processor by default
+	Dic->AddVar(Scalar,"Density",Param->Get_output_density(), true,false,Rho);//No synchronisation between processor by default
+/*	for (int i=0;i<2;i++)
 	{
 		U[i]=new double [nbnodes_total];
 //		for (int j=0;j<nbnodes_total;j++)
 //			U[i][j]=0;
-	}
-	Rho=new double [nbnodes_total];
+	}*/
+//	Rho=new double [nbnodes_total];
 	for (int i=0;i<nbnodes_total;i++)
 		Rho[i]=1;
 	for (int j=0;j<nbnodes_total;j++)
@@ -56,65 +56,11 @@ void Solution2D::Set_Solution() {
 	}
 
 }
-void Solution2D::Set_output(std::string *str, int nbvar){
-	for (int i=0;i<nbvar;i++)
-		if(str[i]=="Rho")
-			PtrVariablesOutput[i]=&Rho[0];
-		else if(str[i]=="RhoN")
-			PtrVariablesOutput[i]=&RhoN[0];
-		else if(str[i]=="RhoRed")
-			PtrVariablesOutput[i]=&Rhor[0];
-		else if(str[i]=="RhoBlue")
-			PtrVariablesOutput[i]=&Rhob[0];
-		else if (str[i]=="VelocityX")
-			PtrVariablesOutput[i]=&U[0][0];//Ptrvariabletest;//&U[0][0];
-		else if(str[i]=="VelocityY")
-			PtrVariablesOutput[i]=&U[1][0];
-		else if(str[i]=="ColourGradX")
-			PtrVariablesOutput[i]=&V1[0][0];
-		else if(str[i]=="ColourGradY")
-			PtrVariablesOutput[i]=&V1[1][0];
-		else if(str[i]=="InterfaceForceX")
-			PtrVariablesOutput[i]=&V2[0][0];
-		else if(str[i]=="InterfaceForceY")
-			PtrVariablesOutput[i]=&V2[1][0];
-		else
-			std::cout<< "Problem in output setup" << std::endl;
-
-
+void Solution2D::Set_output(){
+	Writer->Set_solution(Dic->Get_PtrExportVar(),Dic->Get_PtrExportVarName(),Dic->Get_NbExportVar());
 }
-void Solution2D::Set_breakpoint(std::string *str, int nbvar,double **f_ini){
-	int i_tmp=0;
-	std::stringstream sstm;
-	sstm<<"f_"<<i_tmp;
-	for (int i=0;i<nbvar;i++)
-	{
-		std::string str_tmp=sstm.str();
-		if(str[i]=="Rho")
-			PtrVariablesBreakpoint[i]=&Rho[0];
-		else if(str[i]=="RhoN")
-			PtrVariablesBreakpoint[i]=&RhoN[0];
-		else if(str[i]=="RhoRed")
-			PtrVariablesBreakpoint[i]=&Rhor[0];
-		else if(str[i]=="RhoBlue")
-			PtrVariablesBreakpoint[i]=&Rhob[0];
-		else if (str[i]=="VelocityX")
-			PtrVariablesBreakpoint[i]=&U[0][0];
-		else if (str[i]=="VelocityY")
-			PtrVariablesBreakpoint[i]=&U[1][0];
-		else if (str[i]==str_tmp)
-		{
-			PtrVariablesBreakpoint[i]=f_ini[i_tmp];
-			i_tmp++;
-			//empty stringstream
-			sstm.clear();
-			sstm.str(std::string());
-			// set the next value for sstm
-			sstm<<"f_"<<i_tmp;
-		}
-		else
-			std::cout<< "Problem in breakpoint setup. Name: "<< str[i]<<" not found." << std::endl;
-	}
-
-
+void Solution2D::Set_breakpoint()
+{
+	Writer->Set_breakpoint(Dic->Get_PtrExportVarBreakpoint(),Dic->Get_PtrExportVarBreakpointName(),Dic->Get_NbExportVarBreakpoint());
 }
+

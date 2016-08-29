@@ -23,47 +23,19 @@ SolverSinglePhase::SolverSinglePhase() {
 	PtrParameters=0;
 	f=0;
 	ftmp=0;
-	f_name=0;
-	f_ini=0;
+
 }
 
 SolverSinglePhase::~SolverSinglePhase() {
 	delete f;
 	delete [] ftmp;
 }
-double** SolverSinglePhase::get_f_ini(){
-	return f_ini;
-}
-void SolverSinglePhase::set_f_ini(){
-	if(f_ini!=0)
-		delete f_ini;
-	f_ini=new double*[nbvelo];
-	for (int i=0;i<nbvelo;i++)
-		f_ini[i]=&f->f[i][0];
-}
-std::string* SolverSinglePhase::get_f_name(){
-	return f_name;
-}
-void SolverSinglePhase::set_f_name(){
-	if(f_name!=0)
-		delete f_name;
-	f_name=new std::string[nbvelo+3];
-	f_name[0]="Rho";
-	f_name[1]="VelocityX";
-	f_name[2]="VelocityY";
-	for (int i=3;i<nbvelo+3;i++)
-	{
-		std::stringstream sstm;
-		sstm<<"f_"<<i-3;
-		f_name[i]=sstm.str();
-	}
-}
+
 SolverTwoPhases::SolverTwoPhases() {
 	PtrParameters=0;
 	f=0;
 	ftmp=0;
-	f_name=0;
-	f_ini=0;
+
 }
 
 SolverTwoPhases::~SolverTwoPhases() {
@@ -75,39 +47,7 @@ SolverTwoPhases::~SolverTwoPhases() {
 	}
 	delete [] ftmp;
 }
-double** SolverTwoPhases::get_f_ini(){
-	return f_ini;
-}
-void SolverTwoPhases::set_f_ini(){
-	if(f_ini!=0)
-		delete f_ini;
-	f_ini=new double*[nbvelo*2];
-	for (int i=0;i<nbvelo;i++)
-		f_ini[i]=&f[0]->f[i][0];
-	for (int i=nbvelo;i<nbvelo*2;i++)
-		f_ini[i]=&f[1]->f[i-nbvelo][0];
-}
-std::string* SolverTwoPhases::get_f_name(){
-	return f_name;
-}
-void SolverTwoPhases::set_f_name(){
-	if(f_name!=0)
-		delete f_name;
-	f_name=new std::string[2*nbvelo+3];
-	f_name[0]="Rho";
-/*	f_name[1]="RhoN";
-	f_name[2]="RhoRed";
-	f_name[3]="RhoBlue";*/
-	f_name[1]="VelocityX";
-	f_name[2]="VelocityY";
-	for (int i=3;i<2*nbvelo+3;i++)
-	{
-		std::stringstream sstm;
-		sstm<<"f_"<<i-3;
-		f_name[i]=sstm.str();
-	}
 
-}
 SolverSinglePhaseLowOrder::SolverSinglePhaseLowOrder() {
 	PtrParameters=0;
 }
@@ -123,7 +63,7 @@ SolverTwoPhasesLowOrder::~SolverTwoPhasesLowOrder() {
 	// TODO Auto-generated destructor stub
 }
 SolverSinglePhaseLowOrder2D::SolverSinglePhaseLowOrder2D() {
-	PtrParameters=0;
+	Solver::PtrParameters=0;
 
 }
 
@@ -138,30 +78,49 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 	MultiBlock_=PtrMultiBlock_;
 	parallel=PtrParallel_;
 	Writer=PtrWriter_;
-	PtrParameters=PtrParameters_;
+	Solver::PtrParameters=PtrParameters_;
 	PtrBlockStream=MultiBlock_->Get_Block();
 	PtrBlockCollide=PtrBlockStream;
 	//Node=MultiBlock_->Get_Block()->Get_PtrNode();
 	NodeArrays=MultiBlock_->Get_Block()->Get_NodeArrays2D();
 	IdBoundaries=MultiBlock_->Get_Block()->Get_PtrIdBc();
 	//InvTau=1.0/PtrParameters->Get_Tau();
-	nbvelo=PtrParameters->Get_NbVelocities();
+	nbvelo=Solver::PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
 //	Gradients::initGradients(2,nbvelo,PtrParameters->Get_GradientType());
-	Set_Solution();
-	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()];
+	Dic=new Dictionary(2,nbnode);
+	Add_OneDistributionToDictionary();
+	Set_Solution(PtrParameters);
+/*
+	//PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()];
 	PtrVariablesBreakpoint=new double* [nbvelo+3];
-	Solution2D::Set_output(PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
+	Solution2D::Set_output();
+	//Solution2D::Set_output(PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
 	SolverSinglePhase::set_f_name();///save name of variables (distribution function and macroscopic variables)
 	SolverSinglePhase::set_f_ini();///save pointers of the distribution function
 	///Set the variables names and the variable pointers for breakpoints in solution (the set of solution and writer are separated due to macroscopic variables are not set in the same class)
 	Solution2D::Set_breakpoint(get_f_name(),nbvelo+3,get_f_ini()); //add macroscopic variables to save it
 ///Set the variables names and the variable pointers for breakpoints in writer
 	Writer->Set_breakpoint(PtrVariablesBreakpoint, get_f_name(),  nbvelo+3);
-
+*/
+/*
+///Set the variables names and the variable pointers for output in solution
+	Solution2D::Set_output();
+///Set the variables names and the variable pointers for breakpoints in solution
+	Solution2D::Set_breakpoint();
+*/
+}
+void SolverSinglePhaseLowOrder2D::Add_OneDistributionToDictionary(){
+	//First distribution
+	for(int i=0;i<nbvelo;i++)
+	{
+		std::stringstream sstm;
+		sstm<<"f[0]_"<<i;
+		Dic->AddDistributionBreakpoint(sstm.str(),f->f[i]);
+	}
 }
 SolverTwoPhasesLowOrder2D::SolverTwoPhasesLowOrder2D() {
-	PtrParameters=0;
+	Solver::PtrParameters=0;
 
 
 }
@@ -177,19 +136,20 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	MultiBlock_=PtrMultiBlock_;
 	parallel=PtrParallel_;
 	Writer=PtrWriter_;
-	PtrParameters=PtrParameters_;
+	Solver::PtrParameters=PtrParameters_;
 	PtrBlockStream=MultiBlock_->Get_Block();
-//	PtrBlockCollide=PtrBlockStream;
-	//Node=MultiBlock_->Get_Block()->Get_PtrNode();
 	NodeArrays=MultiBlock_->Get_Block()->Get_NodeArrays2D();
 	IdBoundaries=MultiBlock_->Get_Block()->Get_PtrIdBc();
 	//InvTau=1.0/PtrParameters->Get_Tau();
-	nbvelo=PtrParameters->Get_NbVelocities();
+	nbvelo=Solver::PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
-	Gradients::initGradients(2,nbvelo,PtrParameters->Get_GradientType());
-	Set_Solution();
-	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()+7];
-	PtrVariablesBreakpoint=new double* [2*nbvelo+3];
+	Gradients::initGradients(2,nbvelo,Solver::PtrParameters->Get_GradientType());
+	Dic=new Dictionary(2,nbnode);
+	Add_TwoDistributionsToDictionary();
+	Set_Solution(PtrParameters);
+//	PtrVariablesBreakpoint=new double* [2*nbvelo+3];
+/*	PtrVariablesOutput=new double* [PtrParameters->Get_NbVariablesOutput()+7];
+
 	std::string* TmpPtrVarOut=new std::string [PtrParameters->Get_NbVariablesOutput()+7];
 	for(int i=0;i<PtrParameters->Get_NbVariablesOutput();i++)
 		TmpPtrVarOut[i]=PtrParameters->Get_PtrVariablesOutput()[i];
@@ -199,28 +159,40 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+3]="ColourGradX";
 	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+4]="ColourGradY";
 	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+5]="InterfaceForceX";
-	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+6]="InterfaceForceY";
+	TmpPtrVarOut[PtrParameters->Get_NbVariablesOutput()+6]="InterfaceForceY";*/
+/*
 	Rhor=new double [nbnodes_total];
 	Rhob=new double [nbnodes_total];
 	RhoN=new double [nbnodes_total];
-	V1=new double* [2];
+*/
+/*	V1=new double* [2];
 	V1[0]=new double [nbnodes_total];
 	V1[1]=new double [nbnodes_total];
 
 	V2=new double* [2];
 	V2[0]=new double [nbnodes_total];
-	V2[1]=new double [nbnodes_total];
-
-	Solution2D::Set_output(TmpPtrVarOut,PtrParameters->Get_NbVariablesOutput()+7);
-//	Solution2D::Set_output(PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
-	SolverTwoPhases::set_f_name();///save name of variables (distribution function and macroscopic variables)
-	SolverTwoPhases::set_f_ini();///save pointers of the distribution function
-	///Set the variables names and the variable pointers for breakpoints in solution (the set of solution and writer are separated due to macroscopic variables are not set in the same class)
-	Solution2D::Set_breakpoint(get_f_name(),2*nbvelo+3,get_f_ini()); //add macroscopic variables to save it
-///Set the variables names and the variable pointers for breakpoints in writer
-	Writer->Set_breakpoint(PtrVariablesBreakpoint, get_f_name(),  2*nbvelo+3);
-	Writer->Set_solution(PtrVariablesOutput,TmpPtrVarOut,PtrParameters->Get_NbVariablesOutput()+7);
-//	Writer->Set_solution(PtrVariablesOutput,PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
-
+	V2[1]=new double [nbnodes_total];*/
+/*
+///Set the variables names and the variable pointers for output in solution
+	Solution2D::Set_output();
+///Set the variables names and the variable pointers for breakpoints in solution
+	Solution2D::Set_breakpoint();
+*/
 }
+void SolverTwoPhasesLowOrder2D::Add_TwoDistributionsToDictionary(){
 
+	//First distribution
+	for(int i=0;i<nbvelo;i++)
+	{
+		std::stringstream sstm;
+		sstm<<"f[0]_"<<i;
+		Dic->AddDistributionBreakpoint(sstm.str(),f[0]->f[i]);
+	}
+	//Second distribution
+	for(int i=0;i<nbvelo;i++)
+	{
+		std::stringstream sstm;
+		sstm<<"f[1]_"<<i;
+		Dic->AddDistributionBreakpoint(sstm.str(),f[1]->f[i]);
+	}
+}

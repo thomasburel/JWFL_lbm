@@ -36,7 +36,6 @@ D2Q9::D2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* W
 
 
 	f=new DistriFunct(MultiBlock__->Get_nnodes(),Parameters_->Get_NbVelocities());
-	Ptrvariabletest=&f->f[1][0];
 	Set_Solver(MultiBlock__,parallel__,Writer__,Parameters_);
 	ftmp=new double[nbnode];
 	PtrFiStream=f;
@@ -97,7 +96,7 @@ D2Q9::D2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* W
 	SumWeightConvexNE=omega[3]+omega[4]+omega[7];
 	SumWeightConvexNW=omega[1]+omega[4]+omega[8];
 	SumWeightConvexSW=omega[1]+omega[2]+omega[5];
-	IniComVariables();
+
 	init(ini);
 }
 D2Q9::~D2Q9() {
@@ -293,8 +292,12 @@ void D2Q9::init(InitLBM& ini){
 	//std::cout<<std::endl;
 	delete [] pos;
 	delete [] U_;
-	Writer->Set_solution(PtrVariablesOutput,PtrParameters->Get_PtrVariablesOutput(),PtrParameters->Get_NbVariablesOutput());
-	parallel->barrier();
+//Initialise communication between processors
+	IniComVariables();
+///Set the variables names and the variable pointers for output in solution
+	Solution2D::Set_output();
+///Set the variables names and the variable pointers for breakpoints in solution
+	Solution2D::Set_breakpoint();
 
 }
 bool D2Q9::checknode(int xin, int yin)
