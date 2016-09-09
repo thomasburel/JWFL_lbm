@@ -7,4 +7,5 @@ language.settings.xml
 *.txt
 *.d
 LBM
-/Debug/
+.cproject
+/.settings/
