@@ -8,10 +8,12 @@
 #ifndef CORE_SOLUTION_H_
 #define CORE_SOLUTION_H_
 //#include "../Mesh/SingleBlock/Node2D.h"
+#include "Dictionary.h"
 #include "../Mesh/MultiBlock.h"
 #include "../Parallelism/ParallelManager.h"
 #include "../IO/CGNS.h"
 #include <iostream>
+
 // include this header to serialize vectors
 #include <boost/serialization/vector.hpp>
 // include this header to serialize string
@@ -23,14 +25,11 @@ class Solution2D {
 public:
 	Solution2D();
 	virtual ~Solution2D();
-	void Set_Solution();
-
-	double* Ptrvariabletest;
+	void Set_Solution(Parameters *Param);
 
 protected:
-	void Set_output(std::string *str, int nbvar);
-	void Set_breakpoint(std::string *str, int nbvar,double **f_ini);
-	std::string** Get_VariablesBreakpoint();
+	void Set_output();
+	void Set_breakpoint();
 
 protected:
 //Pointer to general objects
@@ -39,10 +38,8 @@ protected:
 	WriterManager* Writer;
 
 //Solution variables
+	Dictionary* Dic;
 	double **U, *Rho;
-	//Pointers for export solution
-	double *RhoN,*Rhor,*Rhob; // Rho normal, Rho red fluid and Rho Blue fluid
-	double **V1,**V2;
 
 //Mesh variables
 	//std::vector<Node2D*> *Node;
@@ -50,8 +47,7 @@ protected:
 	std::vector<int> IdBoundaries;
 	int nbnodes_real, nbnodes_total; //total include ghost nodes, real without ghost nodes
 
-//Export variables
-	double **PtrVariablesOutput,**PtrVariablesBreakpoint;
+
 private:
 	friend class boost::serialization::access;
     template<class Archive>

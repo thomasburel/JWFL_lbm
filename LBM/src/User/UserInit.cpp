@@ -71,13 +71,14 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 
 //*********** Poiseuille ini***************
 //Left side of the domain
-/*	if(pos[0]<=0)
+	if(pos[0]<=0)
 	// Global Corner at the bottom left side
  		if(pos[1]<=0)
   		{
   			U[0]=0;
   			U[1]=0;
   			Rho=Pmax;
+  			alpha=1;
   		}
   		else
  	// Global Corner at the Top left side
@@ -86,13 +87,15 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   			U[0]=0;
   			U[1]=0;
   			Rho=Pmax;
+  			alpha=1;
   		}
   	//Left side of the domain and excluding the two Global Corners
   		else
   		{
-   			U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));;
+   			U[0]=0;//Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
   			U[1]=0;
   			Rho=Pmax;
+  			alpha=1;
  		}
 	else
 //Right side of the domain
@@ -103,6 +106,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   			U[0]=0;
   			U[1]=0;
   			Rho=Pmin;
+  			alpha=0;
   		}
   		else
   	// Global Corner at the Top right side
@@ -111,13 +115,15 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   			U[0]=0;
   			U[1]=0;
   			Rho=Pmin;
+  			alpha=0;
   		}
   	//Right side of the domain and excluding the two Global Corner
   		else
   		{
-    		U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));;
+    		U[0]=0;//Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
   			U[1]=0;
   			Rho=Pmin;
+  			alpha=0;
   		}
   	else
 //Bottom side of the domain
@@ -125,16 +131,18 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   	{
   		U[0]=0;
   		U[1]=0;
-  		Rho=Pmax-pos[0]*(Pmax-Pmin)/L
+  		Rho=Pmin;//Pmax-pos[0]*(Pmax-Pmin)/L;
+  		alpha=0;
   	}
 	//Top side of the domain
   	else
   	{
   		U[0]=0;
   		U[1]=0;
-  		Rho=Pmax-pos[0]*(Pmax-Pmin)/L
+  		Rho=Pmin;//Pmax-pos[0]*(Pmax-Pmin)/L;
+  		alpha=0;
   	}
-*/
+
 
 //*********** Driven Cavity***************
 /*	if(pos[1]>0.1 )
@@ -144,8 +152,24 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 		U[1]=0.0;
 		Rho=Pmin;*/
 
-	Rho=PtrParameters.Get_Rho_2();
-	alpha=0;
+//	Rho=PtrParameters.Get_Rho_2();
+//	alpha=0;
+
+	/*if(pos[0]>1)
+		{
+		Rho=Pmin;
+		U[0]=Umax;
+		}
+	else
+	{
+		Rho=Pmin;
+		U[0]=Umax;
+
+	}
+	if(pos[1]==0||pos[1]==H)//wall*/
+/*		U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
+		U[1]=0;
+	Rho=Pmax-pos[0]*(Pmax-Pmin)/L;*/
 }
 
 void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U, double& alpha){
@@ -170,7 +194,10 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 		alpha=0;
 		Rho=PtrParameters.Get_Rho_2();
 	}
-
+	Rho=Pmin;
+	U[0]=Umax;
+	U[1]=0;
+//	Rho=PtrParameters.Get_Rho_2();
 //	Rho=1;
 	//Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
 
@@ -186,5 +213,14 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 	Rho=1;*/
 	//Rho=1;
 	//U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
+	U[0]=0;//Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
+	U[1]=0;
+	Rho=Pmin;//Pmax-pos[0]*(Pmax-Pmin)/L;
+	alpha=0;
+	if(pos[0]<=0)
+	{
+		Rho=Pmax;
+		alpha=1;
+	}
 }
 

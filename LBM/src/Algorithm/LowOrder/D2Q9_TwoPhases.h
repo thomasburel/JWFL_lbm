@@ -7,14 +7,15 @@
 
 #ifndef ALGORITHM_LOWORDER_D2Q9TwoPhases_H_
 #define ALGORITHM_LOWORDER_D2Q9TwoPhases_H_
+#include "D2Q9CommonVar.h"
 #include "../../Core/Parameters.h"
 #include "../../Core/Solver.h"
 #include "../../Core/GlobalDef.h"
-#include "Boundaries.h"
 #include <iostream>
 #include <cmath>
+#include "Boundaries/D2Q9Bc.h"
 
-class D2Q9TwoPhases: public SolverTwoPhasesLowOrder2D, public Boundaries {
+class D2Q9TwoPhases: public SolverTwoPhasesLowOrder2D, public D2Q9Bc, protected D2Q9CommonVar{
 public:
 	D2Q9TwoPhases();
 	virtual ~D2Q9TwoPhases();
@@ -114,6 +115,7 @@ protected:
 	int *size_buf; // size of buffers
 
 	int Nd_MacroVariables_sync;//number of variable has to be synchronise
+	std::vector<double*> SyncVar;
 	double ***buf_MacroSend, ***buf_MacroRecv; //buffers to send and receive
 	int *size_MacroBuf; // size of buffers
 
@@ -125,8 +127,8 @@ private:
     void serialize(Archive &ar, const unsigned int version)
     {
        ar & boost::serialization::base_object<SolverTwoPhasesLowOrder2D>(*this);
-       ar & boost::serialization::base_object<Boundaries>(*this);
-       ar & Opposite & Nd_variables_sync;
+  //     ar & boost::serialization::base_object<Boundaries>(*this);
+       ar &  Nd_variables_sync;
     }
 
 };

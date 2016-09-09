@@ -46,7 +46,12 @@ Parameters::Parameters()
 	ColourGrad=Gunstensen;
 	Recolouring=LatvaKokkoRothman;
 	ColourOperator=Grunau;
-
+	PressureModelParam=HeZouP;
+	PressureTypeParam=FixP;
+	VelocityModelParam=HeZouV;
+	VelocityTypeParam=FixV;
+	CornerModelParam=HoChan;
+	CornerPressureTypeParam=ExtrapolCP;
 }
 
 Parameters::~Parameters() {
@@ -217,7 +222,8 @@ int CalculationParameters::Get_OutPutNSteps() const{
 	return IntervalOutput;
 }
 
-void CalculationParameters::Set_VariablesOutput(int nbvar, std::string * strinput)
+/*
+ * void CalculationParameters::Set_VariablesOutput(int nbvar, std::string * strinput)
 {
 	NbVariablesOutput=nbvar;
 	if(VariablesOutput!=0)
@@ -232,7 +238,8 @@ void CalculationParameters::Set_VariablesOutput(int nbvar, std::string * strinpu
 //		VariablesOutputSeria[i]=VariablesOutput[i];
 	}
 }
-void Parameters::Set_VariablesOutput (bool Rho, bool U) {
+*/
+/*void Parameters::Set_VariablesOutput (bool Rho, bool U) {
 	std::string *strtmp=0;
 	int nbvar=0;
 	if(MeshParameters::Get_Dimension()==D2)
@@ -310,7 +317,7 @@ int CalculationParameters::Get_NbVariablesOutput() const {
 	return NbVariablesOutput;
 
 }
-
+*/
 void BoundaryParameters::Set_WallType(WallType WallType_){ WallTypeParam= WallType_;}
 WallType BoundaryParameters::Get_WallType() const {return WallTypeParam;}
 void BoundaryParameters::Set_SymmetryType(SymmetryType SymmetryType_){ SymmetryTypeParam= SymmetryType_;}

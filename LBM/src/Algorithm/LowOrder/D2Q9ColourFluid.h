@@ -23,8 +23,18 @@ public:
 	virtual void run();
 
 private:
-	void InitMultiphase(InitLBM& ini);
+    //! Initialise the colour fluid model.
+    /*!
+      \param ini : initialisation class (generic initialised methods).
+    */
+	void InitColourFluid(InitLBM& ini);
+    //! Set Pointers On Functions for selecting the right model dynamically.
+    /*!
+     *
+      \sa Set_Collide(), Set_Colour_gradient(), Set_Recolouring(), Set_Macro().
+    */
 	void Set_PointersOnFunctions();
+
 	void UpdateMacroVariables();
 
 // Macroscopic calculation
@@ -57,11 +67,14 @@ private:
 //Collide definition
 //	void CollideD2Q9ColourFluid(int & direction, double & fi,double &rho,double*  F,double & F_Norm, double & InvTau_, double &u, double &v);
 	void Set_Collide();
+	void Select_Colour_Operator(ColourOperatorType OperatorType_);
 	double TwoPhase_Collision_operator(int & i, double* F);
 	void SurfaceForce(int & nodenumber, int* connect,int & normal,double & Fx,double & Fy);
 	double Curvature(int & nodenumber, int* connect,int & normal);
-	double& Collision_operator_Gunstensen(int & i, int & nodenumber, double Ak);
-	void Collision_Gunstensen(int & nodenumber, int* connect,int & normal,double* fi);
+	double& Collision_operator_Grunau(int & i, int & nodenumber, double Ak);
+	double& Collision_operator_Reis(int & i, int & nodenumber, double Ak);
+	void Collision_Grunau(int & nodenumber, int* connect,int & normal,double* fi);
+	void Collision_Reis(int & nodenumber, int* connect,int & normal,double* fi);
 	void Collision_SurfaceForce(int & nodenumber, int* connect,int & normal,double* fi);
 
 	double TwoPhase_Collision_operator(int & nodenumber, int & direction, double & Ak, double* F, double & F_Norm);
@@ -72,37 +85,47 @@ private:
 
 // Boundary conditions depend of the model. Some functions has to be rewritten.
 	void ApplyBc();
-	void ApplyGlobalCorner(NodeCorner2D& NodeIn);
+/*	void ApplyGlobalCorner(NodeCorner2D& NodeIn);
 	void ApplyBounceBack(NodeWall2D& Node);
 	void ApplyCorner(NodeCorner2D& Node);
 	void ApplyBounceBack(NodeCorner2D& Node);
-	void ApplySymmetryPressureOnNode(NodeSymmetry2D& NodeIn);
+	void ApplySymmetryPressureOnNode(NodeSymmetry2D& NodeIn);*/
 
 
 private:
 //Multiphase variables
-	double **F, **G;//Surface Force and Colour gradient/density gradient
-	double *G_Norm;//Norm of the colour gradient
-	double tension;
-	double beta,A1,A2;
-	double Rho_limiter;
+	double *RhoN;// Normal density
+	double *Rhor;// Density red fluid
+	double *Rhob;// DensityBlue fluid
+	double **F, **G;///< Surface Force and Colour gradient/density gradient
+	double *G_Norm;///< Norm of the colour gradient
+	double tension;///< Surface tension
+	double beta;///< Separation coefficient for the recolouring method
+	double A1;///< Guntensen parameter for the red fluid
+	double A2;///< Guntensen parameter for the blue fluid
+	double Bi[9];///< Reis correction
+	double Rho_limiter;///< Approximation to null density
 	double D_tmp;// Temporary double
 	double* PtrD_tmp;// Temporary pointer for a double
 	double DVec_2D_tmp[2];// Temporary vector 2D for a double
 	double DArray_2D_tmp[2][2];// Temporary vector 2D for a double
 // Pointers on function
-	//Simplify notation for pointer on member functions
+
+///Simplify notation for pointer on a member function of D2Q9ColourFluid class for Colour Gradient methods
 	typedef void(D2Q9ColourFluid::*ColourGrad)(int & nodenumber, int* connect,int & normal);
+///Simplify notation for pointer on a member function of D2Q9ColourFluid class for recolouring methods
 	typedef void(D2Q9ColourFluid::*Recolour)(int & nodenumber, double * fi_tmp);
+///Simplify notation for pointer on a member function of D2Q9ColourFluid class for macroscopic variables calculation methods
 	typedef void(D2Q9ColourFluid::*Macro)(int & nodenumber);
+///Simplify notation for pointer on a member function of D2Q9ColourFluid class for collision models
 	typedef void(D2Q9ColourFluid::*Collision)(int & nodenumber, int* connect,int & normal,double* fi);
-	//Define name for pointers on functions
-	ColourGrad PtrColourGrad;
-	ColourGrad PtrColourGradBc;
-	ColourGrad PtrColourGradCorner;
-	Recolour PtrRecolour;
-	Macro PtrMacro;
-	Collision PtrCollision;
+//Define name for pointers on functions
+	ColourGrad PtrColourGrad;///< Colour gradient pointer for interior nodes
+	ColourGrad PtrColourGradBc;///< Colour gradient pointer for boundary condition nodes
+	ColourGrad PtrColourGradCorner;///< Colour gradient pointer for corner nodes
+	Recolour PtrRecolour;///< Recolouring pointer
+	Macro PtrMacro;///< Macroscopic pointer
+	Collision PtrCollision;///< Collision pointer
 
 };
 
