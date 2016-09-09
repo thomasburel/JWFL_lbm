@@ -12,6 +12,7 @@
 
 #ifndef ALGORITHM_LOWORDER_COLLIDELOWORDER_H_
 #define ALGORITHM_LOWORDER_COLLIDELOWORDER_H_
+
 #include "../../Core/GlobalDef.h"
 #include "../../Core/Parameters.h"
 #include "../../Mesh/SingleBlock.h"
@@ -21,7 +22,8 @@
 
 enum CollideType{Std2D,Std2DLocal,Std2DBody,Std2DNonCstTau,Std2DNonCstTauLocal,Std2DNonCstTauBody};
 
-class CollideLowOrder: public UserForce {
+class CollideLowOrder: public UserForce
+ {
 public:
 	CollideLowOrder();
 	virtual ~CollideLowOrder();
@@ -39,12 +41,15 @@ public:
 	void Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	double Collide_2D_BodyForce_Non_Constant_Tau(int & i, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+
 protected:
 	double InvTau;
 	Block* PtrBlockCollide;
 	DistriFunct* PtrFiCollide;
-	double Ei[9][2];
-	double omega[9];
+	double **EiCollide;
+	double *omegaCollide;
+//	double Ei[9][2];
+//	double omega[9];
 	double D_tmp;// Temporary double
 	double* PtrD_tmp;// Temporary pointer for a double
 	double DVec_2D_tmp[2];// Temporary vector 2D for a double

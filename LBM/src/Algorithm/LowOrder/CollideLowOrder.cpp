@@ -46,50 +46,50 @@ void CollideLowOrder::Select_Collide_2D(CollideType type){
 }
 ///Standard Collision Single phase step
 void CollideLowOrder::Collide_2D_SinglePhase(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
-	fi= fi-InvTau*(fi-EquiDistriFunct2D(rho, u, v,Ei[i], omega[i]));
+	fi= fi-InvTau*(fi-EquiDistriFunct2D(rho, u, v,EiCollide[i], omegaCollide[i]));
 }
 ///Collision Single phase step with a local (directional) force calculated from User force or model or both
 void CollideLowOrder::Collide_2D_SinglePhase_With_LocalForce(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
-	fi= fi-InvTau*(fi-EquiDistriFunct2D(rho, u, v,Ei[i], omega[i]))+LocalForce(i, rho, u, v)+Fx;
+	fi= fi-InvTau*(fi-EquiDistriFunct2D(rho, u, v,EiCollide[i], omegaCollide[i]))+LocalForce(i, rho, u, v)+Fx;
 }
 ///Collision Single phase step with a body force calculated from User force or model or both
 void CollideLowOrder::Collide_2D_SinglePhase_With_BodyForce(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
 	Fx=Fx+BodyForce(0,rho,u,v);
 	Fy=Fy+BodyForce(1,rho,u,v);
-	fi= fi-InvTau*(fi-EquiDistriFunct2D(rho, u, v,Ei[i], omega[i]))+
+	fi= fi-InvTau*(fi-EquiDistriFunct2D(rho, u, v,EiCollide[i], omegaCollide[i]))+
 			Collide_2D_BodyForce(i, u, v, Fx,Fy);
 }
 ///Body force function
 double CollideLowOrder::Collide_2D_BodyForce(int & i, double &u, double &v, double & Fx, double & Fy){
 	return
-			Fx*(1-InvTau*0.5)*omega[i]*3*((Ei[i][0]-u)+3*Ei[i][0]*(Ei[i][0]*u+Ei[i][1]*v))+
-			Fy*(1-InvTau*0.5)*omega[i]*3*((Ei[i][1]-v)+3*Ei[i][1]*(Ei[i][0]*u+Ei[i][1]*v));
+			Fx*(1-InvTau*0.5)*omegaCollide[i]*3*((EiCollide[i][0]-u)+3*EiCollide[i][0]*(EiCollide[i][0]*u+EiCollide[i][1]*v))+
+			Fy*(1-InvTau*0.5)*omegaCollide[i]*3*((EiCollide[i][1]-v)+3*EiCollide[i][1]*(EiCollide[i][0]*u+EiCollide[i][1]*v));
 
 }
 ///Standard Collision Single phase step with a local Tau (relaxation time which is related to viscosity and/or Knudsen)
 void CollideLowOrder::Collide_2D_SinglePhase_Non_Constant_Tau(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
-	fi= fi-InvTau_tmp*(fi-EquiDistriFunct2D(rho, u, v,Ei[i], omega[i]));
+	fi= fi-InvTau_tmp*(fi-EquiDistriFunct2D(rho, u, v,EiCollide[i], omegaCollide[i]));
 }
 ///Collision Single phase step with a local (directional) force calculated from User force or model or both and with a local Tau (relaxation time which is related to viscosity and/or Knudsen)
 void CollideLowOrder::Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
-	fi= fi-InvTau_tmp*(fi-EquiDistriFunct2D(rho, u, v,Ei[i], omega[i]))+LocalForce(i, rho, u, v)+Fx;
+	fi= fi-InvTau_tmp*(fi-EquiDistriFunct2D(rho, u, v,EiCollide[i], omegaCollide[i]))+LocalForce(i, rho, u, v)+Fx;
 }
 ///Collision Single phase step with a body force calculated from User force or model or both and with a local Tau (relaxation time which is related to viscosity and/or Knudsen)
 void CollideLowOrder::Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForce(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
 	Fx=Fx+BodyForce(0,rho,u,v);
 	Fy=Fy+BodyForce(1,rho,u,v);
-	fi= fi-InvTau_tmp*(fi-EquiDistriFunct2D(rho, u, v,Ei[i], omega[i]))+
+	fi= fi-InvTau_tmp*(fi-EquiDistriFunct2D(rho, u, v,EiCollide[i], omegaCollide[i]))+
 			Collide_2D_BodyForce_Non_Constant_Tau(i, u, v, Fx,Fy, InvTau_tmp);
 }
 ///Body force function with a local Tau (relaxation time which is related to viscosity and/or Knudsen)
 double CollideLowOrder::Collide_2D_BodyForce_Non_Constant_Tau(int & i, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
 	return
-			Fx*(1-InvTau_tmp*0.5)*omega[i]*3*((Ei[i][0]-u)+3*Ei[i][0]*(Ei[i][0]*u+Ei[i][1]*v))+
-			Fy*(1-InvTau_tmp*0.5)*omega[i]*3*((Ei[i][1]-v)+3*Ei[i][1]*(Ei[i][0]*u+Ei[i][1]*v));
+			Fx*(1-InvTau_tmp*0.5)*omegaCollide[i]*3*((EiCollide[i][0]-u)+3*EiCollide[i][0]*(EiCollide[i][0]*u+EiCollide[i][1]*v))+
+			Fy*(1-InvTau_tmp*0.5)*omegaCollide[i]*3*((EiCollide[i][1]-v)+3*EiCollide[i][1]*(EiCollide[i][0]*u+EiCollide[i][1]*v));
 
 }
 /*CollideD2Q9Colour::CollideD2Q9Colour(){
-//	Ei=new double [9][2];
+//	EiCollide=new double [9][2];
 	Ak=0.01;
 }
 CollideD2Q9Colour::~CollideD2Q9Colour(){
@@ -99,15 +99,15 @@ void CollideD2Q9Colour::Collide_ColorFluid(int & direction, double & fi,double &
 {
 	InvTau=InvTau_;
 //	double F_Norm=std::sqrt(F[0]*F[0]+F[1]+F[1]);
-	//f(0) => Ei=0
-//	f[0]= f[0]-InvTau*(f[0]-rho*omega*(1+-1.5*(u*u+v*v)));
+	//f(0) => EiCollide=0
+//	f[0]= f[0]-InvTau*(f[0]-rho*omegaCollide*(1+-1.5*(u*u+v*v)));
 //	f[0]+=-Ak*0.5*F_Norm*3/4;
 
-		CollideLowOrder::Collide_SinglePhase(fi,rho, u, v, Ei[direction], omega[direction]);
+		CollideLowOrder::Collide_SinglePhase(fi,rho, u, v, EiCollide[direction], omegaCollide[direction]);
 		fi+=CollideD2Q9Colour::TwoPhase_Collision_operator(direction, F, F_Norm);
 
 }*/
-/*void CollideD2Q9Colour::Collide_ColorFluid(double &fr,double &fb,double &rho_r,double &rho_b, double &u, double &v, double *e_i, double &omega){
-	fr= fr-InvTau*(fr-EquiDistriFunct2D(rho_r, u, v,e_i, omega));
-	fb= fb-InvTau*(fb-EquiDistriFunct2D(rho_r, u, v,e_i, omega));
+/*void CollideD2Q9Colour::Collide_ColorFluid(double &fr,double &fb,double &rho_r,double &rho_b, double &u, double &v, double *e_i, double &omegaCollide){
+	fr= fr-InvTau*(fr-EquiDistriFunct2D(rho_r, u, v,e_i, omegaCollide));
+	fb= fb-InvTau*(fb-EquiDistriFunct2D(rho_r, u, v,e_i, omegaCollide));
 }*/

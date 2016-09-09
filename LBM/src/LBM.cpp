@@ -27,26 +27,22 @@ int main(int argc, char *argv[]) {
 	double start,end;
 
 	double Umax=0.132013201320132;//0.01;
-	double H=299;
-	double L=299;
+	double H=40;
+	double L=120;
 	double Pmax=1.00001;
+
 	double Pmin=0.99999;
 	//double Umaxtmp,Htmp,Ltmp,Pmaxtmp,Pmintmp;
 
 	double tau=0.6; // Relaxation time
-	double re=10; // Reynold Number
+	double re=100; // Reynold Number
 	double ma=0.01; // Mach number in lattice
 	//double Kn=0.001; //Knudsen number
 	double nu;
 	nu=(2.0*tau-1.0)/6.0 ;
-	Umax=ma/std::sqrt(3.0);
-	//Umax=re*nu/(H+1);
-	H=427;//599
-	L=532;//820
-	H=854;
-	L=1064;
-	H=399;
-	L=399;
+//	Umax=ma/std::sqrt(3.0);
+	Umax=re*nu/(H+1);
+
 	//H=re*nu/Umax-1;
 	//H=round(H);
 	//L=H;
@@ -56,9 +52,9 @@ int main(int argc, char *argv[]) {
 	//Umax=0.005;
 	//re=(H+1)*Umax/nu;
 
-	Umax=0.002;//re*nu/(H+1);
+	//Umax=0.002;//re*nu/(H+1);
 	//********Knudsen formulation*****
-	double Kn=0.01; //Knudsen number
+/*	double Kn=0.01; //Knudsen number
 	double pi=atan(1)*4 ;
 	double dt=1.0/(L)/sqrt(3.0);
 	double omega = dt /(Kn*sqrt(2.0/pi)+0.50*dt);
@@ -69,6 +65,11 @@ int main(int argc, char *argv[]) {
 	tau=(6.0*nu+1.0)*0.5;
 	re=Umax*(H/2+1)/nu;
 	//Umax=re*nu/(H+1);
+	Umax=0.003;*/
+
+	Pmax=1.05;
+	Pmin=1;
+
 	cout<<"Reynolds: "<<re<< " Tau: "<<tau<< " Nu: "<<nu<<" U: "<<Umax<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<endl;
 
 
@@ -91,11 +92,11 @@ int main(int argc, char *argv[]) {
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 
 // Set User Parameters
-	Param.Set_UserParameters(Umax,H+1,L+1,Pmax,Pmin);
+	Param.Set_UserParameters(Umax,H,L,Pmax,Pmin);
 // Set User Force type
 	Param.Set_UserForceType(None);
 // Set delta x for output
-	Param.Set_deltax(1/L);
+	Param.Set_deltax(1/H);
 
 // Single phase Parameters
 	Param.Set_Tau(tau);
@@ -104,7 +105,9 @@ int main(int argc, char *argv[]) {
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)0.1667
-	Param.Set_BcType(Wall,Wall,Wall,Wall);
+	Param.Set_BcType(Wall,Pressure,Wall,Pressure);
+/// Set Global Corner type
+	Param.Set_CornerPressureType(FixCP);
 /// Wall boundary condition type (Implemented BounceBack and Diffuse)
 	Param.Set_WallType(BounceBack);
 
@@ -119,7 +122,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_VariablesOutput(true,true);// export Rho,U
 
 /// Define the Output filename
-	Param.Set_OutputFileName("Two_colour");
+	Param.Set_OutputFileName("TwoPhase_Channel");
 
 	// Multiphase model (SinglePhase or ColourFluid)
 	Param.Set_Model(ColourFluid);
@@ -142,13 +145,13 @@ int main(int argc, char *argv[]) {
 	Param.Set_Tau_2(tau);
 	//Surface tension
 	Param.Set_SurfaceTension(0.1);
-		//Colour fluid Parameters
-		Param.Set_A1(0.00001);
-		Param.Set_A2(Param.Get_A1());
-		Param.Set_Beta(0.7);// Between 0 and 1
-		Param.Set_ColourGradType(DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
-		Param.Set_RecolouringType(LatvaKokkoRothman);
-		Param.Set_ColourOperatorType(SurfaceForce);//Grunau or SurfaceForce
+	//Colour fluid Parameters
+	Param.Set_A1(0.00001);
+	Param.Set_A2(Param.Get_A1());
+	Param.Set_Beta(0.7);// Between 0 and 1
+	Param.Set_ColourGradType(DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
+	Param.Set_RecolouringType(LatvaKokkoRothman);
+	Param.Set_ColourOperatorType(SurfaceForce);//Grunau or SurfaceForce
 
 
 

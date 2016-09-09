@@ -36,39 +36,75 @@ D2Q9ColourFluid::~D2Q9ColourFluid() {
 }
 
 D2Q9ColourFluid::D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini){
+//Initialise the common variables for the two phase models.
 	InitD2Q9TwoPhases(MultiBlock__,parallel__,Writer__, Parameters__, ini);
-	InitMultiphase(ini);
+//Initialise variables of the colour fluid model.
+	InitColourFluid(ini);
+//Initialise boundary conditions.
+	InitD2Q9Bc(Dic, Parameters__);
+//Initialise communication between processors
+	IniComVariables();
+//Set Pointers On Functions for selecting the right model dynamically
 	Set_PointersOnFunctions();
+//Set the variables names and the variable pointers for output in solution
+	Solution2D::Set_output();
+//Set the variables names and the variable pointers for breakpoints in solution
+	Solution2D::Set_breakpoint();
 }
 void D2Q9ColourFluid::Set_PointersOnFunctions(){
+// Select the model for two-phase operator in the collision step
 	Set_Collide();
+// Select the model for the colour gradient
 	Set_Colour_gradient();
+// Select the method for recolouring
 	Set_Recolouring();
+// Select the macrocospic function for the colour fluid model depending of the output variables and models
 	Set_Macro();
 }
-//Std2D,Std2DLocal,Std2DBody,Std2DNonCstTau,Std2DNonCstTauLocal,Std2DNonCstTauBody
+
+void D2Q9ColourFluid::Select_Colour_Operator(ColourOperatorType OperatorType_){
+	switch(OperatorType_)
+	{
+	case ::SurfaceForce:
+		PtrCollision=&D2Q9ColourFluid::Collision_SurfaceForce;
+		break;
+	case ::Grunau:
+		PtrCollision=&D2Q9ColourFluid::Collision_Grunau;
+		break;
+	case ::Reis:
+		PtrCollision=&D2Q9ColourFluid::Collision_Reis;
+		break;
+	default:
+		std::cerr<<" Colour operator not found."<<std::endl;
+		break;
+	}
+}
 void D2Q9ColourFluid::Set_Collide(){
+if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce && PtrParameters->Get_UserForceType()== ::LocalForce)
+{
+	std::cout<<" Warming: The local user force will be ignored. The colour model with the surface force is incompatible with a local user force"<<std::endl;
+}
 	if(PtrParameters->Get_FluidType()==Newtonian)
 	{
 		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
-			{Select_Collide_2D(Std2DBody);PtrCollision=&D2Q9ColourFluid::Collision_SurfaceForce;}
+			{Select_Collide_2D(Std2DBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::LocalForce)
-			{Select_Collide_2D(Std2DLocal);PtrCollision=&D2Q9ColourFluid::Collision_Gunstensen;}
+			{Select_Collide_2D(Std2DLocal);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			{Select_Collide_2D(Std2DBody);PtrCollision=&D2Q9ColourFluid::Collision_Gunstensen;}
+			{Select_Collide_2D(Std2DBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else
-			{Select_Collide_2D(Std2D);PtrCollision=&D2Q9ColourFluid::Collision_Gunstensen;}
+			{Select_Collide_2D(Std2D);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 	}
 	else
 	{
 		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
-			Select_Collide_2D(Std2DNonCstTauBody);
+			{Select_Collide_2D(Std2DNonCstTauBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::LocalForce)
-			Select_Collide_2D(Std2DNonCstTauLocal);
+			{Select_Collide_2D(Std2DNonCstTauLocal);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			Select_Collide_2D(Std2DNonCstTauBody);
+			{Select_Collide_2D(Std2DNonCstTauBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else
-			Select_Collide_2D(Std2DNonCstTau);
+			{Select_Collide_2D(Std2DNonCstTau);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 	}
 
 }
@@ -79,6 +115,7 @@ void D2Q9ColourFluid::Set_Colour_gradient(){
 		case Gunstensen:
 			if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
 			{
+				std::cout<<" Force colour gradient to Density Normal gradient due to Surface force model."<<std::endl;
 				PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
 				PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradBc;
 				PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradCorner;
@@ -136,7 +173,7 @@ void D2Q9ColourFluid::Set_Macro(){
 void D2Q9ColourFluid::Set_Recolouring(){
 	PtrRecolour=&D2Q9ColourFluid::Recolouring_Latva;
 }
-void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
+void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 //Initialise parameters
 	beta=PtrParameters->Get_Beta();
 	A1=PtrParameters->Get_A1();
@@ -148,9 +185,21 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 	G[1]=V1[1];
 	F[0]=V2[0];
 	F[1]=V2[1];*/
-	G=V1;
+	Bi[0]=-4/27;
+	for(int i=1;i<5;i++) Bi[i]=2/27;
+	for(int i=5;i<9;i++) Bi[i]=5/108;
+	G=new double*[2];
+	F=new double*[2];
+	Dic->AddSync("Rho",Rho);
+	Dic->AddVar(Vector,"ColourGrad",true,true,true,G[0],G[1]);
+	Dic->AddVar(Scalar,"ColourGrad_Norm",true,true,true,G_Norm);
+	Dic->AddVar(Vector,"SurfaceForce",true,true,true,F[0],F[1]);
+	Dic->AddVar(Scalar,"RhoRed",true,true,true,Rhor);
+	Dic->AddVar(Scalar,"RhoBlue",true,true,true,Rhob);
+	Dic->AddVar(Scalar,"RhoN",true,true,true,RhoN);
+/*	G=V1;
 	F=V2;
-	G_Norm=new double [nbnodes_total];
+	G_Norm=new double [nbnodes_total];*/
 /*	G=new double* [2];
 	G[0]=new double [nbnodes_total];
 	G[1]=new double [nbnodes_total];*/
@@ -195,6 +244,7 @@ void D2Q9ColourFluid::InitMultiphase(InitLBM& ini){
 // Initialise the blue and red densities
 		Rhor[NodeArrays->NodeCorner[j].Get_index()]=alpha*Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeCorner[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_2();
+
 	}
 	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
@@ -631,12 +681,17 @@ double D2Q9ColourFluid::CosPhi(int nodenumber, int & direction,double & F_Norm){
 /*double D2Q9ColourFluid::TwoPhase_Collision_operator(int & nodenumber, int & i, double & Ak, double* F_tmp, double & F_Norm){
  return Ak*0.5*F_Norm*(((F_tmp[0]*Ei[i][0]+F_tmp[1]*Ei[i][1])/F_Norm)*((F_tmp[0]*Ei[i][0]+F_tmp[1]*Ei[i][1])/F_Norm)-3/4);
 }*/
-double& D2Q9ColourFluid::Collision_operator_Gunstensen(int & i, int & nodenumber, double Ak){
+double& D2Q9ColourFluid::Collision_operator_Grunau(int & i, int & nodenumber, double Ak){
 	if(G_Norm[nodenumber]>0)
 		D_tmp=Ak*0.5*G_Norm[nodenumber]*(((G[0][nodenumber]*Ei[i][0]+G[1][nodenumber]*Ei[i][1])/G_Norm[nodenumber])*((G[0][nodenumber]*Ei[i][0]+G[1][nodenumber]*Ei[i][1])/G_Norm[nodenumber])-3/4);
 	return D_tmp;
 }
-void D2Q9ColourFluid::Collision_Gunstensen(int & nodenumber, int* connect,int & normal,double* fi){
+double& D2Q9ColourFluid::Collision_operator_Reis(int & i, int & nodenumber, double Ak){
+	if(G_Norm[nodenumber]>0)
+		D_tmp=Ak*0.5*G_Norm[nodenumber]*((omega[i]*(G[0][nodenumber]*Ei[i][0]+G[1][nodenumber]*Ei[i][1])/G_Norm[nodenumber])*((G[0][nodenumber]*Ei[i][0]+G[1][nodenumber]*Ei[i][1])/G_Norm[nodenumber])-Bi[i]);
+	return D_tmp;
+}
+void D2Q9ColourFluid::Collision_Grunau(int & nodenumber, int* connect,int & normal,double* fi){
 	double InvTau_tmp=InvTau; int i0=0;
 	fi[0]=f[0]->f[0][nodenumber]+f[1]->f[0][nodenumber];
 	DVec_2D_tmp[0]=0;DVec_2D_tmp[1]=0;
@@ -645,7 +700,19 @@ void D2Q9ColourFluid::Collision_Gunstensen(int & nodenumber, int* connect,int & 
 	{
 		//Save the mixture distribution for recolouring
 		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
-		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Gunstensen(i, nodenumber, A1),DVec_2D_tmp[1], InvTau_tmp);
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Grunau(i, nodenumber, A1),DVec_2D_tmp[1], InvTau_tmp);
+	}
+}
+void D2Q9ColourFluid::Collision_Reis(int & nodenumber, int* connect,int & normal,double* fi){
+	double InvTau_tmp=InvTau; int i0=0;
+	fi[0]=f[0]->f[0][nodenumber]+f[1]->f[0][nodenumber];
+	DVec_2D_tmp[0]=0;DVec_2D_tmp[1]=0;
+	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], InvTau_tmp);
+	for (int i=1;i<9;i++)
+	{
+		//Save the mixture distribution for recolouring
+		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Reis(i, nodenumber, A1),DVec_2D_tmp[1], InvTau_tmp);
 	}
 }
 void D2Q9ColourFluid::Collision_SurfaceForce(int & nodenumber, int* connect,int & normal,double* fi){
@@ -685,526 +752,46 @@ void D2Q9ColourFluid::ApplyBc(){
 
 	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
-		ApplyHeZou_U(NodeArrays->NodeVelocity[j],0,NodeArrays->NodeVelocity[j].Get_UDef()[0],NodeArrays->NodeVelocity[j].Get_UDef()[1]);
-		ApplyHeZou_U(NodeArrays->NodeVelocity[j],1,NodeArrays->NodeVelocity[j].Get_UDef()[0],NodeArrays->NodeVelocity[j].Get_UDef()[1]);
-
+		ApplyVelocity(NodeArrays->NodeVelocity[j].Get_BcNormal(),NodeArrays->NodeVelocity[j].Get_connect(),NodeArrays->NodeVelocity[j].Get_UDef(), f[0],Rhor,U[0],U[1]);
+		ApplyVelocity(NodeArrays->NodeVelocity[j].Get_BcNormal(),NodeArrays->NodeVelocity[j].Get_connect(),NodeArrays->NodeVelocity[j].Get_UDef(), f[1],Rhob,U[0],U[1]);
 	}
 
 	for (int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
-		ApplyHeZou_P(NodeArrays->NodePressure[j],0,NodeArrays->NodePressure[j].Get_RhoDef(),U[0][NodeArrays->NodePressure[j].Get_index()],U[1][NodeArrays->NodePressure[j].Get_index()]);
-		ApplyHeZou_P(NodeArrays->NodePressure[j],1,NodeArrays->NodePressure[j].Get_RhoDef(),U[0][NodeArrays->NodePressure[j].Get_index()],U[1][NodeArrays->NodePressure[j].Get_index()]);
+		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_AlphaDef()*NodeArrays->NodePressure[j].Get_RhoDef(), f[0],Rhor,U[0],U[1]);
+		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),(1-NodeArrays->NodePressure[j].Get_AlphaDef())*NodeArrays->NodePressure[j].Get_RhoDef(), f[1],Rhob,U[0],U[1]);
 	}
-	switch(PtrParameters->Get_WallType())
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
-		case BounceBack:
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
-		{
-			ApplyBounceBack(NodeArrays->NodeWall[j]);
-		}
-		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
-		{
-			ApplyBounceBackSymmetry(NodeArrays->NodeSpecialWall[j]);
-		}
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
-		{
-	//		ApplyCorner(NodeArrays->NodeCorner[j]);
-			ApplyBounceBack(NodeArrays->NodeCorner[j]);
-		}
-		break;
-		case Diffuse:
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
-		{
-			ApplyDiffuseWall(NodeArrays->NodeWall[j]);
-		}
-		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
-		{
-			ApplyDiffuseWallSymmetry(NodeArrays->NodeSpecialWall[j]);
-		}
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
-		{
-			ApplyDiffuseWall(NodeArrays->NodeCorner[j]);
-		}
-		break;
+		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f[0],Rhor,U[0],U[1]);
+		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f[1],Rhob,U[0],U[1]);
 	}
+	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	{
+		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f[0],NodeArrays->TypeOfNode,Rhor,U[0],U[1]);
+		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f[1],NodeArrays->TypeOfNode,Rhob,U[0],U[1]);
+	}
+	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	{
+		ApplyCornerWall(NodeArrays->NodeCorner[j], f[0],Rhor,U[0],U[1]);
+		ApplyCornerWall(NodeArrays->NodeCorner[j], f[1],Rhob,U[0],U[1]);
+	}
+
 	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
-		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j]);
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],(1-NodeArrays->NodeGlobalCorner[j].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
 	}
 	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
-		if(NodeArrays->NodeSymmetry[j].Get_SymmetryType()==OnNode)
-			ApplySymmetryOnNode(NodeArrays->NodeSymmetry[j]);
-		if(NodeArrays->NodeSymmetry[j].Get_SymmetryType()==SymmetryPressureOnNode)
-			ApplySymmetryPressureOnNode(NodeArrays->NodeSymmetry[j]);
+			ApplySymmetry(NodeArrays->NodeSymmetry[j].Get_BcNormal(),NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_RhoDef(),NodeArrays->NodeSymmetry[j].Get_UDef(),f[0],Rhor,U[0],U[1]);
+			ApplySymmetry(NodeArrays->NodeSymmetry[j].Get_BcNormal(),NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_RhoDef(),NodeArrays->NodeSymmetry[j].Get_UDef(),f[1],Rhob,U[0],U[1]);
 	}
    parallel->barrier();
 
 }
 
 
-void D2Q9ColourFluid::ApplyGlobalCorner(NodeCorner2D& NodeIn){
-	NodeType NodeTypeTmp1;
-	NodeType NodeTypeTmp2;
-	int normal=0;
-	for(int j=0;j<2;j++)//Not an efficient way to treat the two distribution function but that affects only 4 nodes maximum
-	{
-		switch(NodeIn.Get_BcNormal())
-		{
-		case 5:
-			NodeTypeTmp1=NodeArrays->TypeOfNode[NodeIn.Get_connect()[2]];
-			NodeTypeTmp2=NodeArrays->TypeOfNode[NodeIn.Get_connect()[1]];
-			if(NodeTypeTmp1==Symmetry||NodeTypeTmp2==Symmetry)
-			{
-				if(NodeTypeTmp1==NodeTypeTmp2)
-				{
-					f[j]->f[1][NodeIn.Get_index()]=f[j]->f[3][NodeIn.Get_index()];//+0.00007/3;
-					f[j]->f[2][NodeIn.Get_index()]=f[j]->f[4][NodeIn.Get_index()];
-					f[j]->f[6][NodeIn.Get_index()]=f[j]->f[7][NodeIn.Get_index()];
-					f[j]->f[8][NodeIn.Get_index()]=f[j]->f[7][NodeIn.Get_index()];//+0.00007/3;
-					f[j]->f[5][NodeIn.Get_index()]=f[j]->f[7][NodeIn.Get_index()];//+0.00007/3;
-//					for (int i=0;i<9;i++)
-//						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]+omega[i]*Ei[i][0]*0.00007;
-					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
-				}
-
-				else
-				{
-				if(NodeTypeTmp1!=Symmetry)
-					{
-						normal=1;
-						f[j]->f[2][NodeIn.Get_index()]=f[j]->f[4][NodeIn.Get_index()];
-						f[j]->f[6][NodeIn.Get_index()]=f[j]->f[7][NodeIn.Get_index()];
-						if(NodeTypeTmp1==Pressure)
-						{
-							ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-						else
-						{
-							ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-
-					}
-					else
-					{
-						normal=2;
-						f[j]->f[8][NodeIn.Get_index()]=f[j]->f[7][NodeIn.Get_index()];
-						f[j]->f[1][NodeIn.Get_index()]=f[j]->f[3][NodeIn.Get_index()];
-						if(NodeTypeTmp2==Pressure)
-						{
-							ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-						else
-						{
-							ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-					}
-				}
-			}
-			else if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
-			{
-				switch(PtrParameters->Get_WallType())
-				{
-					case BounceBack:
-						ApplyBounceBack(NodeIn);
-						break;
-					case Diffuse:
-						ApplyDiffuseWall(NodeIn);
-						break;
-				}
-				if(NodeTypeTmp1==Pressure)
-				{
-					normal=1;
-					ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp2==Pressure)
-				{
-					normal=2;
-					ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp1==Velocity)
-				{
-					normal=1;
-					ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp2==Velocity)
-				{
-					normal=2;
-					ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-			}
-			break;
-		case 6:
-			NodeTypeTmp1=NodeArrays->TypeOfNode[NodeIn.Get_connect()[2]];
-			NodeTypeTmp2=NodeArrays->TypeOfNode[NodeIn.Get_connect()[3]];
-			if(NodeTypeTmp1==Symmetry||NodeTypeTmp2==Symmetry)
-			{
-				if(NodeTypeTmp1==NodeTypeTmp2)
-				{
-					f[j]->f[2][NodeIn.Get_index()]=f[j]->f[4][NodeIn.Get_index()];
-					f[j]->f[3][NodeIn.Get_index()]=f[j]->f[1][NodeIn.Get_index()];//-0.00007/3;
-					f[j]->f[6][NodeIn.Get_index()]=f[j]->f[8][NodeIn.Get_index()];//-0.00007/3;
-					f[j]->f[5][NodeIn.Get_index()]=f[j]->f[8][NodeIn.Get_index()];
-					f[j]->f[7][NodeIn.Get_index()]=f[j]->f[8][NodeIn.Get_index()];//-0.00007/3;
-//					for (int i=0;i<9;i++)
-//						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]-omega[i]*Ei[i][0]*0.00007;
-					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
-				}
-				else
-				{
-				if(NodeTypeTmp1!=Symmetry)
-					{
-						normal=3;
-						f[j]->f[2][NodeIn.Get_index()]=f[j]->f[4][NodeIn.Get_index()];
-						f[j]->f[5][NodeIn.Get_index()]=f[j]->f[8][NodeIn.Get_index()];
-						if(NodeTypeTmp1==Pressure)
-						{
-							ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-						else
-						{
-							ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-
-					}
-					else
-					{
-						normal=2;
-						f[j]->f[7][NodeIn.Get_index()]=f[j]->f[8][NodeIn.Get_index()];
-						f[j]->f[3][NodeIn.Get_index()]=f[j]->f[1][NodeIn.Get_index()];
-						if(NodeTypeTmp2==Pressure)
-						{
-							ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-						else
-						{
-							ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-					}
-				}
-			}
-			else if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
-			{
-				switch(PtrParameters->Get_WallType())
-				{
-					case BounceBack:
-						ApplyBounceBack(NodeIn);
-						break;
-					case Diffuse:
-						ApplyDiffuseWall(NodeIn);
-						break;
-				}
-				if(NodeTypeTmp1==Pressure)
-				{
-					normal=3;
-					ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp2==Pressure)
-				{
-					normal=2;
-					ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp1==Velocity)
-				{
-					normal=3;
-					ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp2==Velocity)
-				{
-					normal=2;
-					ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-			}
-			break;
-		case 7:
-			NodeTypeTmp1=NodeArrays->TypeOfNode[NodeIn.Get_connect()[4]];
-			NodeTypeTmp2=NodeArrays->TypeOfNode[NodeIn.Get_connect()[3]];
-			if(NodeTypeTmp1==Symmetry||NodeTypeTmp2==Symmetry)
-			{
-				if(NodeTypeTmp1==NodeTypeTmp2)
-				{
-					f[j]->f[3][NodeIn.Get_index()]=f[j]->f[1][NodeIn.Get_index()];//-0.00007/3;
-					f[j]->f[4][NodeIn.Get_index()]=f[j]->f[2][NodeIn.Get_index()];
-					f[j]->f[7][NodeIn.Get_index()]=f[j]->f[5][NodeIn.Get_index()];//-0.00007/3;
-					f[j]->f[6][NodeIn.Get_index()]=f[j]->f[5][NodeIn.Get_index()];//-0.00007/3;
-					f[j]->f[8][NodeIn.Get_index()]=f[j]->f[5][NodeIn.Get_index()];
-//					for (int i=0;i<9;i++)
-//						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]-omega[i]*Ei[i][0]*0.00007;
-					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
-				}
-				else
-				{
-				if(NodeTypeTmp1!=Symmetry)
-					{
-						normal=3;
-						f[j]->f[4][NodeIn.Get_index()]=f[j]->f[2][NodeIn.Get_index()];
-						f[j]->f[8][NodeIn.Get_index()]=f[j]->f[5][NodeIn.Get_index()];
-						if(NodeTypeTmp1==Pressure)
-						{
-							ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-						else
-						{
-							ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-					}
-					else
-					{
-						normal=4;
-						f[j]->f[3][NodeIn.Get_index()]=f[j]->f[1][NodeIn.Get_index()];
-						f[j]->f[6][NodeIn.Get_index()]=f[j]->f[5][NodeIn.Get_index()];
-						if(NodeTypeTmp2==Pressure)
-						{
-							ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-						else
-						{
-							ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-					}
-				}
-			}
-			else if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
-			{
-				switch(PtrParameters->Get_WallType())
-				{
-					case BounceBack:
-						ApplyBounceBack(NodeIn);
-						break;
-					case Diffuse:
-						ApplyDiffuseWall(NodeIn);
-						break;
-				}
-				if(NodeTypeTmp1==Pressure)
-				{
-					normal=3;
-					ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp2==Pressure)
-				{
-					normal=4;
-					ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp1==Velocity)
-				{
-					normal=3;
-					ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp2==Velocity)
-				{
-					normal=4;
-					ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-			}
-			break;
-		case 8:
-			NodeTypeTmp1=NodeArrays->TypeOfNode[NodeIn.Get_connect()[4]];
-			NodeTypeTmp2=NodeArrays->TypeOfNode[NodeIn.Get_connect()[1]];
-			if(NodeTypeTmp1==Symmetry||NodeTypeTmp2==Symmetry)
-			{
-				if(NodeTypeTmp1==NodeTypeTmp2)
-				{
-					f[j]->f[1][NodeIn.Get_index()]=f[j]->f[3][NodeIn.Get_index()];//+0.00007/3;
-					f[j]->f[4][NodeIn.Get_index()]=f[j]->f[2][NodeIn.Get_index()];
-					f[j]->f[8][NodeIn.Get_index()]=f[j]->f[6][NodeIn.Get_index()];//+0.00007/3;
-					f[j]->f[5][NodeIn.Get_index()]=f[j]->f[6][NodeIn.Get_index()];//+0.00007/3;
-					f[j]->f[7][NodeIn.Get_index()]=f[j]->f[6][NodeIn.Get_index()];
-//					for (int i=0;i<9;i++)
-//						f[j]->f[i][NodeIn.Get_index()]=f[j]->f[i][NodeIn.Get_index()]+omega[i]*Ei[i][0]*0.00007;
-					std::cerr<<"Symmetry-Symmetry BC not yet fully implemented"<<std::endl;
-				}
-				else
-				{
-				if(NodeTypeTmp1!=Symmetry)
-					{
-						normal=1;
-						f[j]->f[4][NodeIn.Get_index()]=f[j]->f[2][NodeIn.Get_index()];
-						f[j]->f[7][NodeIn.Get_index()]=f[j]->f[6][NodeIn.Get_index()];
-						if(NodeTypeTmp1==Pressure)
-						{
-							ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-						else
-						{
-							ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-
-					}
-					else
-					{
-						normal=4;
-						f[j]->f[5][NodeIn.Get_index()]=f[j]->f[6][NodeIn.Get_index()];
-						f[j]->f[1][NodeIn.Get_index()]=f[j]->f[3][NodeIn.Get_index()];
-						if(NodeTypeTmp2==Pressure)
-						{
-							ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-						else
-						{
-							ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-							ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-						}
-					}
-				}
-			}
-			else if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
-			{
-				switch(PtrParameters->Get_WallType())
-				{
-					case BounceBack:
-						ApplyBounceBack(NodeIn);
-						break;
-					case Diffuse:
-						ApplyDiffuseWall(NodeIn);
-						break;
-				}
-				if(NodeTypeTmp1==Pressure)
-				{
-					normal=1;
-					ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp2==Pressure)
-				{
-					normal=4;
-					ApplyHeZou_P(NodeIn,normal,0,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_P(NodeIn,normal,1,NodeIn.Get_RhoDef(),U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp1==Velocity)
-				{
-					normal=1;
-					ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-				if(NodeTypeTmp2==Velocity)
-				{
-					normal=4;
-					ApplyHeZou_U(NodeIn,normal,0,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					ApplyHeZou_U(NodeIn,normal,1,U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-				}
-			}
-			break;
-		default:
-			std::cerr<<"Direction: "<< NodeIn.Get_BcNormal()<<" not found for Global Corner"<<std::endl;
-		}
-	}
-}
-
-void D2Q9ColourFluid::ApplySymmetryPressureOnNode(NodeSymmetry2D& NodeIn){
-
-	double rhosym=0;
-	double rhoadd=0;
-	switch(NodeIn.Get_BcNormal())
-			{
-			case 2:
-				for(int j=0;j<2;j++)
-				{
-					//Applying symmetry
-					f_tmp[0]=f[j]->f[0][NodeIn.Get_index()];
-					f_tmp[1]=f[j]->f[1][NodeIn.Get_index()];
-					f_tmp[2]=f[j]->f[4][NodeIn.Get_index()];
-					f_tmp[3]=f[j]->f[3][NodeIn.Get_index()];
-					f_tmp[4]=f[j]->f[4][NodeIn.Get_index()];
-					f_tmp[5]=f[j]->f[8][NodeIn.Get_index()];
-					f_tmp[6]=f[j]->f[7][NodeIn.Get_index()];
-					f_tmp[7]=f[j]->f[7][NodeIn.Get_index()];
-					f_tmp[8]=f[j]->f[8][NodeIn.Get_index()];
-					//Applying He Zou Pressure
-					BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					for (int i=0;i<9;i++)
-						f[j]->f[i][NodeIn.Get_index()]=f_tmp[i];
-				}
-				break;
-			case 4:
-				for(int j=0;j<2;j++)
-				{
-					//Applying symmetry
-					f_tmp[0]=f[j]->f[0][NodeIn.Get_index()];
-					f_tmp[1]=f[j]->f[1][NodeIn.Get_index()];
-					f_tmp[2]=f[j]->f[2][NodeIn.Get_index()];
-					f_tmp[3]=f[j]->f[3][NodeIn.Get_index()];
-					f_tmp[4]=f[j]->f[2][NodeIn.Get_index()];
-					f_tmp[5]=f[j]->f[5][NodeIn.Get_index()];
-					f_tmp[6]=f[j]->f[6][NodeIn.Get_index()];
-					f_tmp[7]=f[j]->f[6][NodeIn.Get_index()];
-					f_tmp[8]=f[j]->f[5][NodeIn.Get_index()];
-					//Applying He Zou Pressure
-					BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					for (int i=0;i<9;i++)
-						f[j]->f[i][NodeIn.Get_index()]=f_tmp[i];
-				}
-				break;
-			case 1:
-				for(int j=0;j<2;j++)
-				{
-					//Applying symmetry
-					f_tmp[0]=f[j]->f[0][NodeIn.Get_index()];
-					f_tmp[1]=f[j]->f[3][NodeIn.Get_index()];
-					f_tmp[2]=f[j]->f[2][NodeIn.Get_index()];
-					f_tmp[3]=f[j]->f[3][NodeIn.Get_index()];
-					f_tmp[4]=f[j]->f[4][NodeIn.Get_index()];
-					f_tmp[5]=f[j]->f[6][NodeIn.Get_index()];
-					f_tmp[6]=f[j]->f[6][NodeIn.Get_index()];
-					f_tmp[7]=f[j]->f[7][NodeIn.Get_index()];
-					f_tmp[8]=f[j]->f[7][NodeIn.Get_index()];
-					//Applying He Zou Pressure
-					BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					for (int i=0;i<9;i++)
-						f[j]->f[i][NodeIn.Get_index()]=f_tmp[i];
-				}
-				break;
-			case 3:
-				for(int j=0;j<2;j++)
-				{
-					//Applying symmetry
-					f_tmp[0]=f[j]->f[0][NodeIn.Get_index()];
-					f_tmp[1]=f[j]->f[1][NodeIn.Get_index()];
-					f_tmp[2]=f[j]->f[2][NodeIn.Get_index()];
-					f_tmp[3]=f[j]->f[1][NodeIn.Get_index()];
-					f_tmp[4]=f[j]->f[4][NodeIn.Get_index()];
-					f_tmp[5]=f[j]->f[5][NodeIn.Get_index()];
-					f_tmp[6]=f[j]->f[5][NodeIn.Get_index()];
-					f_tmp[7]=f[j]->f[8][NodeIn.Get_index()];
-					f_tmp[8]=f[j]->f[8][NodeIn.Get_index()];
-					//Applying He Zou Pressure
-					BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,NodeIn.Get_RhoDef(), U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
-					for (int i=0;i<9;i++)
-						f[j]->f[i][NodeIn.Get_index()]=f_tmp[i];
-				}
-				break;
-			default:
-				std::cerr<<"Direction symmetry not found"<<std::endl;
-				break;
-			}
-
-}
 void D2Q9ColourFluid::UpdateMacroVariables(){
 
 		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
@@ -1352,7 +939,7 @@ double D2Q9ColourFluid::Cal_RhoB_Corner(NodeCorner2D& nodeIn){
 
 	return doubleTmpReturn;
 }
-
+/*
 /// Corner treat by Chih-Fung Ho, Cheng Chang, Kuen-Hau Lin and Chao-An Lin
 /// Consistent Boundary Conditions for 2D and 3D Lattice Boltzmann Simulations
 void D2Q9ColourFluid::ApplyCorner(NodeCorner2D& NodeIn){
@@ -1544,3 +1131,4 @@ void D2Q9ColourFluid::ApplyBounceBack(NodeWall2D& NodeIn){
 				break;
 			}
 }
+*/

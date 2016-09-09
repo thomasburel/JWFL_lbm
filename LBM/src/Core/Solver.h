@@ -59,17 +59,13 @@ public:
 protected:
 	DistriFunct* f;
 	double* ftmp; //tmp array for streaming (one dimensional to reduce memory consumption)
-private:
-	double** f_ini; //save pointers for breakpoints
-	std::string* f_name;
+
 private:
 	friend class boost::serialization::access;
     template<class Archive>
     void serialize(Archive &ar, const unsigned int version)
     {
        ar & boost::serialization::base_object<Solver>(*this) & f;
-       for (int i=0;i<nbvelo+3;i++)
-    	   ar & f_name[i];
     }
 };
 
@@ -79,16 +75,10 @@ public:
 	virtual ~SolverTwoPhases();
 	virtual void get_time()=0;
 	virtual void run()=0;
-	void set_f_ini();
-	double** get_f_ini();
-	void set_f_name();
-	std::string* get_f_name();
+
 protected:
 	DistriFunct** f;
 	double* ftmp; //tmp array for streaming (one dimensional to reduce memory consumption)
-private:
-	double** f_ini; //save pointers for breakpoints
-	std::string* f_name;
 private:
 	friend class boost::serialization::access;
     template<class Archive>
@@ -96,8 +86,7 @@ private:
     {
        ar & boost::serialization::base_object<Solver>(*this);
     	ar & f[0]& f[1];
-       for (int i=0;i<nbvelo+3;i++)
-    	   ar & f_name[i];
+
     }
 };
 
@@ -138,6 +127,7 @@ public:
 	SolverSinglePhaseLowOrder2D();
 	virtual ~SolverSinglePhaseLowOrder2D();
 	virtual void get_time();
+	void Add_OneDistributionToDictionary();
 	void Set_Solver(MultiBlock* PtrMultiBlock_,ParallelManager* PtrParallel_,WriterManager* PtrWriter_, Parameters* PtrParameters_);
 	virtual void run()=0;
 
@@ -164,6 +154,7 @@ public:
 	SolverTwoPhasesLowOrder2D();
 	virtual ~SolverTwoPhasesLowOrder2D();
 	virtual void get_time();
+	void Add_TwoDistributionsToDictionary();
 	void Set_Solver(MultiBlock* PtrMultiBlock_,ParallelManager* PtrParallel_,WriterManager* PtrWriter_, Parameters* PtrParameters_);
 	virtual void run()=0;
 

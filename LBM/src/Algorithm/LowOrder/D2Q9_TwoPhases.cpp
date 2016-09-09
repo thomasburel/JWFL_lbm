@@ -46,59 +46,9 @@ void D2Q9TwoPhases::InitD2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* 
 	intTmpReturn=0;
 	doubleTmpReturn=0;
 
-	//Distribution velocity
-	Ei[0][0]= 0.0;
-	Ei[0][1]= 0.0;
-	Ei[1][0]= 1.0;
-	Ei[1][1]= 0.0;
-	Ei[2][0]= 0.0;
-	Ei[2][1]= 1.0;
-	Ei[3][0]= -1.0;
-	Ei[3][1]= 0.0;
-	Ei[4][0]= 0.0;
-	Ei[4][1]= -1.0;
-	Ei[5][0]= 1.0;
-	Ei[5][1]= 1.0;
-	Ei[6][0]= -1.0;
-	Ei[6][1]= 1.0;
-	Ei[7][0]= -1.0;
-	Ei[7][1]= -1.0;
-	Ei[8][0]= 1.0;
-	Ei[8][1]= -1.0;
-	//Weigh depending of the direction
-	omega[0]=4.0/9.0;
-	omega[1]=1.0/9.0;
-	omega[2]=1.0/9.0;
-	omega[3]=1.0/9.0;
-	omega[4]=1.0/9.0;
-	omega[5]=1.0/36.0;
-	omega[6]=1.0/36.0;
-	omega[7]=1.0/36.0;
-	omega[8]=1.0/36.0;
-	// Opposite direction
-	Opposite[0]=0;
-	Opposite[1]=3;
-	Opposite[2]=4;
-	Opposite[3]=1;
-	Opposite[4]=2;
-	Opposite[5]=7;
-	Opposite[6]=8;
-	Opposite[7]=5;
-	Opposite[8]=6;
-	//Diffuse variables
-	SumWeightS=omega[4]+omega[7]+omega[8];
-	SumWeightE=omega[1]+omega[5]+omega[8];
-	SumWeightN=omega[2]+omega[5]+omega[6];
-	SumWeightW=omega[3]+omega[6]+omega[7];
-	SumWeightConcaveSE=omega[1]+omega[4]+omega[8];
-	SumWeightConcaveNE=omega[1]+omega[2]+omega[5];
-	SumWeightConcaveNW=omega[2]+omega[3]+omega[6];
-	SumWeightConcaveSW=omega[3]+omega[4]+omega[7];
-	SumWeightConvexSE=omega[2]+omega[3]+omega[6];
-	SumWeightConvexNE=omega[3]+omega[4]+omega[7];
-	SumWeightConvexNW=omega[1]+omega[4]+omega[8];
-	SumWeightConvexSW=omega[1]+omega[2]+omega[5];
-	IniComVariables();
+	EiCollide=Ei;
+	omegaCollide=omega;
+
 	init(ini);
 }
 D2Q9TwoPhases::~D2Q9TwoPhases() {
@@ -142,6 +92,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeCorner[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeCorner[j].Get_index()]=U_[1];
+		NodeArrays->NodeCorner[j].Set_UDef(U_[0],U_[1]);
+		NodeArrays->NodeCorner[j].Set_RhoDef(Rho[NodeArrays->NodeCorner[j].Get_index()]);
+		NodeArrays->NodeCorner[j].Set_AlphaDef(alpha);
 	}
 	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
@@ -347,6 +300,7 @@ void D2Q9TwoPhases::Set_BcType(){
 		Set_GhostType(NodeArrays->NodeGhost[j]);
 	}
 }
+
 void D2Q9TwoPhases::Set_GhostType(NodeGhost2D& NodeIn){
 	bool GhostStreaming[9];
 	StreamingOrientation(NodeIn,GhostStreaming);
@@ -383,7 +337,7 @@ void D2Q9TwoPhases::Set_PressureType(NodePressure2D& NodeIn){
 	NodeIn.Set_stream(PressureStreaming,nbvelo);
 	NodeIn.Set_RhoDef(Rho[NodeIn.Get_index()]);
 }
-
+/*
 /// Impose velocity by HeZou
 void D2Q9TwoPhases::ApplyHeZou_U(NodeVelocity2D& NodeIn, int distID, double &U, double &V){
 
@@ -410,9 +364,9 @@ void D2Q9TwoPhases::ApplyHeZou_U(NodeCorner2D& NodeIn, int normal, int distID, d
 
 }
 /// Impose pressure by HeZou
-void D2Q9TwoPhases::ApplyHeZou_P(NodePressure2D& NodeIn, int distID, double Mass, double &U, double &V){
+void D2Q9TwoPhases::ApplyHeZou_P(NodePressure2D& NodeIn, int distID, double Rho, double &U, double &V){
 
-	if(Mass==0)
+	if(Rho==0)
 	{
 		for (int i=0;i<9;i++)
 					f[distID]->f[i][NodeIn.Get_index()]=0;
@@ -421,7 +375,7 @@ void D2Q9TwoPhases::ApplyHeZou_P(NodePressure2D& NodeIn, int distID, double Mass
 	{
 		for (int i=0;i<9;i++)
 			f_tmp[i]=f[distID]->f[i][NodeIn.Get_index()];
-		BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,Mass, U,V);
+		BC_HeZou_P(NodeIn.Get_BcNormal(),f_tmp,Rho, U,V);
 		for (int i=0;i<9;i++)
 			f[distID]->f[i][NodeIn.Get_index()]=f_tmp[i];
 	}
@@ -704,6 +658,7 @@ void D2Q9TwoPhases::ApplyDiffuseWallSymmetry(NodeWall2D& NodeIn){
 				break;
 			}
 }
+
 ///Diffuse boundary condition for Concave and Convex corners
 ///For Concave corners, the incoming distributions go to outcoming so divide by 0.5 and the diagonal distribution doesn't participate for the streaming is approximate by the density at the neibourgh nodes
 ///For Convex corners, the diffusion goes in all directions.
@@ -712,18 +667,6 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 	switch(NodeIn.Get_BcNormal())
 			{
 			case 5:
-			/*	if (NodeIn.stream()[3]==false)
-				{
-					rhodiff=(f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[7][NodeIn.Get_index()])*2;
-					f[0]->f[5][NodeIn.Get_index()]=omega[5]*rhodiff;
-					f[0]->f[1][NodeIn.Get_index()]=omega[1]*rhodiff;
-					f[0]->f[2][NodeIn.Get_index()]=omega[2]*rhodiff;
-					double sumfi=f[0]->f[0][NodeIn.Get_index()]+f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[5][NodeIn.Get_index()]+f[0]->f[7][NodeIn.Get_index()];
-					f[0]->f[6][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-					f[0]->f[8][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-				}
-				else
-				{*/
 					rhodiff=(f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[7][NodeIn.Get_index()])/SumWeightConvexNE;
 					f[0]->f[5][NodeIn.Get_index()]=omega[5]*rhodiff;
 					f[0]->f[1][NodeIn.Get_index()]=omega[1]*rhodiff;
@@ -737,21 +680,10 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 					f[1]->f[2][NodeIn.Get_index()]=omega[2]*rhodiff;
 					f[1]->f[6][NodeIn.Get_index()]=omega[6]*rhodiff;
 					f[1]->f[8][NodeIn.Get_index()]=omega[8]*rhodiff;
-				//}
+
 				break;
 			case 6:
-			/*	if (NodeIn.stream()[1]==false)
-				{
-					rhodiff=(f[0]->f[1][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[8][NodeIn.Get_index()])*2;
-					f[0]->f[6][NodeIn.Get_index()]=omega[6]*rhodiff;
-					f[0]->f[2][NodeIn.Get_index()]=omega[2]*rhodiff;
-					f[0]->f[3][NodeIn.Get_index()]=omega[3]*rhodiff;
-					double sumfi=f[0]->f[0][NodeIn.Get_index()]+f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[6][NodeIn.Get_index()]+f[0]->f[8][NodeIn.Get_index()];
-					f[0]->f[5][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-					f[0]->f[7][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-				}
-				else
-				{*/
+
 					rhodiff=(f[0]->f[1][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[8][NodeIn.Get_index()])/SumWeightConvexNW;
 					f[0]->f[6][NodeIn.Get_index()]=omega[6]*rhodiff;
 					f[0]->f[2][NodeIn.Get_index()]=omega[2]*rhodiff;
@@ -765,21 +697,10 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 					f[1]->f[3][NodeIn.Get_index()]=omega[3]*rhodiff;
 					f[1]->f[5][NodeIn.Get_index()]=omega[5]*rhodiff;
 					f[1]->f[7][NodeIn.Get_index()]=omega[7]*rhodiff;
-				//}
+
 				break;
 			case 7:
-				/*if (NodeIn.stream()[1]==false)
-				{
-					rhodiff=(f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[5][NodeIn.Get_index()])*2;
-					f[0]->f[7][NodeIn.Get_index()]=omega[7]*rhodiff;
-					f[0]->f[3][NodeIn.Get_index()]=omega[3]*rhodiff;
-					f[0]->f[4][NodeIn.Get_index()]=omega[4]*rhodiff;
-					double sumfi=f[0]->f[0][NodeIn.Get_index()]+f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[5][NodeIn.Get_index()]+f[0]->f[7][NodeIn.Get_index()];
-					f[0]->f[6][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-					f[0]->f[8][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-				}
-				else
-				{*/
+
 					rhodiff=(f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[5][NodeIn.Get_index()])/SumWeightConvexSW;
 					f[0]->f[7][NodeIn.Get_index()]=omega[7]*rhodiff;
 					f[0]->f[3][NodeIn.Get_index()]=omega[3]*rhodiff;
@@ -796,18 +717,7 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 				//}
 				break;
 			case 8:
-				/*if (NodeIn.stream()[2]==false)
-				{
-					rhodiff=(f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[6][NodeIn.Get_index()])*2;
-					f[0]->f[8][NodeIn.Get_index()]=omega[8]*rhodiff;
-					f[0]->f[1][NodeIn.Get_index()]=omega[1]*rhodiff;
-					f[0]->f[4][NodeIn.Get_index()]=omega[4]*rhodiff;
-					double sumfi=f[0]->f[0][NodeIn.Get_index()]+f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[6][NodeIn.Get_index()]+f[0]->f[8][NodeIn.Get_index()];
-					f[0]->f[5][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-					f[0]->f[7][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-				}
-				else
-				{*/
+
 					rhodiff=(f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[6][NodeIn.Get_index()])/SumWeightConvexSE;
 					f[0]->f[8][NodeIn.Get_index()]=omega[8]*rhodiff;
 					f[0]->f[1][NodeIn.Get_index()]=omega[1]*rhodiff;
@@ -821,7 +731,7 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 					f[1]->f[4][NodeIn.Get_index()]=omega[4]*rhodiff;
 					f[1]->f[5][NodeIn.Get_index()]=omega[5]*rhodiff;
 					f[1]->f[7][NodeIn.Get_index()]=omega[7]*rhodiff;
-				//}
+
 				break;
 			default:
 				std::cerr<<"Direction: "<< NodeIn.Get_BcNormal()<<" (Corner diffuse boundary conditions) not found"<<std::endl;
@@ -829,7 +739,7 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 			}
 }
 
-
+*/
 
 double D2Q9TwoPhases::Cal_RhoCorner(NodeCorner2D& nodeIn){
 
@@ -868,14 +778,6 @@ void D2Q9TwoPhases::StreamingOrientation(NodeGhost2D& nodeIn, bool Streaming[9])
 			Streaming[i]=false;
 		else
 			Streaming[i]=true;
-
-	if(nodeIn.get_x()==20 && nodeIn.get_y()==24)
-	{
-		std::cout<<"streaming ghost: "<<std::endl;
-		for (unsigned int i=1;i<(unsigned int)nbvelo;i++)
-			std::cout<<Streaming[i];
-		std::cout<<std::endl;
-	}
 }
 void D2Q9TwoPhases::StreamingOrientation(NodeCorner2D& nodeIn, bool Streaming[9]){
 
@@ -1130,7 +1032,8 @@ void D2Q9TwoPhases::IniComVariables(){
 	size_buf[2]=IdNodeS.size();
 	size_buf[3]=IdNodeN.size();
 // Macro sync
-	Nd_MacroVariables_sync=6;
+	Nd_MacroVariables_sync=Dic->Get_NbSyncVar();//6;
+	SyncVar=Dic->Get_SyncVar();
 	buf_MacroSend=new double** [Nd_MacroVariables_sync];
 	buf_MacroRecv=new double** [Nd_MacroVariables_sync];
 	for (int i=0;i<Nd_MacroVariables_sync;i++)
@@ -1556,269 +1459,137 @@ void D2Q9TwoPhases::SyncToGhost(){
 }
 
 void D2Q9TwoPhases::SyncMacroVarToGhost(){
-
-
-
+//Put variables in buffer arrays
 	for (unsigned int i=0;i<IdRNodeW.size();i++)
 	{
-		buf_MacroSend[0][1][i]=Rho[IdRNodeW[i]];
-		buf_MacroSend[1][1][i]=Rhor[IdRNodeW[i]];
-		buf_MacroSend[2][1][i]=Rhob[IdRNodeW[i]];
-		buf_MacroSend[3][1][i]=RhoN[IdRNodeW[i]];
-		buf_MacroSend[4][1][i]=V1[0][IdRNodeW[i]];
-		buf_MacroSend[5][1][i]=V1[1][IdRNodeW[i]];
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			buf_MacroSend[j][1][i]=SyncVar[j][IdRNodeW[i]];
 	}
 	for (unsigned int i=0;i<IdRNodeS.size();i++)
 	{
-		buf_MacroSend[0][2][i]=Rho[IdRNodeS[i]];
-		buf_MacroSend[1][2][i]=Rhor[IdRNodeS[i]];
-		buf_MacroSend[2][2][i]=Rhob[IdRNodeS[i]];
-		buf_MacroSend[3][2][i]=RhoN[IdRNodeS[i]];
-		buf_MacroSend[4][2][i]=V1[0][IdRNodeS[i]];
-		buf_MacroSend[5][2][i]=V1[1][IdRNodeS[i]];
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			buf_MacroSend[j][2][i]=SyncVar[j][IdRNodeS[i]];
 	}
 	for (unsigned int i=0;i<IdRNodeE.size();i++)
 	{
-		buf_MacroSend[0][0][i]=Rho[IdRNodeE[i]];
-		buf_MacroSend[1][0][i]=Rhor[IdRNodeE[i]];
-		buf_MacroSend[2][0][i]=Rhob[IdRNodeE[i]];
-		buf_MacroSend[3][0][i]=RhoN[IdRNodeE[i]];
-		buf_MacroSend[4][0][i]=V1[0][IdRNodeE[i]];
-		buf_MacroSend[5][0][i]=V1[1][IdRNodeE[i]];
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			buf_MacroSend[j][0][i]=SyncVar[j][IdRNodeE[i]];
 	}
 	for (unsigned int i=0;i<IdRNodeN.size();i++)
 	{
-		buf_MacroSend[0][3][i]=Rho[IdRNodeN[i]];
-		buf_MacroSend[1][3][i]=Rhor[IdRNodeN[i]];
-		buf_MacroSend[2][3][i]=Rhob[IdRNodeN[i]];
-		buf_MacroSend[3][3][i]=RhoN[IdRNodeN[i]];
-		buf_MacroSend[4][3][i]=V1[0][IdRNodeN[i]];
-		buf_MacroSend[5][3][i]=V1[1][IdRNodeN[i]];
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			buf_MacroSend[j][3][i]=SyncVar[j][IdRNodeN[i]];
 	}
 //		MultiBlock_->Communication(buf_MacroSend[0],buf_MacroRecv[0],size_MacroBuf);
 	int tag_x_r=1;
 	int tag_x_l=2;
 	int tag_y_t=3;
 	int tag_y_b=4;
+	int tag_d_bl=5;
 	MPI_Status status;
 	if(IdRNodeE.size()>=1)
 	{
-		MultiBlock_->Send(&buf_MacroSend[0][0][0],IdRNodeE.size(),1,tag_x_r);
-		MultiBlock_->Send(&buf_MacroSend[1][0][0],IdRNodeE.size(),1,tag_x_r);
-		MultiBlock_->Send(&buf_MacroSend[2][0][0],IdRNodeE.size(),1,tag_x_r);
-		MultiBlock_->Send(&buf_MacroSend[3][0][0],IdRNodeE.size(),1,tag_x_r);
-		MultiBlock_->Send(&buf_MacroSend[4][0][0],IdRNodeE.size(),1,tag_x_r);
-		MultiBlock_->Send(&buf_MacroSend[5][0][0],IdRNodeE.size(),1,tag_x_r);
+		for(int i=0;i<Nd_MacroVariables_sync;i++)
+			MultiBlock_->Send(&buf_MacroSend[i][0][0],IdRNodeE.size(),1,tag_x_r);
 	}
 	if(IdGNodeW.size()>=1)
 	{
-		MultiBlock_->Recv(&buf_MacroRecv[0][0][0],IdGNodeW.size(),3,tag_x_r,status);
-		MultiBlock_->Recv(&buf_MacroRecv[1][0][0],IdGNodeW.size(),3,tag_x_r,status);
-		MultiBlock_->Recv(&buf_MacroRecv[2][0][0],IdGNodeW.size(),3,tag_x_r,status);
-		MultiBlock_->Recv(&buf_MacroRecv[3][0][0],IdGNodeW.size(),3,tag_x_r,status);
-		MultiBlock_->Recv(&buf_MacroRecv[4][0][0],IdGNodeW.size(),3,tag_x_r,status);
-		MultiBlock_->Recv(&buf_MacroRecv[5][0][0],IdGNodeW.size(),3,tag_x_r,status);
+		for(int i=0;i<Nd_MacroVariables_sync;i++)
+			MultiBlock_->Recv(&buf_MacroRecv[i][0][0],IdGNodeW.size(),3,tag_x_r,status);
 	}
 
 	if(IdRNodeW.size()>=1)
 	{
-		MultiBlock_->Send(&buf_MacroSend[0][1][0],IdRNodeW.size(),3,tag_x_l);
-		MultiBlock_->Send(&buf_MacroSend[1][1][0],IdRNodeW.size(),3,tag_x_l);
-		MultiBlock_->Send(&buf_MacroSend[2][1][0],IdRNodeW.size(),3,tag_x_l);
-		MultiBlock_->Send(&buf_MacroSend[3][1][0],IdRNodeW.size(),3,tag_x_l);
-		MultiBlock_->Send(&buf_MacroSend[4][1][0],IdRNodeW.size(),3,tag_x_l);
-		MultiBlock_->Send(&buf_MacroSend[5][1][0],IdRNodeW.size(),3,tag_x_l);
+		for(int i=0;i<Nd_MacroVariables_sync;i++)
+			MultiBlock_->Send(&buf_MacroSend[i][1][0],IdRNodeW.size(),3,tag_x_l);
 	}
 	if(IdGNodeE.size()>=1)
 	{
-		MultiBlock_->Recv(&buf_MacroRecv[0][1][0],IdGNodeE.size(),1,tag_x_l,status);
-		MultiBlock_->Recv(&buf_MacroRecv[1][1][0],IdGNodeE.size(),1,tag_x_l,status);
-		MultiBlock_->Recv(&buf_MacroRecv[2][1][0],IdGNodeE.size(),1,tag_x_l,status);
-		MultiBlock_->Recv(&buf_MacroRecv[3][1][0],IdGNodeE.size(),1,tag_x_l,status);
-		MultiBlock_->Recv(&buf_MacroRecv[4][1][0],IdGNodeE.size(),1,tag_x_l,status);
-		MultiBlock_->Recv(&buf_MacroRecv[5][1][0],IdGNodeE.size(),1,tag_x_l,status);
+		for(int i=0;i<Nd_MacroVariables_sync;i++)
+			MultiBlock_->Recv(&buf_MacroRecv[i][1][0],IdGNodeE.size(),1,tag_x_l,status);
 	}
 		if(IdRNodeN.size()>=1)
 	{
-		MultiBlock_->Send(&buf_MacroSend[0][3][0],IdRNodeN.size(),0,tag_y_t);
-		MultiBlock_->Send(&buf_MacroSend[1][3][0],IdRNodeN.size(),0,tag_y_t);
-		MultiBlock_->Send(&buf_MacroSend[2][3][0],IdRNodeN.size(),0,tag_y_t);
-		MultiBlock_->Send(&buf_MacroSend[3][3][0],IdRNodeN.size(),0,tag_y_t);
-		MultiBlock_->Send(&buf_MacroSend[4][3][0],IdRNodeN.size(),0,tag_y_t);
-		MultiBlock_->Send(&buf_MacroSend[5][3][0],IdRNodeN.size(),0,tag_y_t);
+		for(int i=0;i<Nd_MacroVariables_sync;i++)
+			MultiBlock_->Send(&buf_MacroSend[i][3][0],IdRNodeN.size(),0,tag_y_t);
 	}
 	if(IdGNodeS.size()>=1)
 	{
-		MultiBlock_->Recv(&buf_MacroRecv[0][3][0],IdGNodeS.size(),2,tag_y_t,status);
-		MultiBlock_->Recv(&buf_MacroRecv[1][3][0],IdGNodeS.size(),2,tag_y_t,status);
-		MultiBlock_->Recv(&buf_MacroRecv[2][3][0],IdGNodeS.size(),2,tag_y_t,status);
-		MultiBlock_->Recv(&buf_MacroRecv[3][3][0],IdGNodeS.size(),2,tag_y_t,status);
-		MultiBlock_->Recv(&buf_MacroRecv[4][3][0],IdGNodeS.size(),2,tag_y_t,status);
-		MultiBlock_->Recv(&buf_MacroRecv[5][3][0],IdGNodeS.size(),2,tag_y_t,status);
+		for(int i=0;i<Nd_MacroVariables_sync;i++)
+			MultiBlock_->Recv(&buf_MacroRecv[i][3][0],IdGNodeS.size(),2,tag_y_t,status);
 	}
 	if(IdRNodeS.size()>=1)
 	{
-		MultiBlock_->Send(&buf_MacroSend[0][2][0],IdRNodeS.size(),2,tag_y_b);
-		MultiBlock_->Send(&buf_MacroSend[1][2][0],IdRNodeS.size(),2,tag_y_b);
-		MultiBlock_->Send(&buf_MacroSend[2][2][0],IdRNodeS.size(),2,tag_y_b);
-		MultiBlock_->Send(&buf_MacroSend[3][2][0],IdRNodeS.size(),2,tag_y_b);
-		MultiBlock_->Send(&buf_MacroSend[4][2][0],IdRNodeS.size(),2,tag_y_b);
-		MultiBlock_->Send(&buf_MacroSend[5][2][0],IdRNodeS.size(),2,tag_y_b);
+		for(int i=0;i<Nd_MacroVariables_sync;i++)
+			MultiBlock_->Send(&buf_MacroSend[i][2][0],IdRNodeS.size(),2,tag_y_b);
 	}
 	if(IdGNodeN.size()>=1)
 	{
-		MultiBlock_->Recv(&buf_MacroRecv[0][2][0],IdGNodeN.size(),0,tag_y_b,status);
-		MultiBlock_->Recv(&buf_MacroRecv[1][2][0],IdGNodeN.size(),0,tag_y_b,status);
-		MultiBlock_->Recv(&buf_MacroRecv[2][2][0],IdGNodeN.size(),0,tag_y_b,status);
-		MultiBlock_->Recv(&buf_MacroRecv[3][2][0],IdGNodeN.size(),0,tag_y_b,status);
-		MultiBlock_->Recv(&buf_MacroRecv[4][2][0],IdGNodeN.size(),0,tag_y_b,status);
-		MultiBlock_->Recv(&buf_MacroRecv[5][2][0],IdGNodeN.size(),0,tag_y_b,status);
+		for(int i=0;i<Nd_MacroVariables_sync;i++)
+			MultiBlock_->Recv(&buf_MacroRecv[i][2][0],IdGNodeN.size(),0,tag_y_b,status);
 	}
+//Set variables from buffer to real variables
 	for (unsigned int i=0;i<IdGNodeE.size();i++)
 	{
-		Rho[IdGNodeE[i]]=buf_MacroRecv[0][1][i];
-		Rhor[IdGNodeE[i]]=buf_MacroRecv[1][1][i];
-		Rhob[IdGNodeE[i]]=buf_MacroRecv[2][1][i];
-		RhoN[IdGNodeE[i]]=buf_MacroRecv[3][1][i];
-		V1[0][IdGNodeE[i]]=buf_MacroRecv[4][1][i];
-		V1[1][IdGNodeE[i]]=buf_MacroRecv[5][1][i];
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			SyncVar[j][IdGNodeE[i]]=buf_MacroRecv[j][1][i];
 	}
 	for (unsigned int i=0;i<IdGNodeN.size();i++)
 	{
-		Rho[IdGNodeN[i]]=buf_MacroRecv[0][2][i];
-		Rhor[IdGNodeN[i]]=buf_MacroRecv[1][2][i];
-		Rhob[IdGNodeN[i]]=buf_MacroRecv[2][2][i];
-		RhoN[IdGNodeN[i]]=buf_MacroRecv[3][2][i];
-		V1[0][IdGNodeN[i]]=buf_MacroRecv[4][2][i];
-		V1[1][IdGNodeN[i]]=buf_MacroRecv[5][2][i];
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			SyncVar[j][IdGNodeN[i]]=buf_MacroRecv[j][2][i];
 	}
 	for (unsigned int i=0;i<IdGNodeW.size();i++)
 	{
-		Rho[IdGNodeW[i]]=buf_MacroRecv[0][0][i];
-		Rhor[IdGNodeW[i]]=buf_MacroRecv[1][0][i];
-		Rhob[IdGNodeW[i]]=buf_MacroRecv[2][0][i];
-		RhoN[IdGNodeW[i]]=buf_MacroRecv[3][0][i];
-		V1[0][IdGNodeW[i]]=buf_MacroRecv[4][0][i];
-		V1[1][IdGNodeW[i]]=buf_MacroRecv[5][0][i];
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			SyncVar[j][IdGNodeW[i]]=buf_MacroRecv[j][0][i];
 	}
 
 	for (unsigned int i=0;i<IdGNodeS.size();i++)
 	{
-		Rho[IdGNodeS[i]]=buf_MacroRecv[0][3][i];
-		Rhor[IdGNodeS[i]]=buf_MacroRecv[1][3][i];
-		Rhob[IdGNodeS[i]]=buf_MacroRecv[2][3][i];
-		RhoN[IdGNodeS[i]]=buf_MacroRecv[3][3][i];
-		V1[0][IdGNodeS[i]]=buf_MacroRecv[4][3][i];
-		V1[1][IdGNodeS[i]]=buf_MacroRecv[5][3][i];
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			SyncVar[j][IdGNodeS[i]]=buf_MacroRecv[j][3][i];
 	}
-
-	 int tag_d_bl=3;
-	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;
-//	MPI_Status status;
-
 	if(IdRNodeSE.size()>=1)
 	{
-		MultiBlock_->Send(&Rho[IdRNodeSE[0]],1,5,tag_x_l);
-		MultiBlock_->Send(&Rhor[IdRNodeSE[0]],1,5,tag_x_l);
-		MultiBlock_->Send(&Rhob[IdRNodeSE[0]],1,5,tag_x_l);
-		MultiBlock_->Send(&RhoN[IdRNodeSE[0]],1,5,tag_x_l);
-		MultiBlock_->Send(&V1[0][IdRNodeSE[0]],1,5,tag_x_l);
-		MultiBlock_->Send(&V1[1][IdRNodeSE[0]],1,5,tag_x_l);
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			MultiBlock_->Send(&SyncVar[j][IdRNodeSE[0]],1,5,tag_x_l);
 	}
 	if(IdGNodeNW.size()>=1)
 	{
-		MultiBlock_->Recv(&Rho[IdGNodeNW[0]],1,6,tag_x_l,status);
-		MultiBlock_->Recv(&Rhor[IdGNodeNW[0]],1,6,tag_x_l,status);
-		MultiBlock_->Recv(&Rhob[IdGNodeNW[0]],1,6,tag_x_l,status);
-		MultiBlock_->Recv(&RhoN[IdGNodeNW[0]],1,6,tag_x_l,status);
-		MultiBlock_->Recv(&V1[0][IdGNodeNW[0]],1,6,tag_x_l,status);
-		MultiBlock_->Recv(&V1[1][IdGNodeNW[0]],1,6,tag_x_l,status);
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			MultiBlock_->Recv(&SyncVar[j][IdGNodeNW[0]],1,6,tag_x_l,status);
 	}
 	if(IdRNodeSW.size()>=1)
 	{
-		MultiBlock_->Send(&Rho[IdRNodeSW[0]],1,7,tag_x_l);
-		MultiBlock_->Send(&Rhor[IdRNodeSW[0]],1,7,tag_x_l);
-		MultiBlock_->Send(&Rhob[IdRNodeSW[0]],1,7,tag_x_l);
-		MultiBlock_->Send(&RhoN[IdRNodeSW[0]],1,7,tag_x_l);
-		MultiBlock_->Send(&V1[0][IdRNodeSW[0]],1,7,tag_x_l);
-		MultiBlock_->Send(&V1[1][IdRNodeSW[0]],1,7,tag_x_l);
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			MultiBlock_->Send(&SyncVar[j][IdRNodeSW[0]],1,7,tag_x_l);
 	}
 	if(IdGNodeNE.size()>=1)
 	{
-		MultiBlock_->Recv(&Rho[IdGNodeNE[0]],1,4,tag_x_l,status);
-		MultiBlock_->Recv(&Rhor[IdGNodeNE[0]],1,4,tag_x_l,status);
-		MultiBlock_->Recv(&Rhob[IdGNodeNE[0]],1,4,tag_x_l,status);
-		MultiBlock_->Recv(&RhoN[IdGNodeNE[0]],1,4,tag_x_l,status);
-		MultiBlock_->Recv(&V1[0][IdGNodeNE[0]],1,4,tag_x_l,status);
-		MultiBlock_->Recv(&V1[1][IdGNodeNE[0]],1,4,tag_x_l,status);
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			MultiBlock_->Recv(&SyncVar[j][IdGNodeNE[0]],1,4,tag_x_l,status);
 	}
 	if(IdRNodeNE.size()>=1)
 	{
-		MultiBlock_->Send(&Rho[IdRNodeNE[0]],1,4,tag_x_l);
-		MultiBlock_->Send(&Rhor[IdRNodeNE[0]],1,4,tag_x_l);
-		MultiBlock_->Send(&Rhob[IdRNodeNE[0]],1,4,tag_x_l);
-		MultiBlock_->Send(&RhoN[IdRNodeNE[0]],1,4,tag_x_l);
-		MultiBlock_->Send(&V1[0][IdRNodeNE[0]],1,4,tag_x_l);
-		MultiBlock_->Send(&V1[1][IdRNodeNE[0]],1,4,tag_x_l);
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			MultiBlock_->Send(&SyncVar[j][IdRNodeNE[0]],1,4,tag_x_l);
 	}
 	if(IdGNodeSW.size()>=1)
 	{
-		MultiBlock_->Recv(&Rho[IdGNodeSW[0]],1,7,tag_x_l,status);
-		MultiBlock_->Recv(&Rhor[IdGNodeSW[0]],1,7,tag_x_l,status);
-		MultiBlock_->Recv(&Rhob[IdGNodeSW[0]],1,7,tag_x_l,status);
-		MultiBlock_->Recv(&RhoN[IdGNodeSW[0]],1,7,tag_x_l,status);
-		MultiBlock_->Recv(&V1[0][IdGNodeSW[0]],1,7,tag_x_l,status);
-		MultiBlock_->Recv(&V1[1][IdGNodeSW[0]],1,7,tag_x_l,status);
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			MultiBlock_->Recv(&SyncVar[j][IdGNodeSW[0]],1,7,tag_x_l,status);
 	}
 	if(IdRNodeNW.size()>=1)
 	{
-		MultiBlock_->Send(&Rho[IdRNodeNW[0]],1,6,tag_d_bl);
-		MultiBlock_->Send(&Rhor[IdRNodeNW[0]],1,6,tag_d_bl);
-		MultiBlock_->Send(&Rhob[IdRNodeNW[0]],1,6,tag_d_bl);
-		MultiBlock_->Send(&RhoN[IdRNodeNW[0]],1,6,tag_d_bl);
-		MultiBlock_->Send(&V1[0][IdRNodeNW[0]],1,6,tag_d_bl);
-		MultiBlock_->Send(&V1[1][IdRNodeNW[0]],1,6,tag_d_bl);
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			MultiBlock_->Send(&SyncVar[j][IdRNodeNW[0]],1,6,tag_d_bl);
 	}
 	if(IdGNodeSE.size()>=1)
 	{
-		MultiBlock_->Recv(&Rho[IdGNodeSE[0]],1,5,tag_d_bl,status);
-		MultiBlock_->Recv(&Rhor[IdGNodeSE[0]],1,5,tag_d_bl,status);
-		MultiBlock_->Recv(&Rhob[IdGNodeSE[0]],1,5,tag_d_bl,status);
-		MultiBlock_->Recv(&RhoN[IdGNodeSE[0]],1,5,tag_d_bl,status);
-		MultiBlock_->Recv(&V1[0][IdGNodeSE[0]],1,5,tag_d_bl,status);
-		MultiBlock_->Recv(&V1[1][IdGNodeSE[0]],1,5,tag_d_bl,status);
+		for(int j=0;j<Nd_MacroVariables_sync;j++)
+			MultiBlock_->Recv(&SyncVar[j][IdGNodeSE[0]],1,5,tag_d_bl,status);
 	}
-/*	 int tag_x_l=1;
-	 int tag_y_b=2;
-	 int tag_d_bl=3;
-	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;
-	MPI_Status status;
-	if(IdRNodeSW.size()>=1)
-	{
-		MultiBlock_->Send(&Rho[IdRNodeSW[0]],1,7,tag_d_bl);
-	}
-	if(IdGNodeNE.size()>=1)
-	{
-		MultiBlock_->Recv(&Rho[IdGNodeNE[0]],1,4,tag_d_bl,status);
-		MultiBlock_->Send(&Rho[IdRNodeNW[0]],1,4,tag_d_bl);
-	}
-	if(IdRNodeSW.size()>=1)
-	{
-		MultiBlock_->Recv(&Rho[IdGNodeSW[0]],1,7,tag_d_bl,status);
-		MultiBlock_->Send(&Rho[IdRNodeSW[0]],1,2,tag_y_b);
-	}
-	if(IdGNodeNW.size()>=1)
-	{
-		MultiBlock_->Recv(&Rho[IdGNodeNW[0]],1,0,tag_y_b,status);
-	}
-	if(IdRNodeSW.size()>=1)
-	{
-		MultiBlock_->Send(&Rho[IdRNodeSW[0]],1,3,tag_x_l);
-	}
-	if(IdGNodeSE.size()>=1)
-	{
-		MultiBlock_->Recv(&Rho[IdGNodeSE[0]],1,1,tag_x_l,status);
-	}*/
 }
 
 double D2Q9TwoPhases::Convert_Alpha_To_Rho(double alpha)
