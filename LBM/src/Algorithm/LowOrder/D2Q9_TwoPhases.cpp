@@ -46,58 +46,8 @@ void D2Q9TwoPhases::InitD2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* 
 	intTmpReturn=0;
 	doubleTmpReturn=0;
 
-	//Distribution velocity
-	Ei[0][0]= 0.0;
-	Ei[0][1]= 0.0;
-	Ei[1][0]= 1.0;
-	Ei[1][1]= 0.0;
-	Ei[2][0]= 0.0;
-	Ei[2][1]= 1.0;
-	Ei[3][0]= -1.0;
-	Ei[3][1]= 0.0;
-	Ei[4][0]= 0.0;
-	Ei[4][1]= -1.0;
-	Ei[5][0]= 1.0;
-	Ei[5][1]= 1.0;
-	Ei[6][0]= -1.0;
-	Ei[6][1]= 1.0;
-	Ei[7][0]= -1.0;
-	Ei[7][1]= -1.0;
-	Ei[8][0]= 1.0;
-	Ei[8][1]= -1.0;
-	//Weigh depending of the direction
-	omega[0]=4.0/9.0;
-	omega[1]=1.0/9.0;
-	omega[2]=1.0/9.0;
-	omega[3]=1.0/9.0;
-	omega[4]=1.0/9.0;
-	omega[5]=1.0/36.0;
-	omega[6]=1.0/36.0;
-	omega[7]=1.0/36.0;
-	omega[8]=1.0/36.0;
-	// Opposite direction
-	Opposite[0]=0;
-	Opposite[1]=3;
-	Opposite[2]=4;
-	Opposite[3]=1;
-	Opposite[4]=2;
-	Opposite[5]=7;
-	Opposite[6]=8;
-	Opposite[7]=5;
-	Opposite[8]=6;
-	//Diffuse variables
-	SumWeightS=omega[4]+omega[7]+omega[8];
-	SumWeightE=omega[1]+omega[5]+omega[8];
-	SumWeightN=omega[2]+omega[5]+omega[6];
-	SumWeightW=omega[3]+omega[6]+omega[7];
-	SumWeightConcaveSE=omega[1]+omega[4]+omega[8];
-	SumWeightConcaveNE=omega[1]+omega[2]+omega[5];
-	SumWeightConcaveNW=omega[2]+omega[3]+omega[6];
-	SumWeightConcaveSW=omega[3]+omega[4]+omega[7];
-	SumWeightConvexSE=omega[2]+omega[3]+omega[6];
-	SumWeightConvexNE=omega[3]+omega[4]+omega[7];
-	SumWeightConvexNW=omega[1]+omega[4]+omega[8];
-	SumWeightConvexSW=omega[1]+omega[2]+omega[5];
+	EiCollide=Ei;
+	omegaCollide=omega;
 
 	init(ini);
 }
@@ -142,6 +92,9 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_,alpha);
 		U[0][NodeArrays->NodeCorner[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeCorner[j].Get_index()]=U_[1];
+		NodeArrays->NodeCorner[j].Set_UDef(U_[0],U_[1]);
+		NodeArrays->NodeCorner[j].Set_RhoDef(Rho[NodeArrays->NodeCorner[j].Get_index()]);
+		NodeArrays->NodeCorner[j].Set_AlphaDef(alpha);
 	}
 	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
@@ -384,7 +337,7 @@ void D2Q9TwoPhases::Set_PressureType(NodePressure2D& NodeIn){
 	NodeIn.Set_stream(PressureStreaming,nbvelo);
 	NodeIn.Set_RhoDef(Rho[NodeIn.Get_index()]);
 }
-
+/*
 /// Impose velocity by HeZou
 void D2Q9TwoPhases::ApplyHeZou_U(NodeVelocity2D& NodeIn, int distID, double &U, double &V){
 
@@ -705,6 +658,7 @@ void D2Q9TwoPhases::ApplyDiffuseWallSymmetry(NodeWall2D& NodeIn){
 				break;
 			}
 }
+
 ///Diffuse boundary condition for Concave and Convex corners
 ///For Concave corners, the incoming distributions go to outcoming so divide by 0.5 and the diagonal distribution doesn't participate for the streaming is approximate by the density at the neibourgh nodes
 ///For Convex corners, the diffusion goes in all directions.
@@ -713,18 +667,6 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 	switch(NodeIn.Get_BcNormal())
 			{
 			case 5:
-			/*	if (NodeIn.stream()[3]==false)
-				{
-					rhodiff=(f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[7][NodeIn.Get_index()])*2;
-					f[0]->f[5][NodeIn.Get_index()]=omega[5]*rhodiff;
-					f[0]->f[1][NodeIn.Get_index()]=omega[1]*rhodiff;
-					f[0]->f[2][NodeIn.Get_index()]=omega[2]*rhodiff;
-					double sumfi=f[0]->f[0][NodeIn.Get_index()]+f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[5][NodeIn.Get_index()]+f[0]->f[7][NodeIn.Get_index()];
-					f[0]->f[6][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-					f[0]->f[8][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-				}
-				else
-				{*/
 					rhodiff=(f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[7][NodeIn.Get_index()])/SumWeightConvexNE;
 					f[0]->f[5][NodeIn.Get_index()]=omega[5]*rhodiff;
 					f[0]->f[1][NodeIn.Get_index()]=omega[1]*rhodiff;
@@ -738,21 +680,10 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 					f[1]->f[2][NodeIn.Get_index()]=omega[2]*rhodiff;
 					f[1]->f[6][NodeIn.Get_index()]=omega[6]*rhodiff;
 					f[1]->f[8][NodeIn.Get_index()]=omega[8]*rhodiff;
-				//}
+
 				break;
 			case 6:
-			/*	if (NodeIn.stream()[1]==false)
-				{
-					rhodiff=(f[0]->f[1][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[8][NodeIn.Get_index()])*2;
-					f[0]->f[6][NodeIn.Get_index()]=omega[6]*rhodiff;
-					f[0]->f[2][NodeIn.Get_index()]=omega[2]*rhodiff;
-					f[0]->f[3][NodeIn.Get_index()]=omega[3]*rhodiff;
-					double sumfi=f[0]->f[0][NodeIn.Get_index()]+f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[6][NodeIn.Get_index()]+f[0]->f[8][NodeIn.Get_index()];
-					f[0]->f[5][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-					f[0]->f[7][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-				}
-				else
-				{*/
+
 					rhodiff=(f[0]->f[1][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[8][NodeIn.Get_index()])/SumWeightConvexNW;
 					f[0]->f[6][NodeIn.Get_index()]=omega[6]*rhodiff;
 					f[0]->f[2][NodeIn.Get_index()]=omega[2]*rhodiff;
@@ -766,21 +697,10 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 					f[1]->f[3][NodeIn.Get_index()]=omega[3]*rhodiff;
 					f[1]->f[5][NodeIn.Get_index()]=omega[5]*rhodiff;
 					f[1]->f[7][NodeIn.Get_index()]=omega[7]*rhodiff;
-				//}
+
 				break;
 			case 7:
-				/*if (NodeIn.stream()[1]==false)
-				{
-					rhodiff=(f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[5][NodeIn.Get_index()])*2;
-					f[0]->f[7][NodeIn.Get_index()]=omega[7]*rhodiff;
-					f[0]->f[3][NodeIn.Get_index()]=omega[3]*rhodiff;
-					f[0]->f[4][NodeIn.Get_index()]=omega[4]*rhodiff;
-					double sumfi=f[0]->f[0][NodeIn.Get_index()]+f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[5][NodeIn.Get_index()]+f[0]->f[7][NodeIn.Get_index()];
-					f[0]->f[6][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-					f[0]->f[8][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-				}
-				else
-				{*/
+
 					rhodiff=(f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[5][NodeIn.Get_index()])/SumWeightConvexSW;
 					f[0]->f[7][NodeIn.Get_index()]=omega[7]*rhodiff;
 					f[0]->f[3][NodeIn.Get_index()]=omega[3]*rhodiff;
@@ -797,18 +717,7 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 				//}
 				break;
 			case 8:
-				/*if (NodeIn.stream()[2]==false)
-				{
-					rhodiff=(f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[6][NodeIn.Get_index()])*2;
-					f[0]->f[8][NodeIn.Get_index()]=omega[8]*rhodiff;
-					f[0]->f[1][NodeIn.Get_index()]=omega[1]*rhodiff;
-					f[0]->f[4][NodeIn.Get_index()]=omega[4]*rhodiff;
-					double sumfi=f[0]->f[0][NodeIn.Get_index()]+f[0]->f[1][NodeIn.Get_index()]+f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[4][NodeIn.Get_index()]+f[0]->f[6][NodeIn.Get_index()]+f[0]->f[8][NodeIn.Get_index()];
-					f[0]->f[5][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-					f[0]->f[7][NodeIn.Get_index()]=(Cal_RhoCorner(NodeIn)-sumfi)/2;
-				}
-				else
-				{*/
+
 					rhodiff=(f[0]->f[2][NodeIn.Get_index()]+f[0]->f[3][NodeIn.Get_index()]+f[0]->f[6][NodeIn.Get_index()])/SumWeightConvexSE;
 					f[0]->f[8][NodeIn.Get_index()]=omega[8]*rhodiff;
 					f[0]->f[1][NodeIn.Get_index()]=omega[1]*rhodiff;
@@ -822,7 +731,7 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 					f[1]->f[4][NodeIn.Get_index()]=omega[4]*rhodiff;
 					f[1]->f[5][NodeIn.Get_index()]=omega[5]*rhodiff;
 					f[1]->f[7][NodeIn.Get_index()]=omega[7]*rhodiff;
-				//}
+
 				break;
 			default:
 				std::cerr<<"Direction: "<< NodeIn.Get_BcNormal()<<" (Corner diffuse boundary conditions) not found"<<std::endl;
@@ -830,7 +739,7 @@ void D2Q9TwoPhases::ApplyDiffuseWall(NodeCorner2D& NodeIn){
 			}
 }
 
-
+*/
 
 double D2Q9TwoPhases::Cal_RhoCorner(NodeCorner2D& nodeIn){
 
@@ -869,14 +778,6 @@ void D2Q9TwoPhases::StreamingOrientation(NodeGhost2D& nodeIn, bool Streaming[9])
 			Streaming[i]=false;
 		else
 			Streaming[i]=true;
-
-	if(nodeIn.get_x()==20 && nodeIn.get_y()==24)
-	{
-		std::cout<<"streaming ghost: "<<std::endl;
-		for (unsigned int i=1;i<(unsigned int)nbvelo;i++)
-			std::cout<<Streaming[i];
-		std::cout<<std::endl;
-	}
 }
 void D2Q9TwoPhases::StreamingOrientation(NodeCorner2D& nodeIn, bool Streaming[9]){
 

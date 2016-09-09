@@ -19,19 +19,30 @@ public:
 	D2Q9Pressure();
 	virtual ~D2Q9Pressure();
 
-
-	void ApplyPressure(NodePressure2D& Node, double* fi, double Rho, double & U, double & V);
-
-	void BC_HeZou_P(int & NormalBc, double* fi, double Rho, double & U, double & V);
+	void Set_PressureBcs(Parameters *Param);
+	void ApplyPressure(int const &BcNormal,int const *Connect, double const &Rho_def, DistriFunct* f_in, double *Rho, double *U, double *V);
 
 private:
+//Methods for pressure models (generic)
+	//He Zou with pressure formulation
+	void BC_HeZou_P(int const &BcNormal,int const *Connect, double const &Rho_def, DistriFunct* f_in, double Rho, double & U, double & V);
+
+
+//Functions for pressure models	(Calculations)
 	void FUNC_HeZou_P (double & a,double & b,double & c,double & d,double & e,double & f,double & g,double & h,double & i,double & V,double & Rho);
 
 
+//Function for calculating the pressure and setting in the global variable
+	void FixRho(int const &BcNormal,int const *Connect, double const &Rho_def, double *Rho);
+	void NoGradRho_1stOrder(int const &BcNormal,int const *Connect, double const &Rho_def, double *Rho);
+
+//Private variables
+	double 	InvRho,feq,U;
+
 // Pointers on function
 ///Simplify notation for pointer on a member function of D2Q9Pressure class for Pressure model used
-	typedef void(D2Q9Pressure::*PressureMethod)(int & NormalBc, double* fi, double Rho, double & U, double & V);
-	typedef double(D2Q9Pressure::*CalculRho)(int & NormalBc, double* fi, double Rho, double & U, double & V);
+	typedef void(D2Q9Pressure::*PressureMethod)(int const &BcNormal,int const *Connect, double const &Rho_def, DistriFunct* f_in, double Rho, double & U, double & V);
+	typedef void(D2Q9Pressure::*CalculRho)(int const &BcNormal,int const *Connect, double const &Rho_def, double *Rho);
 //Define name for pointers on functions
 	PressureMethod PtrPressureMethod;
 	CalculRho PtrCalculRho;

@@ -32,25 +32,32 @@
 
 using namespace std;
 
+//General enumeration
+enum parralleltype {Serial,Mpi,Openmp,Hybrid};
+enum OutputFormat {CGNSFormat,TecplotFormat};
+enum DensityExport{Density,NormalDensity,BothDensity};
+
+//Solver enumeration
 enum dimension {D2,D3};
-
 enum schemetype {Q9,Q16};
-
 enum modeltype {SinglePhase, ColourFluid};
 
+//model enumeration
 enum FluidType{Newtonian};
-
 enum UserForceType{None,LocalForce,BodyForce};
-
-enum parralleltype {Serial,Mpi,Openmp,Hybrid};
-
-enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular};
-
-enum OutputFormat {CGNSFormat,TecplotFormat};
-
-enum DensityExport{Density,NormalDensity,BothDensity};
 enum GradientType{FD,LBMStencil};
 
+//Boundary conditions enumeration
+enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular,HeZouWall,HeZouWallVel};
+enum PressureModel{HeZouP};
+enum PressureType{FixP,zeroPGrad1st};
+enum VelocityModel{HeZouV};
+enum VelocityType{FixV,zeroVGrad1st};
+enum CornerModel{HoChan};
+enum CornerPressureType{FixCP,ExtrapolCP};
+
+
+//Colour fluid enumeration
 enum ColourGradType{Gunstensen,DensityGrad,DensityNormalGrad};
 enum RecolouringType{LatvaKokkoRothman};
 enum ColourOperatorType {Grunau,Reis,SurfaceForce};
@@ -241,8 +248,11 @@ private:
 			ar & boost::serialization::make_nvp("GlobalBcType_4",GlobalBcType[4] );
 			ar & boost::serialization::make_nvp("GlobalBcType_5",GlobalBcType[5] );
 		}
-		   //for (int i=0;i<NbGlobalBcType;i++)
-			//   ar & BOOST_SERIALIZATION_NVP(GlobalBcType[i]);
+		ar & BOOST_SERIALIZATION_NVP(PressureModelParam)
+		   & BOOST_SERIALIZATION_NVP(PressureTypeParam)
+		   & BOOST_SERIALIZATION_NVP(VelocityModelParam)
+		   & BOOST_SERIALIZATION_NVP(VelocityTypeParam)
+		   & BOOST_SERIALIZATION_NVP(CornerModelParam);
 	}
 public:
 	NodeType Get_GlobalBcType(int side) const;
@@ -250,12 +260,29 @@ public:
 	WallType Get_WallType() const;
 	void Set_SymmetryType(SymmetryType SymmetryType_);
 	SymmetryType Get_SymmetryType() const;
-
+	void Set_PressureModel(PressureModel PressureModelParam_){PressureModelParam=PressureModelParam_;};
+	PressureModel Get_PressureModel() const {return PressureModelParam;};
+	void Set_PressureType(PressureType PressureType_){PressureTypeParam=PressureType_;};
+	PressureType Get_PressureType() const {return PressureTypeParam;};
+	void Set_VelocityModel(VelocityModel VelocityModel_){VelocityModelParam=VelocityModel_;};
+	VelocityModel Get_VelocityModel() const {return VelocityModelParam;};
+	void Set_VelocityType(VelocityType VelocityType_){VelocityTypeParam=VelocityType_;};
+	VelocityType Get_VelocityType() const {return VelocityTypeParam;};
+	void Set_CornerModel(CornerModel CornerModel_){CornerModelParam=CornerModel_;};
+	CornerModel Get_CornerModel() const {return CornerModelParam;};
+	void Set_CornerPressureType(CornerPressureType CornerPressureType_){CornerPressureTypeParam=CornerPressureType_;};
+	CornerPressureType Get_CornerPressureType() const {return CornerPressureTypeParam;};
 protected:
 	WallType WallTypeParam;
 	SymmetryType SymmetryTypeParam;
 	int NbGlobalBcType;
 	NodeType * GlobalBcType;
+	PressureModel PressureModelParam;
+	PressureType PressureTypeParam;
+	VelocityModel VelocityModelParam;
+	VelocityType VelocityTypeParam;
+	CornerModel CornerModelParam;
+	CornerPressureType CornerPressureTypeParam;
 };
 
 class SolverParameters {

@@ -85,11 +85,11 @@ private:
 
 // Boundary conditions depend of the model. Some functions has to be rewritten.
 	void ApplyBc();
-	void ApplyGlobalCorner(NodeCorner2D& NodeIn);
+/*	void ApplyGlobalCorner(NodeCorner2D& NodeIn);
 	void ApplyBounceBack(NodeWall2D& Node);
 	void ApplyCorner(NodeCorner2D& Node);
 	void ApplyBounceBack(NodeCorner2D& Node);
-	void ApplySymmetryPressureOnNode(NodeSymmetry2D& NodeIn);
+	void ApplySymmetryPressureOnNode(NodeSymmetry2D& NodeIn);*/
 
 
 private:

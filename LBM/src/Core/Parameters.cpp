@@ -46,7 +46,12 @@ Parameters::Parameters()
 	ColourGrad=Gunstensen;
 	Recolouring=LatvaKokkoRothman;
 	ColourOperator=Grunau;
-
+	PressureModelParam=HeZouP;
+	PressureTypeParam=FixP;
+	VelocityModelParam=HeZouV;
+	VelocityTypeParam=FixV;
+	CornerModelParam=HoChan;
+	CornerPressureTypeParam=ExtrapolCP;
 }
 
 Parameters::~Parameters() {

@@ -12,8 +12,13 @@
 
 #ifndef SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9BCVAR_H_
 #define SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9BCVAR_H_
+
 #include "../../../Mesh/SingleBlock/Node2D.h"
-class D2Q9BcVar {
+#include "../../../Core/Parameters.h"
+#include "../../../Core/GlobalDef.h"
+#include <map>
+
+class D2Q9BcVar{
 public:
 	D2Q9BcVar();
 	virtual ~D2Q9BcVar();
@@ -21,7 +26,12 @@ public:
 protected:
 	double ru1,ru2;
 	double q23,q16,q13;
-	short int Opposite[9]; //opposite direction in the distribution function
+	short int OppositeBc[9]; //opposite direction in the distribution function
+	double omegaBc[9]; //Weight of the distribution function. It is need for some boundary conditions
+	double rhodiff;
+	double SumWeightS,SumWeightE,SumWeightN,SumWeightW;
+	double SumWeightConcaveSE,SumWeightConcaveNE,SumWeightConcaveNW,SumWeightConcaveSW;
+	double SumWeightConvexSE,SumWeightConvexNE,SumWeightConvexNW,SumWeightConvexSW;
 };
 
 #endif /* SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9BCVAR_H_ */

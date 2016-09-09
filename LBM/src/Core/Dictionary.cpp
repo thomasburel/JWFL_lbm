@@ -58,9 +58,9 @@ void Dictionary::AddVar(dataType type,std::string VarName,bool BoolExportVar, bo
 
 
 		Var_x=new double [numberNodes];
-		Var.push_back(Var_x);
-		StringVar.push_back(VarName);
 		mapVar[VarName]=Var.size();
+		Var.push_back(Var_x);
+
 
 		if(BoolExportVar)
 		{
@@ -91,40 +91,39 @@ void Dictionary::AddVar(dataType type,std::string VarName,bool BoolExportVar, bo
 void Dictionary::AddVar(dataType type,std::string VarName,bool BoolExportVar, bool BoolExportBreakpoint, bool BoolSynchronise, double* & Var_x, double* & Var_y){
 	if(dimension==2 &&type==Vector)
 	{
-			Var.push_back(Var_x);
-			Var.push_back(Var_y);
-			Var_x=new double [numberNodes];
-			Var_y=new double [numberNodes];
-			StringVar.push_back(VarName+"X");
-			mapVar[VarName+"X"]=Var.size();
-			StringVar.push_back(VarName+"Y");
-			mapVar[VarName+"Y"]=Var.size();
-			if(BoolExportVar)
-			{
-				ExportVar.push_back(Var_x);
-				ExportVar.push_back(Var_y);
+		Var_x=new double [numberNodes];
+		mapVar[VarName+"X"]=Var.size();
+		Var.push_back(Var_x);
+		Var_y=new double [numberNodes];
+		mapVar[VarName+"Y"]=Var.size();
+		Var.push_back(Var_y);
 
-				StringExportVar.push_back(VarName+"X");
-				StringExportVar.push_back(VarName+"Y");
-			}
+		if(BoolExportVar)
+		{
+			ExportVar.push_back(Var_x);
+			ExportVar.push_back(Var_y);
 
-			if(BoolExportBreakpoint)
-			{
-				ExportVarBreakpoint.push_back(Var_x);
-				ExportVarBreakpoint.push_back(Var_y);
+			StringExportVar.push_back(VarName+"X");
+			StringExportVar.push_back(VarName+"Y");
+		}
 
-				StringExportVarBreakpoint.push_back(VarName+"X");
-				StringExportVarBreakpoint.push_back(VarName+"Y");
-			}
+		if(BoolExportBreakpoint)
+		{
+			ExportVarBreakpoint.push_back(Var_x);
+			ExportVarBreakpoint.push_back(Var_y);
 
-			if(BoolSynchronise)
-			{
-				SyncVar.push_back(Var_x);
-				SyncVar.push_back(Var_y);
+			StringExportVarBreakpoint.push_back(VarName+"X");
+			StringExportVarBreakpoint.push_back(VarName+"Y");
+		}
 
-				StringSyncVar.push_back(VarName+"X");
-				StringSyncVar.push_back(VarName+"Y");
-			}
+		if(BoolSynchronise)
+		{
+			SyncVar.push_back(Var_x);
+			SyncVar.push_back(Var_y);
+
+			StringSyncVar.push_back(VarName+"X");
+			StringSyncVar.push_back(VarName+"Y");
+		}
 	}
 	else
 	{
@@ -136,18 +135,16 @@ void Dictionary::AddVar(dataType type,std::string VarName,bool BoolExportVar, bo
 void Dictionary::AddVar(dataType type,std::string VarName,bool BoolExportVar, bool BoolExportBreakpoint, bool BoolSynchronise, double* & Var_x, double* & Var_y, double* & Var_z){
 	if(dimension==3 && type==Vector)
 	{
-		Var.push_back(Var_x);
-		Var.push_back(Var_y);
-		Var.push_back(Var_z);
 		Var_x=new double [numberNodes];
-		Var_y=new double [numberNodes];
-		Var_z=new double [numberNodes];
-		StringVar.push_back(VarName+"X");
 		mapVar[VarName+"X"]=Var.size();
-		StringVar.push_back(VarName+"Y");
+		Var.push_back(Var_x);
+		Var_y=new double [numberNodes];
 		mapVar[VarName+"Y"]=Var.size();
-		StringVar.push_back(VarName+"Z");
+		Var.push_back(Var_y);
+		Var_z=new double [numberNodes];
 		mapVar[VarName+"Z"]=Var.size();
+		Var.push_back(Var_z);
+
 		if(BoolExportVar)
 		{
 			ExportVar.push_back(Var_x);
@@ -226,6 +223,12 @@ int Dictionary::Get_Id_Var(std::string VarName){
 	 std::map<std::string,int>::iterator it;
 	 it=mapVar.find(VarName);
 	 if(it==mapVar.end())
-		 std::cerr<<" Variable name in the dictionary not found"<<std::endl;
+	 {
+		 std::cerr<<" Variable name ( "<< VarName<<" )in the dictionary is not found"<<std::endl;
+		 std::cerr<<"Variable available are: " ;
+		 for (it = mapVar.begin() ; it != mapVar.end() ; ++it)
+			 std::cerr<<it->first<<" ; ";
+		 std::cerr<<std::endl;
+	 }
 	return mapVar[VarName];
 }

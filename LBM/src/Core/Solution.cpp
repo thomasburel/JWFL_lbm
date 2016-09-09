@@ -37,6 +37,8 @@ void Solution2D::Set_Solution(Parameters *Param) {
 	nbnodes_real=MultiBlock_->Get_End_Nodes()-MultiBlock_->Get_Start_Nodes()+1;//nbnodes_total;
 //	std::cout<<"Processor: "<<parrallel->getRank()<<" Number of total node is: "<<nbnodes_total<<" Number of real node is: "<<nbnodes_real<<std::endl;
 	U=new double* [2];
+	U[0]=0;U[1]=0;
+
 
 	Dic->AddVar(Vector,"Velocity",Param->Get_output_velocity(), true,false,U[0],U[1]);//No synchronisation between processor by default
 	Dic->AddVar(Scalar,"Density",Param->Get_output_density(), true,false,Rho);//No synchronisation between processor by default

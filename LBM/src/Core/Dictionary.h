@@ -41,14 +41,18 @@ public:
 	std::vector<double*> Get_SyncVar(){return SyncVar;};
 	int Get_NbSyncVar(){return SyncVar.size();};
 
+	/// Get the ID of the variable from its name. It is a slow access.
 	int Get_Id_Var(std::string VarName);
+	/// Get the pointer of the variable from its Id. It is a quick access.
+	double* Get_PtrVar(int Id_Var){return Var[Id_Var];};
+	/// Get the pointer of the variable from its name. It is a slow access.
+	void Get_PtrVar(std::string VarName, double* & Var_out){Var_out=Var[Get_Id_Var(VarName)];};
 private:
 	int dimension;
 	int numberNodes;//with ghost
 
 //Save Variables (save the full array). Distribution functions are saved outside.
 	std::vector<double*> Var;
-	std::vector<std::string> StringVar;
 	std::map<std::string,int> mapVar;
 
 //Save export variables (array of pointers)
