@@ -27,7 +27,7 @@ void D2Q9GlobalCorner::Set_GlobalCorner(Parameters *Param,D2Q9GenericBc* D2Q9Gen
 
 void D2Q9GlobalCorner::ApplyGlobalCorner(NodeCorner2D& Node, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in)
 {
-	FunctionGlobalCorner(Node,Node.Get_RhoDef(),Node.Get_UDef(),TypeOfNode_,f_in,BcMethods->Get_Rho(),BcMethods->Get_V(),BcMethods->Get_V());
+	FunctionGlobalCorner(Node,Node.Get_RhoDef(),Node.Get_UDef(),TypeOfNode_,f_in,BcMethods->Get_Rho(),BcMethods->Get_U(),BcMethods->Get_V());
 }
 void D2Q9GlobalCorner::ApplyGlobalCorner(NodeCorner2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V)
 {
@@ -155,7 +155,11 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
-				BcMethods->ApplyCorner(Node,f_in,Rho_def,UDef[0],UDef[1],Rho,U,V);
+			{
+				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
+				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
+				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
+			}
 		}
 		break;
 	case 6:
@@ -271,7 +275,9 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
-				BcMethods->ApplyCorner(Node,f_in,Rho_def,UDef[0],UDef[1],Rho,U,V);
+				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
+				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
+				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
 		}
 
 		break;
@@ -388,7 +394,9 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
-				BcMethods->ApplyCorner(Node,f_in,Rho_def,UDef[0],UDef[1],Rho,U,V);
+				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
+				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
+				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
 		}
 		break;
 	case 8:
@@ -504,7 +512,9 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
-				BcMethods->ApplyCorner(Node,f_in,Rho_def,UDef[0],UDef[1],Rho,U,V);
+				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
+				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
+				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
 		}
 		break;
 	default:

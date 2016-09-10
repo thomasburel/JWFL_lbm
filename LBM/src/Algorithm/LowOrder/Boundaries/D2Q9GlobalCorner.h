@@ -30,6 +30,7 @@ public:
 private:
 	void FunctionGlobalCorner(NodeCorner2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V);
 	D2Q9GenericBc* BcMethods;
+	double RhoDef_tmp,UDef_tmp,VDef_tmp;
 };
 
 #endif /* SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9GLOBALCORNER_H_ */

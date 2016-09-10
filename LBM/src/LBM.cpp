@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 	//Umax=re*nu/(H+1);
 	Umax=0.003;*/
 
-	Pmax=1.05;
+	Pmax=1;
 	Pmin=1;
 
 	cout<<"Reynolds: "<<re<< " Tau: "<<tau<< " Nu: "<<nu<<" U: "<<Umax<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<endl;
@@ -105,7 +105,9 @@ int main(int argc, char *argv[]) {
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)0.1667
-	Param.Set_BcType(Wall,Pressure,Wall,Pressure);
+	Param.Set_BcType(Velocity,Pressure,Velocity,Pressure);
+/// Set Pressure Type
+	Param.Set_PressureType(zeroPGrad1st);
 /// Set Global Corner type
 	Param.Set_CornerPressureType(FixCP);
 /// Wall boundary condition type (Implemented BounceBack and Diffuse)
@@ -114,7 +116,7 @@ int main(int argc, char *argv[]) {
 /// Number of maximum timestep
 	Param.Set_NbStep(10000);
 /// Interval for output
-	Param.Set_OutPutNSteps(100);// interval
+	Param.Set_OutPutNSteps(500);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(500);
 
@@ -122,10 +124,10 @@ int main(int argc, char *argv[]) {
 	Param.Set_VariablesOutput(true,true);// export Rho,U
 
 /// Define the Output filename
-	Param.Set_OutputFileName("TwoPhase_Channel");
+	Param.Set_OutputFileName("P-V_SinglePhase");
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(ColourFluid);
+	Param.Set_Model(SinglePhase);
 
 	//Gradient definition
 	Param.Set_GradientType(FD); //FD or LBMStencil

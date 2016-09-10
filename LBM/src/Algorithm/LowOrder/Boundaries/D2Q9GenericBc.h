@@ -59,6 +59,10 @@ public:
 	double*& Get_Rho(){return PtrD2Q9BcRho;};
 	double*& Get_U(){return PtrD2Q9BcU;};
 	double*& Get_V(){return PtrD2Q9BcV;};
+
+	inline void Get_CalculU(int const &BcNormal,int const *Connect, double const *UDef, double *U, double *V, double & Ureturn,double & Vreturn){D2Q9VelocityBc.Get_CalculU(BcNormal,Connect, UDef, U, V,Ureturn,Vreturn);};
+	inline void Get_CalculRho(int const &BcNormal,int const *Connect, double const Rho_def, double *Rho, double & Rhoreturn){D2Q9PressureBc.Get_CalculRho(BcNormal,Connect, Rho_def, Rho, Rhoreturn);};
+
 protected:
 	double *PtrD2Q9BcRho, *PtrD2Q9BcU, *PtrD2Q9BcV;
 	Dictionary *PtrD2Q9BcDic;
