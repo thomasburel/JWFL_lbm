@@ -13,7 +13,7 @@
 #ifndef SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9PRESSURE_H_
 #define SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9PRESSURE_H_
 #include "D2Q9BcVar.h"
-
+#include <cmath>
 class D2Q9Pressure: public D2Q9BcVar {
 public:
 	D2Q9Pressure();

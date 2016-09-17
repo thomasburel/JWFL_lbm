@@ -15,6 +15,7 @@ RM := rm -rf
 -include src/Mesh/MultiBlock/subdir.mk
 -include src/IO/subdir.mk
 -include src/Core/subdir.mk
+-include src/Algorithm/LowOrder/Boundaries/subdir.mk
 -include src/Algorithm/LowOrder/subdir.mk
 -include src/subdir.mk
 -include subdir.mk
@@ -52,7 +53,7 @@ all: LBM
 LBM: $(OBJS) $(USER_OBJS)
 	@echo 'Building target: $@'
 	@echo 'Invoking: GCC C++ Linker'
-	mpic++ -lcgns -lhdf5 -lboost_serialization -o "LBM" $(OBJS) $(USER_OBJS) $(LIBS)
+	mpic++ -o "LBM" $(OBJS) $(USER_OBJS) $(LIBS) -lcgns -lhdf5 -lboost_serialization
 	@echo 'Finished building target: $@'
 	@echo ' '
 

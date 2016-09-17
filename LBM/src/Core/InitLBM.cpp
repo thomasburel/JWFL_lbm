@@ -57,6 +57,8 @@ void InitLBM::IniDomainTwoPhases(int rank,Node2D & Node,int elem, int nodenumber
 		break;
 	case Periodic:
 		UserBc(*PtrParameters,elem, nodenumber, pos,Rho, U,alpha);
+		Node.Set_UDef(U[0],U[1]);
+		Node.Set_RhoDef(Rho);
 		break;
 	case Velocity:
 		UserBc(*PtrParameters,elem, nodenumber, pos,Rho, U,alpha);

@@ -114,24 +114,44 @@ dimension MeshParameters::Get_Dimension() const {
 }
 
 void Parameters::Set_BcType(NodeType Bc0,NodeType Bc1,NodeType Bc2,NodeType Bc3,NodeType Bc4,NodeType Bc5){
+	//Force periodic if only one side is setup as periodic
+	if (Bc0==Periodic||Bc2==Periodic)
+		if(Bc0!=Bc2)
+		{
+			Bc0=Periodic;
+			Bc2=Periodic;
+		}
+	if (Bc1==Periodic||Bc3==Periodic)
+		if(Bc1!=Bc3)
+		{
+			Bc1=Periodic;
+			Bc3=Periodic;
+		}
 	if (MeshParameters::Get_Dimension()==D2)
-			{
-				NbGlobalBcType=4;
-				GlobalBcType[0]=Bc0;
-				GlobalBcType[1]=Bc1;
-				GlobalBcType[2]=Bc2;
-				GlobalBcType[3]=Bc3;
-			}
-			else
-			{
-				NbGlobalBcType=6;
-				GlobalBcType[0]=Bc0;
-				GlobalBcType[1]=Bc1;
-				GlobalBcType[2]=Bc2;
-				GlobalBcType[3]=Bc3;
-				GlobalBcType[4]=Bc4;
-				GlobalBcType[5]=Bc5;
-			}
+		{
+			NbGlobalBcType=4;
+			GlobalBcType[0]=Bc0;
+			GlobalBcType[1]=Bc1;
+			GlobalBcType[2]=Bc2;
+			GlobalBcType[3]=Bc3;
+		}
+		else
+		{
+			//Force periodic if only one side is setup as periodic
+			if (Bc4==Periodic||Bc5==Periodic)
+				if(Bc4!=Bc5)
+				{
+					Bc4=Periodic;
+					Bc5=Periodic;
+				}
+			NbGlobalBcType=6;
+			GlobalBcType[0]=Bc0;
+			GlobalBcType[1]=Bc1;
+			GlobalBcType[2]=Bc2;
+			GlobalBcType[3]=Bc3;
+			GlobalBcType[4]=Bc4;
+			GlobalBcType[5]=Bc5;
+		}
 }
 
 void MeshParameters::Set_Domain_Size(int nx_,int ny_,int nz_) {

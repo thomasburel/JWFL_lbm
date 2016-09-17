@@ -27,8 +27,8 @@ int main(int argc, char *argv[]) {
 	double start,end;
 
 	double Umax=0.132013201320132;//0.01;
-	double H=40;
-	double L=120;
+	double H=100;
+	double L=100;
 	double Pmax=1.00001;
 
 	double Pmin=0.99999;
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 	//Umax=re*nu/(H+1);
 	Umax=0.003;*/
 
-	Pmax=1;
+	Pmax=1.0001;
 	Pmin=1;
 
 	cout<<"Reynolds: "<<re<< " Tau: "<<tau<< " Nu: "<<nu<<" U: "<<Umax<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<endl;
@@ -104,10 +104,12 @@ int main(int argc, char *argv[]) {
 
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity and Symmetry
-/// Order Bottom, Right, Top, Left, (Front, Back for 3D)0.1667
-	Param.Set_BcType(Velocity,Pressure,Velocity,Pressure);
+/// Order Bottom, Right, Top, Left, (Front, Back for 3D)
+//	Param.Set_BcType(Velocity,Periodic,Velocity,Periodic);
+	Param.Set_BcType(Periodic,Periodic,Periodic,Periodic);
+	Param.Set_BcType(Periodic,Periodic,Periodic,Periodic);
 /// Set Pressure Type
-	Param.Set_PressureType(zeroPGrad1st);
+	Param.Set_PressureType(FixP);
 /// Set Global Corner type
 	Param.Set_CornerPressureType(FixCP);
 /// Wall boundary condition type (Implemented BounceBack and Diffuse)
@@ -116,7 +118,7 @@ int main(int argc, char *argv[]) {
 /// Number of maximum timestep
 	Param.Set_NbStep(10000);
 /// Interval for output
-	Param.Set_OutPutNSteps(500);// interval
+	Param.Set_OutPutNSteps(200);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(500);
 
@@ -124,10 +126,10 @@ int main(int argc, char *argv[]) {
 	Param.Set_VariablesOutput(true,true);// export Rho,U
 
 /// Define the Output filename
-	Param.Set_OutputFileName("P-V_SinglePhase");
+	Param.Set_OutputFileName("Test_droplat");
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(SinglePhase);
+	Param.Set_Model(ColourFluid);
 
 	//Gradient definition
 	Param.Set_GradientType(FD); //FD or LBMStencil

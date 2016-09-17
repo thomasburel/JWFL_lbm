@@ -248,6 +248,14 @@ public:
 	virtual void Set_stream(bool* streaming=0,int NbVelocity=0);
 	virtual void Set_UDef(double UDef, double VDef);
 	virtual void Set_RhoDef(double RhoDef);
+
+	void Set_BcNormal(int BcNormal_){BcNormal=BcNormal_;};
+	int& Get_BcNormal(){return BcNormal;};
+private:
+	double RhoDef;
+	double UDef[2];
+	bool* PeriodicStream;
+	int BcNormal;
 private:
 	friend class boost::serialization::access;
     template<class Archive>

@@ -70,15 +70,17 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 		Rho=Pmin;*/
 
 //*********** Poiseuille ini***************
-	double Ubot=-0.01;
-	double Utop=0.01;
+	double Ubot=0;//-0.01;
+	double Utop=0;//0.01;
+	double Vleft=0;//-0.01;
+	double Vright=0;//0.01;
 //Left side of the domain
 	if(pos[0]<=0)
 	// Global Corner at the bottom left side
  		if(pos[1]<=0)
   		{
   			U[0]=Ubot;
-  			U[1]=0;
+  			U[1]=Vleft;
   			Rho=Pmax;
   			alpha=1;
   		}
@@ -87,7 +89,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
  		if(pos[1]>=H)
   		{
   			U[0]=Utop;
-  			U[1]=0;
+  			U[1]=Vleft;
   			Rho=Pmax;
   			alpha=1;
   		}
@@ -95,7 +97,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   		else
   		{
    			U[0]=(Utop-Ubot)/H*pos[1]+Ubot;//Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
-  			U[1]=0;
+  			U[1]=Vleft;
   			Rho=Pmax;
   			alpha=1;
  		}
@@ -106,7 +108,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   		if(pos[1]<=0)
   		{
   			U[0]=Ubot;
-  			U[1]=0;
+  			U[1]=Vright;
   			Rho=Pmin;
   			alpha=0;
   		}
@@ -115,7 +117,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   		if(pos[1]>=H)
   		{
   			U[0]=Utop;
-  			U[1]=0;
+  			U[1]=Vright;
   			Rho=Pmin;
   			alpha=0;
   		}
@@ -123,7 +125,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   		else
   		{
     		U[0]=(Utop-Ubot)/H*pos[1]+Ubot;//Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
-  			U[1]=0;
+  			U[1]=Vright;
   			Rho=Pmin;
   			alpha=0;
   		}
@@ -132,7 +134,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
  	if(pos[1]<=0)
   	{
   		U[0]=Ubot;
-  		U[1]=0;
+  		U[1]=(Vright-Vleft)/L*pos[0]+Vleft;
   		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;//Pmax-pos[0]*(Pmax-Pmin)/L;
   		alpha=0;
   	}
@@ -140,7 +142,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   	else
   	{
   		U[0]=Utop;
-  		U[1]=0;
+  		U[1]=(Vright-Vleft)/L*pos[0]+Vleft;
   		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;//Pmax-pos[0]*(Pmax-Pmin)/L;
   		alpha=0;
   	}
@@ -172,6 +174,10 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 /*		U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
 		U[1]=0;
 	Rho=Pmax-pos[0]*(Pmax-Pmin)/L;*/
+	U[0]=0;
+	U[1]=0;
+	Rho=1;
+	alpha=0;
 }
 
 void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U, double& alpha){
@@ -225,11 +231,24 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 		alpha=1;
 	}
 	//*********** Poiseuille ini***************
-		double Ubot=-0.01;
-		double Utop=0.01;
+		double Ubot=0;//-0.01;
+		double Utop=0;//0.01;
+		double Vleft=0;//-0.01;
+		double Vright=0;//0.01;
 		U[0]=(Utop-Ubot)/H*pos[1]+Ubot;//Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
-		U[1]=0;
+		U[1]=(Vright-Vleft)/L*pos[0]+Vleft;
 		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+
+		U[0]=0;
+		U[1]=0;
+		Rho=1;
 		alpha=0;
+
+		double R=30;
+		if(pow(pos[0]-L/2,2.0)+pow(pos[1]-H/2,2.0)<=R*R)
+		{
+			alpha=1;
+			Rho=1.01;
+		}
 }
 

@@ -30,7 +30,7 @@ public:
 	Block2D(int dx_=1, int dy_=1);
 	virtual ~Block2D();
 
-	void AddBlock(int TotalNumberCells_x,int TotalNumberCells_y,int dims[2],int coord[2],int NyCell_G,int Nx_begin,int Ny_begin,int Nx_last,int Ny_last,NodeType bC[4],int x_last=0,int y_last=0,int start_GlobalNodes=1,int end_GlobalNodes=1, int start_GlobalElems=1, int end_GlobalElems=1);
+	void AddBlock(int TotalNumberCells_x,int TotalNumberCells_y,int dims[2],int periodic_[2],int coord[2],int NyCell_G,int Nx_begin,int Ny_begin,int Nx_last,int Ny_last,NodeType bC[4],int x_last=0,int y_last=0,int start_GlobalNodes=1,int end_GlobalNodes=1, int start_GlobalElems=1, int end_GlobalElems=1);
 //	void AddGhostCell();
 	void WriteCoord();
 	double* Get_Coord(int NodeNumber) const;
@@ -93,6 +93,7 @@ private:
 	int  Get_BcNormal(NodeVelocity2D& Node);
 	int  Get_BcNormal(NodePressure2D& Node);
 	int  Get_BcNormal(NodeSymmetry2D& Node);
+	int  Get_BcNormal(NodePeriodic2D& Node);
 	void Remove_OneCell(int cellnumber);
 	void Remove_ExtraGhostCells();
 	void Remove_SolidCells();
@@ -123,6 +124,7 @@ private:
 	std::vector<int> IdSolidNode,Id_SolidGhost;//Mark solid node to sort the array
 	std::vector<Node2D*> Node_Solidtmp,Node_tmp;
 	int Coord[2],Dims[2];
+	bool periodic[2];
 	bool verbous;
 	double* Coord_physical;
 	int intTmpReturn;
@@ -139,7 +141,7 @@ private:
     	ar & NbGhostNode & NbRealNodes & NbTotalNodes & dx & dy;
     	ar & LocalToGlobalNode;
     	ar & Elems & IdNodeN & IdNodeE & IdNodeS & IdNodeW & IdNodeSW & IdNodeSE & IdNodeNW & IdNodeNE;
-    	ar & Coord & Dims & verbous;
+    	ar & Coord & periodic & Dims & verbous;
     	ar & CellArray;
     	//ar & Node;
 		ar & Node_Ghosttmp;

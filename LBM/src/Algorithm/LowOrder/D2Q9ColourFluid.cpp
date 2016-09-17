@@ -313,6 +313,17 @@ void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 		Rhor[NodeArrays->NodeSymmetry[j].Get_index()]=alpha*Rho[NodeArrays->NodeSymmetry[j].Get_index()];//PtrParameters->Get_Rho_1();
 		Rhob[NodeArrays->NodeSymmetry[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSymmetry[j].Get_index()];//PtrParameters->Get_Rho_2();
 	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+// Get position
+		pos[0]=NodeArrays->NodePeriodic[j].get_x();
+		pos[1]=NodeArrays->NodePeriodic[j].get_y();
+// Get initialise values from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodePeriodic[j],0, NodeArrays->NodePeriodic[j].Get_index(),pos,Rho[NodeArrays->NodePeriodic[j].Get_index()],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[NodeArrays->NodePeriodic[j].Get_index()]=alpha*Rho[NodeArrays->NodePeriodic[j].Get_index()];//PtrParameters->Get_Rho_1();
+		Rhob[NodeArrays->NodePeriodic[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodePeriodic[j].Get_index()];//PtrParameters->Get_Rho_2();
+	}
 	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 // Get position
@@ -479,6 +490,13 @@ void D2Q9ColourFluid::Colour_gradient(){
 	// Calculate gradients
 		(this->*PtrColourGradBc)(idx_tmp,NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_BcNormal());
 	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+	// Common variables
+		idx_tmp=NodeArrays->NodePeriodic[j].Get_index();
+	// Calculate gradients
+		(this->*PtrColourGradBc)(idx_tmp,NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_BcNormal());
+	}
 }
 void D2Q9ColourFluid::ColourFluid_Collision()
 {
@@ -561,6 +579,16 @@ void D2Q9ColourFluid::ColourFluid_Collision()
 
 	//Model
 		(this->*PtrCollision)(idx_tmp, NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_BcNormal(),&fi_tmp[0]);
+		(this->*PtrRecolour)(idx_tmp,&fi_tmp[0]);
+
+	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+	// Common variables
+		idx_tmp=NodeArrays->NodePeriodic[j].Get_index();
+
+	//Model
+		(this->*PtrCollision)(idx_tmp, NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_BcNormal(),&fi_tmp[0]);
 		(this->*PtrRecolour)(idx_tmp,&fi_tmp[0]);
 
 	}
@@ -787,6 +815,11 @@ void D2Q9ColourFluid::ApplyBc(){
 			ApplySymmetry(NodeArrays->NodeSymmetry[j].Get_BcNormal(),NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_RhoDef(),NodeArrays->NodeSymmetry[j].Get_UDef(),f[0],Rhor,U[0],U[1]);
 			ApplySymmetry(NodeArrays->NodeSymmetry[j].Get_BcNormal(),NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_RhoDef(),NodeArrays->NodeSymmetry[j].Get_UDef(),f[1],Rhob,U[0],U[1]);
 	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+			ApplyPeriodic(NodeArrays->NodePeriodic[j].Get_BcNormal(),NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_RhoDef(),NodeArrays->NodePeriodic[j].Get_UDef(),f[0],Rhor,U[0],U[1]);
+			ApplyPeriodic(NodeArrays->NodePeriodic[j].Get_BcNormal(),NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_RhoDef(),NodeArrays->NodePeriodic[j].Get_UDef(),f[1],Rhob,U[0],U[1]);
+	}
    parallel->barrier();
 
 }
@@ -822,7 +855,10 @@ void D2Q9ColourFluid::UpdateMacroVariables(){
 		{
 			(this->*PtrMacro)(NodeArrays->NodeSymmetry[j].Get_index());
 		}
-
+		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		{
+			(this->*PtrMacro)(NodeArrays->NodePeriodic[j].Get_index());
+		}
 }
 
 void D2Q9ColourFluid::MacroVariables(int& idx){
