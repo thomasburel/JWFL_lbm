@@ -149,6 +149,14 @@ void D2Q9::init(InitLBM& ini){
 		U[0][NodeArrays->NodeSymmetry[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSymmetry[j].Get_index()]=U_[1];
 	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+		pos[0]=NodeArrays->NodePeriodic[j].get_x();
+		pos[1]=NodeArrays->NodePeriodic[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodePeriodic[j],0, NodeArrays->NodePeriodic[j].Get_index(),pos,Rho[NodeArrays->NodePeriodic[j].Get_index()],U_);
+		U[0][NodeArrays->NodePeriodic[j].Get_index()]=U_[0];
+		U[1][NodeArrays->NodePeriodic[j].Get_index()]=U_[1];
+	}
 	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 		pos[0]=NodeArrays->NodeGhost[j].get_x();
@@ -195,11 +203,24 @@ void D2Q9::run(){
 
 	int it=0;
 	Writer->Write_Output(it);
-
+ /*	char buffer[50]; // make sure it's big enough
+ 	std::ofstream myFlux;
+ 	snprintf(buffer, sizeof(buffer), "after_streaming_%d.txt", parallel->getRank());
+ 	myFlux.open(buffer);myFlux.close();
+ 	snprintf(buffer, sizeof(buffer), "before_streaming_%d.txt", parallel->getRank());
+ 	myFlux.open(buffer);myFlux.close();*/
 	if(parallel->getSize()>1)
 	{
 		for (int i=1;i<NbStep+1;i++)
 		{
+/*		 	snprintf(buffer, sizeof(buffer), "after_streaming_%d.txt", parallel->getRank());
+		 	myFlux.open(buffer,std::ofstream::out | std::ofstream::app);
+				myFlux<<"iteration number: "<<i<<std::endl;
+				myFlux.close();
+			 	snprintf(buffer, sizeof(buffer), "before_streaming_%d.txt", parallel->getRank());
+			 	myFlux.open(buffer,std::ofstream::out | std::ofstream::app);
+					myFlux<<"iteration number: "<<i<<std::endl;
+					myFlux.close();*/
 			CollideD2Q9_node();
 			SyncToGhost();
 			StreamD2Q9();
@@ -252,7 +273,45 @@ void D2Q9::run(){
 
 
 void D2Q9::StreamD2Q9() {
+/* 	char buffer[50]; // make sure it's big enough
+ 	snprintf(buffer, sizeof(buffer), "before_streaming_%d.txt", parallel->getRank());
+ 	std::ofstream myFlux;
+ 	myFlux.open(buffer,std::ofstream::out | std::ofstream::app);
+	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	{
 
+		if(NodeArrays->NodeInterior[j].get_x()==1&&NodeArrays->NodeInterior[j].get_y()==1)
+		{
+			myFlux<<"x: 1 y: 1"<<std::endl;
+			for (int i=0;i<9;i++) myFlux<<"f_"<<i<<": "<<f->f[0][NodeArrays->NodeInterior[j].Get_index()]<<" ";
+			myFlux<<std::endl;
+		}
+
+		if(NodeArrays->NodeInterior[j].get_x()==9&&NodeArrays->NodeInterior[j].get_y()==9)
+		{
+			myFlux<<"x: 9 y: 9"<<std::endl;
+			for (int i=0;i<9;i++) myFlux<<"f_"<<i<<": "<<f->f[i][NodeArrays->NodeInterior[j].Get_index()]<<" ";
+			myFlux<<std::endl;
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+
+		if(NodeArrays->NodeGlobalCorner[j].get_x()==0 && NodeArrays->NodeGlobalCorner[j].get_y()==0)
+		{
+			myFlux<<"x: 0 y: 0"<<std::endl;
+			for (int i=0;i<9;i++) myFlux<<"f_"<<i<<": "<<f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]<<" ";
+			myFlux<<std::endl;
+		}
+
+		if(NodeArrays->NodeGlobalCorner[j].get_x()==10 && NodeArrays->NodeGlobalCorner[j].get_y()==10)
+		{
+			myFlux<<"x: 10 y: 10"<<std::endl;
+			for (int i=0;i<9;i++) myFlux<<"f_"<<i<<": "<<f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]<<" ";
+			myFlux<<std::endl;
+		}
+	}
+	myFlux.close();*/
 
 
 	for (unsigned int i=1;i<(unsigned int)nbvelo;i++) //No need to stream direction 0
@@ -315,6 +374,13 @@ void D2Q9::StreamD2Q9() {
 				ftmp[NodeArrays->NodeSymmetry[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeSymmetry[j].Get_index()];
 			}
 		}
+		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		{
+			if (NodeArrays->NodePeriodic[j].stream()[i])
+			{
+				ftmp[NodeArrays->NodePeriodic[j].Get_connect()[i]]=f->f[i][NodeArrays->NodePeriodic[j].Get_index()];
+			}
+		}
 		for (int j=0;j<NodeArrays->NodeGhost.size();j++)
 		{
 			if (NodeArrays->NodeGhost[j].stream()[i])
@@ -324,6 +390,43 @@ void D2Q9::StreamD2Q9() {
 		}
 		D2Q9::TmptoDistri(i);
 	}
+/* 	snprintf(buffer, sizeof(buffer), "after_streaming_%d.txt", parallel->getRank());
+ 	myFlux.open(buffer,std::ofstream::out | std::ofstream::app);
+	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	{
+
+		if(NodeArrays->NodeInterior[j].get_x()==1&&NodeArrays->NodeInterior[j].get_y()==1)
+		{
+			myFlux<<"x: 1 y: 1"<<std::endl;
+			for (int i=0;i<9;i++) myFlux<<"f_"<<i<<": "<<f->f[0][NodeArrays->NodeInterior[j].Get_index()]<<" ";
+			myFlux<<std::endl;
+		}
+
+		if(NodeArrays->NodeInterior[j].get_x()==9&&NodeArrays->NodeInterior[j].get_y()==9)
+		{
+			myFlux<<"x: 9 y: 9"<<std::endl;
+			for (int i=0;i<9;i++) myFlux<<"f_"<<i<<": "<<f->f[i][NodeArrays->NodeInterior[j].Get_index()]<<" ";
+			myFlux<<std::endl;
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+
+		if(NodeArrays->NodeGlobalCorner[j].get_x()==0 && NodeArrays->NodeGlobalCorner[j].get_y()==0)
+		{
+			myFlux<<"x: 0 y: 0"<<std::endl;
+			for (int i=0;i<9;i++) myFlux<<"f_"<<i<<": "<<f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]<<" ";
+			myFlux<<std::endl;
+		}
+
+		if(NodeArrays->NodeGlobalCorner[j].get_x()==10 && NodeArrays->NodeGlobalCorner[j].get_y()==10)
+		{
+			myFlux<<"x: 10 y: 10"<<std::endl;
+			for (int i=0;i<9;i++) myFlux<<"f_"<<i<<": "<<f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]<<" ";
+			myFlux<<std::endl;
+		}
+	}
+	myFlux.close();*/
 }
 void D2Q9::CollideD2Q9_node(){
 	double wtmp=0;
@@ -365,6 +468,11 @@ void D2Q9::CollideD2Q9_node(){
 			f->f[i][NodeArrays->NodeSymmetry[j].Get_index()] = f->f[i][NodeArrays->NodeSymmetry[j].Get_index()]-InvTau*(f->f[i][NodeArrays->NodeSymmetry[j].Get_index()]-CollideLowOrder::EquiDistriFunct2D(Rho[NodeArrays->NodeSymmetry[j].Get_index()], U[0][NodeArrays->NodeSymmetry[j].Get_index()], U[1][NodeArrays->NodeSymmetry[j].Get_index()], &Ei[i][0], omega[i]))
 					;//+LocalForce(i,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U[0][NodeArrays->NodeSymmetry[j].Get_index()],U[1][NodeArrays->NodeSymmetry[j].Get_index()],wtmp);
 		}
+		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		{
+			f->f[i][NodeArrays->NodePeriodic[j].Get_index()] = f->f[i][NodeArrays->NodePeriodic[j].Get_index()]-InvTau*(f->f[i][NodeArrays->NodePeriodic[j].Get_index()]-CollideLowOrder::EquiDistriFunct2D(Rho[NodeArrays->NodePeriodic[j].Get_index()], U[0][NodeArrays->NodePeriodic[j].Get_index()], U[1][NodeArrays->NodePeriodic[j].Get_index()], &Ei[i][0], omega[i]))
+					;//+LocalForce(i,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U[0][NodeArrays->NodeSymmetry[j].Get_index()],U[1][NodeArrays->NodeSymmetry[j].Get_index()],wtmp);
+		}
 	}
 }
 void D2Q9::UpdateMacroVariables_node(){
@@ -397,6 +505,10 @@ void D2Q9::UpdateMacroVariables_node(){
 		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
 			MacroVariables(NodeArrays->NodeSymmetry[j].Get_index());
+		}
+		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		{
+			MacroVariables(NodeArrays->NodePeriodic[j].Get_index());
 		}
 	}
 }
@@ -454,6 +566,10 @@ void D2Q9::Set_BcType(){
 	{
 		Set_SymmetryType(NodeArrays->NodeSymmetry[j]);
 	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+		Set_PeriodicType(NodeArrays->NodePeriodic[j]);
+	}
 	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 		Set_GhostType(NodeArrays->NodeGhost[j]);
@@ -474,7 +590,12 @@ void D2Q9::Set_SymmetryType(NodeSymmetry2D& NodeIn){
 	bool SymmetryStreaming[9];
 	StreamingOrientation(NodeIn,SymmetryStreaming);
 	NodeIn.Set_stream(SymmetryStreaming,nbvelo);
+}
 
+void D2Q9::Set_PeriodicType(NodePeriodic2D& NodeIn){
+	bool PeriodicStreaming[9];
+	StreamingOrientation(NodeIn,PeriodicStreaming);
+	NodeIn.Set_stream(PeriodicStreaming,nbvelo);
 }
 void D2Q9::Set_CornerType(NodeCorner2D& NodeIn){
 	bool CornerStreaming[9];
@@ -520,15 +641,19 @@ void D2Q9::ApplyBc(){
 	{
 		ApplyCornerWall(NodeArrays->NodeCorner[j], f);
 	}
-
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
-	{
-		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->TypeOfNode,f);
-	}
 	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 			ApplySymmetry(NodeArrays->NodeSymmetry[j].Get_BcNormal(),NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_RhoDef(),NodeArrays->NodeSymmetry[j].Get_UDef(),f);
 	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+			ApplyPeriodic(NodeArrays->NodePeriodic[j].Get_BcNormal(),NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_RhoDef(),NodeArrays->NodePeriodic[j].Get_UDef(),f);
+	}
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->TypeOfNode,f);
+	}
+
    parallel->barrier();
 
 }
@@ -570,6 +695,11 @@ void D2Q9::StreamingOrientation(NodeGhost2D& nodeIn, bool Streaming[9]){
 			Streaming[i]=true;
 }
 void D2Q9::StreamingOrientation(NodeCorner2D& nodeIn, bool Streaming[9]){
+	if(		NodeArrays->TypeOfNode[nodeIn.Get_connect()[1]]!=Periodic &&
+			NodeArrays->TypeOfNode[nodeIn.Get_connect()[2]]!=Periodic &&
+			NodeArrays->TypeOfNode[nodeIn.Get_connect()[3]]!=Periodic &&
+			NodeArrays->TypeOfNode[nodeIn.Get_connect()[4]]!=Periodic	)
+	{
 
 	if(nodeIn.Get_CornerType()==Concave)
 	{
@@ -671,19 +801,22 @@ void D2Q9::StreamingOrientation(NodeCorner2D& nodeIn, bool Streaming[9]){
 				break;
 			}
 		}
+	}
+	else
+	{
+		for (unsigned int i=1;i<(unsigned int)nbvelo;i++)
+				if((nodeIn.Get_connect()[i]==nodeIn.Get_index())||(nodeIn.get_NodeType()==Solid)||(NodeArrays->TypeOfNode[nodeIn.Get_connect()[i]]==Solid))
+					Streaming[i]=false;
+				else
+					Streaming[i]=true;
+	}
 
 /*	for (unsigned int i=1;i<(unsigned int)nbvelo;i++)
 		if((nodeIn.Get_connect()[i]==nodeIn.Get_index())||(nodeIn.get_NodeType()==Solid)||(NodeArrays->TypeOfNode[nodeIn.Get_connect()[i]]==Solid))
 			Streaming[i]=false;
 		else
 			Streaming[i]=true;*/
-	if(nodeIn.get_x()==19 && nodeIn.get_y()==24)
-	{
-		std::cout<<"streaming corner: "<<std::endl;
-		for (unsigned int i=1;i<(unsigned int)nbvelo;i++)
-			std::cout<<Streaming[i];
-		std::cout<<std::endl;
-	}
+
 }
 void D2Q9::StreamingOrientation(NodeWall2D& nodeIn, bool Streaming[9]){
 	switch(nodeIn.Get_BcNormal())
@@ -799,7 +932,14 @@ void D2Q9::StreamingOrientation(NodePressure2D& nodeIn, bool Streaming[9]){
 		else
 			Streaming[i]=true;
 }
-
+void D2Q9::StreamingOrientation(NodePeriodic2D& nodeIn, bool Streaming[9]){
+	Streaming[0]=false;
+	for (unsigned int i=1;i<(unsigned int)nbvelo;i++)
+		if((nodeIn.Get_connect()[i]==nodeIn.Get_index())||(nodeIn.get_NodeType()==Solid)||(NodeArrays->TypeOfNode[nodeIn.Get_connect()[i]]==Solid))
+			Streaming[i]=false;
+		else
+			Streaming[i]=true;
+}
 
 
 
@@ -821,19 +961,19 @@ void D2Q9::IniComVariables(){
 
 	for (int i=0;i<Nd_variables_sync;i++)
 	{
-		buf_send[i][0]=new double[IdNodeE.size()];
-		buf_send[i][1]=new double[IdNodeW.size()];
-		buf_send[i][2]=new double[IdNodeS.size()];
-		buf_send[i][3]=new double[IdNodeN.size()];
-		buf_recv[i][0]=new double[IdNodeW.size()];
-		buf_recv[i][1]=new double[IdNodeE.size()];
-		buf_recv[i][2]=new double[IdNodeN.size()];
-		buf_recv[i][3]=new double[IdNodeS.size()];
+		buf_send[i][0]=new double[IdRNodeE.size()];
+		buf_send[i][1]=new double[IdRNodeW.size()];
+		buf_send[i][2]=new double[IdRNodeS.size()];
+		buf_send[i][3]=new double[IdRNodeN.size()];
+		buf_recv[i][0]=new double[IdGNodeW.size()];
+		buf_recv[i][1]=new double[IdGNodeE.size()];
+		buf_recv[i][2]=new double[IdGNodeN.size()];
+		buf_recv[i][3]=new double[IdGNodeS.size()];
 	}
-	size_buf[0]=IdNodeE.size();
-	size_buf[1]=IdNodeW.size();
-	size_buf[2]=IdNodeS.size();
-	size_buf[3]=IdNodeN.size();
+	size_buf[0]=IdRNodeE.size();
+	size_buf[1]=IdRNodeW.size();
+	size_buf[2]=IdRNodeS.size();
+	size_buf[3]=IdRNodeN.size();
 // Macro sync
 	Nd_MacroVariables_sync=3;
 	buf_MacroSend=new double** [Nd_MacroVariables_sync];

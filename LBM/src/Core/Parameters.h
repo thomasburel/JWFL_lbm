@@ -248,11 +248,13 @@ private:
 			ar & boost::serialization::make_nvp("GlobalBcType_4",GlobalBcType[4] );
 			ar & boost::serialization::make_nvp("GlobalBcType_5",GlobalBcType[5] );
 		}
-		ar & BOOST_SERIALIZATION_NVP(PressureModelParam)
+		ar & BOOST_SERIALIZATION_NVP(SymmetryTypeParam)
+		   & BOOST_SERIALIZATION_NVP(PressureModelParam)
 		   & BOOST_SERIALIZATION_NVP(PressureTypeParam)
 		   & BOOST_SERIALIZATION_NVP(VelocityModelParam)
 		   & BOOST_SERIALIZATION_NVP(VelocityTypeParam)
-		   & BOOST_SERIALIZATION_NVP(CornerModelParam);
+		   & BOOST_SERIALIZATION_NVP(CornerModelParam)
+		   & BOOST_SERIALIZATION_NVP(CornerPressureTypeParam);
 	}
 public:
 	NodeType Get_GlobalBcType(int side) const;

@@ -45,7 +45,7 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 
 
 //Square
-/*	if(Node.get_y()>=-1 && Node.get_y()<=250 && Node.get_x()>=250 && Node.get_x()<=750)
+	if(Node.get_y()>=40 && Node.get_y()<=60 && Node.get_x()>=40 && Node.get_x()<=60)
 		{
 			solid=true;
 		}
@@ -53,7 +53,7 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 		{
 			solid=false;
 		}
-*/
+
 
 //Cross
 /*	double xmiddle=99.5;

@@ -59,7 +59,7 @@ protected:
 	void Set_VelocityType(NodeVelocity2D& Node);
 	void Set_PressureType(NodePressure2D& Node);
 	void Set_SymmetryType(NodeSymmetry2D& NodeIn);
-
+	void Set_PeriodicType(NodePeriodic2D& NodeIn);
 	//Set Orientation of Boundaries
 
 	void StreamingOrientation(int & nodenumber, bool GhostStreaming[9]);
@@ -69,6 +69,7 @@ protected:
 	void StreamingOrientation(NodeVelocity2D& Node, bool VelocityStreaming[9]);
 	void StreamingOrientation(NodePressure2D& Node, bool PressureStreaming[9]);
 	void StreamingOrientation(NodeSymmetry2D& Node, bool SymmetryStreaming[9]);
+	void StreamingOrientation(NodePeriodic2D& Node, bool PeriodicStreaming[9]);
 
 	//Apply boundary conditions
 

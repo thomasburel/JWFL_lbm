@@ -17,6 +17,8 @@ Block2D::Block2D(int dx_, int dy_) : dx(dx_),dy(dy_)
 	NbRealNodes=0;
 	NbTotalNodes=0;
 	Coord_physical=new double[2];
+	periodic[0]=false;
+	periodic[1]=false;
 }
 
 Block2D::~Block2D() {
@@ -233,7 +235,7 @@ void Block2D::NewGhostCell(NodeType Nodes[4], bool NewNodes[4], int Node2D_SubDo
 }
 
 /// Method to generate a mesh block inside a MPI Block.
-void Block2D::AddBlock(int TotalNumberCells_x,int TotalNumberCells_y,int dims[2],int coord[2],int NyCell_G,int Nx_begin,int Ny_begin,int Nx_last,int Ny_last,NodeType bC[4],int x_last,int y_last,int start_GlobalNodes,int end_GlobalNodes, int start_GlobalElems, int end_GlobalElems)
+void Block2D::AddBlock(int TotalNumberCells_x,int TotalNumberCells_y,int dims[2],int periodic_[2],int coord[2],int NyCell_G,int Nx_begin,int Ny_begin,int Nx_last,int Ny_last,NodeType bC[4],int x_last,int y_last,int start_GlobalNodes,int end_GlobalNodes, int start_GlobalElems, int end_GlobalElems)
 {
 	verbous=false;
 	NodeType Nodes[4];
@@ -248,6 +250,8 @@ void Block2D::AddBlock(int TotalNumberCells_x,int TotalNumberCells_y,int dims[2]
 	Coord[1]=coord[1];
 	Dims[0]=dims[0];
 	Dims[1]=dims[1];
+	periodic[0]=periodic_[0];
+	periodic[1]=periodic_[1];
 	bool dimsM1=dims[0]-2==coord[0];
 	int Node2D_SubDomain[4];
 	int Node2D_GlobalDomain[4];
@@ -2022,68 +2026,7 @@ void Block2D::Correct_MarkNode(){
 		*it=Node[*it]->Get_connect(2);
 
 }
-void Block2D::Clear_MarkNode(){
-	if (Dims[1]==1)
-	{
-		IdNodeW.insert(IdNodeW.end(),IdNodeNW.begin(),IdNodeNW.end());
-		IdNodeE.insert(IdNodeE.end(),IdNodeNE.begin(),IdNodeNE.end());
-		IdNodeW.insert(IdNodeW.end(),IdNodeSW.begin(),IdNodeSW.end());
-		IdNodeE.insert(IdNodeE.end(),IdNodeSE.begin(),IdNodeSE.end());
 
-		IdNodeNW.clear();//IdRNodeNW.clear();IdGNodeNW.clear();
-		IdNodeNE.clear();//IdRNodeNE.clear();IdGNodeNE.clear();
-		IdNodeSW.clear();//IdRNodeSW.clear();IdGNodeSW.clear();
-		IdNodeSE.clear();//IdRNodeSE.clear();IdGNodeSE.clear();
-	}
-	if (Coord[0]==0)
-	{
-		IdNodeN.insert(IdNodeN.end(),IdNodeNW.begin(),IdNodeNW.end());
-		IdNodeS.insert(IdNodeS.end(),IdNodeSW.begin(),IdNodeSW.end());
-		IdNodeNW.clear();//IdRNodeNW.clear();IdGNodeNW.clear();
-		IdNodeSW.clear();//IdRNodeSW.clear();IdGNodeSW.clear();
-	}
-	if (Coord[0]==Dims[0]-1)
-	{
-		IdNodeN.insert(IdNodeN.end(),IdNodeNE.begin(),IdNodeNE.end());
-		IdNodeS.insert(IdNodeS.end(),IdNodeSE.begin(),IdNodeSE.end());
-		IdNodeNE.clear();//IdRNodeNE.clear();IdGNodeNE.clear();
-		IdNodeSE.clear();//IdRNodeSE.clear();IdGNodeSE.clear();
-	}
-
-	if (Coord[1]==Dims[1]-1)
-	{
-		IdNodeW.insert(IdNodeW.end(),IdNodeNW.begin(),IdNodeNW.end());
-		IdNodeE.insert(IdNodeE.end(),IdNodeNE.begin(),IdNodeNE.end());
-		IdNodeNW.clear();//IdRNodeNW.clear();IdGNodeNW.clear();
-		IdNodeNE.clear();//IdRNodeNE.clear();IdGNodeNE.clear();
-	}
-	if (Coord[1]==0)
-	{
-		IdNodeW.insert(IdNodeW.end(),IdNodeSW.begin(),IdNodeSW.end());
-		IdNodeE.insert(IdNodeE.end(),IdNodeSE.begin(),IdNodeSE.end());
-		IdNodeSW.clear();//IdRNodeSW.clear();IdGNodeSW.clear();
-		IdNodeSE.clear();//IdRNodeSE.clear();IdGNodeSE.clear();
-	}
-
-	if (Coord[0]==0)
-		{IdNodeW.clear();}
-//		{IdNodeW.clear();IdRNodeW.clear();IdGNodeW.clear();}
-	if(Coord[0]==Dims[0]-1)
-		{IdNodeE.clear();}
-//		{IdNodeE.clear();IdRNodeE.clear();IdGNodeE.clear();}
-	if (Coord[1]==0)
-		{IdNodeS.clear();}
-//		{IdNodeS.clear();IdRNodeS.clear();IdGNodeS.clear();}
-	if(Coord[1]==Dims[1]-1)
-		{IdNodeN.clear();}
-//		{IdNodeN.clear();IdRNodeN.clear();IdGNodeN.clear();}
-
-	std::sort(IdNodeW.begin(), IdNodeW.end());
-	std::sort(IdNodeE.begin(), IdNodeE.end());
-	std::sort(IdNodeN.rbegin(), IdNodeN.rend()); //reverse sort
-	std::sort(IdNodeS.begin(), IdNodeS.end());
-
-}
 void Block2D::Get_Connect_Node(std::vector<int> & IdNodeN_,std::vector<int> & IdNodeE_,std::vector<int> & IdNodeS_,std::vector<int> & IdNodeW_,
 							  std::vector<int> & IdNodeSW_,std::vector<int> & IdNodeSE_,std::vector<int> & IdNodeNW_,std::vector<int> & IdNodeNE_){
 	IdNodeN_=IdNodeN;
@@ -2125,6 +2068,7 @@ void Block2D::GenerateSolid(Parameters &Param, int &ndSolidNode,int &firstSolid)
 				IdSolidNode.push_back(i);
 			//create the solid node}
 			Block2D::ChangeNodeType(i,Solid);//convert node to solid
+			//Extend the solid to the ghost of the domain for the automatic wall detection functions. Otherwise, the wall can be consider as a corner
 			if(Node[i]->get_y()==0)//Convert ghost node to solid at the border of the domain (bottom)
 				Block2D::ChangeNodeType(Node[i]->Get_connect(0),Solid);//convert node to solid
 			if(Node[i]->get_y()==Param.Get_Ny())//Convert ghost node to solid at the border of the domain (North)
@@ -2563,6 +2507,13 @@ void Block2D::reorganizeNodeByType(){
 			// ******** Set Symmetry Type ********
 			SetSymmetryType(NodeArrays.NodeSymmetry[NodeArrays.NodeSymmetry.size()-1].Get_SymmetryType(),NodeArrays.NodeSymmetry[NodeArrays.NodeSymmetry.size()-1].get_x() , NodeArrays.NodeSymmetry[NodeArrays.NodeSymmetry.size()-1].get_y());
 			break;
+		case Periodic:
+			NodeArrays.NodeIndexByType[i]=NodeArrays.NodePeriodic.size();
+			NodeArrays.NodePeriodic.push_back(NodePeriodic2D(x_tmp,y_tmp));
+			NodeArrays.NodePeriodic[NodeArrays.NodePeriodic.size()-1].Set_Connect(Connect_N_tmp,Connect_S_tmp,Connect_W_tmp,Connect_E_tmp);
+			NodeArrays.NodePeriodic[NodeArrays.NodePeriodic.size()-1].Set_NbVelocity(NbVelocity_tmp);
+			NodeArrays.NodePeriodic[NodeArrays.NodePeriodic.size()-1].Set_Index(i);
+			break;
 		default:
 			std::cerr<<"Type "<< NodeArrays.TypeOfNode[i]<<" of node not find in the sort of Node array and type "<<std::endl;
 			break;
@@ -2607,7 +2558,6 @@ void Block2D::Set_Connect(Parameters& Param){
 			break;
 		case Velocity:
 			NodeArrays.NodeVelocity[NodeArrays.NodeIndexByType[i]].Set_Connect(tmpConnect,Param.Get_NbVelocities());
-
 			break;
 		case Pressure:
 			NodeArrays.NodePressure[NodeArrays.NodeIndexByType[i]].Set_Connect(tmpConnect,Param.Get_NbVelocities());
@@ -2623,6 +2573,9 @@ void Block2D::Set_Connect(Parameters& Param){
 			break;
 		case Symmetry:
 			NodeArrays.NodeSymmetry[NodeArrays.NodeIndexByType[i]].Set_Connect(tmpConnect,Param.Get_NbVelocities());
+			break;
+		case Periodic:
+			NodeArrays.NodePeriodic[NodeArrays.NodeIndexByType[i]].Set_Connect(tmpConnect,Param.Get_NbVelocities());
 			break;
 		default:
 			std::cerr<<"Type of node not find in the sort of Node array"<<std::endl;
@@ -2708,6 +2661,10 @@ void Block2D::Set_BcNormal()
 	for (int i=0;i<NodeArrays.NodeSymmetry.size();i++)
 	{
 			NodeArrays.NodeSymmetry[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeSymmetry[i]));
+	}
+	for (int i=0;i<NodeArrays.NodePeriodic.size();i++)
+	{
+			NodeArrays.NodePeriodic[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodePeriodic[i]));
 	}
 	for (int i=0;i<NodeArrays.NodePressure.size();i++)
 	{
@@ -2873,6 +2830,15 @@ int Block2D::Get_BcNormal(NodeSymmetry2D & nodeIn)
 			intTmpReturn=i;
 	return intTmpReturn;
 }
+int Block2D::Get_BcNormal(NodePeriodic2D & nodeIn)
+{
+	int nbinterior=0;
+	for (unsigned int i=1;i<5;i++)
+//		if (nodeIn.stream()[i] && NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Interior)
+		if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Interior)
+			intTmpReturn=i;
+	return intTmpReturn;
+}
 int Block2D::Get_BcNormal(NodePressure2D & nodeIn)
 {
 	int nbinterior=0;
@@ -2893,7 +2859,6 @@ void Block2D::Get_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & Node
 		  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE)
 {
 
-
 // Get Node type of the sides of the 2D block for the real nodes
 	for(int i=0;i<IdRNodeN.size();i++)
 		NodeTypeN.push_back((int)Node[IdRNodeN[i]]->get_NodeType());
@@ -2912,6 +2877,67 @@ void Block2D::Get_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & Node
 		NodeTypeNW.push_back((int)Node[IdRNodeNW[i]]->get_NodeType());
 	for(int i=0;i<IdRNodeNE.size();i++)
 		NodeTypeNE.push_back((int)Node[IdRNodeNE[i]]->get_NodeType());
+/*
+ 	int rank;
+ 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+ 	char buffer[50]; // make sure it's big enough
+ 	snprintf(buffer, sizeof(buffer), "NodeTypeReal_%d.txt", rank);
+ 	std::ofstream myFlux;
+ 	myFlux.open(buffer);
+ 	myFlux<<std::endl<<" ****** after Removing nodes *******"<<std::endl;
+ 	myFlux<<"West real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeW.size();i++)
+ 		myFlux<<IdRNodeW[i]<<" NodeType: "<<NodeTypeW[i]<<" ";
+ 	myFlux<<std::endl<<"West Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeW.size();i++)
+ 		myFlux<<IdGNodeW[i]<<" ";
+ 	myFlux<<std::endl<<"North real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeN.size();i++)
+ 		myFlux<<IdRNodeN[i]<<" NodeType: "<<NodeTypeN[i]<<" ";
+ 	myFlux<<std::endl<<"North Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeN.size();i++)
+ 		myFlux<<IdGNodeN[i]<<" ";
+ 	myFlux<<std::endl<<"South real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeS.size();i++)
+ 		myFlux<<IdRNodeS[i]<<" NodeType: "<<NodeTypeS[i]<<" ";
+ 	myFlux<<std::endl<<"South Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeS.size();i++)
+ 		myFlux<<IdGNodeS[i]<<" ";
+ 	myFlux<<std::endl<<"East real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeE.size();i++)
+ 		myFlux<<IdRNodeE[i]<<" NodeType: "<<NodeTypeE[i]<<" ";
+ 	myFlux<<std::endl<<"East Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeE.size();i++)
+ 		myFlux<<IdGNodeE[i]<<" ";
+
+ 	myFlux<<std::endl<<std::endl;
+ 	myFlux<<"South West real nodes: "<<std::endl;
+
+ 	for(int i=0;i<IdRNodeSW.size();i++)
+ 		myFlux<<IdRNodeSW[i]<<" NodeType: "<<NodeTypeSW[i]<<" ";
+ 	myFlux<<std::endl<<"South West Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeSW.size();i++)
+ 		myFlux<<IdGNodeSW[i]<<" ";
+ 	myFlux<<std::endl<<"North West real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeNW.size();i++)
+ 		myFlux<<IdRNodeNW[i]<<" NodeType: "<<NodeTypeNW[i]<<" ";
+ 	myFlux<<std::endl<<"North West Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeNW.size();i++)
+ 		myFlux<<IdGNodeNW[i]<<" ";
+ 	myFlux<<std::endl<<"South East real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeSE.size();i++)
+ 		myFlux<<IdRNodeSE[i]<<" NodeType: "<<NodeTypeSE[i]<<" ";
+ 	myFlux<<std::endl<<"South East Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeSE.size();i++)
+ 		myFlux<<IdGNodeSE[i]<<" ";
+ 	myFlux<<std::endl<<"North East real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeNE.size();i++)
+ 		myFlux<<IdRNodeNE[i]<<" NodeType: "<<NodeTypeNE[i]<<" ";
+ 	myFlux<<std::endl<<"North East Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeNE.size();i++)
+ 		myFlux<<IdGNodeNE[i]<<" ";
+ 	myFlux<<std::endl<<" Size of NE Ghost: "<< IdGNodeNE.size()<<std::endl;*/
+
 }
 void Block2D::Set_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
 		  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE)
@@ -2943,6 +2969,66 @@ void Block2D::Set_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & Node
 	if(IdGNodeNE.size()>0)
 	for(int i=0;i<IdGNodeNE.size();i++)
 		Correct_GhostType(IdGNodeNE[i], (NodeType)NodeTypeNE[i]);
+/*
+	int rank;
+ 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+ 	char buffer[50]; // make sure it's big enough
+ 	snprintf(buffer, sizeof(buffer), "NodeTypeGhost_%d.txt", rank);
+ 	std::ofstream myFlux;
+ 	myFlux.open(buffer);
+ 	myFlux<<std::endl<<" ****** after Removing nodes *******"<<std::endl;
+ 	myFlux<<"West real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeW.size();i++)
+ 		myFlux<<IdRNodeW[i]<<" ";
+ 	myFlux<<std::endl<<"West Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeW.size();i++)
+ 		myFlux<<IdGNodeW[i]<<" NodeType: "<<NodeTypeW[i]<<" ";
+ 	myFlux<<std::endl<<"North real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeN.size();i++)
+ 		myFlux<<IdRNodeN[i]<<" ";
+ 	myFlux<<std::endl<<"North Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeN.size();i++)
+ 		myFlux<<IdGNodeN[i]<<" NodeType: "<<NodeTypeN[i]<<" ";
+ 	myFlux<<std::endl<<"South real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeS.size();i++)
+ 		myFlux<<IdRNodeS[i]<<" ";
+ 	myFlux<<std::endl<<"South Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeS.size();i++)
+ 		myFlux<<IdGNodeS[i]<<" NodeType: "<<NodeTypeS[i]<<" ";
+ 	myFlux<<std::endl<<"East real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeE.size();i++)
+ 		myFlux<<IdRNodeE[i]<<" ";
+ 	myFlux<<std::endl<<"East Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeE.size();i++)
+ 		myFlux<<IdGNodeE[i]<<" NodeType: "<<NodeTypeE[i]<<" ";
+
+ 	myFlux<<std::endl<<std::endl;
+ 	myFlux<<"South West real nodes: "<<std::endl;
+
+ 	for(int i=0;i<IdRNodeSW.size();i++)
+ 		myFlux<<IdRNodeSW[i]<<" ";
+ 	myFlux<<std::endl<<"South West Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeSW.size();i++)
+ 		myFlux<<IdGNodeSW[i]<<" NodeType: "<<NodeTypeSW[i]<<" ";
+ 	myFlux<<std::endl<<"North West real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeNW.size();i++)
+ 		myFlux<<IdRNodeNW[i]<<" ";
+ 	myFlux<<std::endl<<"North West Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeNW.size();i++)
+ 		myFlux<<IdGNodeNW[i]<<" NodeType: "<<NodeTypeNW[i]<<" ";
+ 	myFlux<<std::endl<<"South East real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeSE.size();i++)
+ 		myFlux<<IdRNodeSE[i]<<" ";
+ 	myFlux<<std::endl<<"South East Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeSE.size();i++)
+ 		myFlux<<IdGNodeSE[i]<<" NodeType: "<<NodeTypeSE[i]<<" ";
+ 	myFlux<<std::endl<<"North East real nodes: "<<std::endl;
+ 	for(int i=0;i<IdRNodeNE.size();i++)
+ 		myFlux<<IdRNodeNE[i]<<" ";
+ 	myFlux<<std::endl<<"North East Ghost nodes: "<<std::endl;
+ 	for(int i=0;i<IdGNodeNE.size();i++)
+ 		myFlux<<IdGNodeNE[i]<<" NodeType: "<<NodeTypeNE[i]<<" ";
+ 	myFlux<<std::endl<<" Size of NE Ghost: "<< IdGNodeNE.size()<<std::endl;*/
 }
 void Block2D::Correct_GhostType(int  idNode, NodeType RealNodeType)
 {
@@ -2951,22 +3037,22 @@ void Block2D::Correct_GhostType(int  idNode, NodeType RealNodeType)
 	/*else
 		Block2D::ChangeNodeType(idNode, Solid);*/
 }
+//Remove unused mark nodes
+void Block2D::Clear_MarkNode(){
+	IdNodeN.clear();	IdNodeS.clear();	IdNodeE.clear();	IdNodeW.clear();
+	IdNodeNW.clear();	IdNodeNE.clear();	IdNodeSW.clear();	IdNodeSE.clear();
+}
 void Block2D::Get_CommNodes(std::vector<int> & IdRNodeN_,std::vector<int> & IdRNodeE_,std::vector<int> & IdRNodeS_,std::vector<int> & IdRNodeW_,
 		std::vector<int> & IdGNodeN_,std::vector<int> & IdGNodeE_,std::vector<int> & IdGNodeS_,std::vector<int> & IdGNodeW_,
 		std::vector<int> & IdRNodeSW_,std::vector<int> & IdRNodeSE_,std::vector<int> & IdRNodeNW_,std::vector<int> & IdRNodeNE_,
 		std::vector<int> & IdGNodeSW_,std::vector<int> & IdGNodeSE_,std::vector<int> & IdGNodeNW_,std::vector<int> & IdGNodeNE_)
 {
-	IdGNodeN_=IdGNodeN;IdRNodeN_=IdRNodeN;
-	IdGNodeE_=IdGNodeE;IdRNodeE_=IdRNodeE;
-	IdGNodeW_=IdGNodeW;IdRNodeW_=IdRNodeW;
-	IdGNodeS_=IdGNodeS;IdRNodeS_=IdRNodeS;
-	IdGNodeSW_=IdGNodeSW;IdRNodeSW_=IdRNodeSW;
-	IdGNodeSE_=IdGNodeSE;IdRNodeSE_=IdRNodeSE;
-	IdGNodeNE_=IdGNodeNE;IdRNodeNE_=IdRNodeNE;
-	IdGNodeNW_=IdGNodeNW;IdRNodeNW_=IdRNodeNW;
+	IdGNodeN_=IdGNodeN;IdRNodeN_=IdRNodeN;	IdGNodeE_=IdGNodeE;IdRNodeE_=IdRNodeE;	IdGNodeW_=IdGNodeW;IdRNodeW_=IdRNodeW;	IdGNodeS_=IdGNodeS;IdRNodeS_=IdRNodeS;
+	IdGNodeSW_=IdGNodeSW;IdRNodeSW_=IdRNodeSW;	IdGNodeSE_=IdGNodeSE;IdRNodeSE_=IdRNodeSE;	IdGNodeNE_=IdGNodeNE;IdRNodeNE_=IdRNodeNE;	IdGNodeNW_=IdGNodeNW;IdRNodeNW_=IdRNodeNW;
 }
 void Block2D::Set_CommNodes()
 {
+	//Create the Real and Ghost mark nodes
 	IdRNodeW.push_back(IdNodeSW[0]);
 	IdRNodeW.insert(IdRNodeW.end(),IdNodeW.begin(),IdNodeW.end());
 	IdGNodeW.push_back(Node[IdNodeSW[0]]->Get_connect(3));
@@ -3078,50 +3164,247 @@ void Block2D::Set_CommNodes()
 				IdRNodeE.push_back(Node[IdGNodeE[i]]->Get_connect(3));
 		}
 	}
-//Remove mark nodes on the boundary of the all calculation domain
-	if (Dims[1]==1)
-	{
-		IdRNodeNW.clear();IdGNodeNW.clear();
-		IdRNodeNE.clear();IdGNodeNE.clear();
-		IdRNodeSW.clear();IdGNodeSW.clear();
-		IdRNodeSE.clear();IdGNodeSE.clear();
-	}
-	if (Coord[0]==0)
-	{
-		IdRNodeNW.clear();IdGNodeNW.clear();
-		IdRNodeSW.clear();IdGNodeSW.clear();
-	}
-	if (Coord[0]==Dims[0]-1)
-	{
-		IdRNodeNE.clear();IdGNodeNE.clear();
-		IdRNodeSE.clear();IdGNodeSE.clear();
-	}
 
-	if (Coord[1]==Dims[1]-1)
+// if periodic boundary conditions, we need to shift the real by one node to keep the code working in the same way.
+// On the periodic boundary conditions, by this way, the distribution will be collide stream in each side of the periodic conditions.
+// If no periodic boundary, we remove the unused marking nodes on the boundary of the domain
+
+// Boundaries treatment
+	if(periodic[0]==true)
 	{
-		IdRNodeNW.clear();IdGNodeNW.clear();
-		IdRNodeNE.clear();IdGNodeNE.clear();
+		if(Coord[0]==0)
+		{
+			for(int i=0;i<IdRNodeW.size();i++)
+				IdRNodeW[i]=Node[IdRNodeW[i]]->Get_connect(1);
+		}
+		if(Coord[0]==Dims[0]-1)
+		{
+			for(int i=0;i<IdRNodeE.size();i++)
+				IdRNodeE[i]=Node[IdRNodeE[i]]->Get_connect(3);
+		}
 	}
-	if (Coord[1]==0)
+	else
 	{
-		IdRNodeSW.clear();IdGNodeSW.clear();
-		IdRNodeSE.clear();IdGNodeSE.clear();
-	}
-	if (Coord[0]==0)
+		if(Coord[0]==0)
 		{IdRNodeW.clear();IdGNodeW.clear();}
-	if(Coord[0]==Dims[0]-1)
+		if(Coord[0]==Dims[0]-1)
 		{IdRNodeE.clear();IdGNodeE.clear();}
-	if (Coord[1]==0)
+	}
+	if(periodic[1]==true)
+	{
+		if(Coord[1]==0)
+		{
+			for(int i=0;i<IdRNodeS.size();i++)
+				IdRNodeS[i]=Node[IdRNodeS[i]]->Get_connect(2);
+		}
+		if(Coord[1]==Dims[1]-1)
+		{
+			for(int i=0;i<IdRNodeN.size();i++)
+				IdRNodeN[i]=Node[IdRNodeN[i]]->Get_connect(0);
+		}
+	}
+	else
+	{
+		if(Coord[1]==0)
 		{IdRNodeS.clear();IdGNodeS.clear();}
-	if(Coord[1]==Dims[1]-1)
+		if(Coord[1]==Dims[1]-1)
 		{IdRNodeN.clear();IdGNodeN.clear();}
+	}
+//Corners treament
+	if(periodic[0]||periodic[1])
+	{
+		//Treat the 4 corners of the domain
+		if(Coord[0]==0 && Coord[1]==0)
+			if(periodic[0]&&periodic[1])
+			{
+				IdRNodeSW[0]=Node[Node[IdRNodeSW[0]]->Get_connect(1)]->Get_connect(2);
+				IdRNodeNW[0]=Node[IdRNodeNW[0]]->Get_connect(1);
+				IdRNodeSE[0]=Node[IdRNodeSE[0]]->Get_connect(2);
+			}
+			else
+			{
+				if(periodic[0])
+				{
+					IdRNodeNW[0]=Node[IdRNodeNW[0]]->Get_connect(1);
+					IdRNodeSW.clear();IdGNodeSW.clear();
+					IdRNodeSE.clear();IdGNodeSE.clear();
+				}
+				else
+				{
+					IdRNodeSE[0]=Node[IdRNodeSE[0]]->Get_connect(2);
+					IdRNodeSW.clear();IdGNodeSW.clear();
+					IdRNodeNW.clear();IdGNodeNW.clear();
+				}
+			}
+		else
+			if(Coord[0]==0 && Coord[1]==Dims[1]-1)
+						if(periodic[0]&&periodic[1])
+						{
+							IdRNodeNW[0]=Node[Node[IdRNodeNW[0]]->Get_connect(1)]->Get_connect(0);
+							IdRNodeNE[0]=Node[IdRNodeNE[0]]->Get_connect(0);
+							IdRNodeSW[0]=Node[IdRNodeSW[0]]->Get_connect(1);
+						}
+						else
+						{
+							if(periodic[0])
+							{
+								IdRNodeSW[0]=Node[IdRNodeSW[0]]->Get_connect(1);
+								IdRNodeNW.clear();IdGNodeNW.clear();
+								IdRNodeNE.clear();IdGNodeNE.clear();
+							}
+							else
+							{
+								IdRNodeNE[0]=Node[IdRNodeNE[0]]->Get_connect(0);
+								IdRNodeNW.clear();IdGNodeNW.clear();
+								IdRNodeSW.clear();IdGNodeSW.clear();
 
-/*	int rank;
+							}
+						}
+			else
+				if(Coord[0]==Dims[0]-1 && Coord[1]==0)
+							if(periodic[0]&&periodic[1])
+							{
+								IdRNodeSE[0]=Node[Node[IdRNodeSE[0]]->Get_connect(3)]->Get_connect(2);
+								IdRNodeNE[0]=Node[IdRNodeNE[0]]->Get_connect(3);
+								IdRNodeSW[0]=Node[IdRNodeSW[0]]->Get_connect(2);
+							}
+							else
+							{
+								if(periodic[0])
+								{
+									IdRNodeNE[0]=Node[IdRNodeNE[0]]->Get_connect(3);
+									IdRNodeSW.clear();IdGNodeSW.clear();
+									IdRNodeSE.clear();IdGNodeSE.clear();
+								}
+								else
+								{
+									IdRNodeSW[0]=Node[IdRNodeSW[0]]->Get_connect(2);
+									IdRNodeSE.clear();IdGNodeSE.clear();
+									IdRNodeNE.clear();IdGNodeNE.clear();
+
+								}
+							}
+				else
+					if(Coord[0]==Dims[0]-1 && Coord[1]==Dims[1]-1)
+								if(periodic[0]&&periodic[1])
+								{
+									IdRNodeNE[0]=Node[Node[IdRNodeNE[0]]->Get_connect(3)]->Get_connect(0);
+									IdRNodeNW[0]=Node[IdRNodeNW[0]]->Get_connect(0);
+									IdRNodeSE[0]=Node[IdRNodeSE[0]]->Get_connect(3);
+								}
+								else
+								{
+									if(periodic[0])
+									{
+										IdRNodeSE[0]=Node[IdRNodeSE[0]]->Get_connect(3);
+										IdRNodeNW.clear();IdGNodeNW.clear();
+										IdRNodeNE.clear();IdGNodeNE.clear();
+									}
+									else
+									{
+										IdRNodeNW[0]=Node[IdRNodeNW[0]]->Get_connect(0);
+										IdRNodeNE.clear();IdGNodeNE.clear();
+										IdRNodeSE.clear();IdGNodeSE.clear();
+
+									}
+								}
+		//Treat the boundary of the domain excluding the corners
+					else
+					{
+						if(Coord[0]==0)
+						{
+							if(periodic[0])
+							{
+								IdRNodeNW[0]=Node[IdRNodeNW[0]]->Get_connect(1);
+								IdRNodeSW[0]=Node[IdRNodeSW[0]]->Get_connect(1);
+							}
+							else
+							{
+								IdRNodeNW.clear();IdGNodeNW.clear();
+								IdRNodeSW.clear();IdGNodeSW.clear();
+							}
+						}
+						if(Coord[0]==Dims[0]-1)
+						{
+							if(periodic[0])
+							{
+								IdRNodeNE[0]=Node[IdRNodeNE[0]]->Get_connect(3);
+								IdRNodeSE[0]=Node[IdRNodeSE[0]]->Get_connect(3);
+							}
+							else
+							{
+								IdRNodeNE.clear();IdGNodeNE.clear();
+								IdRNodeSE.clear();IdGNodeSE.clear();
+							}
+						}
+						if(Coord[1]==0)
+						{
+							if(periodic[1])
+							{
+								IdRNodeSE[0]=Node[IdRNodeSE[0]]->Get_connect(2);
+								IdRNodeSW[0]=Node[IdRNodeSW[0]]->Get_connect(2);
+							}
+							else
+							{
+								IdRNodeSE.clear();IdGNodeSE.clear();
+								IdRNodeSW.clear();IdGNodeSW.clear();
+							}
+						}
+						if(Coord[1]==Dims[1]-1)
+						{
+							if(periodic[1])
+							{
+								IdRNodeNE[0]=Node[IdRNodeNE[0]]->Get_connect(0);
+								IdRNodeNW[0]=Node[IdRNodeNW[0]]->Get_connect(0);
+							}
+							else
+							{
+								IdRNodeNE.clear();IdGNodeNE.clear();
+								IdRNodeNW.clear();IdGNodeNW.clear();
+							}
+						}
+					}
+	}
+	else
+	{
+		//Remove unused mark nodes on the boundary of the domain
+		if (Dims[1]==1)
+		{
+			IdRNodeNW.clear();IdGNodeNW.clear();
+			IdRNodeNE.clear();IdGNodeNE.clear();
+			IdRNodeSW.clear();IdGNodeSW.clear();
+			IdRNodeSE.clear();IdGNodeSE.clear();
+		}
+		if (Coord[0]==0)
+		{
+			IdRNodeNW.clear();IdGNodeNW.clear();
+			IdRNodeSW.clear();IdGNodeSW.clear();
+		}
+		if (Coord[0]==Dims[0]-1)
+		{
+			IdRNodeNE.clear();IdGNodeNE.clear();
+			IdRNodeSE.clear();IdGNodeSE.clear();
+		}
+
+		if (Coord[1]==Dims[1]-1)
+		{
+			IdRNodeNW.clear();IdGNodeNW.clear();
+			IdRNodeNE.clear();IdGNodeNE.clear();
+		}
+		if (Coord[1]==0)
+		{
+			IdRNodeSW.clear();IdGNodeSW.clear();
+			IdRNodeSE.clear();IdGNodeSE.clear();
+		}
+	}
+/*
+	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 	char buffer[50]; // make sure it's big enough
 	snprintf(buffer, sizeof(buffer), "ConnectionMarks_%d.txt", rank);
 	std::ofstream myFlux;
 	myFlux.open(buffer);
+	myFlux<<std::endl<<" ****** Removing nodes *******"<<std::endl;
 	myFlux<<"West real nodes: "<<std::endl;
 	for(int i=0;i<IdRNodeW.size();i++)
 		myFlux<<IdRNodeW[i]<<" ";
@@ -3150,27 +3433,28 @@ void Block2D::Set_CommNodes()
 	myFlux<<std::endl<<std::endl;
 	myFlux<<"South West real nodes: "<<std::endl;
 	for(int i=0;i<IdRNodeSW.size();i++)
-		myFlux<<IdRNodeSW[i]<<" ";
+		myFlux<<IdRNodeSW[i]<<" x: "<< Node[IdRNodeSW[i]]->get_x()<<" y: "<< Node[IdRNodeSW[i]]->get_y()<<" ";
 	myFlux<<std::endl<<"South West Ghost nodes: "<<std::endl;
 	for(int i=0;i<IdGNodeSW.size();i++)
-		myFlux<<IdGNodeSW[i]<<" ";
+		myFlux<<IdGNodeSW[i]<<" x: "<< Node[IdGNodeSW[i]]->get_x()<<" y: "<< Node[IdGNodeSW[i]]->get_y()<<" ";
 	myFlux<<std::endl<<"North West real nodes: "<<std::endl;
 	for(int i=0;i<IdRNodeNW.size();i++)
-		myFlux<<IdRNodeNW[i]<<" ";
+		myFlux<<IdRNodeNW[i]<<" x: "<< Node[IdRNodeNW[i]]->get_x()<<" y: "<< Node[IdRNodeNW[i]]->get_y()<<" ";
 	myFlux<<std::endl<<"North West Ghost nodes: "<<std::endl;
 	for(int i=0;i<IdGNodeNW.size();i++)
-		myFlux<<IdGNodeNW[i]<<" ";
+		myFlux<<IdGNodeNW[i]<<" x: "<< Node[IdGNodeNW[i]]->get_x()<<" y: "<< Node[IdGNodeNW[i]]->get_y()<<" ";
 	myFlux<<std::endl<<"South East real nodes: "<<std::endl;
 	for(int i=0;i<IdRNodeSE.size();i++)
-		myFlux<<IdRNodeSE[i]<<" ";
+		myFlux<<IdRNodeSE[i]<<" x: "<< Node[IdRNodeSE[i]]->get_x()<<" y: "<< Node[IdRNodeSE[i]]->get_y()<<" ";
 	myFlux<<std::endl<<"South East Ghost nodes: "<<std::endl;
 	for(int i=0;i<IdGNodeSE.size();i++)
-		myFlux<<IdGNodeSE[i]<<" ";
+		myFlux<<IdGNodeSE[i]<<" x: "<< Node[IdGNodeSE[i]]->get_x()<<" y: "<< Node[IdGNodeSE[i]]->get_y()<<" ";
 	myFlux<<std::endl<<"North East real nodes: "<<std::endl;
 	for(int i=0;i<IdRNodeNE.size();i++)
-		myFlux<<IdRNodeNE[i]<<" ";
+		myFlux<<IdRNodeNE[i]<<" x: "<< Node[IdRNodeNE[i]]->get_x()<<" y: "<< Node[IdRNodeNE[i]]->get_y()<<" ";
 	myFlux<<std::endl<<"North East Ghost nodes: "<<std::endl;
 	for(int i=0;i<IdGNodeNE.size();i++)
-		myFlux<<IdGNodeNE[i]<<" ";*/
+		myFlux<<IdGNodeNE[i]<<" x: "<< Node[IdGNodeNE[i]]->get_x()<<" y: "<< Node[IdGNodeNE[i]]->get_y()<<" ";
+		*/
 }
 

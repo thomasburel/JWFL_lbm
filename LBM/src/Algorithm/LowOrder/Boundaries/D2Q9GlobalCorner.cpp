@@ -27,7 +27,7 @@ void D2Q9GlobalCorner::Set_GlobalCorner(Parameters *Param,D2Q9GenericBc* D2Q9Gen
 
 void D2Q9GlobalCorner::ApplyGlobalCorner(NodeCorner2D& Node, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in)
 {
-	FunctionGlobalCorner(Node,Node.Get_RhoDef(),Node.Get_UDef(),TypeOfNode_,f_in,BcMethods->Get_Rho(),BcMethods->Get_V(),BcMethods->Get_V());
+	FunctionGlobalCorner(Node,Node.Get_RhoDef(),Node.Get_UDef(),TypeOfNode_,f_in,BcMethods->Get_Rho(),BcMethods->Get_U(),BcMethods->Get_V());
 }
 void D2Q9GlobalCorner::ApplyGlobalCorner(NodeCorner2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V)
 {
@@ -54,6 +54,26 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the left side
 				normal=1;
+				switch(NodeTypeTmp1)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
+				}
 			}
 			else
 			{
@@ -62,26 +82,26 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the bottom side
 				normal=2;
-			}
-			switch(NodeTypeTmp2)
-			{
-			case Pressure:
-				BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
-				break;
-			case Velocity:
-				BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
-				break;
-			case Symmetry:
-				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			case Wall:
-				BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
-				break;
-			case Periodic:
-				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			default:
-				std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
+				switch(NodeTypeTmp2)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
+				}
 			}
 		}
 		else if(NodeTypeTmp1==Periodic||NodeTypeTmp2==Periodic)
@@ -93,6 +113,26 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the left side
 				normal=1;
+				switch(NodeTypeTmp1)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
+				}
 			}
 			else
 			{
@@ -101,26 +141,26 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the bottom side
 				normal=2;
-			}
-			switch(NodeTypeTmp2)
-			{
-			case Pressure:
-				BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
-				break;
-			case Velocity:
-				BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
-				break;
-			case Symmetry:
-				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			case Wall:
-				BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
-				break;
-			case Periodic:
-				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			default:
-				std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
+				switch(NodeTypeTmp2)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
+				}
 			}
 		}
 		else
@@ -138,6 +178,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						break;
 					case Wall:
 						BcMethods->ApplyCornerWall(Node,f_in,Rho,U,V);
+						break;
 					default:
 						std::cerr<<"Global corner condition with one wall is not found"<<std::endl;
 					}
@@ -155,7 +196,11 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
-				BcMethods->ApplyCorner(Node,f_in,Rho_def,UDef[0],UDef[1],Rho,U,V);
+			{
+				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
+				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
+				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
+			}
 		}
 		break;
 	case 6:
@@ -170,6 +215,26 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the right side
 				normal=3;
+				switch(NodeTypeTmp1)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
+				}
 			}
 			else
 			{
@@ -178,27 +243,28 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the bottom side
 				normal=2;
+				switch(NodeTypeTmp2)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
+				}
 			}
-			switch(NodeTypeTmp2)
-			{
-			case Pressure:
-				BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
-				break;
-			case Velocity:
-				BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
-				break;
-			case Symmetry:
-				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			case Wall:
-				BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
-				break;
-			case Periodic:
-				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			default:
-				std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
-			}
+
 		}
 		else if(NodeTypeTmp1==Periodic||NodeTypeTmp2==Periodic)
 		{
@@ -209,6 +275,26 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the right side
 				normal=3;
+				switch(NodeTypeTmp1)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
+				}
 			}
 			else
 			{
@@ -217,27 +303,28 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the bottom side
 				normal=2;
+				switch(NodeTypeTmp2)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
+				}
 			}
-			switch(NodeTypeTmp2)
-			{
-			case Pressure:
-				BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
-				break;
-			case Velocity:
-				BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
-				break;
-			case Symmetry:
-				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			case Wall:
-				BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
-				break;
-			case Periodic:
-				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			default:
-				std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
-			}
+
 		}
 		else
 		{
@@ -254,6 +341,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						break;
 					case Wall:
 						BcMethods->ApplyCornerWall(Node,f_in,Rho,U,V);
+						break;
 					default:
 						std::cerr<<"Global corner condition with one wall is not found"<<std::endl;
 					}
@@ -271,7 +359,9 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
-				BcMethods->ApplyCorner(Node,f_in,Rho_def,UDef[0],UDef[1],Rho,U,V);
+				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
+				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
+				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
 		}
 
 		break;
@@ -287,6 +377,26 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the right side
 				normal=3;
+				switch(NodeTypeTmp1)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
+				}
 			}
 			else
 			{
@@ -295,27 +405,28 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the top side
 				normal=4;
+				switch(NodeTypeTmp2)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
+				}
 			}
-			switch(NodeTypeTmp2)
-			{
-			case Pressure:
-				BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
-				break;
-			case Velocity:
-				BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
-				break;
-			case Symmetry:
-				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			case Wall:
-				BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
-				break;
-			case Periodic:
-				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			default:
-				std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
-			}
+
 		}
 		else if(NodeTypeTmp1==Periodic||NodeTypeTmp2==Periodic)
 		{
@@ -326,35 +437,56 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the right side
 				normal=3;
+				switch(NodeTypeTmp1)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
+				}
 			}
 			else
 			{
 			//Apply symmetry on the right side
-				normal=4;
+				normal=3;
 				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the top side
-				normal=3;
+				normal=4;
+				switch(NodeTypeTmp2)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
+				}
 			}
-			switch(NodeTypeTmp2)
-			{
-			case Pressure:
-				BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
-				break;
-			case Velocity:
-				BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
-				break;
-			case Symmetry:
-				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			case Wall:
-				BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
-				break;
-			case Periodic:
-				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			default:
-				std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
-			}
+
 		}
 		else
 		{
@@ -371,6 +503,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						break;
 					case Wall:
 						BcMethods->ApplyCornerWall(Node,f_in,Rho,U,V);
+						break;
 					default:
 						std::cerr<<"Global corner condition with one wall is not found"<<std::endl;
 					}
@@ -388,7 +521,9 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
-				BcMethods->ApplyCorner(Node,f_in,Rho_def,UDef[0],UDef[1],Rho,U,V);
+				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
+				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
+				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
 		}
 		break;
 	case 8:
@@ -403,6 +538,26 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the left side
 				normal=1;
+				switch(NodeTypeTmp1)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
+				}
 			}
 			else
 			{
@@ -411,27 +566,28 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the top side
 				normal=4;
+				switch(NodeTypeTmp2)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
+				}
 			}
-			switch(NodeTypeTmp2)
-			{
-			case Pressure:
-				BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
-				break;
-			case Velocity:
-				BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
-				break;
-			case Symmetry:
-				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			case Wall:
-				BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
-				break;
-			case Periodic:
-				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			default:
-				std::cerr<<"Global corner condition with one symmetry is not found"<<std::endl;
-			}
+
 		}
 		else if(NodeTypeTmp1==Periodic||NodeTypeTmp2==Periodic)
 		{
@@ -442,6 +598,26 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the left side
 				normal=1;
+				switch(NodeTypeTmp1)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
+				}
 			}
 			else
 			{
@@ -450,26 +626,27 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 			//Apply Other boundary on the top side
 				normal=4;
-			}
-			switch(NodeTypeTmp2)
-			{
-			case Pressure:
-				BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
-				break;
-			case Velocity:
-				BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
-				break;
-			case Symmetry:
-				BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			case Wall:
-				BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
-				break;
-			case Periodic:
-				BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
-				break;
-			default:
-				std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
+
+				switch(NodeTypeTmp2)
+				{
+				case Pressure:
+					BcMethods->ApplyPressure(normal,Node.Get_connect(),Rho_def,f_in,Rho,U,V);
+					break;
+				case Velocity:
+					BcMethods->ApplyVelocity(normal,Node.Get_connect(),UDef,f_in,Rho,U,V);
+					break;
+				case Symmetry:
+					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				case Wall:
+					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					break;
+				case Periodic:
+					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+					break;
+				default:
+					std::cerr<<"Global corner condition with one periodic is not found"<<std::endl;
+				}
 			}
 		}
 		else
@@ -487,6 +664,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						break;
 					case Wall:
 						BcMethods->ApplyCornerWall(Node,f_in,Rho,U,V);
+						break;
 					default:
 						std::cerr<<"Global corner condition with one wall is not found"<<std::endl;
 					}
@@ -504,7 +682,9 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
-				BcMethods->ApplyCorner(Node,f_in,Rho_def,UDef[0],UDef[1],Rho,U,V);
+				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
+				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
+				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
 		}
 		break;
 	default:
