@@ -18,6 +18,7 @@ MultiBlock2D::MultiBlock2D() :
 			coord[i]=0;
 			periods[i]=false;
 		}
+
 	ndims=2;
 	dims[0]=0;
 	dims[1]=0;
@@ -42,13 +43,22 @@ MultiBlock2D::MultiBlock2D(ParallelManager* parallel_, Parameters * PtrParameter
 		start_nodes(1),end_nodes(0),start_elems(1),end_elems(0),
 		reorder(false),COMM_CART(0),VertComm(0),HorizComm(0)
 {
+	PtrParameters=PtrParameters_;
 	for (int i=0;i<2;i++)
 	{
 		dims[i]=0;
 		coord[i]=0;
 		periods[i]=false;
 	}
-	PtrParameters=PtrParameters_;
+	if(PtrParameters->Get_GlobalBcType(0)==Periodic||PtrParameters->Get_GlobalBcType(2)==Periodic)
+		periods[1]=true;
+	else
+		periods[1]=false;
+	if(PtrParameters->Get_GlobalBcType(1)==Periodic||PtrParameters->Get_GlobalBcType(3)==Periodic)
+		periods[0]=true;
+	else
+		periods[0]=false;
+
 	parallel=parallel_;
 	Nx_G=PtrParameters->Get_Nx();
 	Ny_G=PtrParameters->Get_Ny();
@@ -121,31 +131,115 @@ void MultiBlock2D::Partitioning() {
 	coordtmp[0]=coord[0]-1;
 	coordtmp[1]=coord[1]-1;
 	if (coordtmp[0]<0 || coordtmp[0]>dims[0]-1||coordtmp[1]<0 || coordtmp[1]>dims[1]-1)
-		BlockNeighbour[SW]=-2;
+		if(((coord[0]>0 && periods[1]) || (coord[1]>0 && periods[0])) || (periods[0] && periods[1]))
+		{
+			if(periods[0] && periods[1] && coord[0]==0 && coord[1]==0)
+			{
+				coordtmp[0]=dims[0]-1;
+				coordtmp[1]=dims[1]-1;
+			}
+		/*	else
+			{
+				coordtmp[0]=dims[0]-1;
+			}*/
+				MPI_Cart_rank (COMM_CART,coordtmp,&BlockNeighbour[SW]);
+		}
+		else
+		{
+			BlockNeighbour[SW]=-2;
+		}
 	else
 		MPI_Cart_rank (COMM_CART,coordtmp,&BlockNeighbour[SW]);
 
 	coordtmp[0]=coord[0]-1;
 	coordtmp[1]=coord[1]+1;
 	if (coordtmp[0]<0 || coordtmp[0]>dims[0]-1||coordtmp[1]<0 || coordtmp[1]>dims[1]-1)
-		BlockNeighbour[NW]=-2;
+		if(((coord[0]>0 && periods[1]) || (coord[1]<dims[1]-1 && periods[0])) || (periods[0] && periods[1]))
+		{
+			if(periods[0] && periods[1]&& coord[0]==0 && coord[1]==dims[1]-1)
+			{
+				coordtmp[0]=dims[0]-1;
+				coordtmp[1]=0;
+			}
+	/*		else
+			{
+				coordtmp[0]=dims[0]-1;
+			}*/
+			MPI_Cart_rank (COMM_CART,coordtmp,&BlockNeighbour[NW]);
+		}
+		else
+		{
+			BlockNeighbour[NW]=-2;
+		}
 	else
 		MPI_Cart_rank (COMM_CART,coordtmp,&BlockNeighbour[NW]);
 
 	coordtmp[0]=coord[0]+1;
 	coordtmp[1]=coord[1]-1;
 	if (coordtmp[0]<0 || coordtmp[0]>dims[0]-1||coordtmp[1]<0 || coordtmp[1]>dims[1]-1)
-		BlockNeighbour[SE]=-2;
+		if(((coord[0]<dims[0]-1 && periods[1]) || (coord[1]>0 && periods[0])) || (periods[0] && periods[1]))
+		{
+			if(periods[0] && periods[1]&& coord[0]==dims[0]-1 && coord[1]==0)
+			{
+				coordtmp[0]=0;
+				coordtmp[1]=dims[1]-1;
+			}
+	/*		else
+			{
+				coordtmp[0]=0;
+			}*/
+			MPI_Cart_rank (COMM_CART,coordtmp,&BlockNeighbour[SE]);
+		}
+		else
+		{
+			BlockNeighbour[SE]=-2;
+		}
 	else
 		MPI_Cart_rank (COMM_CART,coordtmp,&BlockNeighbour[SE]);
 
 	coordtmp[0]=coord[0]+1;
 	coordtmp[1]=coord[1]+1;
 	if (coordtmp[0]<0 || coordtmp[0]>dims[0]-1||coordtmp[1]<0 || coordtmp[1]>dims[1]-1)
-		BlockNeighbour[NE]=-2;
+		if(((coord[0]<dims[0]-1 && periods[1]) || (coord[1]<dims[1]-1 && periods[0])) || (periods[0] && periods[1]))
+		{
+			if(periods[0] && periods[1]&& coord[0]==dims[0]-1 && coord[1]==dims[1]-1)
+			{
+				coordtmp[0]=0;
+				coordtmp[1]=0;
+			}
+	/*		else if(coord[0]<dims[0]-1 && periods[1])
+			{
+				coordtmp[0]=0;
+			}
+			else if(coord[1]>0 && periods[0])
+			{
+
+			}*/
+			MPI_Cart_rank (COMM_CART,coordtmp,&BlockNeighbour[NE]);
+		}
+		else
+		{
+			BlockNeighbour[NE]=-2;
+		}
 	else
 		MPI_Cart_rank (COMM_CART,coordtmp,&BlockNeighbour[NE]);
-
+/*
+ 	int rank;
+ 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+ 	char buffer[50]; // make sure it's big enough
+ 	snprintf(buffer, sizeof(buffer), "BlockConnect_%d.txt", rank);
+ 	std::ofstream myFlux;
+ 	myFlux.open(buffer);
+ 	myFlux<< "Connection to block N is: "<<BlockNeighbour[N]<<std::endl;
+ 	myFlux<< "Connection to block S is: "<<BlockNeighbour[S]<<std::endl;
+ 	myFlux<< "Connection to block E is: "<<BlockNeighbour[E]<<std::endl;
+ 	myFlux<< "Connection to block W is: "<<BlockNeighbour[W]<<std::endl;
+ 	myFlux<< "Connection to block NE is: "<<BlockNeighbour[NE]<<std::endl;
+ 	myFlux<< "Connection to block NW is: "<<BlockNeighbour[NW]<<std::endl;
+ 	myFlux<< "Connection to block SE is: "<<BlockNeighbour[SE]<<std::endl;
+ 	myFlux<< "Connection to block SW is: "<<BlockNeighbour[SW]<<std::endl;
+ 	myFlux.close();
+*/
 	if(verbous)
 	{
 		printf ("processor : %d my processors neighbour are ", rank_in_topo);
@@ -470,7 +564,7 @@ void  MultiBlock2D::Create_Block2D() {
 		if(parallel->isMainProcessor())
 			std::cout<<"processor ID: "<<parallel->getRank() <<" Bc[0]: "<< bC[0]<<" Bc[1]: "<<bC[1]<<" Bc[2]: "<<bC[2]<<" Bc[3]: "<< bC[3]<<std::endl;
 
-	Block2D_.AddBlock(Nx[parallel->getRank()],Ny[parallel->getRank()],dims,coord,Ny_G,Nx_dim[0],Ny_dim[0],Nx_dim[dims[0]-1],Ny_dim[dims[1]-1],bC,x_start,y_start,start_nodes,end_nodes, start_elems);
+	Block2D_.AddBlock(Nx[parallel->getRank()],Ny[parallel->getRank()],dims,periods,coord,Ny_G,Nx_dim[0],Ny_dim[0],Nx_dim[dims[0]-1],Ny_dim[dims[1]-1],bC,x_start,y_start,start_nodes,end_nodes, start_elems);
 
 }
 
@@ -701,10 +795,85 @@ void MultiBlock2D::Correct_SolidGhost()
 	 IdGNodeS=IdRNodeS;
 	 IdGNodeW=IdRNodeW;
 	 IdGNodeSW=IdRNodeSW;
-	 IdGNodeSE=IdRNodeS;
+	 IdGNodeSE=IdRNodeSE;
 	 IdGNodeNW=IdRNodeNW;
 	 IdGNodeNE=IdRNodeNE;
 	 MPI_Status status;
+/*	 	int rank;
+	 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	 	char buffer[50]; // make sure it's big enough
+	 	snprintf(buffer, sizeof(buffer), "ConnectionMarks_%d.txt", rank);
+	 	std::ofstream myFlux;
+	 	myFlux.open(buffer);
+	 	myFlux<<std::endl<<" ****** after Removing nodes *******"<<std::endl;
+	 	myFlux<<"West real nodes: "<<std::endl;
+	 	for(int i=0;i<IdRNodeW.size();i++)
+	 		myFlux<<IdRNodeW[i]<<" ";
+	 	myFlux<<std::endl<<"West Ghost nodes: "<<std::endl;
+	 	for(int i=0;i<IdGNodeW.size();i++)
+	 		myFlux<<IdGNodeW[i]<<" ";
+	 	myFlux<<std::endl<<"North real nodes: "<<std::endl;
+	 	for(int i=0;i<IdRNodeN.size();i++)
+	 		myFlux<<IdRNodeN[i]<<" ";
+	 	myFlux<<std::endl<<"North Ghost nodes: "<<std::endl;
+	 	for(int i=0;i<IdGNodeN.size();i++)
+	 		myFlux<<IdGNodeN[i]<<" ";
+	 	myFlux<<std::endl<<"South real nodes: "<<std::endl;
+	 	for(int i=0;i<IdRNodeS.size();i++)
+	 		myFlux<<IdRNodeS[i]<<" ";
+	 	myFlux<<std::endl<<"South Ghost nodes: "<<std::endl;
+	 	for(int i=0;i<IdGNodeS.size();i++)
+	 		myFlux<<IdGNodeS[i]<<" ";
+	 	myFlux<<std::endl<<"East real nodes: "<<std::endl;
+	 	for(int i=0;i<IdRNodeE.size();i++)
+	 		myFlux<<IdRNodeE[i]<<" ";
+	 	myFlux<<std::endl<<"East Ghost nodes: "<<std::endl;
+	 	for(int i=0;i<IdGNodeE.size();i++)
+	 		myFlux<<IdGNodeE[i]<<" ";
+
+	 	myFlux<<std::endl<<std::endl;
+	 	myFlux<<"South West real nodes: "<<std::endl;
+
+	 	for(int i=0;i<IdRNodeSW.size();i++)
+	 		myFlux<<IdRNodeSW[i]<<" ";
+	 	myFlux<<std::endl<<"South West Ghost nodes: "<<std::endl;
+	 	for(int i=0;i<IdGNodeSW.size();i++)
+	 		myFlux<<IdGNodeSW[i]<<" ";
+	 	myFlux<<std::endl<<"North West real nodes: "<<std::endl;
+	 	for(int i=0;i<IdRNodeNW.size();i++)
+	 		myFlux<<IdRNodeNW[i]<<" ";
+	 	myFlux<<std::endl<<"North West Ghost nodes: "<<std::endl;
+	 	for(int i=0;i<IdGNodeNW.size();i++)
+	 		myFlux<<IdGNodeNW[i]<<" ";
+	 	myFlux<<std::endl<<"South East real nodes: "<<std::endl;
+	 	for(int i=0;i<IdRNodeSE.size();i++)
+	 		myFlux<<IdRNodeSE[i]<<" ";
+	 	myFlux<<std::endl<<"South East Ghost nodes: "<<std::endl;
+	 	for(int i=0;i<IdGNodeSE.size();i++)
+	 		myFlux<<IdGNodeSE[i]<<" ";
+	 	myFlux<<std::endl<<"North East real nodes: "<<std::endl;
+	 	for(int i=0;i<IdRNodeNE.size();i++)
+	 		myFlux<<IdRNodeNE[i]<<" ";
+	 	myFlux<<std::endl<<"North East Ghost nodes: "<<std::endl;
+	 	for(int i=0;i<IdGNodeNE.size();i++)
+	 		myFlux<<IdGNodeNE[i]<<" ";
+	 	myFlux<<std::endl<<" Size of NE Ghost: "<< IdGNodeNE.size()<<std::endl;*/
+/*	 	int rank;
+	 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	 	char buffer[50]; // make sure it's big enough
+	 	snprintf(buffer, sizeof(buffer), "ConnectionBlocks_%d.txt", rank);
+	 	std::ofstream myFlux;
+	 	myFlux.open(buffer);
+
+	 	myFlux<<"Connection Bloc W: "<<BlockNeighbour[W]<<std::endl;
+	 	myFlux<<"Connection Bloc E: "<<BlockNeighbour[E]<<std::endl;
+	 	myFlux<<"Connection Bloc N: "<<BlockNeighbour[N]<<std::endl;
+	 	myFlux<<"Connection Bloc S: "<<BlockNeighbour[S]<<std::endl;
+
+	 	myFlux<<"Connection Bloc NW: "<<BlockNeighbour[NW]<<std::endl;
+	 	myFlux<<"Connection Bloc NE: "<<BlockNeighbour[NE]<<std::endl;
+	 	myFlux<<"Connection Bloc SW: "<<BlockNeighbour[SW]<<std::endl;
+	 	myFlux<<"Connection Bloc SE: "<<BlockNeighbour[SE]<<std::endl;*/
 
 	 if(BlockNeighbour[W]>=0)
 	 {

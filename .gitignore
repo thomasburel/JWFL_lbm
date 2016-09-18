@@ -33,3 +33,6 @@
 *.txt
 *.xml
 LBM
+.cproject
+.project
+/.settings/

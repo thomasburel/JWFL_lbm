@@ -326,7 +326,12 @@ void NodePressure2D::Set_RhoDef(double RhoDef_){RhoDef=RhoDef_;}
 NodePeriodic2D::NodePeriodic2D(unsigned int x_,unsigned int y_) {
 	x=x_;
 	y=y_;
-	NodeType_=Solid;
+	NodeType_=Periodic;
+	RhoDef=1;
+	UDef[0]=0;
+	UDef[1]=0;
+	PeriodicStream=0;
+	BcNormal=0;
 }
 ///Destructor for Periodic Nodes
 NodePeriodic2D::~NodePeriodic2D() {
@@ -334,13 +339,18 @@ NodePeriodic2D::~NodePeriodic2D() {
 }
 
 
-bool* NodePeriodic2D::stream(){return 0;}//Don't need
-double* NodePeriodic2D::Get_UDef(){return 0;}
-double NodePeriodic2D::Get_RhoDef(){return 0;}
+bool* NodePeriodic2D::stream(){return PeriodicStream;}
+double* NodePeriodic2D::Get_UDef(){return UDef;}
+double NodePeriodic2D::Get_RhoDef(){return RhoDef;}
 
-void NodePeriodic2D::Set_stream(bool* streaming,int NbVelocity){}
-void NodePeriodic2D::Set_UDef(double UDef, double VDef){}
-void NodePeriodic2D::Set_RhoDef(double RhoDef){}
+void NodePeriodic2D::Set_stream(bool* streaming,int NbVelocity_){
+	NbVelocity=NbVelocity_;
+	PeriodicStream=new bool [NbVelocity];
+	for (int i=0;i<NbVelocity;i++)
+		PeriodicStream[i]=streaming[i];
+}
+void NodePeriodic2D::Set_UDef(double U_Def, double V_Def){UDef[0]=U_Def;UDef[1]=V_Def;}
+void NodePeriodic2D::Set_RhoDef(double RhoDef_){RhoDef=RhoDef_;}
 
 
 //**************Corner Node Methods***************

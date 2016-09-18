@@ -247,6 +247,13 @@ void D2Q9TwoPhases::StreamD2Q9() {
 				ftmp[NodeArrays->NodeSymmetry[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeSymmetry[j].Get_index()];
 			}
 		}
+		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		{
+			if (NodeArrays->NodePeriodic[j].stream()[i])
+			{
+				ftmp[NodeArrays->NodePeriodic[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodePeriodic[j].Get_index()];
+			}
+		}
 		for (int j=0;j<NodeArrays->NodeGhost.size();j++)
 		{
 			if (NodeArrays->NodeGhost[j].stream()[i])
@@ -295,6 +302,10 @@ void D2Q9TwoPhases::Set_BcType(){
 	{
 		Set_SymmetryType(NodeArrays->NodeSymmetry[j]);
 	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+		Set_PeriodicType(NodeArrays->NodePeriodic[j]);
+	}
 	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 		Set_GhostType(NodeArrays->NodeGhost[j]);
@@ -316,6 +327,12 @@ void D2Q9TwoPhases::Set_SymmetryType(NodeSymmetry2D& NodeIn){
 	bool SymmetryStreaming[9];
 	StreamingOrientation(NodeIn,SymmetryStreaming);
 	NodeIn.Set_stream(SymmetryStreaming,nbvelo);
+
+}
+void D2Q9TwoPhases::Set_PeriodicType(NodePeriodic2D& NodeIn){
+	bool PeriodicStreaming[9];
+	StreamingOrientation(NodeIn,PeriodicStreaming);
+	NodeIn.Set_stream(PeriodicStreaming,nbvelo);
 
 }
 void D2Q9TwoPhases::Set_CornerType(NodeCorner2D& NodeIn){
@@ -980,6 +997,14 @@ void D2Q9TwoPhases::StreamingOrientation(NodeSymmetry2D& nodeIn, bool Streaming[
 			break;
 		}
 }
+void D2Q9TwoPhases::StreamingOrientation(NodePeriodic2D& nodeIn, bool Streaming[9]){
+	Streaming[0]=false;
+	for (unsigned int i=1;i<(unsigned int)nbvelo;i++)
+		if((nodeIn.Get_connect()[i]==nodeIn.Get_index())||(nodeIn.get_NodeType()==Solid)||(NodeArrays->TypeOfNode[nodeIn.Get_connect()[i]]==Solid))
+			Streaming[i]=false;
+		else
+			Streaming[i]=true;
+}
 void D2Q9TwoPhases::StreamingOrientation(NodeVelocity2D& nodeIn, bool Streaming[9]){
 	Streaming[0]=false;
 	for (unsigned int i=1;i<(unsigned int)nbvelo;i++)
@@ -1018,19 +1043,19 @@ void D2Q9TwoPhases::IniComVariables(){
 
 	for (int i=0;i<Nd_variables_sync;i++)
 	{
-		buf_send[i][0]=new double[IdNodeE.size()];
-		buf_send[i][1]=new double[IdNodeW.size()];
-		buf_send[i][2]=new double[IdNodeS.size()];
-		buf_send[i][3]=new double[IdNodeN.size()];
-		buf_recv[i][0]=new double[IdNodeW.size()];
-		buf_recv[i][1]=new double[IdNodeE.size()];
-		buf_recv[i][2]=new double[IdNodeN.size()];
-		buf_recv[i][3]=new double[IdNodeS.size()];
+		buf_send[i][0]=new double[IdRNodeE.size()];
+		buf_send[i][1]=new double[IdRNodeW.size()];
+		buf_send[i][2]=new double[IdRNodeS.size()];
+		buf_send[i][3]=new double[IdRNodeN.size()];
+		buf_recv[i][0]=new double[IdGNodeW.size()];
+		buf_recv[i][1]=new double[IdGNodeE.size()];
+		buf_recv[i][2]=new double[IdGNodeN.size()];
+		buf_recv[i][3]=new double[IdGNodeS.size()];
 	}
-	size_buf[0]=IdNodeE.size();
-	size_buf[1]=IdNodeW.size();
-	size_buf[2]=IdNodeS.size();
-	size_buf[3]=IdNodeN.size();
+	size_buf[0]=IdGNodeE.size();
+	size_buf[1]=IdGNodeW.size();
+	size_buf[2]=IdGNodeS.size();
+	size_buf[3]=IdGNodeN.size();
 // Macro sync
 	Nd_MacroVariables_sync=Dic->Get_NbSyncVar();//6;
 	SyncVar=Dic->Get_SyncVar();

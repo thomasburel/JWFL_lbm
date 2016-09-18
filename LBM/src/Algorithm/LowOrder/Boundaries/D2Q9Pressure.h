@@ -13,7 +13,7 @@
 #ifndef SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9PRESSURE_H_
 #define SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9PRESSURE_H_
 #include "D2Q9BcVar.h"
-
+#include <cmath>
 class D2Q9Pressure: public D2Q9BcVar {
 public:
 	D2Q9Pressure();
@@ -21,7 +21,7 @@ public:
 
 	void Set_PressureBcs(Parameters *Param);
 	void ApplyPressure(int const &BcNormal,int const *Connect, double const &Rho_def, DistriFunct* f_in, double *Rho, double *U, double *V);
-
+	inline void Get_CalculRho(int const &BcNormal,int const *Connect, double const &Rho_def, double *Rho, double & Rhoreturn){(this->*PtrCalculRho)(BcNormal,Connect,Rho_def,Rho);Rhoreturn=Rho[Connect[0]];};
 private:
 //Methods for pressure models (generic)
 	//He Zou with pressure formulation

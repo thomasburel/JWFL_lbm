@@ -21,8 +21,8 @@ public:
 	virtual ~D2Q9Velocity();
 
 	void SetVelocity(Parameters *Param);
-
 	void ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in, double *Rho, double *U, double *V);
+	inline void Get_CalculU(int const &BcNormal,int const *Connect, double const *UDef, double *U, double *V, double & Ureturn,double & Vreturn){(this->*PtrCalculU)(BcNormal,Connect,UDef,U,V); Ureturn=U[Connect[0]];Vreturn=V[Connect[0]];};
 
 private:
 //Function for calculating the velocity
@@ -36,6 +36,7 @@ private:
 ///Simplify notation for pointer on a member function of D2Q9Velocity class for Velocity model used
 	typedef void(D2Q9Velocity::*VelocityMethod)(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in, double & U, double & V);
 	typedef void(D2Q9Velocity::*CalculU)(int const &BcNormal,int const *Connect, double const *UDef, double *U, double *V);
+
 //Define name for pointers on functions
 	VelocityMethod PtrVelocityMethod;
 	CalculU PtrCalculU;
