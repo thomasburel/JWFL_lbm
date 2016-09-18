@@ -3037,92 +3037,22 @@ void Block2D::Correct_GhostType(int  idNode, NodeType RealNodeType)
 	/*else
 		Block2D::ChangeNodeType(idNode, Solid);*/
 }
+//Remove unused mark nodes
 void Block2D::Clear_MarkNode(){
-/*	if (Dims[1]==1)
-	{
-		IdNodeW.insert(IdNodeW.end(),IdNodeNW.begin(),IdNodeNW.end());
-		IdNodeE.insert(IdNodeE.end(),IdNodeNE.begin(),IdNodeNE.end());
-		IdNodeW.insert(IdNodeW.end(),IdNodeSW.begin(),IdNodeSW.end());
-		IdNodeE.insert(IdNodeE.end(),IdNodeSE.begin(),IdNodeSE.end());
-
-		IdNodeNW.clear();//IdRNodeNW.clear();IdGNodeNW.clear();
-		IdNodeNE.clear();//IdRNodeNE.clear();IdGNodeNE.clear();
-		IdNodeSW.clear();//IdRNodeSW.clear();IdGNodeSW.clear();
-		IdNodeSE.clear();//IdRNodeSE.clear();IdGNodeSE.clear();
-	}
-	if (Coord[0]==0)
-	{
-		IdNodeN.insert(IdNodeN.end(),IdNodeNW.begin(),IdNodeNW.end());
-		IdNodeS.insert(IdNodeS.end(),IdNodeSW.begin(),IdNodeSW.end());
-		IdNodeNW.clear();//IdRNodeNW.clear();IdGNodeNW.clear();
-		IdNodeSW.clear();//IdRNodeSW.clear();IdGNodeSW.clear();
-	}
-	if (Coord[0]==Dims[0]-1)
-	{
-		IdNodeN.insert(IdNodeN.end(),IdNodeNE.begin(),IdNodeNE.end());
-		IdNodeS.insert(IdNodeS.end(),IdNodeSE.begin(),IdNodeSE.end());
-		IdNodeNE.clear();//IdRNodeNE.clear();IdGNodeNE.clear();
-		IdNodeSE.clear();//IdRNodeSE.clear();IdGNodeSE.clear();
-	}
-
-	if (Coord[1]==Dims[1]-1)
-	{
-		IdNodeW.insert(IdNodeW.end(),IdNodeNW.begin(),IdNodeNW.end());
-		IdNodeE.insert(IdNodeE.end(),IdNodeNE.begin(),IdNodeNE.end());
-		IdNodeNW.clear();//IdRNodeNW.clear();IdGNodeNW.clear();
-		IdNodeNE.clear();//IdRNodeNE.clear();IdGNodeNE.clear();
-	}
-	if (Coord[1]==0)
-	{
-		IdNodeW.insert(IdNodeW.end(),IdNodeSW.begin(),IdNodeSW.end());
-		IdNodeE.insert(IdNodeE.end(),IdNodeSE.begin(),IdNodeSE.end());
-		IdNodeSW.clear();//IdRNodeSW.clear();IdGNodeSW.clear();
-		IdNodeSE.clear();//IdRNodeSE.clear();IdGNodeSE.clear();
-	}
-
-	if (Coord[0]==0)
-		{IdNodeW.clear();}
-//		{IdNodeW.clear();IdRNodeW.clear();IdGNodeW.clear();}
-	if(Coord[0]==Dims[0]-1)
-		{IdNodeE.clear();}
-//		{IdNodeE.clear();IdRNodeE.clear();IdGNodeE.clear();}
-	if (Coord[1]==0)
-		{IdNodeS.clear();}
-//		{IdNodeS.clear();IdRNodeS.clear();IdGNodeS.clear();}
-	if(Coord[1]==Dims[1]-1)
-		{IdNodeN.clear();}
-//		{IdNodeN.clear();IdRNodeN.clear();IdGNodeN.clear();}
-
-	std::sort(IdNodeW.begin(), IdNodeW.end());
-	std::sort(IdNodeE.begin(), IdNodeE.end());
-	std::sort(IdNodeN.rbegin(), IdNodeN.rend()); //reverse sort
-	std::sort(IdNodeS.begin(), IdNodeS.end());
-	*/
-	IdNodeN.clear();
-	IdNodeS.clear();
-	IdNodeE.clear();
-	IdNodeW.clear();
-	IdNodeNW.clear();//IdRNodeNW.clear();IdGNodeNW.clear();
-	IdNodeNE.clear();//IdRNodeNE.clear();IdGNodeNE.clear();
-	IdNodeSW.clear();//IdRNodeSW.clear();IdGNodeSW.clear();
-	IdNodeSE.clear();//IdRNodeSE.clear();IdGNodeSE.clear();
+	IdNodeN.clear();	IdNodeS.clear();	IdNodeE.clear();	IdNodeW.clear();
+	IdNodeNW.clear();	IdNodeNE.clear();	IdNodeSW.clear();	IdNodeSE.clear();
 }
 void Block2D::Get_CommNodes(std::vector<int> & IdRNodeN_,std::vector<int> & IdRNodeE_,std::vector<int> & IdRNodeS_,std::vector<int> & IdRNodeW_,
 		std::vector<int> & IdGNodeN_,std::vector<int> & IdGNodeE_,std::vector<int> & IdGNodeS_,std::vector<int> & IdGNodeW_,
 		std::vector<int> & IdRNodeSW_,std::vector<int> & IdRNodeSE_,std::vector<int> & IdRNodeNW_,std::vector<int> & IdRNodeNE_,
 		std::vector<int> & IdGNodeSW_,std::vector<int> & IdGNodeSE_,std::vector<int> & IdGNodeNW_,std::vector<int> & IdGNodeNE_)
 {
-	IdGNodeN_=IdGNodeN;IdRNodeN_=IdRNodeN;
-	IdGNodeE_=IdGNodeE;IdRNodeE_=IdRNodeE;
-	IdGNodeW_=IdGNodeW;IdRNodeW_=IdRNodeW;
-	IdGNodeS_=IdGNodeS;IdRNodeS_=IdRNodeS;
-	IdGNodeSW_=IdGNodeSW;IdRNodeSW_=IdRNodeSW;
-	IdGNodeSE_=IdGNodeSE;IdRNodeSE_=IdRNodeSE;
-	IdGNodeNE_=IdGNodeNE;IdRNodeNE_=IdRNodeNE;
-	IdGNodeNW_=IdGNodeNW;IdRNodeNW_=IdRNodeNW;
+	IdGNodeN_=IdGNodeN;IdRNodeN_=IdRNodeN;	IdGNodeE_=IdGNodeE;IdRNodeE_=IdRNodeE;	IdGNodeW_=IdGNodeW;IdRNodeW_=IdRNodeW;	IdGNodeS_=IdGNodeS;IdRNodeS_=IdRNodeS;
+	IdGNodeSW_=IdGNodeSW;IdRNodeSW_=IdRNodeSW;	IdGNodeSE_=IdGNodeSE;IdRNodeSE_=IdRNodeSE;	IdGNodeNE_=IdGNodeNE;IdRNodeNE_=IdRNodeNE;	IdGNodeNW_=IdGNodeNW;IdRNodeNW_=IdRNodeNW;
 }
 void Block2D::Set_CommNodes()
 {
+	//Create the Real and Ghost mark nodes
 	IdRNodeW.push_back(IdNodeSW[0]);
 	IdRNodeW.insert(IdRNodeW.end(),IdNodeW.begin(),IdNodeW.end());
 	IdGNodeW.push_back(Node[IdNodeSW[0]]->Get_connect(3));
@@ -3237,7 +3167,7 @@ void Block2D::Set_CommNodes()
 
 // if periodic boundary conditions, we need to shift the real by one node to keep the code working in the same way.
 // On the periodic boundary conditions, by this way, the distribution will be collide stream in each side of the periodic conditions.
-// If no periodic boundary, we remove the unused marking nodes
+// If no periodic boundary, we remove the unused marking nodes on the boundary of the domain
 
 // Boundaries treatment
 	if(periodic[0]==true)
@@ -3437,6 +3367,7 @@ void Block2D::Set_CommNodes()
 	}
 	else
 	{
+		//Remove unused mark nodes on the boundary of the domain
 		if (Dims[1]==1)
 		{
 			IdRNodeNW.clear();IdGNodeNW.clear();
@@ -3466,80 +3397,7 @@ void Block2D::Set_CommNodes()
 			IdRNodeSE.clear();IdGNodeSE.clear();
 		}
 	}
-	/*
-	//Remove mark nodes on the boundary of the all calculation domain
-	//If all boundaries are periodic, we keep the 4 corners of the domain to set the diagonal distribution functions
-	if(periodic[0]==false && periodic[1]==false)
-	{
-		if(Coord[0]==0)
-		{
-			if (Coord[1]!=0)
-			{IdRNodeSW.clear();IdGNodeSW.clear();}
-			if (Coord[1]!=Dims[1]-1)
-			{IdRNodeNW.clear();IdGNodeNW.clear();}
-		}
-		if(Coord[0]==Dims[0]-1)
-		{
-			if (Coord[1]!=0)
-			{IdRNodeSE.clear();IdGNodeSE.clear();}
-			if (Coord[1]!=Dims[1]-1)
-			{IdRNodeNE.clear();IdGNodeNE.clear();}
-		}
-		if(Coord[1]==0)
-		{
-			if (Coord[0]!=0)
-			{IdRNodeSW.clear();IdGNodeSW.clear();}
-			if (Coord[0]!=Dims[0]-1)
-			{IdRNodeSE.clear();IdGNodeSE.clear();}
-		}
-		if(Coord[1]==Dims[1]-1)
-		{
-			if (Coord[0]!=0)
-			{IdRNodeNW.clear();IdGNodeNW.clear();}
-			if (Coord[0]!=Dims[0]-1)
-			{IdRNodeNE.clear();IdGNodeNE.clear();}
-		}
-	}
-	else
-	{
-		if (Dims[1]==1)
-		{
-			IdRNodeNW.clear();IdGNodeNW.clear();
-			IdRNodeNE.clear();IdGNodeNE.clear();
-			IdRNodeSW.clear();IdGNodeSW.clear();
-			IdRNodeSE.clear();IdGNodeSE.clear();
-		}
-		if (Coord[0]==0)
-		{
-			IdRNodeNW.clear();IdGNodeNW.clear();
-			IdRNodeSW.clear();IdGNodeSW.clear();
-		}
-		if (Coord[0]==Dims[0]-1)
-		{
-			IdRNodeNE.clear();IdGNodeNE.clear();
-			IdRNodeSE.clear();IdGNodeSE.clear();
-		}
-
-		if (Coord[1]==Dims[1]-1)
-		{
-			IdRNodeNW.clear();IdGNodeNW.clear();
-			IdRNodeNE.clear();IdGNodeNE.clear();
-		}
-		if (Coord[1]==0)
-		{
-			IdRNodeSW.clear();IdGNodeSW.clear();
-			IdRNodeSE.clear();IdGNodeSE.clear();
-		}
-		if (Coord[0]==0 && periodic[0]==false)
-			{IdRNodeW.clear();IdGNodeW.clear();}
-		if(Coord[0]==Dims[0]-1 && periodic[0]==false)
-			{IdRNodeE.clear();IdGNodeE.clear();}
-		if (Coord[1]==0 && periodic[1]==false)
-			{IdRNodeS.clear();IdGNodeS.clear();}
-		if(Coord[1]==Dims[1]-1 && periodic[1]==false)
-			{IdRNodeN.clear();IdGNodeN.clear();}
-	}*/
-
+/*
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 	char buffer[50]; // make sure it's big enough
@@ -3597,5 +3455,6 @@ void Block2D::Set_CommNodes()
 	myFlux<<std::endl<<"North East Ghost nodes: "<<std::endl;
 	for(int i=0;i<IdGNodeNE.size();i++)
 		myFlux<<IdGNodeNE[i]<<" x: "<< Node[IdGNodeNE[i]]->get_x()<<" y: "<< Node[IdGNodeNE[i]]->get_y()<<" ";
+		*/
 }
 

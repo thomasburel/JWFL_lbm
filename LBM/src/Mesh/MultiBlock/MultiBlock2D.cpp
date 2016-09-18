@@ -223,7 +223,7 @@ void MultiBlock2D::Partitioning() {
 		}
 	else
 		MPI_Cart_rank (COMM_CART,coordtmp,&BlockNeighbour[NE]);
-
+/*
  	int rank;
  	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
  	char buffer[50]; // make sure it's big enough
@@ -239,7 +239,7 @@ void MultiBlock2D::Partitioning() {
  	myFlux<< "Connection to block SE is: "<<BlockNeighbour[SE]<<std::endl;
  	myFlux<< "Connection to block SW is: "<<BlockNeighbour[SW]<<std::endl;
  	myFlux.close();
-
+*/
 	if(verbous)
 	{
 		printf ("processor : %d my processors neighbour are ", rank_in_topo);
