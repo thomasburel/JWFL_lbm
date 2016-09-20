@@ -182,7 +182,9 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 
 void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U, double& alpha){
 	double Umax,H,L,Pmax,Pmin;
+	double Re,Ca,diameter, sigma;
 	PtrParameters.Get_UserParameters(Umax,H,L,Pmax,Pmin);
+	PtrParameters.Get_TwoPhaseUserParameters(Re,Ca,diameter, sigma);
 
 	//U[0]=Umax;//*4.0*(pos[1]/H)*(1-(pos[1]/H));///pos[0];
 	//U[0]=0.0;
@@ -244,7 +246,7 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 		Rho=1;
 		alpha=0;
 
-		double R=20;
+		double R=diameter/2;
 		if(pow(pos[0]-(L)/2,2.0)+pow(pos[1]-(H)/2,2.0)<=R*R+0.000001)
 		{
 			alpha=1;

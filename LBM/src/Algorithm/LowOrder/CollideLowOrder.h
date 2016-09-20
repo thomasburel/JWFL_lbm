@@ -28,7 +28,7 @@ public:
 	CollideLowOrder();
 	virtual ~CollideLowOrder();
 
-	void Collide_2D(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+	void Collide_2D(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double InvTau_tmp);
 	void Select_Collide_2D(CollideType Type);
 
 	double EquiDistriFunct2D(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);

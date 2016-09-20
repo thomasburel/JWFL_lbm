@@ -70,7 +70,15 @@ int main(int argc, char *argv[]) {
 	Pmax=1;
 	Pmin=1;
 
-	cout<<"Reynolds: "<<re<< " Tau: "<<tau<< " Nu: "<<nu<<" U: "<<Umax<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<endl;
+
+	double Ca=0.2;
+	double Re=1;
+	double diameter=40;
+	Umax=0.01;
+	nu=Umax*diameter/Re;
+	tau=(6.0*nu+1.0)*0.5;
+	double sigma=nu*Umax/Ca;
+	cout<<"Reynolds: "<<Re<<" Ca is: "<<Ca<<" Surface tension is: "<<sigma<< " Tau: "<<tau<< " Nu: "<<nu<<" U: "<<Umax<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<endl;
 
 
 
@@ -91,8 +99,12 @@ int main(int argc, char *argv[]) {
 // Set Domain size
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 
+// Set Reynolds
+
+
 // Set User Parameters
 	Param.Set_UserParameters(Umax,H,L,Pmax,Pmin);
+	Param.Set_TwoPhaseUserParameters(Re,Ca,diameter, sigma);
 // Set User Force type
 	Param.Set_UserForceType(None);
 // Set delta x for output
@@ -142,13 +154,13 @@ int main(int argc, char *argv[]) {
 	// Normal density output
 	Param.Set_NormalDensityOutput(true);
 	//Density of each fluid
-	Param.Set_Rho_1(2);
+	Param.Set_Rho_1(1.0);
 	Param.Set_Rho_2(1.0);
 	//Relaxation time for each fluid
 	Param.Set_Tau_1(tau);
-	Param.Set_Tau_2(tau);
+	Param.Set_Tau_2(tau*5);
 	//Surface tension
-	Param.Set_SurfaceTension(0.0001);
+	Param.Set_SurfaceTension(sigma);
 	//Colour fluid Parameters
 	Param.Set_A1(0.00001);
 	Param.Set_A2(Param.Get_A1());

@@ -11,7 +11,7 @@ Tau::Tau() {
 	// TODO Auto-generated constructor stub
 	tau=0;
 }
-Tau::Tau(Parameters *Param) {
+void Tau::IniTau(Parameters *Param) {
 	// TODO Auto-generated constructor stub
 	if(Param->Get_Model()==SinglePhase)
 	{
@@ -28,7 +28,7 @@ Tau::Tau(Parameters *Param) {
 Tau::~Tau() {
 	delete tau;
 }
-double Tau::Get_InvTau(double const Rho, double const RhoN){
+double& Tau::Get_InvTau(double const Rho, double const RhoN){
 return tau->Get_InvTau(Rho,RhoN);
 }
 TauDEF::TauDEF() {
@@ -54,8 +54,9 @@ HarmonicViscosity::HarmonicViscosity(){
 HarmonicViscosity::~HarmonicViscosity(){
 
 }
-double HarmonicViscosity::Get_InvTau(double const &Rho, double const &RhoN){
-	return 1/CalculTau(Rho,RhoN);}
+double& HarmonicViscosity::Get_InvTau(double const &Rho, double const &RhoN){
+	InvTau=1/CalculTau(Rho,RhoN);
+	return InvTau;}
 
 double HarmonicViscosity::CalculTau(double const &Rho, double const &RhoN){
 	Convert_NuToTau(Convert_MutoNu(CalculHarmonicViscosity(RhoN),Rho));

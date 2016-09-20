@@ -22,7 +22,7 @@ CollideLowOrder::~CollideLowOrder() {
 	// TODO Auto-generated destructor stub
 }
 
-void CollideLowOrder::Collide_2D(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
+void CollideLowOrder::Collide_2D(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double InvTau_tmp){
 	(this->*PtrCollide_2D)(i,fi,rho,u,v,Fx,Fy,InvTau_tmp);
 }
 void CollideLowOrder::Select_Collide_2D(CollideType type){

@@ -723,24 +723,24 @@ void D2Q9ColourFluid::Collision_Grunau(int & nodenumber, int* connect,int & norm
 	double InvTau_tmp=InvTau; int i0=0;
 	fi[0]=f[0]->f[0][nodenumber]+f[1]->f[0][nodenumber];
 	DVec_2D_tmp[0]=0;DVec_2D_tmp[1]=0;
-	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], InvTau_tmp);
+	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
 	for (int i=1;i<9;i++)
 	{
 		//Save the mixture distribution for recolouring
 		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
-		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Grunau(i, nodenumber, A1),DVec_2D_tmp[1], InvTau_tmp);
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Grunau(i, nodenumber, A1),DVec_2D_tmp[1], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
 	}
 }
 void D2Q9ColourFluid::Collision_Reis(int & nodenumber, int* connect,int & normal,double* fi){
 	double InvTau_tmp=InvTau; int i0=0;
 	fi[0]=f[0]->f[0][nodenumber]+f[1]->f[0][nodenumber];
 	DVec_2D_tmp[0]=0;DVec_2D_tmp[1]=0;
-	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], InvTau_tmp);
+	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
 	for (int i=1;i<9;i++)
 	{
 		//Save the mixture distribution for recolouring
 		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
-		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Reis(i, nodenumber, A1),DVec_2D_tmp[1], InvTau_tmp);
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Reis(i, nodenumber, A1),DVec_2D_tmp[1], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
 	}
 }
 void D2Q9ColourFluid::Collision_SurfaceForce(int & nodenumber, int* connect,int & normal,double* fi){
@@ -756,7 +756,7 @@ void D2Q9ColourFluid::Collision_SurfaceForce(int & nodenumber, int* connect,int 
 	{
 		//Save the mixture distribution for recolouring
 		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
-		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], F[0][nodenumber],F[1][nodenumber], InvTau_tmp);
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], F[0][nodenumber],F[1][nodenumber], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
 	}
 }
 

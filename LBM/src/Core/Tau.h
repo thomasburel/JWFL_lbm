@@ -14,7 +14,7 @@ class TauDEF {
 public:
 	TauDEF();
 	virtual ~TauDEF();
-	virtual double Get_InvTau(double const &Rho, double const &RhoN)=0;
+	virtual double& Get_InvTau(double const &Rho, double const &RhoN)=0;
 	void Init_Tau(double Tau_,double cs2_,double deltaT_){InvTau=1/Tau_;cs2=cs2_;deltaT=deltaT_;};
 	virtual void Set_mu(double mu1_,double mu2_=0)=0;
 inline	double Convert_TauToNu(double Tau_){return (Tau_-0.5)*cs2*deltaT;};
@@ -30,7 +30,7 @@ class ConstTau: public TauDEF {
 public:
 	ConstTau();
 	virtual ~ConstTau();
-	virtual double Get_InvTau(double const &Rho, double const &RhoN){return InvTau;};
+	virtual double& Get_InvTau(double const &Rho, double const &RhoN){return InvTau;};
 	virtual void Set_mu(double mu1_,double mu2_=0){};
 };
 
@@ -38,7 +38,7 @@ class HarmonicViscosity: public TauDEF {
 public:
 	HarmonicViscosity();
 	virtual ~HarmonicViscosity();
-	virtual double Get_InvTau(double const &Rho, double const &RhoN);
+	virtual double& Get_InvTau(double const &Rho, double const &RhoN);
 	virtual void Set_mu(double mu1_,double mu2_=0){mu1=mu1_;mu2=mu2_;};
 private:
 	double CalculTau(double const &Rho, double const &RhoN);
@@ -50,9 +50,9 @@ private:
 class Tau {
 public:
 	Tau();
-	Tau(Parameters *Param);
+	void IniTau(Parameters *Param);
 	virtual ~Tau();
-	double Get_InvTau(double const Rho=1, double const RhoN=0);
+	double& Get_InvTau(double const Rho=1, double const RhoN=0);
 private:
 	TauDEF* tau;
 };
