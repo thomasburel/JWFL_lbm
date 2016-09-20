@@ -35,3 +35,15 @@ void UserParameters::Get_UserParameters(double & Umax_,double & H_,double & L_,d
 	Pmin_=Pmin;
 
 }
+void UserParameters::Set_TwoPhaseUserParameters(double Re_, double Ca_, double Diameter_, double sigma_){
+	ReUser=Re_;
+	CaUser=Ca_;
+	DiameterUser=Diameter_;
+	sigmaUser=sigma_;
+}
+void UserParameters::Get_TwoPhaseUserParameters(double &Re_, double &Ca_, double &Diameter_, double &sigma_){
+	Re_=ReUser;
+	Ca_=CaUser;
+	Diameter_=DiameterUser;
+	sigma_=sigmaUser;
+}

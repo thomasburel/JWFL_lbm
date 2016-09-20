@@ -10,6 +10,7 @@
 
 #include "Parameters.h"
 #include "Solution.h"
+#include "Tau.h"
 #include "../Algorithm/LowOrder/CollideLowOrder.h"
 #include "../Algorithm/LowOrder/StreamLowOrder.h"
 #include "InitLBM.h"
@@ -22,7 +23,7 @@
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/assume_abstract.hpp>
 
-class Solver {
+class Solver: public Tau{
 public:
 	Solver();
 	virtual ~Solver();

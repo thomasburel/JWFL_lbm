@@ -218,6 +218,9 @@ void SolverParameters::set_SolverParameters()
 		{
 		case Q9:
 			NbVelocities=9;
+			cs=1/std::sqrt(3);
+			cs2=1/3;
+			deltaT=1;
 			break;
 		default:
 			std::cout<< "Scheme not found" << std::endl;
