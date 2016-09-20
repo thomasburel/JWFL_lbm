@@ -316,8 +316,14 @@ public:
 	void Set_GradientType(GradientType GradientType_){Gradient=GradientType_;};
 	GradientType Get_GradientType() const{return Gradient;};
 	int Get_NbVelocities() const;
+	double Convert_TauToNu(double Tau_){return (Tau_-0.5)*cs2*deltaT;};
+	double Convert_MutoNu(double mu_,double rho){return mu_/rho;};
+	double Convert_NutoMu(double nu_,double rho){return nu_*rho;};
+	double Convert_NuToTau(double nu_){return nu_/(cs2*deltaT)+0.5;};
 
-
+	double Get_cs() const {return cs;};
+	double Get_cs2() const {return cs2;};
+	double Get_deltaT() const {return deltaT;};
 protected:
 	schemetype scheme;
 	modeltype model;
@@ -325,6 +331,8 @@ protected:
 	GradientType Gradient;
 	UserForceType UserForce;
 	int NbVelocities;
+	double cs,cs2;
+	double deltaT;
 
 
 

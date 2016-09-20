@@ -495,7 +495,7 @@ void D2Q9ColourFluid::Colour_gradient(){
 	// Common variables
 		idx_tmp=NodeArrays->NodePeriodic[j].Get_index();
 	// Calculate gradients
-		(this->*PtrColourGradBc)(idx_tmp,NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_BcNormal());
+		(this->*PtrColourGrad)(idx_tmp,NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_BcNormal());
 	}
 }
 void D2Q9ColourFluid::ColourFluid_Collision()

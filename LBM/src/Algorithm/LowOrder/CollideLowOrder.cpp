@@ -50,7 +50,8 @@ void CollideLowOrder::Collide_2D_SinglePhase(int & i, double &fi,double &rho, do
 }
 ///Collision Single phase step with a local (directional) force calculated from User force or model or both
 void CollideLowOrder::Collide_2D_SinglePhase_With_LocalForce(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
-	fi= fi-InvTau*(fi-EquiDistriFunct2D(rho, u, v,EiCollide[i], omegaCollide[i]))+LocalForce(i, rho, u, v)+Fx;
+	Fx+=LocalForce(i, rho, u, v);
+	fi= fi-InvTau*(fi-EquiDistriFunct2D(rho, u, v,EiCollide[i], omegaCollide[i]))+Fx;
 }
 ///Collision Single phase step with a body force calculated from User force or model or both
 void CollideLowOrder::Collide_2D_SinglePhase_With_BodyForce(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){

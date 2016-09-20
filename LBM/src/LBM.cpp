@@ -28,7 +28,7 @@ int main(int argc, char *argv[]) {
 
 	double Umax=0.132013201320132;//0.01;
 	double H=100;
-	double L=100;
+	double L=300;
 	double Pmax=1.00001;
 
 	double Pmin=0.99999;
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 	//Umax=re*nu/(H+1);
 	Umax=0.003;*/
 
-	Pmax=1.0001;
+	Pmax=1;
 	Pmin=1;
 
 	cout<<"Reynolds: "<<re<< " Tau: "<<tau<< " Nu: "<<nu<<" U: "<<Umax<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<endl;
@@ -96,7 +96,7 @@ int main(int argc, char *argv[]) {
 // Set User Force type
 	Param.Set_UserForceType(None);
 // Set delta x for output
-	Param.Set_deltax(1/H);
+	Param.Set_deltax(1);
 
 // Single phase Parameters
 	Param.Set_Tau(tau);
@@ -107,7 +107,7 @@ int main(int argc, char *argv[]) {
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
 //	Param.Set_BcType(Velocity,Periodic,Velocity,Periodic);
 	Param.Set_BcType(Periodic,Periodic,Periodic,Periodic);
-	Param.Set_BcType(Periodic,Periodic,Periodic,Periodic);
+	Param.Set_BcType(Velocity,Periodic,Velocity,Periodic);
 /// Set Pressure Type
 	Param.Set_PressureType(FixP);
 /// Set Global Corner type
@@ -116,7 +116,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_WallType(BounceBack);
 
 /// Number of maximum timestep
-	Param.Set_NbStep(10000);
+	Param.Set_NbStep(300000);
 /// Interval for output
 	Param.Set_OutPutNSteps(200);// interval
 ///Display information during the calculation every N iteration
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_Model(ColourFluid);
 
 	//Gradient definition
-	Param.Set_GradientType(FD); //FD or LBMStencil
+	Param.Set_GradientType(LBMStencil); //FD or LBMStencil
 
 /// Singlephase Parameters
 	Param.Set_Rho(1.0);
@@ -148,7 +148,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_Tau_1(tau);
 	Param.Set_Tau_2(tau);
 	//Surface tension
-	Param.Set_SurfaceTension(0.1);
+	Param.Set_SurfaceTension(0.0001);
 	//Colour fluid Parameters
 	Param.Set_A1(0.00001);
 	Param.Set_A2(Param.Get_A1());
