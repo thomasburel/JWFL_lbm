@@ -47,8 +47,8 @@ ConstTau::ConstTau() {
 ConstTau::~ConstTau() {
 }
 HarmonicViscosity::HarmonicViscosity(){
-	mu1=0.01;
-	mu2=mu1;
+	mu2_1=0.01;
+	mu2_2=mu2_1;
 }
 
 HarmonicViscosity::~HarmonicViscosity(){
@@ -63,5 +63,5 @@ double HarmonicViscosity::CalculTau(double const &Rho, double const &RhoN){
 	return Convert_NuToTau(Convert_MutoNu(CalculHarmonicViscosity(RhoN),Rho));
 }
 double HarmonicViscosity::CalculHarmonicViscosity(double const &RhoN){
-	return 1/((1+RhoN)/mu1+(1-RhoN)/mu2);
+	return 1/((1+RhoN)/mu2_1+(1-RhoN)/mu2_2);
 }

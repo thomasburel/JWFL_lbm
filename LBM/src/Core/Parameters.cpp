@@ -52,6 +52,8 @@ Parameters::Parameters()
 	VelocityTypeParam=FixV;
 	CornerModelParam=HoChan;
 	CornerPressureTypeParam=ExtrapolCP;
+	tetaType=NoTeta;
+	teta=std::acos(-1)/2;// pi/2
 }
 
 Parameters::~Parameters() {
@@ -219,7 +221,7 @@ void SolverParameters::set_SolverParameters()
 		case Q9:
 			NbVelocities=9;
 			cs=1/std::sqrt(3);
-			cs2=1/3;
+			cs2=cs*cs;
 			deltaT=1;
 			break;
 		default:

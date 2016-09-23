@@ -151,6 +151,14 @@ void D2Q9TwoPhases::init(InitLBM& ini){
 		U[0][NodeArrays->NodeSymmetry[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSymmetry[j].Get_index()]=U_[1];
 	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+		pos[0]=NodeArrays->NodePeriodic[j].get_x();
+		pos[1]=NodeArrays->NodePeriodic[j].get_y();
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodePeriodic[j],0, NodeArrays->NodePeriodic[j].Get_index(),pos,Rho[NodeArrays->NodePeriodic[j].Get_index()],U_,alpha);
+		U[0][NodeArrays->NodePeriodic[j].Get_index()]=U_[0];
+		U[1][NodeArrays->NodePeriodic[j].Get_index()]=U_[1];
+	}
 	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 		pos[0]=NodeArrays->NodeGhost[j].get_x();

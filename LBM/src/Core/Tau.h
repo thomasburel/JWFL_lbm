@@ -39,11 +39,11 @@ public:
 	HarmonicViscosity();
 	virtual ~HarmonicViscosity();
 	virtual double& Get_InvTau(double const &Rho, double const &RhoN);
-	virtual void Set_mu(double mu1_,double mu2_=0){mu1=mu1_;mu2=mu2_;};
+	virtual void Set_mu(double mu1_,double mu2_=0){mu2_1=2*mu1_;mu2_2=2*mu2_;};
 private:
 	double CalculTau(double const &Rho, double const &RhoN);
 	double CalculHarmonicViscosity(double const &RhoN);
-	double mu1,mu2;
+	double mu2_1,mu2_2;//two times kinematic viscosity
 
 };
 
