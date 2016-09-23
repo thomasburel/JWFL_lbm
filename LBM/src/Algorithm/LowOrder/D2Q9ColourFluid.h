@@ -51,6 +51,9 @@ private:
 // Colour gradient definition
 	void Set_Colour_gradient();
 	void Colour_gradient();
+
+	void Colour_gradient_FixTeta(int & nodenumber, int* connect,int & normal);
+	void Colour_gradient_NoCstTeta(int & nodenumber, int* connect,int & normal);
 	void Colour_gradient_Gunstensen(int & nodenumber, int* connect,int & normal);
 	void Colour_gradient_DensityGrad(int & nodenumber, int* connect,int & normal);
 	void Colour_gradient_DensityGradBc(int & nodenumber, int* connect,int & normal);
@@ -100,6 +103,7 @@ private:
 	double **F, **G;///< Surface Force and Colour gradient/density gradient
 	double *G_Norm;///< Norm of the colour gradient
 	double tension;///< Surface tension
+	double *teta;///< Contact angle
 	double beta;///< Separation coefficient for the recolouring method
 	double A1;///< Guntensen parameter for the red fluid
 	double A2;///< Guntensen parameter for the blue fluid
@@ -122,6 +126,7 @@ private:
 //Define name for pointers on functions
 	ColourGrad PtrColourGrad;///< Colour gradient pointer for interior nodes
 	ColourGrad PtrColourGradBc;///< Colour gradient pointer for boundary condition nodes
+	ColourGrad PtrColourGradWall;///< Colour gradient pointer for wall nodes (force the contact angle)
 	ColourGrad PtrColourGradCorner;///< Colour gradient pointer for corner nodes
 	Recolour PtrRecolour;///< Recolouring pointer
 	Macro PtrMacro;///< Macroscopic pointer

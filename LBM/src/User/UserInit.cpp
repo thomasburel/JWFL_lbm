@@ -26,52 +26,16 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 
 	double Umax,H,L,Pmax,Pmin;
 	PtrParameters.Get_UserParameters(Umax,H,L,Pmax,Pmin);
-
-		//if (pos[1]>0.1 && pos[1]<H-0.1)
-		//U[0]=Umax;//*4.0*(pos[1]/H)*(1-(pos[1]/H));
-	//else
-		//U[0]=0.0;
-		U[0]=0.0;//002;
-	U[1]=0.0;
-	//Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
-	//Rho=(Pmin+Pmax)/2.0;
-	//Rho=Pmax;
-	//Rho=Pmin;
-	Rho=Pmin;
-
-/*	if (pos[0]==L)
-		Rho=Pmin;
-	if (pos[0]==0)
-		Rho=Pmax;
-*/
-//	Rho=1;
-/*	if(pos[0]<=3)
-		Rho=1.1;
+	if(pos[0<=0])
+		U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
 	else
-		Rho=0.9;*/
-	//Rho=Pmax;
-
-	//Rho=0;
-	//if (pos[0]==L)
-	//	Rho=Pmax;
-	//Rho=1.0;//Pmax-pos[0]*(Pmax-Pmin)/H;
-	/*double coef=0.5;
-	if(pos[0]<L/2)
-	{
-		if(pos[1]>H/2)
-			Rho=Pmax+coef*(Pmax-Pmin);
-		else
-			Rho=Pmax-coef*(Pmax-Pmin);
-
-		if(pos[1]==0 && pos[0]==0) std::cout<<"Pressure inlet downstream"<<Rho<<std::endl;
-		if(pos[1]==H && pos[0]==0) std::cout<<"Pressure inlet upstream"<<Rho<<std::endl;
-	}
-	else
-		Rho=Pmin;*/
-
+		U[0]=0.0;
+	U[1]=0;
+	Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+	/*
 //*********** Poiseuille ini***************
-	double Ubot=-0.01;//-0.01;
-	double Utop=0.01;//0.01;
+	double Ubot=-Umax;//-0.01;
+	double Utop=Umax;//0.01;
 	double Vleft=0;//-0.01;
 	double Vright=0;//0.01;
 //Left side of the domain
@@ -146,38 +110,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;//Pmax-pos[0]*(Pmax-Pmin)/L;
   		alpha=0;
   	}
-
-
-//*********** Driven Cavity***************
-/*	if(pos[1]>0.1 )
-			U[0]=Umax;
-		else
-			U[0]=0;
-		U[1]=0.0;
-		Rho=Pmin;*/
-
-//	Rho=PtrParameters.Get_Rho_2();
-//	alpha=0;
-
-	/*if(pos[0]>1)
-		{
-		Rho=Pmin;
-		U[0]=Umax;
-		}
-	else
-	{
-		Rho=Pmin;
-		U[0]=Umax;
-
-	}
-	if(pos[1]==0||pos[1]==H)//wall*/
-/*		U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
-		U[1]=0;
-	Rho=Pmax-pos[0]*(Pmax-Pmin)/L;*/
-/*	U[0]=0;
-	U[1]=0;
-	Rho=1;
-	alpha=0;*/
+*/
 }
 
 void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U, double& alpha){
@@ -186,53 +119,7 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 	PtrParameters.Get_UserParameters(Umax,H,L,Pmax,Pmin);
 	PtrParameters.Get_TwoPhaseUserParameters(Re,Ca,diameter, sigma);
 
-	//U[0]=Umax;//*4.0*(pos[1]/H)*(1-(pos[1]/H));///pos[0];
-	//U[0]=0.0;
-	U[0]=0.00;//02;
-	U[1]=0.0;
-	//Rho=(Pmax+Pmin)/2.0;
-	Rho=Pmin;
-	int dx=15;
-	if((pos[0]>=L/2-dx&&pos[0]<=L/2+dx)&&(pos[1]>=H/2-dx&&pos[1]<=H/2+dx))
-	{
-		alpha=1;
-		Rho=PtrParameters.Get_Rho_1();
-//		std::cout<<" Node number fluid 1 are: "<<nodenumber<<" x: "<<pos[0]<<" y: "<<pos[1]<<std::endl;
-	}
-	else
-	{
-		alpha=0;
-		Rho=PtrParameters.Get_Rho_2();
-	}
-	Rho=Pmin;
-	U[0]=Umax;
-	U[1]=0;
-//	Rho=PtrParameters.Get_Rho_2();
-//	Rho=1;
-	//Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
 
-/*	if(pos[0]<=3)
-		Rho=1.1;
-	else
-		Rho=0.9;*/
-	//Rho=Pmax;
-
-	//U[0]=Umax;
-/*	U[0]=0.0;
-	U[1]=0.0;
-	Rho=1;*/
-	//Rho=1;
-	//U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
-	U[0]=0;//Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
-	U[1]=0;
-	Rho=Pmin;//Pmax-pos[0]*(Pmax-Pmin)/L;
-	alpha=0;
-	if(pos[0]<=0)
-	{
-		Rho=Pmax;
-		alpha=1;
-	}
-	//*********** Poiseuille ini***************
 		double Ubot=0;//-0.01;
 		double Utop=0;//0.01;
 		double Vleft=0;//-0.01;
