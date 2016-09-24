@@ -79,6 +79,7 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 	parallel=PtrParallel_;
 	Writer=PtrWriter_;
 	Solver::PtrParameters=PtrParameters_;
+	IniTau(PtrParameters);
 	PtrBlockStream=MultiBlock_->Get_Block();
 	PtrBlockCollide=PtrBlockStream;
 	//Node=MultiBlock_->Get_Block()->Get_PtrNode();
@@ -119,6 +120,7 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	parallel=PtrParallel_;
 	Writer=PtrWriter_;
 	Solver::PtrParameters=PtrParameters_;
+	IniTau(PtrParameters);
 	PtrBlockStream=MultiBlock_->Get_Block();
 	NodeArrays=MultiBlock_->Get_Block()->Get_NodeArrays2D();
 	IdBoundaries=MultiBlock_->Get_Block()->Get_PtrIdBc();

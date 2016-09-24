@@ -163,9 +163,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				}
 			}
 		}
-		else
-		{
-			if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
+		else	if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
 			{
 				if(NodeTypeTmp1==Wall)
 					switch(NodeTypeTmp2)
@@ -201,7 +199,6 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
 				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
 			}
-		}
 		break;
 	case 6:
 		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[2]];
@@ -326,9 +323,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 			}
 
 		}
-		else
-		{
-			if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
+		else	if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
 			{
 				if(NodeTypeTmp1==Wall)
 					switch(NodeTypeTmp2)
@@ -359,11 +354,11 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
+			{
 				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
 				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
 				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
-		}
-
+			}
 		break;
 	case 7:
 		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[4]];
@@ -488,9 +483,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 			}
 
 		}
-		else
-		{
-			if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
+		else	if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
 			{
 				if(NodeTypeTmp1==Wall)
 					switch(NodeTypeTmp2)
@@ -521,10 +514,11 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
+			{
 				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
 				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
 				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
-		}
+			}
 		break;
 	case 8:
 		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[4]];
@@ -649,9 +643,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 				}
 			}
 		}
-		else
-		{
-			if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
+		else if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
 			{
 				if(NodeTypeTmp1==Wall)
 					switch(NodeTypeTmp2)
@@ -682,10 +674,11 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						}
 			}
 			else
+			{
 				BcMethods->Get_CalculU(Node.Get_BcNormal(),Node.Get_connect(),UDef,U,V,UDef_tmp,VDef_tmp);
 				BcMethods->Get_CalculRho(Node.Get_BcNormal(),Node.Get_connect(),Rho_def,Rho,RhoDef_tmp);
 				BcMethods->ApplyCorner(Node,f_in,RhoDef_tmp,UDef_tmp,VDef_tmp,Rho,U,V);
-		}
+			}
 		break;
 	default:
 		std::cerr<<"Direction: "<< Node.Get_BcNormal()<<" not found for Global Corner"<<std::endl;

@@ -93,7 +93,8 @@ void D2Q9Corner::ApplyHoChan(NodeCorner2D& Node, DistriFunct* f_in, double Rho, 
       case 8: //Top West
     	  InvV=-V;
     	  FUNC_corner(f_in->f[0][Node.Get_index()],f_in->f[1][Node.Get_index()],f_in->f[4][Node.Get_index()],f_in->f[8][Node.Get_index()],f_in->f[7][Node.Get_index()],f_in->f[5][Node.Get_index()],f_in->f[3][Node.Get_index()],f_in->f[2][Node.Get_index()],f_in->f[6][Node.Get_index()],U,InvV,Rho);
-   	  break;
+//    	  std::cout<<"Rho def: "<<Rho<<" Rho cal: "<<f_in->f[0][Node.Get_index()]+f_in->f[1][Node.Get_index()]+f_in->f[2][Node.Get_index()]+f_in->f[3][Node.Get_index()]+f_in->f[4][Node.Get_index()]+f_in->f[5][Node.Get_index()]+f_in->f[6][Node.Get_index()]+f_in->f[7][Node.Get_index()]+f_in->f[8][Node.Get_index()]<<std::endl;
+    	  break;
       case 5: //Bottom West
     	  FUNC_corner(f_in->f[0][Node.Get_index()],f_in->f[1][Node.Get_index()],f_in->f[2][Node.Get_index()],f_in->f[5][Node.Get_index()],f_in->f[6][Node.Get_index()],f_in->f[8][Node.Get_index()],f_in->f[3][Node.Get_index()],f_in->f[4][Node.Get_index()],f_in->f[7][Node.Get_index()],U,V,Rho);
     	  break;

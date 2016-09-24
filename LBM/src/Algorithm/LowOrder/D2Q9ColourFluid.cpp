@@ -10,7 +10,9 @@
 D2Q9ColourFluid::D2Q9ColourFluid() {
 	Rhor=0;
 	Rhob=0;
+	RhoN=0;
 	PtrColourGrad=0;
+	PtrColourGradWall=0;
 	PtrColourGradBc=0;
 	PtrColourGradCorner=0;
 	PtrCollision=0;
@@ -26,6 +28,7 @@ D2Q9ColourFluid::D2Q9ColourFluid() {
 	G=0;
 	G_Norm=0;
 	tension=0;
+	teta=0;
 
 
 }
@@ -84,7 +87,7 @@ if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce && PtrParameters->Ge
 {
 	std::cout<<" Warming: The local user force will be ignored. The colour model with the surface force is incompatible with a local user force"<<std::endl;
 }
-	if(PtrParameters->Get_FluidType()==Newtonian)
+	if(PtrParameters->Get_FluidType()==Newtonian &&(PtrParameters->Get_Tau_1()==PtrParameters->Get_Tau_2()))
 	{
 		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
 			{Select_Collide_2D(Std2DBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
@@ -109,6 +112,11 @@ if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce && PtrParameters->Ge
 
 }
 void D2Q9ColourFluid::Set_Colour_gradient(){
+	//Allocate teta if needed
+	if(PtrParameters->Get_ContactAngleType()==FixTeta)
+		teta=new double[1];
+	else if(PtrParameters->Get_ContactAngleType()==NonCstTeta)
+		Dic->AddVar(Scalar,"Teta",true,true,false,teta);
 
 		switch(PtrParameters->Get_ColourGradType())
 		{
@@ -117,27 +125,37 @@ void D2Q9ColourFluid::Set_Colour_gradient(){
 			{
 				std::cout<<" Force colour gradient to Density Normal gradient due to Surface force model."<<std::endl;
 				PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
+				PtrColourGradWall =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
 				PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradBc;
 				PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradCorner;
 			}
 			else
 			{
 			PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_Gunstensen;
+			PtrColourGradWall =&D2Q9ColourFluid::Colour_gradient_Gunstensen;
 			PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_Gunstensen;
 			PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_Gunstensen;
 			}
 			break;
 		case DensityGrad:
 			PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityGrad;
+			PtrColourGradWall =&D2Q9ColourFluid::Colour_gradient_DensityGrad;
 			PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_DensityGradBc;
 			PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_DensityGradCorner;
 			break;
 		case DensityNormalGrad:
 			PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
+			PtrColourGradWall =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
 			PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradBc;
 			PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradCorner;
 			break;
 		}
+	// Force teta value
+		if(PtrParameters->Get_ContactAngleType()==FixTeta)
+			PtrColourGradWall =&D2Q9ColourFluid::Colour_gradient_FixTeta;
+		else if(PtrParameters->Get_ContactAngleType()==NonCstTeta)
+			PtrColourGradWall =&D2Q9ColourFluid::Colour_gradient_NoCstTeta;
+
 }
 void D2Q9ColourFluid::Set_Macro(){
 	switch(PtrParameters->Get_ColourGradType())
@@ -435,6 +453,7 @@ void D2Q9ColourFluid::run(){
 ///Calculate the colour gradient by Gunstensen formulation, density gradient or normal density gradient
 void D2Q9ColourFluid::Colour_gradient(){
 	int idx_tmp;int normal_interior=0;
+	double teta;
 	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
 	{
 	// Common variables
@@ -495,7 +514,7 @@ void D2Q9ColourFluid::Colour_gradient(){
 	// Common variables
 		idx_tmp=NodeArrays->NodePeriodic[j].Get_index();
 	// Calculate gradients
-		(this->*PtrColourGradBc)(idx_tmp,NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_BcNormal());
+		(this->*PtrColourGrad)(idx_tmp,NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_BcNormal());
 	}
 }
 void D2Q9ColourFluid::ColourFluid_Collision()
@@ -510,6 +529,7 @@ void D2Q9ColourFluid::ColourFluid_Collision()
 	double  InvTau_;
 	double fi_tmp[9];
 	InvTau_=InvTau; //Tmp
+
 //	std::cout<<" Nd Interior: "<<NodeArrays->NodeInterior.size()<<std::endl;
 	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
 	{
@@ -603,6 +623,55 @@ void D2Q9ColourFluid::ColourFluid_Collision()
 	 return A1*0.5*F_Norm*(EiGperGNorm*EiGperGNorm-3/4);
 }*/
 
+
+void D2Q9ColourFluid::Colour_gradient_FixTeta(int & nodenumber, int* connect,int & normal){
+	switch(normal)
+	{
+	case 1:
+		G[0][nodenumber]=std::cos(teta[0]);
+		G[1][nodenumber]=std::sin(teta[0]);
+		break;
+	case 2:
+		G[0][nodenumber]=std::sin(teta[0]);
+		G[1][nodenumber]=std::cos(teta[0]);
+		break;
+	case 3:
+		G[0][nodenumber]=-std::cos(teta[0]);
+		G[1][nodenumber]=std::sin(teta[0]);
+		break;
+	case 4:
+		G[0][nodenumber]=std::sin(teta[0]);
+		G[1][nodenumber]=-std::cos(teta[0]);
+		break;
+	default:
+		std::cerr<<" Normal for Colour gradient Fix Teta is not found"<<std::endl;
+	}
+	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
+}
+void D2Q9ColourFluid::Colour_gradient_NoCstTeta(int & nodenumber, int* connect,int & normal){
+	switch(normal)
+	{
+	case 1:
+		G[0][nodenumber]=std::cos(teta[nodenumber]);
+		G[1][nodenumber]=std::sin(teta[nodenumber]);
+		break;
+	case 2:
+		G[0][nodenumber]=std::sin(teta[nodenumber]);
+		G[1][nodenumber]=std::cos(teta[nodenumber]);
+		break;
+	case 3:
+		G[0][nodenumber]=-std::cos(teta[nodenumber]);
+		G[1][nodenumber]=std::sin(teta[nodenumber]);
+		break;
+	case 4:
+		G[0][nodenumber]=std::sin(teta[nodenumber]);
+		G[1][nodenumber]=-std::cos(teta[nodenumber]);
+		break;
+	default:
+		std::cerr<<" Normal for Colour gradient non constant Teta is not found"<<std::endl;
+	}
+	G_Norm[nodenumber]=std::sqrt(G[0][nodenumber]*G[0][nodenumber]+G[1][nodenumber]*G[1][nodenumber]);
+}
 
 
 void D2Q9ColourFluid::Colour_gradient_Gunstensen(int & nodenumber, int* connect,int & normal){
@@ -723,24 +792,24 @@ void D2Q9ColourFluid::Collision_Grunau(int & nodenumber, int* connect,int & norm
 	double InvTau_tmp=InvTau; int i0=0;
 	fi[0]=f[0]->f[0][nodenumber]+f[1]->f[0][nodenumber];
 	DVec_2D_tmp[0]=0;DVec_2D_tmp[1]=0;
-	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], InvTau_tmp);
+	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
 	for (int i=1;i<9;i++)
 	{
 		//Save the mixture distribution for recolouring
 		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
-		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Grunau(i, nodenumber, A1),DVec_2D_tmp[1], InvTau_tmp);
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Grunau(i, nodenumber, A1),DVec_2D_tmp[1], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
 	}
 }
 void D2Q9ColourFluid::Collision_Reis(int & nodenumber, int* connect,int & normal,double* fi){
 	double InvTau_tmp=InvTau; int i0=0;
 	fi[0]=f[0]->f[0][nodenumber]+f[1]->f[0][nodenumber];
 	DVec_2D_tmp[0]=0;DVec_2D_tmp[1]=0;
-	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], InvTau_tmp);
+	Collide_2D(i0, fi[0],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], DVec_2D_tmp[0],DVec_2D_tmp[1], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
 	for (int i=1;i<9;i++)
 	{
 		//Save the mixture distribution for recolouring
 		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
-		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Reis(i, nodenumber, A1),DVec_2D_tmp[1], InvTau_tmp);
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], Collision_operator_Reis(i, nodenumber, A1),DVec_2D_tmp[1], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
 	}
 }
 void D2Q9ColourFluid::Collision_SurfaceForce(int & nodenumber, int* connect,int & normal,double* fi){
@@ -756,7 +825,7 @@ void D2Q9ColourFluid::Collision_SurfaceForce(int & nodenumber, int* connect,int 
 	{
 		//Save the mixture distribution for recolouring
 		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
-		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], F[0][nodenumber],F[1][nodenumber], InvTau_tmp);
+		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], F[0][nodenumber],F[1][nodenumber], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
 	}
 }
 

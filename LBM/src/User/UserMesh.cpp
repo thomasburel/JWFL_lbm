@@ -45,7 +45,11 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 
 
 //Square
-	if(Node.get_y()>=40 && Node.get_y()<=60 && Node.get_x()>=40 && Node.get_x()<=60)
+/* 	int L=100;
+	int H=100;
+	double dx=5;
+	double dy=dx;
+	if(Node.get_y()>=H/2-dy && Node.get_y()<=H/2+dy && Node.get_x()>=L/2-dx && Node.get_x()<=L/2+dx)
 		{
 			solid=true;
 		}
@@ -53,6 +57,7 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 		{
 			solid=false;
 		}
+*/
 
 
 //Cross

@@ -26,9 +26,12 @@ public:
 	virtual ~UserParameters();
 	void Get_UserParameters(double & Umax_,double & H_,double & L_,double & Pmax_,double & Pmin_);
 	void Set_UserParameters(double  Umax_,double  H_,double  L_,double  Pmax_,double  Pmin_);
+	void Set_TwoPhaseUserParameters(double Re_, double Ca_, double Diameter_, double sigma_);
+	void Get_TwoPhaseUserParameters(double &Re_, double &Ca_, double &Diameter_, double &sigma_);
 
 private:
 	double Umax,H,L,Pmax,Pmin;
+	double ReUser,CaUser,DiameterUser,sigmaUser;
 
 };
 

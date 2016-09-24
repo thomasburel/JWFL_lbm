@@ -430,48 +430,40 @@ void D2Q9::StreamD2Q9() {
 }
 void D2Q9::CollideD2Q9_node(){
 	double wtmp=0;
+	double Fx, Fy, InvTau_tmp;
 	for (int i=0;i<nbvelo;i++)
 	{
 		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
 		{
-			f->f[i][NodeArrays->NodeInterior[j].Get_index()]= f->f[i][NodeArrays->NodeInterior[j].Get_index()]-InvTau*(f->f[i][NodeArrays->NodeInterior[j].Get_index()]-CollideLowOrder::EquiDistriFunct2D(Rho[NodeArrays->NodeInterior[j].Get_index()], U[0][NodeArrays->NodeInterior[j].Get_index()], U[1][NodeArrays->NodeInterior[j].Get_index()], &Ei[i][0], omega[i]))
-					;//+LocalForce(i,Rho[NodeArrays->NodeCorner[j].Get_index()],U[0][NodeArrays->NodeInterior[j].Get_index()],U[1][NodeArrays->NodeInterior[j].Get_index()],wtmp);
+			Collide_2D(i, f->f[i][NodeArrays->NodeInterior[j].Get_index()],Rho[NodeArrays->NodeInterior[j].Get_index()], U[0][NodeArrays->NodeInterior[j].Get_index()], U[1][NodeArrays->NodeInterior[j].Get_index()], Fx, Fy, Get_InvTau());
 		}
 		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
-			f->f[i][NodeArrays->NodeCorner[j].Get_index()]= f->f[i][NodeArrays->NodeCorner[j].Get_index()]-InvTau*(f->f[i][NodeArrays->NodeCorner[j].Get_index()]-CollideLowOrder::EquiDistriFunct2D(Rho[NodeArrays->NodeCorner[j].Get_index()], U[0][NodeArrays->NodeCorner[j].Get_index()], U[1][NodeArrays->NodeCorner[j].Get_index()], &Ei[i][0], omega[i]))
-					;//+LocalForce(i,Rho[NodeArrays->NodeCorner[j].Get_index()],U[0][NodeArrays->NodeCorner[j].Get_index()],U[1][NodeArrays->NodeCorner[j].Get_index()],wtmp);
+			Collide_2D(i, f->f[i][NodeArrays->NodeCorner[j].Get_index()],Rho[NodeArrays->NodeCorner[j].Get_index()], U[0][NodeArrays->NodeCorner[j].Get_index()], U[1][NodeArrays->NodeCorner[j].Get_index()], Fx, Fy, Get_InvTau());
 		}
 		for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
-			f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]= f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]-InvTau*(f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]-CollideLowOrder::EquiDistriFunct2D(Rho[NodeArrays->NodeGlobalCorner[j].Get_index()], U[0][NodeArrays->NodeGlobalCorner[j].Get_index()], U[1][NodeArrays->NodeGlobalCorner[j].Get_index()], &Ei[i][0], omega[i]))
-					;//+LocalForce(i,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U[0][NodeArrays->NodeGlobalCorner[j].Get_index()],U[1][NodeArrays->NodeGlobalCorner[j].Get_index()],wtmp);
+			Collide_2D(i, f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()],Rho[NodeArrays->NodeGlobalCorner[j].Get_index()], U[0][NodeArrays->NodeGlobalCorner[j].Get_index()], U[1][NodeArrays->NodeGlobalCorner[j].Get_index()], Fx, Fy, Get_InvTau());
 		}
 		for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
 		{
-			f->f[i][NodeArrays->NodeVelocity[j].Get_index()]= f->f[i][NodeArrays->NodeVelocity[j].Get_index()]-InvTau*(f->f[i][NodeArrays->NodeVelocity[j].Get_index()]-CollideLowOrder::EquiDistriFunct2D(Rho[NodeArrays->NodeVelocity[j].Get_index()], U[0][NodeArrays->NodeVelocity[j].Get_index()], U[1][NodeArrays->NodeVelocity[j].Get_index()], &Ei[i][0], omega[i]))
-					;//+LocalForce(i,Rho[NodeArrays->NodeVelocity[j].Get_index()],U[0][NodeArrays->NodeVelocity[j].Get_index()],U[1][NodeArrays->NodeVelocity[j].Get_index()],wtmp);
+			Collide_2D(i, f->f[i][NodeArrays->NodeVelocity[j].Get_index()],Rho[NodeArrays->NodeVelocity[j].Get_index()], U[0][NodeArrays->NodeVelocity[j].Get_index()], U[1][NodeArrays->NodeVelocity[j].Get_index()], Fx, Fy, Get_InvTau());
 		}
-
 		for (int j=0;j<NodeArrays->NodePressure.size();j++)
 		{
-			f->f[i][NodeArrays->NodePressure[j].Get_index()]= f->f[i][NodeArrays->NodePressure[j].Get_index()]-InvTau*(f->f[i][NodeArrays->NodePressure[j].Get_index()]-CollideLowOrder::EquiDistriFunct2D(Rho[NodeArrays->NodePressure[j].Get_index()], U[0][NodeArrays->NodePressure[j].Get_index()], U[1][NodeArrays->NodePressure[j].Get_index()], &Ei[i][0], omega[i]))
-					;//+LocalForce(i,Rho[NodeArrays->NodePressure[j].Get_index()],U[0][NodeArrays->NodePressure[j].Get_index()],U[1][NodeArrays->NodePressure[j].Get_index()],wtmp);
+			Collide_2D(i, f->f[i][NodeArrays->NodePressure[j].Get_index()],Rho[NodeArrays->NodePressure[j].Get_index()], U[0][NodeArrays->NodePressure[j].Get_index()], U[1][NodeArrays->NodePressure[j].Get_index()], Fx, Fy, Get_InvTau());
 		}
 		for (int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
-			f->f[i][NodeArrays->NodeWall[j].Get_index()] = f->f[i][NodeArrays->NodeWall[j].Get_index()]-InvTau*(f->f[i][NodeArrays->NodeWall[j].Get_index()]-CollideLowOrder::EquiDistriFunct2D(Rho[NodeArrays->NodeWall[j].Get_index()], U[0][NodeArrays->NodeWall[j].Get_index()], U[1][NodeArrays->NodeWall[j].Get_index()], &Ei[i][0], omega[i]))
-					;//+LocalForce(i,Rho[NodeArrays->NodeWall[j].Get_index()],U[0][NodeArrays->NodeWall[j].Get_index()],U[1][NodeArrays->NodeWall[j].Get_index()],wtmp);
+			Collide_2D(i, f->f[i][NodeArrays->NodeWall[j].Get_index()],Rho[NodeArrays->NodeWall[j].Get_index()], U[0][NodeArrays->NodeWall[j].Get_index()], U[1][NodeArrays->NodeWall[j].Get_index()], Fx, Fy, Get_InvTau());
 		}
 		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
-			f->f[i][NodeArrays->NodeSymmetry[j].Get_index()] = f->f[i][NodeArrays->NodeSymmetry[j].Get_index()]-InvTau*(f->f[i][NodeArrays->NodeSymmetry[j].Get_index()]-CollideLowOrder::EquiDistriFunct2D(Rho[NodeArrays->NodeSymmetry[j].Get_index()], U[0][NodeArrays->NodeSymmetry[j].Get_index()], U[1][NodeArrays->NodeSymmetry[j].Get_index()], &Ei[i][0], omega[i]))
-					;//+LocalForce(i,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U[0][NodeArrays->NodeSymmetry[j].Get_index()],U[1][NodeArrays->NodeSymmetry[j].Get_index()],wtmp);
+			Collide_2D(i, f->f[i][NodeArrays->NodeSymmetry[j].Get_index()],Rho[NodeArrays->NodeSymmetry[j].Get_index()], U[0][NodeArrays->NodeSymmetry[j].Get_index()], U[1][NodeArrays->NodeSymmetry[j].Get_index()], Fx, Fy, Get_InvTau());
 		}
 		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
 		{
-			f->f[i][NodeArrays->NodePeriodic[j].Get_index()] = f->f[i][NodeArrays->NodePeriodic[j].Get_index()]-InvTau*(f->f[i][NodeArrays->NodePeriodic[j].Get_index()]-CollideLowOrder::EquiDistriFunct2D(Rho[NodeArrays->NodePeriodic[j].Get_index()], U[0][NodeArrays->NodePeriodic[j].Get_index()], U[1][NodeArrays->NodePeriodic[j].Get_index()], &Ei[i][0], omega[i]))
-					;//+LocalForce(i,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U[0][NodeArrays->NodeSymmetry[j].Get_index()],U[1][NodeArrays->NodeSymmetry[j].Get_index()],wtmp);
+			Collide_2D(i, f->f[i][NodeArrays->NodePeriodic[j].Get_index()],Rho[NodeArrays->NodePeriodic[j].Get_index()], U[0][NodeArrays->NodePeriodic[j].Get_index()], U[1][NodeArrays->NodePeriodic[j].Get_index()], Fx, Fy, Get_InvTau());
 		}
 	}
 }
