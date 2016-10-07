@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 //#include <string>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/nvp.hpp>
@@ -51,13 +52,14 @@ enum GradientType{FD,LBMStencil};
 enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular,HeZouWall,HeZouWallVel};
 enum PressureModel{HeZouP};
 enum PressureType{FixP,zeroPGrad1st};
-enum VelocityModel{HeZouV};
+enum VelocityModel{HeZouV,Ladd};
 enum VelocityType{FixV,zeroVGrad1st};
 enum CornerModel{HoChan};
 enum CornerPressureType{FixCP,ExtrapolCP};
 
 //Two phases enumeration
 enum TetaType{NoTeta, FixTeta, NonCstTeta};
+enum ViscosityType{ConstViscosity,LinearViscosity,HarmonicViscosity};
 //Colour fluid enumeration
 enum ColourGradType{Gunstensen,DensityGrad,DensityNormalGrad};
 enum RecolouringType{LatvaKokkoRothman};
@@ -299,7 +301,8 @@ private:
 		   & BOOST_SERIALIZATION_NVP(fluid)
 		   & BOOST_SERIALIZATION_NVP(Gradient)
 		   & BOOST_SERIALIZATION_NVP(UserForce)
-		   & BOOST_SERIALIZATION_NVP(NbVelocities);
+		   & BOOST_SERIALIZATION_NVP(NbVelocities)
+		   & BOOST_SERIALIZATION_NVP(ErrorMax);
 
 
 	}
@@ -314,12 +317,16 @@ public:
 	FluidType Get_FluidType() const{return fluid;};
 	void Set_UserForceType(UserForceType UserForceType_){UserForce=UserForceType_;};
 	UserForceType Get_UserForceType() const{return UserForce;};
+	void Set_ErrorMax(double ErrorMax_){ErrorMax=ErrorMax_;};
+	double Get_ErrorMax(){return ErrorMax;};
 	void Set_GradientType(GradientType GradientType_){Gradient=GradientType_;};
 	GradientType Get_GradientType() const{return Gradient;};
 	void Set_ContactAngle(double teta_){teta=teta_;};
 	double Get_ContactAngle(){return teta;};
 	void Set_ContactAngleType(TetaType tetaType_){tetaType=tetaType_;};
 	TetaType Get_ContactAngleType(){return tetaType;};
+	void Set_ViscosityType(ViscosityType viscosityType_){viscosityType=viscosityType_;};
+	ViscosityType Get_ViscosityType(){return viscosityType;};
 	int Get_NbVelocities() const;
 	double Convert_TauToNu(double Tau_){return (Tau_-0.5)*cs2*deltaT;};
 	double Convert_MutoNu(double mu_,double rho){return mu_/rho;};
@@ -338,9 +345,11 @@ protected:
 	int NbVelocities;
 	double cs,cs2;
 	double deltaT;
+	double ErrorMax;
 
 	TetaType tetaType;
 	double teta;
+	ViscosityType viscosityType;
 
 
 

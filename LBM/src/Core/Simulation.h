@@ -39,10 +39,17 @@ public:
 	void Create_Mesh(dimension dim, int Nx, int Ny, int Nz);
 	void Import_Mesh(string MeshFile);
 	void RunSimu();
+	void RunSimu(Parameters &UpdatedParam);
+
+	void UpdateAllDomain(Parameters &UpdatedParam);
+	void UpdateDomainBc(Parameters &UpdatedParam);
+	void UpdateWall(Parameters &UpdatedParam);
+	void UpdateInterior(Parameters &UpdatedParam);
 
 	void FinalizeSimu();
 
 	double get_time();
+	bool Is_MainProcessor(){return parallel->isMainProcessor();};
 
 	void Save_Simulation();
 

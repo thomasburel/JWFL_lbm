@@ -47,6 +47,9 @@ public:
 	double* Get_PtrVar(int Id_Var){return Var[Id_Var];};
 	/// Get the pointer of the variable from its name. It is a slow access.
 	void Get_PtrVar(std::string VarName, double* & Var_out){Var_out=Var[Get_Id_Var(VarName)];};
+
+	/// Get number of nodes per variable
+	int Get_NbNodes(){return numberNodes;};
 private:
 	int dimension;
 	int numberNodes;//with ghost

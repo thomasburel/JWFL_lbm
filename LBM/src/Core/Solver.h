@@ -11,6 +11,7 @@
 #include "Parameters.h"
 #include "Solution.h"
 #include "Tau.h"
+#include "Convergence.h"
 #include "../Algorithm/LowOrder/CollideLowOrder.h"
 #include "../Algorithm/LowOrder/StreamLowOrder.h"
 #include "InitLBM.h"
@@ -23,12 +24,17 @@
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/assume_abstract.hpp>
 
-class Solver: public Tau{
+class Solver: public Tau, public Convergence{
 public:
 	Solver();
 	virtual ~Solver();
 	virtual void get_time()=0;
 	virtual void run()=0;
+	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
 protected:
 	void saveParameters();
 protected:
@@ -53,6 +59,11 @@ public:
 	virtual ~SolverSinglePhase();
 	virtual void get_time()=0;
 	virtual void run()=0;
+	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
 	void set_f_ini();
 	double** get_f_ini();
 	void set_f_name();
@@ -76,6 +87,11 @@ public:
 	virtual ~SolverTwoPhases();
 	virtual void get_time()=0;
 	virtual void run()=0;
+	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
 
 protected:
 	DistriFunct** f;
@@ -97,6 +113,11 @@ public:
 	virtual ~SolverSinglePhaseLowOrder();
 	virtual void get_time()=0;
 	virtual void run()=0;
+	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
 private:
 	friend class boost::serialization::access;
     template<class Archive>
@@ -113,6 +134,11 @@ public:
 	virtual ~SolverTwoPhasesLowOrder();
 	virtual void get_time()=0;
 	virtual void run()=0;
+	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
 private:
 	friend class boost::serialization::access;
     template<class Archive>
@@ -131,7 +157,11 @@ public:
 	void Add_OneDistributionToDictionary();
 	void Set_Solver(MultiBlock* PtrMultiBlock_,ParallelManager* PtrParallel_,WriterManager* PtrWriter_, Parameters* PtrParameters_);
 	virtual void run()=0;
-
+	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
 protected:
 	std::vector<int>::iterator itBc;
 	std::vector<int> IdNodeN,IdNodeE,IdNodeS,IdNodeW;//Block connections
@@ -158,7 +188,11 @@ public:
 	void Add_TwoDistributionsToDictionary();
 	void Set_Solver(MultiBlock* PtrMultiBlock_,ParallelManager* PtrParallel_,WriterManager* PtrWriter_, Parameters* PtrParameters_);
 	virtual void run()=0;
-
+	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
 protected:
 	std::vector<int>::iterator itBc;
 	std::vector<int> IdNodeN,IdNodeE,IdNodeS,IdNodeW;//Block connections

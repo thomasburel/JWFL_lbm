@@ -97,6 +97,32 @@ void Simulation::RunSimu()
 	Save_Simulation();
 
 }
+void Simulation::RunSimu(Parameters &UpdatedParam)
+{
+	PtrParameters=&UpdatedParam;
+	Writer->UpdateFileNames(PtrParameters->Get_OutputFileName());
+	Solver_->run(PtrParameters);
+	if (parallel->isMainProcessor())
+	cout<< "Time to run the simulation:    "<<get_time()-time << endl;
+	time=get_time();
+
+}
+void Simulation::UpdateAllDomain(Parameters &UpdatedParam){
+	ini.Set_Parameters(&UpdatedParam);
+	Solver_->UpdateAllDomain(&UpdatedParam,ini);
+}
+void Simulation::UpdateDomainBc(Parameters &UpdatedParam){
+	ini.Set_Parameters(&UpdatedParam);
+	Solver_->UpdateDomainBc(&UpdatedParam,ini);
+}
+void Simulation::UpdateWall(Parameters &UpdatedParam){
+	ini.Set_Parameters(&UpdatedParam);
+	Solver_->UpdateWall(&UpdatedParam,ini);
+}
+void Simulation::UpdateInterior(Parameters &UpdatedParam){
+	ini.Set_Parameters(&UpdatedParam);
+	Solver_->UpdateInterior(&UpdatedParam,ini);
+}
 void Simulation::SelectSolver()
 {
 	if(PtrParameters->Get_Dimension()==D2)
