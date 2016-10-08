@@ -28,6 +28,7 @@ protected:
 	double q23,q16,q13;
 	short int OppositeBc[9]; //opposite direction in the distribution function
 	double omegaBc[9]; //Weight of the distribution function. It is need for some boundary conditions
+	double EiBc[9][2];
 	double rhodiff;
 	double SumWeightS,SumWeightE,SumWeightN,SumWeightW;
 	double SumWeightConcaveSE,SumWeightConcaveNE,SumWeightConcaveNW,SumWeightConcaveSW;

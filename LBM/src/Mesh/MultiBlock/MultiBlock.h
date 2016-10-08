@@ -48,6 +48,9 @@ public:
 	virtual void reorganizeNodeByType()=0;
 	virtual NodeArrays2D* Get_NodeArrays2D()=0;
 	virtual int* get_Block_Connect()=0;
+	virtual double SumBC(double *value)=0;
+	virtual double SumAllProcessors(double *value)=0;
+	virtual int NumberOfProcessors()=0;
 protected:
 	int ndims;
 	Parameters * PtrParameters;

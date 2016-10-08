@@ -25,6 +25,10 @@ protected:
 
 	void InitD2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini);
 	void init(InitLBM& ini);
+	void InitAllDomain(InitLBM& ini);
+	void InitDomainBc(InitLBM& ini);
+	void InitWall(InitLBM& ini);
+	void InitInterior(InitLBM& ini);
 	void StreamD2Q9();
 
 

@@ -50,7 +50,9 @@ public:
 	virtual NodeArrays2D* Get_NodeArrays2D();
 	void Correct_SolidGhost();
 	virtual int* get_Block_Connect(){return &BlockNeighbour[0];};
-	double SumBC(double *value);
+	virtual double SumBC(double *value);
+	virtual double SumAllProcessors(double *value);
+	virtual int NumberOfProcessors();
 private:
 	int Nx_G,Ny_G;
 	int  Nx_size, Ny_size;//For serialization of Nx and Ny

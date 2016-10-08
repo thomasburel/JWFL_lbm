@@ -21,19 +21,30 @@ public:
 	virtual ~D2Q9ColourFluid();
 	D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini);
 	virtual void run();
-
+	virtual void run(Parameters* UpdatedParam);
+	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini);
+	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini);
+	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini);
+	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini);
 private:
-    //! Initialise the colour fluid model.
+	//! Initialise the colour fluid model.
     /*!
       \param ini : initialisation class (generic initialised methods).
     */
 	void InitColourFluid(InitLBM& ini);
+	void InitColourFluidAllDomain(InitLBM& ini);
+	void InitColourFluidDomainBc(InitLBM& ini);
+	void InitColourFluidWall(InitLBM& ini);
+	void InitColourFluidInterior(InitLBM& ini);
     //! Set Pointers On Functions for selecting the right model dynamically.
     /*!
      *
       \sa Set_Collide(), Set_Colour_gradient(), Set_Recolouring(), Set_Macro().
     */
 	void Set_PointersOnFunctions();
+
+	double Calcul_Error();
+	double Error_RhoN(int &idx);
 
 	void UpdateMacroVariables();
 
@@ -61,6 +72,8 @@ private:
 	void Colour_gradient_DensityNormalGrad(int & nodenumber, int* connect,int & normal);
 	void Colour_gradient_DensityNormalGradBc(int & nodenumber, int* connect,int & normal);
 	void Colour_gradient_DensityNormalGradCorner(int & nodenumber, int* connect,int & normal);
+
+	void Synchronise_Colour_gradient();
 
 // Recolouring definition
 	void Set_Recolouring();

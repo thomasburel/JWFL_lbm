@@ -939,8 +939,16 @@ void MultiBlock2D::Correct_SolidGhost()
 double MultiBlock2D::SumBC(double *value){
 	double sum=0;
 	if(BcW||BcE)
-		MPI_Reduce(value,&sum,1, MPI_REAL , MPI_SUM ,0, VertComm);
+		MPI_Reduce(value,&sum,1, MPI_DOUBLE , MPI_SUM ,0, VertComm);
 	if(BcN||BcS)
-		MPI_Reduce(value,&sum,1, MPI_REAL , MPI_SUM ,0, HorizComm);
+		MPI_Reduce(value,&sum,1, MPI_DOUBLE , MPI_SUM ,0, HorizComm);
 	return sum;
+}
+double MultiBlock2D::SumAllProcessors(double *value){
+	double sum=0;
+	MPI_Allreduce(&value[0],&sum,1, MPI_DOUBLE , MPI_SUM ,parallel->getGlobalCommunicator());
+	return sum;
+}
+int MultiBlock2D::NumberOfProcessors(){
+	return parallel->getSize();
 }

@@ -4,6 +4,7 @@
 
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
+../src/Core/Convergence.cpp \
 ../src/Core/Dictionary.cpp \
 ../src/Core/GlobalDef.cpp \
 ../src/Core/InitLBM.cpp \
@@ -14,6 +15,7 @@ CPP_SRCS += \
 ../src/Core/Tau.cpp 
 
 OBJS += \
+./src/Core/Convergence.o \
 ./src/Core/Dictionary.o \
 ./src/Core/GlobalDef.o \
 ./src/Core/InitLBM.o \
@@ -24,6 +26,7 @@ OBJS += \
 ./src/Core/Tau.o 
 
 CPP_DEPS += \
+./src/Core/Convergence.d \
 ./src/Core/Dictionary.d \
 ./src/Core/GlobalDef.d \
 ./src/Core/InitLBM.d \

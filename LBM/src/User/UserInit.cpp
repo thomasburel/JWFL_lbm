@@ -26,14 +26,14 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 
 	double Umax,H,L,Pmax,Pmin;
 	PtrParameters.Get_UserParameters(Umax,H,L,Pmax,Pmin);
-	if(pos[0<=0])
+	/*	if(pos[0<=0])
 		U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
 	else
 		U[0]=0.0;
 	U[1]=0;
 	Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
-	/*
-//*********** Poiseuille ini***************
+
+// *********** Poiseuille ini***************
 	double Ubot=-Umax;//-0.01;
 	double Utop=Umax;//0.01;
 	double Vleft=0;//-0.01;
@@ -111,6 +111,21 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
   		alpha=0;
   	}
 */
+	if(pos[1]<=0)
+	{
+		U[0]=-Umax;
+	}
+	else if(pos[1]>=H)
+	{
+		U[0]=Umax;
+	}
+	else
+	{
+		U[0]=0.0;
+	}
+	U[1]=0.0;
+	Rho=Pmax;
+	alpha=0.0;
 }
 
 void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U, double& alpha){
@@ -128,16 +143,16 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 		U[1]=(Vright-Vleft)/L*pos[0]+Vleft;
 		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
 
-		U[0]=0;
-		U[1]=0;
-		Rho=1;
-		alpha=0;
+		U[0]=0.0;//Umax*2.0*pos[1]/H-Umax;
+		U[1]=0.0;
+		Rho=Pmax;
+		alpha=0.0;
 
-		double R=diameter/2;
-		if(pow(pos[0]-(L)/2,2.0)+pow(pos[1]-(H)/2,2.0)<=R*R+0.000001)
+		double R=diameter/2.0;
+		if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]-(H)/2.0,2.0)<=R*R)
 		{
-			alpha=1;
-			Rho=1;
+			alpha=1.0;
 		}
+		//alpha=pos[0]/L;
 }
 

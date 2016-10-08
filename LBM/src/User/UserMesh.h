@@ -9,7 +9,7 @@
 #define USER_USERMESH_H_
 #include "../SpecialTreatment/PorousMedia.h"
 #include "../Mesh/SingleBlock/Node2D.h"
-#include <math.h>
+#include <cmath>
 class UserMesh :public PorousMedia {
 public:
 	UserMesh();

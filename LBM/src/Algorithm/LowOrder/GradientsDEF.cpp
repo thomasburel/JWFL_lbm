@@ -190,6 +190,7 @@ GradientsLBMStencil::GradientsLBMStencil(int dimension_,int nb_vel){
 		Ei[i]=new double[nb_vel];
 	omega=new double[nb_vel];
 
+
 	//Distribution velocity
 	Ei[0][0]= 0.0;
 	Ei[1][0]= 0.0;
@@ -235,8 +236,8 @@ void GradientsLBMStencil::Grad (double* grad_, double *Var, int * Connect, int &
 		grad_[0]+=omega[i]*Var[Connect[i]]*Ei[0][i];//fourth order compact scheme
 		grad_[1]+=omega[i]*Var[Connect[i]]*Ei[1][i];//fourth order compact scheme
 	}
-	grad_[0]*=3;
-	grad_[1]*=3;
+	grad_[0]*=3.0;
+	grad_[1]*=3.0;
 }
 void GradientsLBMStencil::GradBc (double* grad_, double *Var, int * Connect, int & normal){
 /*	gradient_scalar[0]=0;

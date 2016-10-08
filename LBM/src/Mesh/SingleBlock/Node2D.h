@@ -178,10 +178,14 @@ public:
 	virtual void Set_UDef(double UDef, double VDef);
 	virtual void Set_RhoDef(double RhoDef);
 
+	virtual void Set_AlphaDef(double Alpha){alphaDef=Alpha;};
+	virtual double Get_AlphaDef(){return alphaDef;};
+
 	void Set_BcNormal(int BcNormal_){BcNormal=BcNormal_;};
 	int& Get_BcNormal(){return BcNormal;};
 
 private:
+	double alphaDef;
 	double UDef[2];
 	bool* VelocityStream;
 	int BcNormal;

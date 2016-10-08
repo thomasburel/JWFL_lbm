@@ -21,7 +21,7 @@ D2Q9ColourFluid::D2Q9ColourFluid() {
 	PtrRecolour=0;
 	PtrMacro=0;
 	beta=0.7;
-	Rho_limiter=1.E-8;
+	Rho_limiter=1.e-8;
 	A1=0;
 	A2=0;
 	F=0;
@@ -53,6 +53,8 @@ D2Q9ColourFluid::D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* paral
 	Solution2D::Set_output();
 //Set the variables names and the variable pointers for breakpoints in solution
 	Solution2D::Set_breakpoint();
+//Set_Convergence
+	Set_Convergence();
 }
 void D2Q9ColourFluid::Set_PointersOnFunctions(){
 // Select the model for two-phase operator in the collision step
@@ -83,12 +85,16 @@ void D2Q9ColourFluid::Select_Colour_Operator(ColourOperatorType OperatorType_){
 	}
 }
 void D2Q9ColourFluid::Set_Collide(){
+	PtrDicCollide=Dic;
+
+
 if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce && PtrParameters->Get_UserForceType()== ::LocalForce)
 {
 	std::cout<<" Warming: The local user force will be ignored. The colour model with the surface force is incompatible with a local user force"<<std::endl;
 }
-	if(PtrParameters->Get_FluidType()==Newtonian &&(PtrParameters->Get_Tau_1()==PtrParameters->Get_Tau_2()))
+	if(PtrParameters->Get_ViscosityType()==ConstViscosity)
 	{
+
 		if(PtrParameters->Get_ColourOperatorType()== ::SurfaceForce)
 			{Select_Collide_2D(Std2DBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::LocalForce)
@@ -209,173 +215,308 @@ void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 	G=new double*[2];
 	F=new double*[2];
 	Dic->AddSync("Rho",Rho);
-	Dic->AddVar(Vector,"ColourGrad",true,true,true,G[0],G[1]);
-	Dic->AddVar(Scalar,"ColourGrad_Norm",true,true,true,G_Norm);
-	Dic->AddVar(Vector,"SurfaceForce",true,true,true,F[0],F[1]);
+	Dic->AddVar(Vector,"ColourGrad",true,true,false,G[0],G[1]);
+	Dic->AddVar(Scalar,"ColourGrad_Norm",true,true,false,G_Norm);
+	Dic->AddVar(Vector,"SurfaceForce",true,true,false,F[0],F[1]);
 	Dic->AddVar(Scalar,"RhoRed",true,true,true,Rhor);
 	Dic->AddVar(Scalar,"RhoBlue",true,true,true,Rhob);
 	Dic->AddVar(Scalar,"RhoN",true,true,true,RhoN);
-/*	G=V1;
-	F=V2;
-	G_Norm=new double [nbnodes_total];*/
-/*	G=new double* [2];
-	G[0]=new double [nbnodes_total];
-	G[1]=new double [nbnodes_total];*/
+
 	for(int i=0;i<nbnodes_total;i++)
 	{
 		G[0][i]=0;
 		G[1][i]=0;
 		G_Norm[i]=0;
-	}
-
-//	F=new double* [nbnodes_total];
-	for(int i=0;i<nbnodes_total;i++)
-	{
-//		F[i]=new double [2];
 		F[0][i]=0;
 		F[1][i]=0;
 	}
+	InitColourFluidAllDomain(ini);
+}
+void D2Q9ColourFluid::InitColourFluidAllDomain(InitLBM& ini){
+	InitColourFluidDomainBc(ini);
+	InitColourFluidWall(ini);
+	InitColourFluidInterior(ini);
+
+// Init Solid
 	double alpha=0;
 	double* pos =new double[2];
 	double* U_=new double[2];
-// Loops for all kind of nodes
-	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
-	{
-// Get position
-		pos[0]=NodeArrays->NodeInterior[j].get_x();
-		pos[1]=NodeArrays->NodeInterior[j].get_y();
-// Get initialise value from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeInterior[j],0, NodeArrays->NodeInterior[j].Get_index(),pos,Rho[NodeArrays->NodeInterior[j].Get_index()],U_,alpha);
-// Initialise the blue and red densities
-		Rhor[NodeArrays->NodeInterior[j].Get_index()]=alpha*Rho[NodeArrays->NodeInterior[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeInterior[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeInterior[j].Get_index()];//PtrParameters->Get_Rho_2();
-		RhoN[NodeArrays->NodeInterior[j].Get_index()]=(Rhor[NodeArrays->NodeInterior[j].Get_index()]-Rhob[NodeArrays->NodeInterior[j].Get_index()])/Rho[NodeArrays->NodeInterior[j].Get_index()];
-	}
+	int idx=0;
 
-	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
-	{
-// Get position
-		pos[0]=NodeArrays->NodeCorner[j].get_x();
-		pos[1]=NodeArrays->NodeCorner[j].get_y();
-// Get initialise value from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_,alpha);
-// Initialise the blue and red densities
-		Rhor[NodeArrays->NodeCorner[j].Get_index()]=alpha*Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeCorner[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeCorner[j].Get_index()];//PtrParameters->Get_Rho_2();
-
-	}
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
-	{
-// Get position
-		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
-		pos[1]=NodeArrays->NodeGlobalCorner[j].get_y();
-// Get initialise values from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, NodeArrays->NodeGlobalCorner[j].Get_index(),pos,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U_,alpha);
-// Initialise the blue and red densities
-		Rhor[NodeArrays->NodeGlobalCorner[j].Get_index()]=alpha*Rho[NodeArrays->NodeGlobalCorner[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeGlobalCorner[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeGlobalCorner[j].Get_index()];//PtrParameters->Get_Rho_2();
-	}
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
-	{
-// Get position
-		pos[0]=NodeArrays->NodeVelocity[j].get_x();
-		pos[1]=NodeArrays->NodeVelocity[j].get_y();
-// Get initialise values from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeVelocity[j],0, NodeArrays->NodeVelocity[j].Get_index(),pos,Rho[NodeArrays->NodeVelocity[j].Get_index()],U_,alpha);
-// Initialise the blue and red densities
-		Rhor[NodeArrays->NodeVelocity[j].Get_index()]=alpha*Rho[NodeArrays->NodeVelocity[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeVelocity[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeVelocity[j].Get_index()];//PtrParameters->Get_Rho_2();
-	}
-
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
-	{
-// Get position
-		pos[0]=NodeArrays->NodePressure[j].get_x();
-		pos[1]=NodeArrays->NodePressure[j].get_y();
-// Get initialise values from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodePressure[j],0, NodeArrays->NodePressure[j].Get_index(),pos,Rho[NodeArrays->NodePressure[j].Get_index()],U_,alpha);
-// Initialise the blue and red densities
-		Rhor[NodeArrays->NodePressure[j].Get_index()]=alpha*Rho[NodeArrays->NodePressure[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodePressure[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodePressure[j].Get_index()];//PtrParameters->Get_Rho_2();
-	}
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
-	{
-// Get position
-		pos[0]=NodeArrays->NodeWall[j].get_x();
-		pos[1]=NodeArrays->NodeWall[j].get_y();
-// Get initialise values from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeWall[j],0, NodeArrays->NodeWall[j].Get_index(),pos,Rho[NodeArrays->NodeWall[j].Get_index()],U_,alpha);
-// Initialise the blue and red densities
-		Rhor[NodeArrays->NodeWall[j].Get_index()]=alpha*Rho[NodeArrays->NodeWall[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeWall[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeWall[j].Get_index()];//PtrParameters->Get_Rho_2();
-	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
-	{
-// Get position
-		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
-		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
-// Get initialise values from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, NodeArrays->NodeSpecialWall[j].Get_index(),pos,Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U_,alpha);
-// Initialise the blue and red densities
-		Rhor[NodeArrays->NodeSpecialWall[j].Get_index()]=alpha*Rho[NodeArrays->NodeSpecialWall[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeSpecialWall[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSpecialWall[j].Get_index()];//PtrParameters->Get_Rho_2();
-	}
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
-	{
-// Get position
-		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
-		pos[1]=NodeArrays->NodeSymmetry[j].get_y();
-// Get initialise values from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, NodeArrays->NodeSymmetry[j].Get_index(),pos,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U_,alpha);
-// Initialise the blue and red densities
-		Rhor[NodeArrays->NodeSymmetry[j].Get_index()]=alpha*Rho[NodeArrays->NodeSymmetry[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeSymmetry[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSymmetry[j].Get_index()];//PtrParameters->Get_Rho_2();
-	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
-	{
-// Get position
-		pos[0]=NodeArrays->NodePeriodic[j].get_x();
-		pos[1]=NodeArrays->NodePeriodic[j].get_y();
-// Get initialise values from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodePeriodic[j],0, NodeArrays->NodePeriodic[j].Get_index(),pos,Rho[NodeArrays->NodePeriodic[j].Get_index()],U_,alpha);
-// Initialise the blue and red densities
-		Rhor[NodeArrays->NodePeriodic[j].Get_index()]=alpha*Rho[NodeArrays->NodePeriodic[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodePeriodic[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodePeriodic[j].Get_index()];//PtrParameters->Get_Rho_2();
-	}
-	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
-	{
-// Get position
-		pos[0]=NodeArrays->NodeGhost[j].get_x();
-		pos[1]=NodeArrays->NodeGhost[j].get_y();
-// Get initialise values from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeGhost[j],0, NodeArrays->NodeGhost[j].Get_index(),pos,Rho[NodeArrays->NodeGhost[j].Get_index()],U_,alpha);
-// Initialise the blue and red densities
-		Rhor[NodeArrays->NodeGhost[j].Get_index()]=alpha*Rho[NodeArrays->NodeGhost[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeGhost[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeGhost[j].Get_index()];//PtrParameters->Get_Rho_2();
-	}
 	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
 	{
+// Set Index
+		idx=NodeArrays->NodeSolid[j].Get_index();
 // Get position
 		pos[0]=NodeArrays->NodeSolid[j].get_x();
 		pos[1]=NodeArrays->NodeSolid[j].get_y();
 // Get initialise values from the user
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_,alpha);
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSolid[j],0, idx,pos,Rho[idx],U_,alpha);
 // Initialise the blue and red densities
-		Rhor[NodeArrays->NodeSolid[j].Get_index()]=alpha*Rho[NodeArrays->NodeSolid[j].Get_index()];//PtrParameters->Get_Rho_1();
-		Rhob[NodeArrays->NodeSolid[j].Get_index()]=(1- alpha) *Rho[NodeArrays->NodeSolid[j].Get_index()];//PtrParameters->Get_Rho_2();
-	}
-	for (int i=0;i<nbvelo;i++)
-	{
-		for (int j=0;j<nbnode;j++)
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=-2;
+		for (int i=0;i<nbvelo;i++)
 		{
-			f[0]->f[i][j]=CollideLowOrder::EquiDistriFunct2D(Rhor[j], U[0][j], U[1][j], &Ei[i][0], omega[i]);
-			f[1]->f[i][j]=CollideLowOrder::EquiDistriFunct2D(Rhob[j], U[0][j], U[1][j], &Ei[i][0], omega[i]);
+			f[0]->f[i][idx]=0;//CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=0;//CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	delete [] pos;
+	delete [] U_;
+}
+void D2Q9ColourFluid::InitColourFluidDomainBc(InitLBM& ini){
+	double alpha=0;
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeGlobalCorner[j].Get_index();
+// Get position
+		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
+		pos[1]=NodeArrays->NodeGlobalCorner[j].get_y();
+// Get initialise values from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, idx,pos,Rho[idx],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeSpecialWall[j].Get_index();
+// Get position
+		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
+		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
+// Get initialise values from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, idx,pos,Rho[idx],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeVelocity[j].Get_index();
+// Get position
+		pos[0]=NodeArrays->NodeVelocity[j].get_x();
+		pos[1]=NodeArrays->NodeVelocity[j].get_y();
+// Get initialise values from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeVelocity[j],0, idx,pos,Rho[idx],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodePressure[j].Get_index();
+// Get position
+		pos[0]=NodeArrays->NodePressure[j].get_x();
+		pos[1]=NodeArrays->NodePressure[j].get_y();
+// Get initialise values from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodePressure[j],0, idx,pos,Rho[idx],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeSymmetry[j].Get_index();
+// Get position
+		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
+		pos[1]=NodeArrays->NodeSymmetry[j].get_y();
+// Get initialise values from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, idx,pos,Rho[idx],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodePeriodic[j].Get_index();
+// Get position
+		pos[0]=NodeArrays->NodePeriodic[j].get_x();
+		pos[1]=NodeArrays->NodePeriodic[j].get_y();
+// Get initialise values from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodePeriodic[j],0, idx,pos,Rho[idx],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	delete [] pos;
+	delete [] U_;
+}
+void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
+	double alpha=0;
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+
+	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeCorner[j].Get_index();
+// Get position
+		pos[0]=NodeArrays->NodeCorner[j].get_x();
+		pos[1]=NodeArrays->NodeCorner[j].get_y();
+// Get initialise value from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeCorner[j],0, idx,pos,Rho[idx],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeWall[j].Get_index();
+// Get position
+		pos[0]=NodeArrays->NodeWall[j].get_x();
+		pos[1]=NodeArrays->NodeWall[j].get_y();
+// Get initialise values from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeWall[j],0, idx,pos,Rho[idx],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+
+	delete [] pos;
+	delete [] U_;
+}
+void D2Q9ColourFluid::InitColourFluidInterior(InitLBM& ini){
+	double alpha=0;
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+
+	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeInterior[j].Get_index();
+// Get position
+		pos[0]=NodeArrays->NodeInterior[j].get_x();
+		pos[1]=NodeArrays->NodeInterior[j].get_y();
+// Get initialise value from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeInterior[j],0,idx,pos,Rho[idx],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeGhost[j].Get_index();
+// Get position
+		pos[0]=NodeArrays->NodeGhost[j].get_x();
+		pos[1]=NodeArrays->NodeGhost[j].get_y();
+// Get initialise values from the user
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeGhost[j],0, idx,pos,Rho[idx],U_,alpha);
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
 		}
 	}
 
 	delete [] pos;
 	delete [] U_;
+}
+void D2Q9ColourFluid::UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini){
+	UpdateDomainBc(UpdatedParam,ini);
+	UpdateWall(UpdatedParam,ini);
+	UpdateInterior(UpdatedParam,ini);
+}
+void D2Q9ColourFluid::UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini){
+	InitDomainBc(ini);
+	InitColourFluidDomainBc(ini);
+}
+void D2Q9ColourFluid::UpdateWall(Parameters* UpdatedParam,InitLBM& ini){
+	InitWall(ini);
+	InitColourFluidWall(ini);
+}
+void D2Q9ColourFluid::UpdateInterior(Parameters* UpdatedParam,InitLBM& ini){
+	InitInterior(ini);
+	InitColourFluidInterior(ini);
+}
+void D2Q9ColourFluid::run(Parameters* UpdatedParam){
 
+	PtrParameters=UpdatedParam;
+	IniTau(PtrParameters);
+	InvTau=Get_InvTau();
+
+	//Initialise parameters for colour fluid
+	beta=PtrParameters->Get_Beta();
+	A1=PtrParameters->Get_A1();
+	A2=PtrParameters->Get_A2();
+	tension=PtrParameters->Get_SurfaceTension();
+
+	D2Q9ColourFluid::run();
 }
 
 void D2Q9ColourFluid::run(){
@@ -385,43 +526,62 @@ void D2Q9ColourFluid::run(){
 	double time_inirun=parallel->getTime();
 	double time_run=0;
 	int it=0;
+	double max_error=PtrParameters->Get_ErrorMax()*listing;
+
+	if(parallel->isMainProcessor())
+		std::cout<<"Error max (listing*"<<PtrParameters->Get_ErrorMax()<<")= "<<max_error<<std::endl<< "Convergence will be checked every: "<<listing<<" iterations"<<std::endl;
 
 	if(parallel->getSize()>1)
 		SyncToGhost();
 	ApplyBc();
+	Colour_gradient();
+	Synchronise_Colour_gradient();
+	ColourFluid_Collision();
 	UpdateMacroVariables();
 	if(parallel->getSize()>1)
 		SyncMacroVarToGhost();
-	Colour_gradient();
-	ColourFluid_Collision();
 	Writer->Write_Output(it);
-
+	it++;
 	if(parallel->getSize()>1)
 	{
-		for (int i=1;i<NbStep+1;i++)
+
+//		for (int i=1;i<NbStep+1;i++)
+		while(it<NbStep+1)
 		{
 			Colour_gradient();
+			Synchronise_Colour_gradient();
 			ColourFluid_Collision();
 			SyncToGhost();
 			StreamD2Q9();;
 			ApplyBc();
 			UpdateMacroVariables();
 			SyncMacroVarToGhost();
-			if(i%OutPutNStep==0)
+			if(it%OutPutNStep==0)
 			{
-				Writer->Write_Output(i);
+				Writer->Write_Output(it);
 			}
-			if(i%listing==0 && parallel->isMainProcessor() )
+			if(it%listing==0 )
 			{
-				time_run=parallel->getTime()-time_inirun;
+				Convergence::Calcul_Error();
+				if(parallel->isMainProcessor())
+				{
+					time_run=parallel->getTime()-time_inirun;
 
-				std::cout<<"Iteration number: "<<i<< " Running time: ";
-				if(time_run>60.0)
-					std::cout<<trunc(time_run/60)<<"Minutes ";
-				else //less than 1 minute
-				std::cout<<trunc(time_run)<<"Seconds ";
-				std::cout<< " Time per iteration: "<<time_run/i<<"s"<<std::endl;
+					std::cout<<"Iteration number: "<<it<< " Running time: ";
+					if(time_run>60.0)
+						std::cout<<trunc(time_run/60)<<"Minutes ";
+					else //less than 1 minute
+					std::cout<<trunc(time_run)<<"Seconds ";
+					std::cout<< " Time per iteration: "<<time_run/it<<"s"<<std::endl;
+					std::cout<<"Error is: "<<Get_Error()<<std::endl;
+				}
+				if(Get_Error()<max_error)
+				{
+					Writer->Write_Output(it);
+					it=NbStep;
+				}
 			}
+			it++;
 		}
 	}
 	else
@@ -448,8 +608,48 @@ void D2Q9ColourFluid::run(){
 				std::cout<< " Time per iteration: "<<time_run/i<<"s"<<std::endl;			}
 		}
 	}
+
 	Writer->Write_breakpoint(*PtrParameters);
 }
+/*
+double D2Q9ColourFluid::Calcul_Error(){
+	double error=0;
+	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	{
+		error+=Error_RhoN(NodeArrays->NodeInterior[j].Get_index());
+		//error+=std::abs(RhoN[NodeArrays->NodeInterior[j].Get_index()]-RhoN[NodeArrays->NodeInterior[j].Get_index()])/(std::abs(RhoN[NodeArrays->NodeInterior[j].Get_index()])+1e-15);
+	}
+	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	{
+		error+=Error_RhoN(NodeArrays->NodeCorner[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+		error+=Error_RhoN(NodeArrays->NodeGlobalCorner[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	{
+		error+=Error_RhoN(NodeArrays->NodeVelocity[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	{
+		error+=Error_RhoN(NodeArrays->NodePressure[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+		error+=Error_RhoN(NodeArrays->NodeWall[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	{
+		error+=Error_RhoN(NodeArrays->NodeSymmetry[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+		error+=Error_RhoN(NodeArrays->NodePeriodic[j].Get_index());
+	}
+	return error;
+}
+*/
 ///Calculate the colour gradient by Gunstensen formulation, density gradient or normal density gradient
 void D2Q9ColourFluid::Colour_gradient(){
 	int idx_tmp;int normal_interior=0;
@@ -554,7 +754,7 @@ void D2Q9ColourFluid::ColourFluid_Collision()
 	// Common variables
 		idx_tmp=NodeArrays->NodeGlobalCorner[j].Get_index();
 	//Calculate Norms
-		G_Norm[idx_tmp]=0;
+//		G_Norm[idx_tmp]=0;
 //		G_Norm=std::sqrt(G[idx_tmp][0]*G[idx_tmp][0]+G[idx_tmp][1]*G[idx_tmp][1]);
 	//Model
 		(this->*PtrCollision)(idx_tmp, NodeArrays->NodeGlobalCorner[j].Get_connect(),NodeArrays->NodeGlobalCorner[j].Get_BcNormal(),&fi_tmp[0]);
@@ -585,7 +785,7 @@ void D2Q9ColourFluid::ColourFluid_Collision()
 	// Common variables
 		idx_tmp=NodeArrays->NodeWall[j].Get_index();
 	//Calculate Norms
-		G_Norm[idx_tmp]=0;
+//		G_Norm[idx_tmp]=0;
 //		G_Norm=std::sqrt(G[idx_tmp][0]*G[idx_tmp][0]+G[idx_tmp][1]*G[idx_tmp][1]);
 	//Model
 		(this->*PtrCollision)(idx_tmp, NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal(),&fi_tmp[0]);
@@ -751,24 +951,28 @@ void D2Q9ColourFluid::Recolouring_Latva(int & nodenumber, double * fi_tmp){
 /*	if(CosPhi(i,F,F_Norm)<-1 ||CosPhi(i,F,F_Norm)>1)
 		std::cout<<"CosPhi: "<<CosPhi(i,F,F_Norm)<<std::endl;*/
 
+/*	for(int i=0;i<nbvelo;i++)
+	{
+		ColSingle[i][nodenumber]=f[0]->f[i][nodenumber];
+		ColTwoPhase[i][nodenumber]=fi_tmp[i];
+	}*/
 		f[0]->f[0][nodenumber]=Rhor[nodenumber]*fi_tmp[0]/Rho[nodenumber];
 		for(int i=1;i<nbvelo;i++)
 		{
 		f[0]->f[i][nodenumber]=Rhor[nodenumber]*fi_tmp[i]/Rho[nodenumber]
-								+beta*omega[i]*Rhor[nodenumber]*Rhob[nodenumber]*CosPhi(nodenumber,i,G_Norm[nodenumber])/Rho[nodenumber];
+				+beta*omega[i]*Rhor[nodenumber]*Rhob[nodenumber]*(G[0][nodenumber]* Ei[i][0]+G[1][nodenumber]* Ei[i][1])/Rho[nodenumber];
+//								+beta*omega[i]*Rhor[nodenumber]*Rhob[nodenumber]*CosPhi(nodenumber,i,G_Norm[nodenumber])/Rho[nodenumber];
 		}
-		for(int i=0;i<nbvelo;i++)
-		{
+
 		if(Rhor[nodenumber]<=Rho_limiter)
-			f[0]->f[i][nodenumber]=0;
+			for(int i=0;i<nbvelo;i++)
+				f[0]->f[i][nodenumber]=0.0;
 		if(Rhob[nodenumber]<=Rho_limiter)
-		{
-			f[0]->f[i][nodenumber]=fi_tmp[i];
-			f[1]->f[i][nodenumber]=0;
-		}
-		else
+			for(int i=0;i<nbvelo;i++)
+				f[0]->f[i][nodenumber]=fi_tmp[i];
+		for(int i=0;i<nbvelo;i++)
 			f[1]->f[i][nodenumber]=fi_tmp[i]-f[0]->f[i][nodenumber];
-		}
+
 
 }
 //CosPhi(nodenumber,i,G_Norm[nodenumber])
@@ -813,7 +1017,7 @@ void D2Q9ColourFluid::Collision_Reis(int & nodenumber, int* connect,int & normal
 	}
 }
 void D2Q9ColourFluid::Collision_SurfaceForce(int & nodenumber, int* connect,int & normal,double* fi){
-	double InvTau_tmp=InvTau;
+//	double InvTau_tmp=InvTau;
 
 	if(G_Norm[nodenumber]>0)
 	{
@@ -821,11 +1025,16 @@ void D2Q9ColourFluid::Collision_SurfaceForce(int & nodenumber, int* connect,int 
 	}
 	else
 		{F[0][nodenumber]=0;F[1][nodenumber]=0;}
+	U[0][nodenumber]=U[0][nodenumber]+0.5*F[0][nodenumber]/Rho[nodenumber];
+	U[1][nodenumber]=U[1][nodenumber]+0.5*F[1][nodenumber]/Rho[nodenumber];
 	for (int i=0;i<9;i++)
 	{
 		//Save the mixture distribution for recolouring
 		fi[i]=f[0]->f[i][nodenumber]+f[1]->f[i][nodenumber];
+		//std::cout<<Get_InvTau(Rho[nodenumber],RhoN[nodenumber])<<std::endl;
 		Collide_2D(i, fi[i],Rho[nodenumber], U[0][nodenumber], U[1][nodenumber], F[0][nodenumber],F[1][nodenumber], Get_InvTau(Rho[nodenumber],RhoN[nodenumber]));
+		//ColSingle[i][nodenumber]=ColSingle_tmp;
+		//ColTwoPhase[i][nodenumber]=ColTwoPhase_tmp;
 	}
 }
 
@@ -847,10 +1056,20 @@ double D2Q9ColourFluid::Curvature(int & nodenumber, int* connect,int & normal){
 ///Select and apply boundary conditions
 void D2Q9ColourFluid::ApplyBc(){
 
+	double fi_tmp;
 	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		ApplyVelocity(NodeArrays->NodeVelocity[j].Get_BcNormal(),NodeArrays->NodeVelocity[j].Get_connect(),NodeArrays->NodeVelocity[j].Get_UDef(), f[0],Rhor,U[0],U[1]);
 		ApplyVelocity(NodeArrays->NodeVelocity[j].Get_BcNormal(),NodeArrays->NodeVelocity[j].Get_connect(),NodeArrays->NodeVelocity[j].Get_UDef(), f[1],Rhob,U[0],U[1]);
+
+//Keep alpha
+/*		for(int i=0;i<9;i++)
+		{
+			fi_tmp=f[0]->f[i][NodeArrays->NodeVelocity[j].Get_index()]+f[1]->f[i][NodeArrays->NodeVelocity[j].Get_index()];
+			f[0]->f[i][NodeArrays->NodeVelocity[j].Get_index()]=NodeArrays->NodeVelocity[j].Get_AlphaDef()*fi_tmp;
+			f[1]->f[i][NodeArrays->NodeVelocity[j].Get_index()]=(1-NodeArrays->NodeVelocity[j].Get_AlphaDef())*fi_tmp;
+		}*/
+
 	}
 
 	for (int j=0;j<NodeArrays->NodePressure.size();j++)
@@ -977,13 +1196,15 @@ void D2Q9ColourFluid::MacroVariablesWithNormalDensityAndForce(int& idx){
 		Rhob[idx]+=f[1]->f[k][idx];
 		for (int j=0;j<2;j++)
 		{
-			U[j][idx]+=(f[0]->f[k][idx]+f[1]->f[k][idx])*Ei[k][j];
+			U[j][idx]+=(f[0]->f[k][idx] + f[1]->f[k][idx])*Ei[k][j];
 		}
 	}
 	Rho[idx]=Rhor[idx]+Rhob[idx];
 	RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-	U[0][idx]=(U[0][idx]+0.5*F[0][idx])/Rho[idx];
-	U[1][idx]=(U[1][idx]+0.5*F[1][idx])/Rho[idx];
+	U[0][idx]=U[0][idx]/Rho[idx];
+	U[1][idx]=U[1][idx]/Rho[idx];
+//	U[0][idx]=(U[0][idx]+0.5*F[0][idx])/Rho[idx];
+//	U[1][idx]=(U[1][idx]+0.5*F[1][idx])/Rho[idx];
 }
 
 double D2Q9ColourFluid::Cal_RhoR_Corner(NodeCorner2D& nodeIn){
@@ -1043,6 +1264,141 @@ double D2Q9ColourFluid::Cal_RhoB_Corner(NodeCorner2D& nodeIn){
 	}
 
 	return doubleTmpReturn;
+}
+void D2Q9ColourFluid::Synchronise_Colour_gradient(){
+	//Put variables in buffer arrays
+		for (unsigned int i=0;i<IdRNodeW.size();i++)
+		{
+				buf_MacroSend[0][1][i]=G[0][IdRNodeW[i]];
+				buf_MacroSend[1][1][i]=G[1][IdRNodeW[i]];
+		}
+		for (unsigned int i=0;i<IdRNodeS.size();i++)
+		{
+				buf_MacroSend[0][2][i]=G[0][IdRNodeS[i]];
+				buf_MacroSend[1][2][i]=G[1][IdRNodeS[i]];
+		}
+		for (unsigned int i=0;i<IdRNodeE.size();i++)
+		{
+				buf_MacroSend[0][0][i]=G[0][IdRNodeE[i]];
+				buf_MacroSend[1][0][i]=G[1][IdRNodeE[i]];
+		}
+		for (unsigned int i=0;i<IdRNodeN.size();i++)
+		{
+				buf_MacroSend[0][3][i]=G[0][IdRNodeN[i]];
+				buf_MacroSend[1][3][i]=G[1][IdRNodeN[i]];
+		}
+	//		MultiBlock_->Communication(buf_MacroSend[0],buf_MacroRecv[0],size_MacroBuf);
+		int tag_x_r=1;
+		int tag_x_l=2;
+		int tag_y_t=3;
+		int tag_y_b=4;
+		int tag_d_bl=5;
+		MPI_Status status;
+		if(IdRNodeE.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSend[0][0][0],IdRNodeE.size(),1,tag_x_r);
+				MultiBlock_->Send(&buf_MacroSend[1][0][0],IdRNodeE.size(),1,tag_x_r);
+		}
+		if(IdGNodeW.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecv[0][0][0],IdGNodeW.size(),3,tag_x_r,status);
+				MultiBlock_->Recv(&buf_MacroRecv[1][0][0],IdGNodeW.size(),3,tag_x_r,status);
+		}
+
+		if(IdRNodeW.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSend[0][1][0],IdRNodeW.size(),3,tag_x_l);
+				MultiBlock_->Send(&buf_MacroSend[1][1][0],IdRNodeW.size(),3,tag_x_l);
+		}
+		if(IdGNodeE.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecv[0][1][0],IdGNodeE.size(),1,tag_x_l,status);
+				MultiBlock_->Recv(&buf_MacroRecv[1][1][0],IdGNodeE.size(),1,tag_x_l,status);
+		}
+			if(IdRNodeN.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSend[0][3][0],IdRNodeN.size(),0,tag_y_t);
+				MultiBlock_->Send(&buf_MacroSend[1][3][0],IdRNodeN.size(),0,tag_y_t);
+		}
+		if(IdGNodeS.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecv[0][3][0],IdGNodeS.size(),2,tag_y_t,status);
+				MultiBlock_->Recv(&buf_MacroRecv[1][3][0],IdGNodeS.size(),2,tag_y_t,status);
+		}
+		if(IdRNodeS.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSend[0][2][0],IdRNodeS.size(),2,tag_y_b);
+				MultiBlock_->Send(&buf_MacroSend[1][2][0],IdRNodeS.size(),2,tag_y_b);
+		}
+		if(IdGNodeN.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecv[0][2][0],IdGNodeN.size(),0,tag_y_b,status);
+				MultiBlock_->Recv(&buf_MacroRecv[1][2][0],IdGNodeN.size(),0,tag_y_b,status);
+		}
+	//Set variables from buffer to real variables
+		for (unsigned int i=0;i<IdGNodeE.size();i++)
+		{
+			G[0][IdGNodeE[i]]=buf_MacroRecv[0][1][i];
+			G[1][IdGNodeE[i]]=buf_MacroRecv[1][1][i];
+		}
+		for (unsigned int i=0;i<IdGNodeN.size();i++)
+		{
+			G[0][IdGNodeN[i]]=buf_MacroRecv[0][2][i];
+			G[1][IdGNodeN[i]]=buf_MacroRecv[1][2][i];
+		}
+		for (unsigned int i=0;i<IdGNodeW.size();i++)
+		{
+			G[0][IdGNodeW[i]]=buf_MacroRecv[0][0][i];
+			G[1][IdGNodeW[i]]=buf_MacroRecv[1][0][i];
+		}
+
+		for (unsigned int i=0;i<IdGNodeS.size();i++)
+		{
+			G[0][IdGNodeS[i]]=buf_MacroRecv[0][3][i];
+			G[1][IdGNodeS[i]]=buf_MacroRecv[1][3][i];
+		}
+
+	//Corners of the local domain
+		if(IdRNodeSE.size()>=1)
+		{
+				MultiBlock_->Send(&G[0][IdRNodeSE[0]],1,5,tag_x_l);
+				MultiBlock_->Send(&G[1][IdRNodeSE[0]],1,5,tag_x_l);
+		}
+		if(IdGNodeNW.size()>=1)
+		{
+				MultiBlock_->Recv(&G[0][IdGNodeNW[0]],1,6,tag_x_l,status);
+				MultiBlock_->Recv(&G[1][IdGNodeNW[0]],1,6,tag_x_l,status);
+		}
+		if(IdRNodeSW.size()>=1)
+		{
+				MultiBlock_->Send(&G[0][IdRNodeSW[0]],1,7,tag_x_l);
+				MultiBlock_->Send(&G[1][IdRNodeSW[0]],1,7,tag_x_l);
+		}
+		if(IdGNodeNE.size()>=1)
+		{
+				MultiBlock_->Recv(&G[0][IdGNodeNE[0]],1,4,tag_x_l,status);
+				MultiBlock_->Recv(&G[1][IdGNodeNE[0]],1,4,tag_x_l,status);
+		}
+		if(IdRNodeNE.size()>=1)
+		{
+				MultiBlock_->Send(&G[0][IdRNodeNE[0]],1,4,tag_x_l);
+				MultiBlock_->Send(&G[1][IdRNodeNE[0]],1,4,tag_x_l);
+		}
+		if(IdGNodeSW.size()>=1)
+		{
+				MultiBlock_->Recv(&G[0][IdGNodeSW[0]],1,7,tag_x_l,status);
+				MultiBlock_->Recv(&G[1][IdGNodeSW[0]],1,7,tag_x_l,status);
+		}
+		if(IdRNodeNW.size()>=1)
+		{
+				MultiBlock_->Send(&G[0][IdRNodeNW[0]],1,6,tag_d_bl);
+				MultiBlock_->Send(&G[1][IdRNodeNW[0]],1,6,tag_d_bl);
+		}
+		if(IdGNodeSE.size()>=1)
+		{
+				MultiBlock_->Recv(&G[0][IdGNodeSE[0]],1,5,tag_d_bl,status);
+				MultiBlock_->Recv(&G[1][IdGNodeSE[0]],1,5,tag_d_bl,status);
+		}
 }
 /*
 /// Corner treat by Chih-Fung Ho, Cheng Chang, Kuen-Hau Lin and Chao-An Lin

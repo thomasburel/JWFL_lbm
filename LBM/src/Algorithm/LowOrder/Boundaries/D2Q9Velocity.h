@@ -29,12 +29,14 @@ private:
 	void FixU(int const &BcNormal,int const *Connect, double const *UDef, double *U, double *V);
 	void NoGradU_1stOrder(int const &BcNormal,int const *Connect, double const *UDef, double *U, double *V);
 
-	void BC_HeZou_U(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in, double & U, double & V);
+	void BC_HeZou_U(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double & Rho, double & U, double & V);
 	void FUNC_HeZou_U (double & a,double & b,double & c,double & d,double & e,double & f,double & g,double & h,double & i,double & U,double & V);
+
+	void BC_Ladd(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double & Rho, double & U, double & V);
 
 // Pointers on function
 ///Simplify notation for pointer on a member function of D2Q9Velocity class for Velocity model used
-	typedef void(D2Q9Velocity::*VelocityMethod)(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in, double & U, double & V);
+	typedef void(D2Q9Velocity::*VelocityMethod)(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double & Rho, double & U, double & V);
 	typedef void(D2Q9Velocity::*CalculU)(int const &BcNormal,int const *Connect, double const *UDef, double *U, double *V);
 
 //Define name for pointers on functions

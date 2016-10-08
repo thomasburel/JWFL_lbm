@@ -13,6 +13,9 @@
 #include "D2Q9CommonVar.h"
 
 D2Q9CommonVar::D2Q9CommonVar() {
+	Ei=0;
+	omega=0;
+	Opposite=0;
 	Ei=new double* [9]; for(int i=0;i<9;i++) Ei[i]=new double [2];
 	omega=new double [9];
 	Opposite=new short int [9];
