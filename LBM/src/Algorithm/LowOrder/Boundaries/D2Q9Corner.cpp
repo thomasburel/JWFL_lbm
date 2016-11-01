@@ -219,27 +219,33 @@ double D2Q9Corner::FixRho(NodeCorner2D& Node, double *Rho){
 }
 //Get the density by using the two direct neighbours
 double D2Q9Corner::ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho){
+	double SumWeightCornerConvex=1.0/(4.0+3.0*std::sqrt(0.5));
+	double Invsqrt2=std::sqrt(0.5);
 	switch(Node.Get_BcNormal())
 	{
 	case 5:
-		direction1=1;
-		direction2=2;
-		doubleTmpReturn=(Rho[Node.Get_connect()[direction1]]+Rho[Node.Get_connect()[direction2]])*0.5;
+		if(Node.Get_CornerType()==Concave)
+			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]])*0.5;
+		else
+			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[5]]+Rho[Node.Get_connect()[6]]+Rho[Node.Get_connect()[8]]))*SumWeightCornerConvex;
 		break;
 	case 6:
-		direction1=2;
-		direction2=3;
-		doubleTmpReturn=(Rho[Node.Get_connect()[direction1]]+Rho[Node.Get_connect()[direction2]])*0.5;
+		if(Node.Get_CornerType()==Concave)
+			doubleTmpReturn=(Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]])*0.5;
+		else
+			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[5]]+Rho[Node.Get_connect()[6]]+Rho[Node.Get_connect()[7]]))*SumWeightCornerConvex;
 		break;
 	case 7:
-		direction1=3;
-		direction2=4;
-		doubleTmpReturn=(Rho[Node.Get_connect()[direction1]]+Rho[Node.Get_connect()[direction2]])*0.5;
+		if(Node.Get_CornerType()==Concave)
+			doubleTmpReturn=(Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]])*0.5;
+		else
+			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[6]]+Rho[Node.Get_connect()[7]]+Rho[Node.Get_connect()[8]]))*SumWeightCornerConvex;
 		break;
 	case 8:
-		direction1=1;
-		direction2=4;
-		doubleTmpReturn=(Rho[Node.Get_connect()[direction1]]+Rho[Node.Get_connect()[direction2]])*0.5;
+		if(Node.Get_CornerType()==Concave)
+			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[4]])*0.5;
+		else
+			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[5]]+Rho[Node.Get_connect()[7]]+Rho[Node.Get_connect()[8]]))*SumWeightCornerConvex;
 		break;
 	}
 

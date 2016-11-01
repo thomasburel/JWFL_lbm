@@ -9,8 +9,6 @@ CPP_SRCS += \
 ../src/Algorithm/LowOrder/D2Q9ColourFluid.cpp \
 ../src/Algorithm/LowOrder/D2Q9CommonVar.cpp \
 ../src/Algorithm/LowOrder/D2Q9_TwoPhases.cpp \
-../src/Algorithm/LowOrder/Gradients.cpp \
-../src/Algorithm/LowOrder/GradientsDEF.cpp \
 ../src/Algorithm/LowOrder/StreamLowOrder.cpp 
 
 OBJS += \
@@ -19,8 +17,6 @@ OBJS += \
 ./src/Algorithm/LowOrder/D2Q9ColourFluid.o \
 ./src/Algorithm/LowOrder/D2Q9CommonVar.o \
 ./src/Algorithm/LowOrder/D2Q9_TwoPhases.o \
-./src/Algorithm/LowOrder/Gradients.o \
-./src/Algorithm/LowOrder/GradientsDEF.o \
 ./src/Algorithm/LowOrder/StreamLowOrder.o 
 
 CPP_DEPS += \
@@ -29,8 +25,6 @@ CPP_DEPS += \
 ./src/Algorithm/LowOrder/D2Q9ColourFluid.d \
 ./src/Algorithm/LowOrder/D2Q9CommonVar.d \
 ./src/Algorithm/LowOrder/D2Q9_TwoPhases.d \
-./src/Algorithm/LowOrder/Gradients.d \
-./src/Algorithm/LowOrder/GradientsDEF.d \
 ./src/Algorithm/LowOrder/StreamLowOrder.d 
 
 

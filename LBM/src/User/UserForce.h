@@ -7,7 +7,7 @@
 
 #ifndef USER_USERFORCE_H_
 #define USER_USERFORCE_H_
-
+#include "../Core/Parameters.h"
 class UserForce {
 public:
 	UserForce();

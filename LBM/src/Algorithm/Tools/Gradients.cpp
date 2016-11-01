@@ -4,7 +4,7 @@
  *  Created on: 30 Jul 2016
  *      Author: Thomas Burel
  */
-#include "Gradients.h"
+#include "../Tools/Gradients.h"
 
 Gradients::Gradients(){
 	grad=0;

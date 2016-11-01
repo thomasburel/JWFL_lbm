@@ -89,5 +89,34 @@ void InitLBM::IniDomainTwoPhases(int rank,Node2D & Node,int elem, int nodenumber
 		break;
 	}
 }
-
+void InitLBM::IniContactAngle(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double & teta){
+	if(PtrParameters->Get_ContactAngleType()!=::NoTeta)
+	{
+		switch(Node.get_NodeType())
+		{
+		case Wall:
+			if(PtrParameters->Get_ContactAngleType()==FixTeta)
+				teta=PtrParameters->Get_ContactAngle();
+			else
+				Set_ContactAngle(*PtrParameters,elem, nodenumber, pos,teta);
+			break;
+		case SpecialWall:
+			if(PtrParameters->Get_ContactAngleType()==FixTeta)
+				teta=PtrParameters->Get_ContactAngle();
+			else
+				Set_ContactAngle(*PtrParameters,elem, nodenumber, pos,teta);
+			break;
+		case Corner:
+			if(PtrParameters->Get_ContactAngleType()==FixTeta)
+				teta=PtrParameters->Get_ContactAngle();
+			else
+				Set_ContactAngle(*PtrParameters,elem, nodenumber, pos,teta);
+			break;
+		default:
+			std::cout<<"Processor ID: "<<rank<<" Node number: "<<nodenumber<<" Node type not find in initialisation "<<std::endl;
+			std::cout<<"Processor ID: "<<rank<<" Node number: "<<nodenumber<<" Type of node is : "<<Node.get_NodeType()<<std::endl;
+			break;
+		}
+	}
+}
 

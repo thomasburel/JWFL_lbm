@@ -11,6 +11,7 @@
 #include "mpi.h"
 #include "Parameters.h"
 #include "../User/UserInit.h"
+#include "../User/UserContactAngle.h"
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/base_object.hpp>
@@ -23,7 +24,8 @@
 
 class InitLBM:
 		public MpiManager,
-		public UserInit
+		public UserInit,
+		public UserContactAngle
 		{
 public:
 	InitLBM();
@@ -32,6 +34,7 @@ public:
 	void IniMPI(ParallelManager* parallel_,int *argc, char ***argv, bool verbous_=false);
 	void IniDomainSinglePhase(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U);
 	void IniDomainTwoPhases(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double& Rho, double* U,double & alpha);
+	void IniContactAngle(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double & teta);
 
 
 private:

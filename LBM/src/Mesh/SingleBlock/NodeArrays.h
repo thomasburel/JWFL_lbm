@@ -16,6 +16,7 @@ public:
 	virtual ~NodeArrays();
     std::map<int,NodeType> TypeOfNode;
     std::map<int,int> NodeIndexByType;
+    int Get_NodeIndex(int const IndexNodeInDomain){return NodeIndexByType[IndexNodeInDomain];};
 
 };
 

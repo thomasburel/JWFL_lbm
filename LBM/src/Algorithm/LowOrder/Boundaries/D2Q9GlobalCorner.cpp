@@ -166,6 +166,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 		else	if(NodeTypeTmp1==Wall||NodeTypeTmp2==Wall)
 			{
 				if(NodeTypeTmp1==Wall)
+				{
 					switch(NodeTypeTmp2)
 					{
 					case Pressure:
@@ -173,6 +174,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 						break;
 					case Velocity:
 						BcMethods->ApplyCorner(Node,f_in,BcMethods->Get_Rho(Node.Get_connect()[1]),UDef[0],UDef[1],Rho,U,V);
+
 						break;
 					case Wall:
 						BcMethods->ApplyCornerWall(Node,f_in,Rho,U,V);
@@ -180,6 +182,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					default:
 						std::cerr<<"Global corner condition with one wall is not found"<<std::endl;
 					}
+				}
 				else
 					switch(NodeTypeTmp1)
 						{

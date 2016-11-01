@@ -25,134 +25,70 @@ UserInit::~UserInit() {
 void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, double* pos,double& Rho, double* U, double& alpha){
 
 	double Umax,H,L,Pmax,Pmin;
+	double teta,sigma,Diameter,Re,Ca;
 	PtrParameters.Get_UserParameters(Umax,H,L,Pmax,Pmin);
-	/*	if(pos[0<=0])
-		U[0]=Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
-	else
-		U[0]=0.0;
-	U[1]=0;
-	Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+	PtrParameters.Get_UserDroplets(teta,sigma,Diameter,Re,Ca);
+/*	U[0]=Umax*pos[1]/H;
+	U[1]=0.0;
+	Rho=Pmin;
+	alpha=0.0;
 
-// *********** Poiseuille ini***************
-	double Ubot=-Umax;//-0.01;
-	double Utop=Umax;//0.01;
-	double Vleft=0;//-0.01;
-	double Vright=0;//0.01;
-//Left side of the domain
-	if(pos[0]<=0)
-	// Global Corner at the bottom left side
- 		if(pos[1]<=0)
-  		{
-  			U[0]=Ubot;
-  			U[1]=Vleft;
-  			Rho=Pmax;
-  			alpha=0;
-  		}
-  		else
- 	// Global Corner at the Top left side
- 		if(pos[1]>=H)
-  		{
-  			U[0]=Utop;
-  			U[1]=Vleft;
-  			Rho=Pmax;
-  			alpha=0;
-  		}
-  	//Left side of the domain and excluding the two Global Corners
-  		else
-  		{
-   			U[0]=(Utop-Ubot)/H*pos[1]+Ubot;//Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
-  			U[1]=Vleft;
-  			Rho=Pmax;
-  			alpha=0;
- 		}
-	else
-//Right side of the domain
- 	if(pos[0]>=L)
-	// Global Corner at the bottom right side
-  		if(pos[1]<=0)
-  		{
-  			U[0]=Ubot;
-  			U[1]=Vright;
-  			Rho=Pmin;
-  			alpha=0;
-  		}
-  		else
-  	// Global Corner at the Top right side
-  		if(pos[1]>=H)
-  		{
-  			U[0]=Utop;
-  			U[1]=Vright;
-  			Rho=Pmin;
-  			alpha=0;
-  		}
-  	//Right side of the domain and excluding the two Global Corner
-  		else
-  		{
-    		U[0]=(Utop-Ubot)/H*pos[1]+Ubot;//Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
-  			U[1]=Vright;
-  			Rho=Pmin;
-  			alpha=0;
-  		}
-  	else
-//Bottom side of the domain
- 	if(pos[1]<=0)
-  	{
-  		U[0]=Ubot;
-  		U[1]=(Vright-Vleft)/L*pos[0]+Vleft;
-  		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;//Pmax-pos[0]*(Pmax-Pmin)/L;
-  		alpha=0;
-  	}
-	//Top side of the domain
-  	else
-  	{
-  		U[0]=Utop;
-  		U[1]=(Vright-Vleft)/L*pos[0]+Vleft;
-  		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;//Pmax-pos[0]*(Pmax-Pmin)/L;
-  		alpha=0;
-  	}
-*/
-	if(pos[1]<=0)
+	double R=Diameter/2.0;
+//	if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]+cos(teta)*R,2.0)<=R*R)
+	if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]-R,2.0)<=R*R)
 	{
-		U[0]=-Umax;
-	}
-	else if(pos[1]>=H)
+		alpha=1.0;
+		Rho=Pmin+sigma*3.0/R;
+	}*/
+	if(pos[0]<=10)
 	{
 		U[0]=Umax;
+		U[1]=0.0;
+		Rho=Pmin;
+		alpha=1.0;
 	}
 	else
 	{
 		U[0]=0.0;
+		U[1]=0.0;
+		Rho=Pmin;
+		alpha=0.0;
 	}
-	U[1]=0.0;
-	Rho=Pmax;
-	alpha=0.0;
+
 }
 
 void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U, double& alpha){
 	double Umax,H,L,Pmax,Pmin;
-	double Re,Ca,diameter, sigma;
+	double teta,sigma,Diameter,Re,Ca;
 	PtrParameters.Get_UserParameters(Umax,H,L,Pmax,Pmin);
-	PtrParameters.Get_TwoPhaseUserParameters(Re,Ca,diameter, sigma);
+	PtrParameters.Get_UserDroplets(teta,sigma,Diameter,Re,Ca);
 
-
-		double Ubot=0;//-0.01;
-		double Utop=0;//0.01;
-		double Vleft=0;//-0.01;
-		double Vright=0;//0.01;
-		U[0]=(Utop-Ubot)/H*pos[1]+Ubot;//Umax*4.0*(pos[1]/H)*(1-(pos[1]/H));
-		U[1]=(Vright-Vleft)/L*pos[0]+Vleft;
-		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
-
-		U[0]=0.0;//Umax*2.0*pos[1]/H-Umax;
+	/*	U[0]=Umax*pos[1]/H;
 		U[1]=0.0;
-		Rho=Pmax;
+		Rho=Pmin;
 		alpha=0.0;
 
-		double R=diameter/2.0;
-		if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]-(H)/2.0,2.0)<=R*R)
+		double R=Diameter/2.0;
+//		if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]+cos(teta)*R,2.0)<=R*R)
+		if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]-R,2.0)<=R*R)
 		{
 			alpha=1.0;
-		}
-		//alpha=pos[0]/L;
+			Rho=Pmin+sigma*3.0/R;
+		}*/
+
+	if(pos[0]<=10)
+	{
+		U[0]=Umax;
+		U[1]=0.0;
+		Rho=Pmin;
+		alpha=1.0;
+	}
+	else
+	{
+		U[0]=0.0;
+		U[1]=0.0;
+		Rho=Pmin;
+		alpha=0.0;
+	}
 }
 

@@ -47,6 +47,7 @@ enum modeltype {SinglePhase, ColourFluid};
 enum FluidType{Newtonian};
 enum UserForceType{None,LocalForce,BodyForce};
 enum GradientType{FD,LBMStencil};
+enum ExtrapolationType{NoExtrapol,TailorExtrapol,WeightDistanceExtrapol};
 
 //Boundary conditions enumeration
 enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular,HeZouWall,HeZouWallVel};

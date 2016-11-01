@@ -15,14 +15,13 @@
 #include "../Algorithm/LowOrder/CollideLowOrder.h"
 #include "../Algorithm/LowOrder/StreamLowOrder.h"
 #include "InitLBM.h"
-#include "../Algorithm/LowOrder/Gradients.h"
-
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 #include <boost/serialization/base_object.hpp>
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/assume_abstract.hpp>
+#include "../Algorithm/Tools/Gradients.h"
 
 class Solver: public Tau, public Convergence{
 public:

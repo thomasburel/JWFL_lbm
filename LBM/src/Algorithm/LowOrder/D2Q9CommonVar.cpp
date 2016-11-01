@@ -13,10 +13,12 @@
 #include "D2Q9CommonVar.h"
 
 D2Q9CommonVar::D2Q9CommonVar() {
+	pi=atan(1.0)*4.0;
 	Ei=0;
 	omega=0;
 	Opposite=0;
 	Ei=new double* [9]; for(int i=0;i<9;i++) Ei[i]=new double [2];
+	Ei_Norm=new double [9];
 	omega=new double [9];
 	Opposite=new short int [9];
 	//Distribution velocity
@@ -38,6 +40,9 @@ D2Q9CommonVar::D2Q9CommonVar() {
 	Ei[7][1]= -1.0;
 	Ei[8][0]= 1.0;
 	Ei[8][1]= -1.0;
+	for(int i=0;i<9;i++)
+		Ei_Norm[i]=std::sqrt(Ei[i][0]*Ei[i][0]+Ei[i][1]*Ei[i][1]);
+
 	//Weigh depending of the direction
 	omega[0]=4.0/9.0;
 	omega[1]=1.0/9.0;

@@ -5,7 +5,8 @@
  *      Author: thomas
  */
 
-#include "GradientsDEF.h"
+#include "../Tools/GradientsDEF.h"
+
 #include <iostream>
 GradientsDEF::GradientsDEF() {
 /*	gradient_scalar=0;

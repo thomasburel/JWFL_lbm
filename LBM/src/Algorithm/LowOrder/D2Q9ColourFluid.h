@@ -11,7 +11,7 @@
 #define SRC_ALGORITHM_LOWORDER_D2Q9COLOURFLUID_H_
 
 #include "D2Q9_TwoPhases.h"
-
+#include <cmath>
 
 #define Callfunction(pointer)  (this->*(pointer))
 
@@ -63,8 +63,7 @@ private:
 	void Set_Colour_gradient();
 	void Colour_gradient();
 
-	void Colour_gradient_FixTeta(int & nodenumber, int* connect,int & normal);
-	void Colour_gradient_NoCstTeta(int & nodenumber, int* connect,int & normal);
+
 	void Colour_gradient_Gunstensen(int & nodenumber, int* connect,int & normal);
 	void Colour_gradient_DensityGrad(int & nodenumber, int* connect,int & normal);
 	void Colour_gradient_DensityGradBc(int & nodenumber, int* connect,int & normal);
@@ -73,25 +72,36 @@ private:
 	void Colour_gradient_DensityNormalGradBc(int & nodenumber, int* connect,int & normal);
 	void Colour_gradient_DensityNormalGradCorner(int & nodenumber, int* connect,int & normal);
 
+	void Set_NormalWall();
+	void CalculNormal(int & nodenumber, int* connect,int & normal); //Normalise the colour gradient
+	void Not_CalculNormal(int & nodenumber, int* connect,int & normal){}; //Do nothing
+	void CalculNormal_NoTeta(int & nodenumber, int* connect,int & normal);
+	void CalculNormal_FixTeta(int & nodenumber, int* connect,int & normal);
+	void CalculNormal_NoCstTeta(int & nodenumber, int* connect,int & normal);
+
 	void Synchronise_Colour_gradient();
 
 // Recolouring definition
 	void Set_Recolouring();
 	double CosPhi(int nodenumber, int & direction,double & F_Norm);
 	void Recolouring_Latva(int & nodenumber, double * fi_tmp);
-
+	void Recolouring_Wall(int & nodenumber, double * fi_tmp);
 //Collide definition
 //	void CollideD2Q9ColourFluid(int & direction, double & fi,double &rho,double*  F,double & F_Norm, double & InvTau_, double &u, double &v);
 	void Set_Collide();
 	void Select_Colour_Operator(ColourOperatorType OperatorType_);
 	double TwoPhase_Collision_operator(int & i, double* F);
 	void SurfaceForce(int & nodenumber, int* connect,int & normal,double & Fx,double & Fy);
-	double Curvature(int & nodenumber, int* connect,int & normal);
+	void SurfaceForceWall(int & nodenumber, int* connect,int & normal,double & Fx,double & Fy);
 	double& Collision_operator_Grunau(int & i, int & nodenumber, double Ak);
 	double& Collision_operator_Reis(int & i, int & nodenumber, double Ak);
 	void Collision_Grunau(int & nodenumber, int* connect,int & normal,double* fi);
 	void Collision_Reis(int & nodenumber, int* connect,int & normal,double* fi);
 	void Collision_SurfaceForce(int & nodenumber, int* connect,int & normal,double* fi);
+	void Collision_SurfaceForceWall(int & nodenumber, int* connect,int & normal,double* fi);
+
+	double Curvature(int & nodenumber, int* connect,int & normal);
+	double CurvatureWall(int & nodenumber, int* connect,int & normal);
 
 	double TwoPhase_Collision_operator(int & nodenumber, int & direction, double & Ak, double* F, double & F_Norm);
 	double Convert_Alpha_To_Rho(double alpha);
@@ -99,6 +109,11 @@ private:
 	double Cal_RhoR_Corner(NodeCorner2D& Node);
 	double Cal_RhoB_Corner(NodeCorner2D& Node);
 
+	double ExtrapolationSpacial2ndOrder(double* Var,int index1,int index2){return 2.0*Var[index1]-Var[index2];};
+	void NormalDensityExtrapolationSpacial2ndOrder(int const & idxNodeArray, int & nodenumber, int* connect,int & normal);
+	void NormalDensityExtrapolationWeight(int const & idxNodeArray, int & nodenumber, int* connect,int & normal);
+	void NormalDensityNoExtrapolation(int const & idxNodeArray, int & nodenumber, int* connect,int & normal){};
+	void NormalDensityNoTeta(int const & idxNodeArray, int & nodenumber, int* connect,int & normal);
 // Boundary conditions depend of the model. Some functions has to be rewritten.
 	void ApplyBc();
 /*	void ApplyGlobalCorner(NodeCorner2D& NodeIn);
@@ -110,11 +125,14 @@ private:
 
 private:
 //Multiphase variables
+	double *testVar;
 	double *RhoN;// Normal density
 	double *Rhor;// Density red fluid
 	double *Rhob;// DensityBlue fluid
 	double **F, **G;///< Surface Force and Colour gradient/density gradient
+	double **Normal;///< normal of the interface
 	double *G_Norm;///< Norm of the colour gradient
+	double *Curv;//Store curvature
 	double tension;///< Surface tension
 	double *teta;///< Contact angle
 	double beta;///< Separation coefficient for the recolouring method
@@ -134,8 +152,12 @@ private:
 	typedef void(D2Q9ColourFluid::*Recolour)(int & nodenumber, double * fi_tmp);
 ///Simplify notation for pointer on a member function of D2Q9ColourFluid class for macroscopic variables calculation methods
 	typedef void(D2Q9ColourFluid::*Macro)(int & nodenumber);
+///Simplify notation for pointer on a member function of D2Q9ColourFluid class for extrapolation density in solid by considering a mixture fluid
+	typedef void(D2Q9ColourFluid::*ExtrapolDensity)(int const & idxNodeArray, int & nodenumber, int* connect,int & normal);
 ///Simplify notation for pointer on a member function of D2Q9ColourFluid class for collision models
 	typedef void(D2Q9ColourFluid::*Collision)(int & nodenumber, int* connect,int & normal,double* fi);
+///Simplify notation for pointer on a member function of D2Q9ColourFluid class for the normalisation of the Colour Gradient
+	typedef void(D2Q9ColourFluid::*CalNormal)(int & nodenumber, int* connect,int & normal);
 //Define name for pointers on functions
 	ColourGrad PtrColourGrad;///< Colour gradient pointer for interior nodes
 	ColourGrad PtrColourGradBc;///< Colour gradient pointer for boundary condition nodes
@@ -143,8 +165,11 @@ private:
 	ColourGrad PtrColourGradCorner;///< Colour gradient pointer for corner nodes
 	Recolour PtrRecolour;///< Recolouring pointer
 	Macro PtrMacro;///< Macroscopic pointer
+	ExtrapolDensity PtrExtrapolDensity;///< Pointer on Density extrapolation in Solid
 	Collision PtrCollision;///< Collision pointer
-
+	Collision PtrCollisionWall;///< Collision pointer
+	CalNormal PtrCalNormal;///< Calcul Normal
+	CalNormal PtrCalNormalWall;///< Calcul or fix normal at the wall
 };
 
 #endif /* SRC_ALGORITHM_LOWORDER_D2Q9COLOURFLUID_H_ */
