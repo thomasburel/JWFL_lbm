@@ -22,8 +22,9 @@
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/assume_abstract.hpp>
 #include "../Algorithm/Tools/Gradients.h"
+#include "../Algorithm/Tools/Extrapolation.h"
 
-class Solver: public Tau, public Convergence{
+class Solver: public Tau, public Convergence, public Extrapolation{
 public:
 	Solver();
 	virtual ~Solver();
