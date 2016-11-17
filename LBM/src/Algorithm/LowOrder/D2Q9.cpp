@@ -629,7 +629,16 @@ void D2Q9::ApplyBc(){
 	}
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
-		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f,NodeArrays->TypeOfNode);
+		//ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f,NodeArrays->TypeOfNode);
+		ExtrapolationCornerConcaveToSolid(Rho,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+		//ExtrapolationCornerConcaveToSolid(Rhob,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+		ExtrapolationCornerConcaveToSolid(U[0],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+		ExtrapolationCornerConcaveToSolid(U[1],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+
+//		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+
+		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U[0][NodeArrays->NodeSpecialWall[j].Get_index()],U[1][NodeArrays->NodeSpecialWall[j].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+
 	}
 	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{

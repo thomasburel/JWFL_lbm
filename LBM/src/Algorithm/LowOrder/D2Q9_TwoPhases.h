@@ -98,6 +98,17 @@ protected:
 	void CornerNodesSyncToGhost();
 	void SyncMacroVarToGhost();
 
+	//Tools
+inline	void Normalise(double* Var_x,double* Var_y, int nodenumber){
+	// Normalise
+	D_tmp=sqrt(Var_x[nodenumber]*Var_x[nodenumber]+Var_y[nodenumber]*Var_y[nodenumber]);
+	if(D_tmp>0)
+		{Var_x[nodenumber]/=D_tmp;Var_y[nodenumber]/=D_tmp;}
+	else
+		{Var_x[nodenumber]=0.0; Var_y[nodenumber]=0.0;}
+
+}
+
 
 protected:
 //Multiphase variables

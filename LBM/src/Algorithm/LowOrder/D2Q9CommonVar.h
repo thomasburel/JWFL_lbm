@@ -24,6 +24,7 @@ public:
 	double **Ei; //< Velocity in the distribution space
 	double *Ei_Norm;//< Velocity Magnitude in the distribution space (only need it in few models)
 	double pi;
+	double epsilon;
 };
 
 #endif /* SRC_ALGORITHM_LOWORDER_D2Q9COMMONVAR_H_ */

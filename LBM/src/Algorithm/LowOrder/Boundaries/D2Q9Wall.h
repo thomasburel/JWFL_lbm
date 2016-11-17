@@ -34,6 +34,9 @@ private:
 	void FUNC_HeZou_NoU (double & a,double & b,double & c,double & d,double & e,double & f,double & g,double & h,double & i);
 
 //Special wall methods
+//	void ApplyWallWall(NodeWall2D & Node, DistriFunct* f_in, std::map<int,NodeType> & TypeOfNode_);
+//	void ApplyWallPressure(NodeWall2D & Node, DistriFunct* f_in, std::map<int,NodeType> & TypeOfNode_);
+//	void ApplyWallVelocity(NodeWall2D & Node, DistriFunct* f_in, std::map<int,NodeType> & TypeOfNode_);
 	void ApplyBounceBackSymmetry(NodeWall2D & Node, DistriFunct* f_in, std::map<int,NodeType> & TypeOfNode_);
 	void ApplyDiffuseWallSymmetry(NodeWall2D & Node, DistriFunct* f_in, std::map<int,NodeType> & TypeOfNode_);
 

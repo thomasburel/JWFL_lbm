@@ -39,6 +39,7 @@ public:
 	virtual void ConvertToPhysicalUnit(Parameters &Param)=0;
 	virtual NodeArrays2D* Get_NodeArrays2D()=0;
 	virtual void Set_Connect(Parameters& Param)=0;
+	virtual void Mark1stLayerSolid()=0;
 };
 
 #endif /* MESH_SINGLEBLOCK_BLOCK_H_ */

@@ -34,25 +34,26 @@ int main(int argc, char *argv[]) {
 stringstream FileExportStream;
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 //Domain size
-	double H=41;
-	double L=600;
+	double L=400;
+	double H=100;
 
-	double Diameter=H/4.0;
+	double Diameter=H;
 	double Ca=0;
 
-	double U2_ref=0.001;
+	double U2_ref=0.01;
 	double Re=1;
 
 	double Rho1_ref=1;
 	double Rho2_ref=Rho1_ref;
 
-	double nu_1=0.3;
-	double lambda=1;
-	double nu_2=lambda*nu_1;
+	double nu_2=1.0/6.0;
+	double lambda=10;
+	double nu_1=lambda*nu_2;
 
-	double tau1=(6.0*nu_1+1.0)*0.5;;
-	double tau2=(6.0*nu_2+1.0)*0.5;;
-	double sigma=0.0;//0.001;
+	double tau1=(6.0*nu_1+1.0)*0.5;
+	double tau2=(6.0*nu_2+1.0)*0.5;
+	double La=0;
+	double sigma=0.0001;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
 
 
 	double Mach =U2_ref*std::sqrt(3);
@@ -79,8 +80,8 @@ stringstream FileExportStream;
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 
 // Set User Parameters
-	U2_ref=0.001;Pmax=1;Pmin=1;
-	double contactangle=90.0*pi/180.0;
+	//U2_ref=0.01;Pmax=1;Pmin=1;
+	double contactangle=120*pi/180.0;
 	Param.Set_ContactAngleType(FixTeta);//NoTeta, FixTeta or NonCstTeta
 	if(Param.Get_ContactAngleType()==NoTeta)
 		contactangle=pi/2.0;
@@ -98,7 +99,7 @@ stringstream FileExportStream;
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
-	Param.Set_BcType(Wall,Pressure,Wall,Velocity);
+	Param.Set_BcType(Wall,Periodic,Velocity,Periodic);
 
 
 /// Set Pressure Type
@@ -106,16 +107,16 @@ stringstream FileExportStream;
 /// Set Global Corner type
 	Param.Set_CornerPressureType(ExtrapolCP);//FixCP,ExtrapolCP
 /// Wall boundary condition type (Implemented BounceBack and Diffuse)
-	Param.Set_WallType(HeZouWall);//BounceBack,HeZouWall
+	Param.Set_WallType(BounceBack);//BounceBack,HeZouWall
 	Param.Set_VelocityModel(HeZouV);
 
 /// Number of maximum timestep
 	Param.Set_NbStep(100000);
 /// Interval for output
-	Param.Set_OutPutNSteps(1000);// interval
+	Param.Set_OutPutNSteps(2000);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(20);
-	Param.Set_ErrorMax(1e-7);
+	Param.Set_ErrorMax(1e-11);
 
 ///Selection of variables to export
 	Param.Set_VariablesOutput(true,true);// export Rho,U
@@ -125,15 +126,16 @@ stringstream FileExportStream;
 			<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
 			<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
 	FileExportStream.str("");
-	FileExportStream<<"Test_PoiseuilleFlow_90degree_with_obstacle_beta_0.6_NoSigma";
+	FileExportStream<<"TwoPhase_Periodic_M10_sigma0.0001_teta90";
 	Param.Set_OutputFileName(FileExportStream.str());
 
 	// Multiphase model (SinglePhase or ColourFluid)
 	Param.Set_Model(ColourFluid);
-	Param.Set_ViscosityType(ConstViscosity);//ConstViscosity,HarmonicViscosity
+	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
 
 	//Gradient definition
 	Param.Set_GradientType(LBMStencil); //FD or LBMStencil
+	Param.Set_ExtrapolationType(WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,WeightDistanceExtrapol
 
 /// Singlephase Parameters
 	Param.Set_Tau(tau1);
@@ -153,7 +155,7 @@ stringstream FileExportStream;
 	//Colour fluid Parameters
 	Param.Set_A1(0.00001);
 	Param.Set_A2(Param.Get_A1());
-	Param.Set_Beta(0.6);// Between 0 and 1
+	Param.Set_Beta(0.7);// Between 0 and 1
 	Param.Set_ColourGradType(DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
 	Param.Set_RecolouringType(LatvaKokkoRothman);
 	Param.Set_ColourOperatorType(SurfaceForce);//Grunau or Reis or SurfaceForce

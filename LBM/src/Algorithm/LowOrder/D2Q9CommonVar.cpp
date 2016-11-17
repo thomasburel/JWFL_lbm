@@ -14,6 +14,7 @@
 
 D2Q9CommonVar::D2Q9CommonVar() {
 	pi=atan(1.0)*4.0;
+	epsilon=1.e-10;
 	Ei=0;
 	omega=0;
 	Opposite=0;

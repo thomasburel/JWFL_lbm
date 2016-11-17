@@ -45,7 +45,8 @@ D2Q9ColourFluid::~D2Q9ColourFluid() {
 }
 
 D2Q9ColourFluid::D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini){
-//Initialise the common variables for the two phase models.
+	Rho_limiter=1.e-10;
+	//Initialise the common variables for the two phase models.
 	InitD2Q9TwoPhases(MultiBlock__,parallel__,Writer__, Parameters__, ini);
 //Set Pointers On Functions for selecting the right model dynamically
 	Set_PointersOnFunctions();
@@ -80,7 +81,7 @@ void D2Q9ColourFluid::Select_Colour_Operator(ColourOperatorType OperatorType_){
 	{
 	case ::SurfaceForce:
 		PtrCollision=&D2Q9ColourFluid::Collision_SurfaceForce;
-		PtrCollisionWall=&D2Q9ColourFluid::Collision_SurfaceForceWall;
+		PtrCollisionWall=&D2Q9ColourFluid::Collision_SurfaceForce;
 		break;
 	case ::Grunau:
 		PtrCollision=&D2Q9ColourFluid::Collision_Grunau;
@@ -252,15 +253,15 @@ void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 	F=new double*[2];
 	Normal=new double*[2];
 	Dic->AddSync("Rho",Rho);
-	Dic->AddVar(Vector,"ColourGrad",true,true,false,G[0],G[1]);
+	Dic->AddVar(Vector,"ColourGrad",false,true,false,G[0],G[1]);
 	Dic->AddVar(Scalar,"ColourGrad_Norm",true,true,false,G_Norm);
-	Dic->AddVar(Vector,"Normal",true,true,false,Normal[0],Normal[1]);
-	Dic->AddVar(Vector,"SurfaceForce",true,true,false,F[0],F[1]);
-	Dic->AddVar(Scalar,"RhoRed",true,true,true,Rhor);
-	Dic->AddVar(Scalar,"RhoBlue",true,true,true,Rhob);
+	Dic->AddVar(Vector,"Normal",false,true,false,Normal[0],Normal[1]);
+	Dic->AddVar(Vector,"SurfaceForce",false,true,false,F[0],F[1]);
+	Dic->AddVar(Scalar,"RhoRed",false,true,true,Rhor);
+	Dic->AddVar(Scalar,"RhoBlue",false,true,true,Rhob);
 	Dic->AddVar(Scalar,"RhoN",true,true,true,RhoN);
-	Dic->AddVar(Scalar,"Curvature",true,true,true,Curv);
-	Dic->AddVar(Scalar,"Check",true,true,true,testVar);
+	Dic->AddVar(Scalar,"Curvature",false,false,false,Curv);
+	Dic->AddVar(Scalar,"Check",false,false,false,testVar);
 	for(int i=0;i<nbnodes_total;i++)
 	{
 		G[0][i]=0;
@@ -272,6 +273,11 @@ void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 		F[0][i]=0;
 		F[1][i]=0;
 	}
+
+std::cout<<"Number of Solid first layer="<<NodeArrays->Solid1stLayer.size()<<std::endl
+		<<"Number of concave corner"<<NodeArrays->CornerConcave.size()<<std::endl
+		<<"Number of convex corner"<<NodeArrays->CornerConvex.size()<<std::endl;
+
 	InitColourFluidAllDomain(ini);
 }
 void D2Q9ColourFluid::InitColourFluidAllDomain(InitLBM& ini){
@@ -445,6 +451,9 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 		pos[1]=NodeArrays->NodeCorner[j].get_y();
 // Get initialise value from the user
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeCorner[j],0, idx,pos,Rho[idx],U_,alpha);
+// Set contact angle if needed
+		if(PtrParameters->Get_ContactAngleType()==::NonCstTeta)
+			ini.IniContactAngle(parallel->getRank(),NodeArrays->NodeWall[j],0, idx,pos,teta[idx]);
 // Initialise the blue and red densities
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
@@ -454,6 +463,8 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
 			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
 		}
+	if(PtrParameters->Get_ContactAngleType()==::FixTeta)
+		{teta[0]=PtrParameters->Get_ContactAngle();costeta=std::cos(teta[0]);sinteta=std::sin(teta[0]);}
 	}
 
 	for (int j=0;j<NodeArrays->NodeWall.size();j++)
@@ -480,7 +491,59 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 	}
 
 	if(PtrParameters->Get_ContactAngleType()==::FixTeta)
+	{
 		teta[0]=PtrParameters->Get_ContactAngle();
+		costeta=std::cos(teta[0]);
+		sinteta=std::sin(teta[0]);
+		if (std::abs(costeta)<epsilon) {
+			costeta=0.0;
+			sinteta=copysign(1.0,sinteta);
+		}
+		if (std::abs(costeta)>1.0-epsilon) {
+			costeta=copysign(1.0,costeta);
+			sinteta=0.0;
+		}
+		n1[0][0]=0.0;
+		n2[0][0]=n1[0][0];
+		n1[0][1]=0.0;
+		n2[0][1]=n1[0][1];
+		n1[1][0]=costeta;
+		n2[1][0]=n1[1][0];
+		n1[1][1]=sinteta;
+		n2[1][1]=-n1[1][1];
+		n1[2][0]=sinteta;
+		n2[2][0]=-n1[2][0];
+		n1[2][1]=costeta;
+		n2[2][1]=n1[2][1];
+		n1[3][0]=-costeta;
+		n2[3][0]=n1[3][0];
+		n1[3][1]=sinteta;
+		n2[3][1]=-n1[3][1];
+		n1[4][0]=sinteta;
+		n2[4][0]=-n1[4][0];
+		n1[4][1]=-costeta;
+		n2[4][1]=n1[4][1];
+		double InvSqrt2=1.0/std::sqrt(2.0);
+		n1[5][0]=InvSqrt2*(costeta-sinteta);
+		n1[5][1]=InvSqrt2*(costeta+sinteta);
+		n2[5][0]=InvSqrt2*(costeta+sinteta);
+		n2[5][1]=InvSqrt2*(costeta-sinteta);
+
+		n1[6][0]=InvSqrt2*(-costeta+sinteta);
+		n1[6][1]=InvSqrt2*(costeta+sinteta);
+		n2[6][0]=InvSqrt2*(-costeta-sinteta);
+		n2[6][1]=InvSqrt2*(costeta-sinteta);
+
+		n1[7][0]=InvSqrt2*(-costeta-sinteta);
+		n1[7][1]=InvSqrt2*(-costeta+sinteta);
+		n2[7][0]=InvSqrt2*(-costeta+sinteta);
+		n2[7][1]=InvSqrt2*(-costeta-sinteta);
+
+		n1[8][0]=InvSqrt2*(costeta+sinteta);
+		n1[8][1]=InvSqrt2*(-costeta+sinteta);
+		n2[8][0]=InvSqrt2*(costeta-sinteta);
+		n2[8][1]=InvSqrt2*(-costeta-sinteta);
+	}
 	delete [] pos;
 	delete [] U_;
 }
@@ -582,10 +645,13 @@ void D2Q9ColourFluid::run(){
 	ApplyBc();
 	Colour_gradient();
 	Synchronise_Colour_gradient();
+	Extrapolate_NormalInSolid();
+	Impose_ContactAngleInSolid();
 	ColourFluid_Collision();
 	UpdateMacroVariables();
 	if(parallel->getSize()>1)
 		SyncMacroVarToGhost();
+	Extrapol_Density_Corner();
 	Writer->Write_Output(it);
 	it++;
 	if(parallel->getSize()>1)
@@ -596,12 +662,15 @@ void D2Q9ColourFluid::run(){
 		{
 			Colour_gradient();
 			Synchronise_Colour_gradient();
+			Extrapolate_NormalInSolid();
+			Impose_ContactAngleInSolid();
 			ColourFluid_Collision();
 			SyncToGhost();
 			StreamD2Q9();;
 			ApplyBc();
 			UpdateMacroVariables();
 			SyncMacroVarToGhost();
+			Extrapol_Density_Corner();
 			if(it%OutPutNStep==0)
 			{
 				Writer->Write_Output(it);
@@ -635,10 +704,13 @@ void D2Q9ColourFluid::run(){
 		for (int i=1;i<NbStep+1;i++)
 		{
 			Colour_gradient();
+			Extrapolate_NormalInSolid();
+			Impose_ContactAngleInSolid();
 			ColourFluid_Collision();
 			StreamD2Q9();
 			ApplyBc();
 			UpdateMacroVariables();
+			Extrapol_Density_Corner();
 			if(i%OutPutNStep==0)
 			{
 				Writer->Write_Output(i);
@@ -989,8 +1061,130 @@ void D2Q9ColourFluid::CalculNormal_NoCstTeta(int & nodenumber, int* connect,int 
 		std::cerr<<" Normal for Colour gradient non constant Teta is not found"<<std::endl;
 	}
 }
+//Extrapolation of the normal of the interface at the first layer in the solid
+void D2Q9ColourFluid::Extrapolate_NormalInSolid(){
+	for (int j=0;j<NodeArrays->CornerConcave.size();j++)
+	{
+		ExtrapolationCornerConcaveToSolid(Normal[0],NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_connect(),NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_BcNormal());
+		ExtrapolationCornerConcaveToSolid(Normal[1],NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_connect(),NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_BcNormal());
+		Normalise(Normal[0],Normal[1],NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_connect()[Opposite[NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_BcNormal()]]);
+	}
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+		ExtrapolationWallToSolid(Normal[0],NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal());
+		ExtrapolationWallToSolid(Normal[1],NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal());
+		Normalise(Normal[0],Normal[1],NodeArrays->NodeWall[j].Get_connect()[Opposite[NodeArrays->NodeWall[j].Get_BcNormal()]]);
+	}
+	for (int j=0;j<NodeArrays->CornerConvex.size();j++)
+	{
+		ExtrapolationCornerConvexToSolid(Normal[0],NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_connect(),NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_BcNormal());
+		ExtrapolationCornerConvexToSolid(Normal[1],NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_connect(),NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_BcNormal());
+		Normalise(Normal[0],Normal[1],NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_connect()[Opposite[NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_BcNormal()]]);
+	}
+}
+void D2Q9ColourFluid::Impose_ContactAngleInSolid(){
+	//define the contact angle in the solid
+	for (int j=0;j<NodeArrays->CornerConcave.size();j++)
+	{
+		ContactAngleConcaveCornerInSolid(NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_connect(),NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_BcNormal());
+	}
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+		ContactAngleWallInSolid(NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal());
+	}
+	for (int j=0;j<NodeArrays->CornerConvex.size();j++)
+	{
+		ContactAngleConvexCornerInSolid(NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_connect(),NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_BcNormal());
+	}
+	//interpolate the contact angle on the boundary from in the solid and in the interior fluid
+	for (int j=0;j<NodeArrays->CornerConcave.size();j++)
+	{
+		ContactAngleConcaveCornerOnBc(NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_connect(),NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_BcNormal());
+	}
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+		ContactAngleWallOnBc(NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal());
+	}
+	for (int j=0;j<NodeArrays->CornerConvex.size();j++)
+	{
+		ContactAngleConvexCornerOnBc(NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_connect(),NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_BcNormal());
+	}
+}
+void D2Q9ColourFluid::Select_ContactAngle(int & normal,double & Nx, double & Ny){
+	D1=std::sqrt((Nx-n1[normal][0])*(Nx-n1[normal][0])+(Ny-n1[normal][1])*(Ny-n1[normal][1]));
+	D2=std::sqrt((Nx-n2[normal][0])*(Nx-n2[normal][0])+(Ny-n2[normal][1])*(Ny-n2[normal][1]));
+	r=D1/(D1+D2);rMinus1=1.0-r;
+	Nx=rMinus1*n1[normal][0]+r*n2[normal][0];
+	Ny=rMinus1*n1[normal][1]+r*n2[normal][1];
+}
+void D2Q9ColourFluid::ContactAngleConcaveCornerInSolid(int* connect, int & normal){
+	Select_ContactAngle(normal,Normal[0][connect[Opposite[normal]]],Normal[1][connect[Opposite[normal]]]);
+	switch(normal)
+	{
+	case 5:
+		Select_ContactAngle(IntRef(1),Normal[0][connect[3]],Normal[1][connect[3]]);
+		Select_ContactAngle(IntRef(2),Normal[0][connect[4]],Normal[1][connect[4]]);
 
-
+		break;
+	case 6:
+		Select_ContactAngle(IntRef(3),Normal[0][connect[1]],Normal[1][connect[1]]);
+		Select_ContactAngle(IntRef(2),Normal[0][connect[4]],Normal[1][connect[4]]);
+		break;
+	case 7:
+		Select_ContactAngle(IntRef(3),Normal[0][connect[1]],Normal[1][connect[1]]);
+		Select_ContactAngle(IntRef(4),Normal[0][connect[2]],Normal[1][connect[2]]);
+		break;
+	case 8:
+		Select_ContactAngle(IntRef(1),Normal[0][connect[3]],Normal[1][connect[3]]);
+		Select_ContactAngle(IntRef(4),Normal[0][connect[2]],Normal[1][connect[2]]);
+		break;
+	}
+}
+void D2Q9ColourFluid::ContactAngleConvexCornerInSolid(int* connect, int & normal){
+	Select_ContactAngle(normal,Normal[0][connect[Opposite[normal]]],Normal[1][connect[Opposite[normal]]]);
+}
+void D2Q9ColourFluid::ContactAngleWallInSolid(int* Connect, int & normal){
+	Select_ContactAngle(normal,Normal[0][Connect[Opposite[normal]]],Normal[1][Connect[Opposite[normal]]]);
+}
+void D2Q9ColourFluid::ContactAngleConcaveCornerOnBc(int* connect, int & normal){
+	Normal[0][connect[0]]=0.5*(Normal[0][connect[normal]]+Normal[0][connect[Opposite[normal]]]);
+	Normal[1][connect[0]]=0.5*(Normal[1][connect[normal]]+Normal[1][connect[Opposite[normal]]]);
+	// Normalise
+	D_tmp=sqrt(Normal[0][connect[0]]*Normal[0][connect[0]]+Normal[1][connect[0]]*Normal[1][connect[0]]);
+	if(D_tmp>0)
+		{Normal[0][connect[0]]/=D_tmp;Normal[1][connect[0]]/=D_tmp;}
+	else
+		{Normal[0][connect[0]]=0.0; Normal[1][connect[0]]=0.0;}
+	//Update the colour gradient
+	G[0][connect[0]]=Normal[0][connect[0]]*G_Norm[connect[0]];
+	G[1][connect[0]]=Normal[1][connect[0]]*G_Norm[connect[0]];
+}
+void D2Q9ColourFluid::ContactAngleConvexCornerOnBc(int* connect, int & normal){
+	Normal[0][connect[0]]=0.5*(Normal[0][connect[normal]]+Normal[0][connect[Opposite[normal]]]);
+	Normal[1][connect[0]]=0.5*(Normal[1][connect[normal]]+Normal[1][connect[Opposite[normal]]]);
+	// Normalise
+	D_tmp=sqrt(Normal[0][connect[0]]*Normal[0][connect[0]]+Normal[1][connect[0]]*Normal[1][connect[0]]);
+	if(D_tmp>0)
+		{Normal[0][connect[0]]/=D_tmp;Normal[1][connect[0]]/=D_tmp;}
+	else
+		{Normal[0][connect[0]]=0.0; Normal[1][connect[0]]=0.0;}
+	//Update the colour gradient
+	G[0][connect[0]]=Normal[0][connect[0]]*G_Norm[connect[0]];
+	G[1][connect[0]]=Normal[1][connect[0]]*G_Norm[connect[0]];
+}
+void D2Q9ColourFluid::ContactAngleWallOnBc(int* connect, int & normal){
+	Normal[0][connect[0]]=0.5*(Normal[0][connect[normal]]+Normal[0][connect[Opposite[normal]]]);
+	Normal[1][connect[0]]=0.5*(Normal[1][connect[normal]]+Normal[1][connect[Opposite[normal]]]);
+	// Normalise
+	D_tmp=sqrt(Normal[0][connect[0]]*Normal[0][connect[0]]+Normal[1][connect[0]]*Normal[1][connect[0]]);
+	if(D_tmp>0)
+		{Normal[0][connect[0]]/=D_tmp;Normal[1][connect[0]]/=D_tmp;}
+	else
+		{Normal[0][connect[0]]=0.0; Normal[1][connect[0]]=0.0;}
+	//Update the colour gradient
+	G[0][connect[0]]=Normal[0][connect[0]]*G_Norm[connect[0]];
+	G[1][connect[0]]=Normal[1][connect[0]]*G_Norm[connect[0]];
+}
 void D2Q9ColourFluid::Colour_gradient_Gunstensen(int & nodenumber, int* connect,int & normal){
 
 	for (int j=0;j<2;j++)
@@ -1242,10 +1436,16 @@ void D2Q9ColourFluid::ApplyBc(){
 
 	}
 
+	double alpha=0;
 	for (int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
-		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_AlphaDef()*NodeArrays->NodePressure[j].Get_RhoDef(), f[0],Rhor,U[0],U[1]);
-		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),(1-NodeArrays->NodePressure[j].Get_AlphaDef())*NodeArrays->NodePressure[j].Get_RhoDef(), f[1],Rhob,U[0],U[1]);
+//		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_AlphaDef()*NodeArrays->NodePressure[j].Get_RhoDef(), f[0],Rhor,U[0],U[1]);
+//		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),(1-NodeArrays->NodePressure[j].Get_AlphaDef())*NodeArrays->NodePressure[j].Get_RhoDef(), f[1],Rhob,U[0],U[1]);
+		ExtrapolationOnWall(RhoN,NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_BcNormal());
+		alpha=(RhoN[NodeArrays->NodePressure[j].Get_index()]+1.0)*0.5;
+		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),alpha*NodeArrays->NodePressure[j].Get_RhoDef(), f[0],Rhor,U[0],U[1]);
+		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),(1-alpha)*NodeArrays->NodePressure[j].Get_RhoDef(), f[1],Rhob,U[0],U[1]);
+
 	}
 	for (int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
@@ -1254,8 +1454,19 @@ void D2Q9ColourFluid::ApplyBc(){
 	}
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
-		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f[0],NodeArrays->TypeOfNode,Rhor,U[0],U[1]);
-		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f[1],NodeArrays->TypeOfNode,Rhob,U[0],U[1]);
+		ExtrapolationCornerConcaveToSolid(Rhor,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+		ExtrapolationCornerConcaveToSolid(Rhob,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+		ExtrapolationCornerConcaveToSolid(U[0],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+		ExtrapolationCornerConcaveToSolid(U[1],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+
+//		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+
+		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],Rhor[NodeArrays->NodeSpecialWall[j].Get_index()],U[0][NodeArrays->NodeSpecialWall[j].Get_index()],U[1][NodeArrays->NodeSpecialWall[j].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],Rhob[NodeArrays->NodeSpecialWall[j].Get_index()],U[0][NodeArrays->NodeSpecialWall[j].Get_index()],U[1][NodeArrays->NodeSpecialWall[j].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+
+//		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+//		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f[0],NodeArrays->TypeOfNode,Rhor,U[0],U[1]);
+//		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f[1],NodeArrays->TypeOfNode,Rhob,U[0],U[1]);
 	}
 	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
@@ -1291,7 +1502,17 @@ void D2Q9ColourFluid::ApplyBc(){
 	parallel->barrier();
 
 }
-
+void D2Q9ColourFluid::Extrapol_Density_Corner(){
+	//Extrapolation of density or normal density at the first layer in the solid
+			for (int j=0;j<NodeArrays->NodeWall.size();j++)
+			{
+				(this->*PtrExtrapolDensity)(j,NodeArrays->NodeWall[j].Get_index(),NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal());
+			}
+			for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+			{
+				(this->*PtrExtrapolDensity)(j,NodeArrays->NodeCorner[j].Get_index(),NodeArrays->NodeCorner[j].Get_connect(),NodeArrays->NodeCorner[j].Get_BcNormal());
+			}
+}
 
 void D2Q9ColourFluid::UpdateMacroVariables(){
 
@@ -1327,15 +1548,7 @@ void D2Q9ColourFluid::UpdateMacroVariables(){
 		{
 			(this->*PtrMacro)(NodeArrays->NodePeriodic[j].Get_index());
 		}
-//Extrapolation of density or normal density at the first layer in the solid
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
-		{
-			(this->*PtrExtrapolDensity)(j,NodeArrays->NodeWall[j].Get_index(),NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal());
-		}
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
-		{
-			(this->*PtrExtrapolDensity)(j,NodeArrays->NodeCorner[j].Get_index(),NodeArrays->NodeCorner[j].Get_connect(),NodeArrays->NodeCorner[j].Get_BcNormal());
-		}
+
 }
 
 void D2Q9ColourFluid::MacroVariables(int& idx){

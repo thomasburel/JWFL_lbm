@@ -25,9 +25,13 @@ public:
 	void SelectExtrapolationType(ExtrapolationType Type_);
 
 //Scalar Extrapolations
-	void ExtrapolationWall (double *Var, int * Connect, int & normal);
-	void ExtrapolationCornerConcave (double *Var, int * Connect, int & normal);
-	void ExtrapolationCornerConvex (double *Var, int * Connect, int & normal);
+	void ExtrapolationOnWall (double *Var, int * Connect, int & normal);
+	void ExtrapolationOnCornerConcave (double *Var, int * Connect, int & normal);
+	void ExtrapolationOnCornerConvex (double *Var, int * Connect, int & normal);
+
+	void ExtrapolationWallToSolid (double * & Var, int * Connect, int & normal);
+	void ExtrapolationCornerConcaveToSolid (double * & Var, int * Connect, int & normal);
+	void ExtrapolationCornerConvexToSolid (double * & Var, int * Connect, int & normal);
 
 private:
  // Extrapolation object to be able to select different kind of Extrapolation automatically

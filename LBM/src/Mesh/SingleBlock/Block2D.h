@@ -50,6 +50,7 @@ public:
 	virtual void ConvertToPhysicalUnit(Parameters &Param);
 	virtual NodeArrays2D* Get_NodeArrays2D();
 	virtual void Set_Connect(Parameters& Param);
+	virtual void Mark1stLayerSolid();
 
 	void Correct_Solid_Ghost();
 	void Get_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
@@ -78,7 +79,7 @@ private:
 	void Connect_highOrder();
 	void GenerateSolid(Parameters &Param,int &ndSolidNode,int &firstSolid);
 	void DetectDirectInterior(int & nodeID, int & nbinterior);
-	void DetectSpecialWall(int & nodeID,int x,int y, int nx, int ny, bool & specialwall, unsigned int & directionwall);
+	void DetectSpecialWall(int & nodeID,int x,int y, bool & specialwall, unsigned int & directionwall);
 	void CreateCorner(int &nodeID);
 	void CreateWall(int &nodeID);
 	void CreateSpecialWall(int &nodeID);
@@ -113,7 +114,7 @@ private:
 	int NbGhostNode;
 	int NbRealNodes, NbTotalNodes;
 	std::vector<int> Elems; //4 nodes to define each cell
-    int dx,dy;
+    int dx,dy,nx,ny;
     std::map<int,int> LocalToGlobalNode;
 	std::vector<int> IdNodeN,IdNodeE,IdNodeS,IdNodeW;
 	std::vector<int> IdNodeSW,IdNodeSE,IdNodeNW,IdNodeNE;

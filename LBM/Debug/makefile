@@ -15,6 +15,7 @@ RM := rm -rf
 -include src/Mesh/MultiBlock/subdir.mk
 -include src/IO/subdir.mk
 -include src/Core/subdir.mk
+-include src/Algorithm/Tools/subdir.mk
 -include src/Algorithm/LowOrder/Boundaries/subdir.mk
 -include src/Algorithm/LowOrder/subdir.mk
 -include src/subdir.mk

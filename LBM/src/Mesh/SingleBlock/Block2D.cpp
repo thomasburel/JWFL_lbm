@@ -19,6 +19,7 @@ Block2D::Block2D(int dx_, int dy_) : dx(dx_),dy(dy_)
 	Coord_physical=new double[2];
 	periodic[0]=false;
 	periodic[1]=false;
+	nx=0;ny=0;
 }
 
 Block2D::~Block2D() {
@@ -2129,7 +2130,7 @@ void Block2D::DetectDirectInterior(int & nodeID, int & nbinterior)
 		}
 	}
 }
-void Block2D::DetectSpecialWall(int & nodeID,int x,int y, int nx, int ny, bool & specialwall, unsigned int & directionwall)
+void Block2D::DetectSpecialWall(int & nodeID,int x,int y, bool & specialwall, unsigned int & directionwall)
 {
 	directionwall=-1;//Negative value to generate an error if it is not a special wall
 	int nbspecialwall=0;// check if only one special wall is detected
@@ -2292,7 +2293,7 @@ void Block2D::ModifyMeshByUser(Parameters &Param){
 
 	if(Param.Get_Verbous())
 		std::cout<<"Processor ID: "<<rank<<" Number of node:"<<NbRealNodes<<std::endl;
-
+	nx=Param.Get_Nx();ny=Param.Get_Ny();
 	GenerateSolid(Param, ndSolidNode,firstSolid);
 	int computenode=Node.size()-NbGhostNode-ndSolidNode;
 	int sizeIdBcBeforeSolid=IdBoundaries.size();
@@ -2300,31 +2301,25 @@ void Block2D::ModifyMeshByUser(Parameters &Param){
 	bool specialwall=false;
 	std::vector<int> IdSpecialNode;
 	unsigned int directionspecialwall;
+
 	for (int i=0;i<IdSolidNode.size();i++)
 	{
 
-		DetectSpecialWall(IdSolidNode[i], Node[IdSolidNode[i]]->get_x(),Node[IdSolidNode[i]]->get_y(),Param.Get_Nx(),Param.Get_Ny(),specialwall,directionspecialwall);
+		DetectSpecialWall(IdSolidNode[i], Node[IdSolidNode[i]]->get_x(),Node[IdSolidNode[i]]->get_y(),specialwall,directionspecialwall);
 		if(specialwall)
 			IdSpecialNode.push_back(IdSolidNode[i]);
 
-		//CreateCorner(IdSolidNode[i]);
-//			std::cout<< "***** Special wall detected: "<<IdSolidNode[i]<<" Direction special wall: "<< directionspecialwall<<" ******"<<std::endl;
-
-//		else
-//		{
-			DetectDirectInterior(IdSolidNode[i], nbinterior);
-			CreateWallandCorners(Param,IdSolidNode[i] , nbinterior,specialwall);
-//		}
-
+		DetectDirectInterior(IdSolidNode[i], nbinterior);
+		CreateWallandCorners(Param,IdSolidNode[i] , nbinterior,specialwall);
 	}
-	//Remove Ghost node convert to wall or corner
+	//Remove Solid Ghost node convert to wall or corner
 	for(int i=0;i<Id_SolidGhost.size();i++)
 	{
 		Block2D::ChangeNodeType(Id_SolidGhost[i],Solid);
 	}
 	for(int i=0;i<IdSpecialNode.size();i++)
 	{
-		DetectSpecialWall(IdSpecialNode[i], Node[IdSpecialNode[i]]->get_x(),Node[IdSpecialNode[i]]->get_y(),Param.Get_Nx(),Param.Get_Ny(),specialwall,directionspecialwall);
+		DetectSpecialWall(IdSpecialNode[i], Node[IdSpecialNode[i]]->get_x(),Node[IdSpecialNode[i]]->get_y(),specialwall,directionspecialwall);
 		if(specialwall)
 			CreateSpecialWall(IdSpecialNode[i]);
 	}
@@ -2804,19 +2799,33 @@ int Block2D::Get_BcNormal(NodeWall2D & nodeIn)
 }
 int Block2D::Get_BcNormal_SpecialWall(NodeWall2D & nodeIn)
 {
+	if(nodeIn.get_x()==0 )
+	{
+		if(NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]!=Solid)
+			intTmpReturn=5;
+		else
+			intTmpReturn=8;
+	}
+	if(nodeIn.get_x()==nx )
+	{
+		if(NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]!=Solid)
+			intTmpReturn=6;
+		else
+			intTmpReturn=7;
+	}
 	if(nodeIn.get_y()==0 )
 	{
 		if(NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]!=Solid)
-			intTmpReturn=1;
+			intTmpReturn=5;
 		else
-			intTmpReturn=3;
+			intTmpReturn=6;
 	}
-	if(nodeIn.get_y()>0 )
+	if(nodeIn.get_y()==ny )
 	{
 		if(NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]!=Solid)
-			intTmpReturn=1;
+			intTmpReturn=8;
 		else
-			intTmpReturn=3;
+			intTmpReturn=7;
 	}
 	return intTmpReturn;
 }
@@ -3457,4 +3466,81 @@ void Block2D::Set_CommNodes()
 		myFlux<<IdGNodeNE[i]<<" x: "<< Node[IdGNodeNE[i]]->get_x()<<" y: "<< Node[IdGNodeNE[i]]->get_y()<<" ";
 		*/
 }
+void Block2D::Mark1stLayerSolid(){
+	for(int i=0;i<NodeArrays.NodeWall.size();i++)
+		switch(NodeArrays.NodeWall[i].Get_BcNormal())
+		{
+		case 1:
+			NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeWall[i].Get_connect()[3]);
+			break;
+		case 2:
+			NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeWall[i].Get_connect()[4]);
+			break;
+		case 3:
+			NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeWall[i].Get_connect()[1]);
+			break;
+		case 4:
+			NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeWall[i].Get_connect()[2]);
+			break;
+		}
+	for(int i=0;i<NodeArrays.NodeCorner.size();i++)
+		switch(NodeArrays.NodeCorner[i].Get_BcNormal())
+		{
+		case 5:
+			if(NodeArrays.NodeCorner[i].Get_CornerType()==Convex)
+			{
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[7]);
+				NodeArrays.CornerConvex.push_back(i);
+			}
+			else
+			{
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[7]);
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[3]);
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[4]);
+				NodeArrays.CornerConcave.push_back(i);
+			}
+			break;
+		case 6:
+			if(NodeArrays.NodeCorner[i].Get_CornerType()==Convex)
+			{
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[8]);
+				NodeArrays.CornerConvex.push_back(i);
+			}
+			else
+			{
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[8]);
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[1]);
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[4]);
+				NodeArrays.CornerConcave.push_back(i);
+			}			break;
+		case 7:
+			if(NodeArrays.NodeCorner[i].Get_CornerType()==Convex)
+			{
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[5]);
+				NodeArrays.CornerConvex.push_back(i);
+			}
+			else
+			{
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[5]);
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[1]);
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[2]);
+				NodeArrays.CornerConcave.push_back(i);
+			}			break;
+		case 8:
+			if(NodeArrays.NodeCorner[i].Get_CornerType()==Convex)
+			{
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[6]);
+				NodeArrays.CornerConvex.push_back(i);
+			}
+			else
+			{
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[6]);
+				NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[3]);
+				NodeArrays.	Solid1stLayer.push_back(NodeArrays.NodeCorner[i].Get_connect()[2]);
+				NodeArrays.CornerConcave.push_back(i);
+			}			break;
+		}
+	std::sort( NodeArrays.Solid1stLayer.begin(), NodeArrays.Solid1stLayer.end() );
+	NodeArrays.Solid1stLayer.erase( std::unique( NodeArrays.Solid1stLayer.begin(), NodeArrays.Solid1stLayer.end() ), NodeArrays.Solid1stLayer.end() );
 
+}

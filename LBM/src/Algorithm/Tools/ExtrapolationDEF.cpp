@@ -19,7 +19,9 @@ ExtrapolationDEF::ExtrapolationDEF(int dimension_, int nb_vel) {
 ExtrapolationDEF::~ExtrapolationDEF() {
 
 }
-
+NoExtrapolation::NoExtrapolation(){}
+NoExtrapolation::NoExtrapolation(int dimension, int nb_vel){}
+NoExtrapolation::~NoExtrapolation(){}
 
 ExtrapolationTailor::ExtrapolationTailor() {
 	dimension=0;
@@ -33,8 +35,63 @@ ExtrapolationTailor::ExtrapolationTailor(int dimension_, int nb_vel){
 	dimension=dimension_;
 	nb_Vel=nb_vel;
 }
+///First order Tailor extrapolation
+void ExtrapolationTailor::ExtrapolationOnWall (double *Var, int * Connect, int & normal){
+
+	switch(normal)
+	{
+	case 1:
+		Var[Connect[0]]=Var[Connect[1]];
+		break;
+	case 2:
+		Var[Connect[0]]=Var[Connect[2]];
+		break;
+	case 3:
+		Var[Connect[0]]=Var[Connect[3]];
+		break;
+	case 4:
+		Var[Connect[0]]=Var[Connect[4]];
+		break;
+	}
+}
+///First order Tailor extrapolation
+void ExtrapolationTailor::ExtrapolationOnCornerConcave (double *Var, int * Connect, int & normal){
+	switch(normal)
+	{
+	case 5:
+		Var[Connect[0]]=Var[Connect[5]];
+		break;
+	case 6:
+		Var[Connect[0]]=Var[Connect[6]];
+		break;
+	case 7:
+		Var[Connect[0]]=Var[Connect[7]];
+		break;
+	case 8:
+		Var[Connect[0]]=Var[Connect[8]];
+		break;
+	}
+}
+///First order Tailor extrapolation
+void ExtrapolationTailor::ExtrapolationOnCornerConvex(double *Var, int * Connect, int & normal){
+	switch(normal)
+	{
+	case 5:
+		Var[Connect[0]]=Var[Connect[5]];
+		break;
+	case 6:
+		Var[Connect[0]]=Var[Connect[6]];
+		break;
+	case 7:
+		Var[Connect[0]]=Var[Connect[7]];
+		break;
+	case 8:
+		Var[Connect[0]]=Var[Connect[8]];
+		break;
+	}
+}
 ///Second order Tailor extrapolation
-void ExtrapolationTailor::ExtrapolationWall (double *Var, int * Connect, int & normal){
+void ExtrapolationTailor::ExtrapolationWallToSolid (double *Var, int * Connect, int & normal){
 
 	switch(normal)
 	{
@@ -53,7 +110,7 @@ void ExtrapolationTailor::ExtrapolationWall (double *Var, int * Connect, int & n
 	}
 }
 ///Second order Tailor extrapolation
-void ExtrapolationTailor::ExtrapolationCornerConcave (double *Var, int * Connect, int & normal){
+void ExtrapolationTailor::ExtrapolationCornerConcaveToSolid (double *Var, int * Connect, int & normal){
 	switch(normal)
 	{
 	case 5:
@@ -79,7 +136,7 @@ void ExtrapolationTailor::ExtrapolationCornerConcave (double *Var, int * Connect
 	}
 }
 ///Second order Tailor extrapolation
-void ExtrapolationTailor::ExtrapolationCornerConvex (double *Var, int * Connect, int & normal){
+void ExtrapolationTailor::ExtrapolationCornerConvexToSolid (double *Var, int * Connect, int & normal){
 	switch(normal)
 	{
 	case 5:
@@ -101,83 +158,140 @@ void ExtrapolationTailor::ExtrapolationCornerConvex (double *Var, int * Connect,
 ExtrapolationWeightDistance::ExtrapolationWeightDistance(){
 	InvSqrt2=std::sqrt(0.5);
 	InvSqrt2_5=std::sqrt(0.4);//0.4=2/5
-	InvSumWeightWall=1.0/(1.0+2.0*InvSqrt2);
-	InvSumWeightCornerConvex=1.0/(2.0+1.0*InvSqrt2);
-	InvSumWeightCornerConcave=1.0/(1.0+2.0*InvSqrt2_5);//0.4=2/5
-	InvSumWeightCornerWall=1.0/(1.0+1.0*InvSqrt2);
+	InvSumWeightWallToSolid=1.0/(1.0+2.0*InvSqrt2);
+	InvSumWeightCornerConvexToSolid=1.0/(2.0+1.0*InvSqrt2);
+	InvSumWeightCornerConcaveToSolid=1.0/(1.0+2.0*InvSqrt2_5);//0.4=2/5
+	InvSumWeightCornerWallToSolid=1.0/(1.0+1.0*InvSqrt2);
+	InvSumWeightOnCornerConvex=1.0/(4.0+3.0*InvSqrt2);
+	InvSumWeightOnCornerConcave=1.0/(2.0+1.0*InvSqrt2);
+	InvSumWeightOnWall=1.0/(1.0+2.0*InvSqrt2);
 }
 ExtrapolationWeightDistance::ExtrapolationWeightDistance(int dimension_,int nb_vel){
 	dimension=dimension_;
 	nb_Vel=nb_vel;
 	InvSqrt2=std::sqrt(0.5);
 	InvSqrt2_5=std::sqrt(0.4);//0.4=2/5
-	InvSumWeightWall=1.0/(1.0+2.0*InvSqrt2);
-	InvSumWeightCornerConvex=1.0/(2.0+1.0*InvSqrt2);
-	InvSumWeightCornerConcave=1.0/(1.0+2.0*InvSqrt2_5);//0.4=2/5
-	InvSumWeightCornerWall=1.0/(1.0+1.0*InvSqrt2);
+	InvSumWeightWallToSolid=1.0/(1.0+2.0*InvSqrt2);
+	InvSumWeightCornerConvexToSolid=1.0/(2.0+1.0*InvSqrt2);
+	InvSumWeightCornerConcaveToSolid=1.0/(1.0+2.0*InvSqrt2_5);
+	InvSumWeightCornerWallToSolid=1.0/(1.0+1.0*InvSqrt2);
+	InvSumWeightOnCornerConvex=1.0/(4.0+3.0*InvSqrt2);
+	InvSumWeightOnCornerConcave=1.0/(2.0+1.0*InvSqrt2);
+	InvSumWeightOnWall=1.0/(1.0+2.0*InvSqrt2);
 }
 ExtrapolationWeightDistance::~ExtrapolationWeightDistance(){
 
 }
-
-void ExtrapolationWeightDistance::ExtrapolationWall (double *Var, int * Connect, int & normal){
+void ExtrapolationWeightDistance::ExtrapolationOnWall(double *Var, int * Connect, int & normal){
 	switch(normal)
 	{
 	case 1:
-		Var[Connect[3]]=InvSumWeightWall*(InvSqrt2*(Var[Connect[2]]+Var[Connect[4]])+Var[Connect[0]]);
+		Var[Connect[0]]=InvSumWeightOnWall*(InvSqrt2*(Var[Connect[5]]+Var[Connect[8]])+Var[Connect[1]]);
 		break;
 	case 2:
-		Var[Connect[4]]=InvSumWeightWall*(InvSqrt2*(Var[Connect[1]]+Var[Connect[3]])+Var[Connect[0]]);
+		Var[Connect[0]]=InvSumWeightOnWall*(InvSqrt2*(Var[Connect[5]]+Var[Connect[6]])+Var[Connect[2]]);
 		break;
 	case 3:
-		Var[Connect[1]]=InvSumWeightWall*(InvSqrt2*(Var[Connect[2]]+Var[Connect[4]])+Var[Connect[0]]);
+		Var[Connect[0]]=InvSumWeightOnWall*(InvSqrt2*(Var[Connect[6]]+Var[Connect[7]])+Var[Connect[3]]);
 		break;
 	case 4:
-		Var[Connect[2]]=InvSumWeightWall*(InvSqrt2*(Var[Connect[1]]+Var[Connect[3]])+Var[Connect[0]]);
+		Var[Connect[0]]=InvSumWeightOnWall*(InvSqrt2*(Var[Connect[7]]+Var[Connect[8]])+Var[Connect[4]]);
 		break;
 	}
 }
-void ExtrapolationWeightDistance::ExtrapolationCornerConcave (double *Var, int * Connect, int & normal){
+void ExtrapolationWeightDistance::ExtrapolationOnCornerConcave (double *Var, int * Connect, int & normal){
 	switch(normal)
 	{
 	case 5:
-		Var[Connect[3]]=InvSumWeightCornerWall*(InvSqrt2*Var[Connect[2]]+Var[Connect[0]]);
-		Var[Connect[4]]=InvSumWeightCornerWall*(InvSqrt2*Var[Connect[1]]+Var[Connect[0]]);
-		Var[Connect[7]]=InvSumWeightCornerConcave*(InvSqrt2_5*(Var[Connect[3]]+Var[Connect[4]])+Var[Connect[0]]);
+		Var[Connect[0]]=InvSumWeightOnCornerConcave*(Var[Connect[1]]+Var[Connect[2]]+InvSqrt2*Var[Connect[5]]);
 		break;
 	case 6:
-		Var[Connect[1]]=InvSumWeightCornerWall*(InvSqrt2*Var[Connect[2]]+Var[Connect[0]]);
-		Var[Connect[4]]=InvSumWeightCornerWall*(InvSqrt2*Var[Connect[3]]+Var[Connect[0]]);
-		Var[Connect[8]]=InvSumWeightCornerConcave*(InvSqrt2_5*(Var[Connect[3]]+Var[Connect[2]])+Var[Connect[0]]);
+		Var[Connect[0]]=InvSumWeightOnCornerConcave*(Var[Connect[3]]+Var[Connect[2]]+InvSqrt2*Var[Connect[6]]);
 		break;
 	case 7:
-		Var[Connect[1]]=InvSumWeightCornerWall*(InvSqrt2*Var[Connect[4]]+Var[Connect[0]]);
-		Var[Connect[2]]=InvSumWeightCornerWall*(InvSqrt2*Var[Connect[3]]+Var[Connect[0]]);
-		Var[Connect[5]]=InvSumWeightCornerConcave*(InvSqrt2_5*(Var[Connect[3]]+Var[Connect[4]])+Var[Connect[0]]);
+		Var[Connect[0]]=InvSumWeightOnCornerConcave*(Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*Var[Connect[7]]);
 		break;
 	case 8:
-		Var[Connect[3]]=InvSumWeightCornerWall*(InvSqrt2*Var[Connect[4]]+Var[Connect[0]]);
-		Var[Connect[2]]=InvSumWeightCornerWall*(InvSqrt2*Var[Connect[1]]+Var[Connect[0]]);
-		Var[Connect[6]]=InvSumWeightCornerConcave*(InvSqrt2_5*(Var[Connect[1]]+Var[Connect[4]])+Var[Connect[0]]);
+		Var[Connect[0]]=InvSumWeightOnCornerConcave*(Var[Connect[1]]+Var[Connect[4]]+InvSqrt2*Var[Connect[8]]);
+		break;
+	}
+}
+void ExtrapolationWeightDistance::ExtrapolationOnCornerConvex (double *Var, int * Connect, int & normal){
+	switch(normal)
+	{
+	case 5:
+		Var[Connect[7]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[5]]+Var[Connect[6]]+Var[Connect[8]]));
+		break;
+	case 6:
+		Var[Connect[8]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[5]]+Var[Connect[6]]+Var[Connect[7]]));
+		break;
+	case 7:
+		Var[Connect[5]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[6]]+Var[Connect[7]]+Var[Connect[8]]));
+
+		break;
+	case 8:
+		Var[Connect[6]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[5]]+Var[Connect[7]]+Var[Connect[8]]));
+		break;
+	}
+
+}
+void ExtrapolationWeightDistance::ExtrapolationWallToSolid (double *Var, int * Connect, int & normal){
+	switch(normal)
+	{
+	case 1:
+		Var[Connect[3]]=InvSumWeightWallToSolid*(InvSqrt2*(Var[Connect[2]]+Var[Connect[4]])+Var[Connect[0]]);
+		break;
+	case 2:
+		Var[Connect[4]]=InvSumWeightWallToSolid*(InvSqrt2*(Var[Connect[1]]+Var[Connect[3]])+Var[Connect[0]]);
+		break;
+	case 3:
+		Var[Connect[1]]=InvSumWeightWallToSolid*(InvSqrt2*(Var[Connect[2]]+Var[Connect[4]])+Var[Connect[0]]);
+		break;
+	case 4:
+		Var[Connect[2]]=InvSumWeightWallToSolid*(InvSqrt2*(Var[Connect[1]]+Var[Connect[3]])+Var[Connect[0]]);
+		break;
+	}
+}
+void ExtrapolationWeightDistance::ExtrapolationCornerConcaveToSolid (double *Var, int * Connect, int & normal){
+	switch(normal)
+	{
+	case 5:
+		Var[Connect[3]]=InvSumWeightCornerWallToSolid*(InvSqrt2*Var[Connect[2]]+Var[Connect[0]]);
+		Var[Connect[4]]=InvSumWeightCornerWallToSolid*(InvSqrt2*Var[Connect[1]]+Var[Connect[0]]);
+		Var[Connect[7]]=InvSumWeightCornerConcaveToSolid*(InvSqrt2_5*(Var[Connect[1]]+Var[Connect[2]])+Var[Connect[0]]);
+		break;
+	case 6:
+		Var[Connect[1]]=InvSumWeightCornerWallToSolid*(InvSqrt2*Var[Connect[2]]+Var[Connect[0]]);
+		Var[Connect[4]]=InvSumWeightCornerWallToSolid*(InvSqrt2*Var[Connect[3]]+Var[Connect[0]]);
+		Var[Connect[8]]=InvSumWeightCornerConcaveToSolid*(InvSqrt2_5*(Var[Connect[3]]+Var[Connect[2]])+Var[Connect[0]]);
+		break;
+	case 7:
+		Var[Connect[1]]=InvSumWeightCornerWallToSolid*(InvSqrt2*Var[Connect[4]]+Var[Connect[0]]);
+		Var[Connect[2]]=InvSumWeightCornerWallToSolid*(InvSqrt2*Var[Connect[3]]+Var[Connect[0]]);
+		Var[Connect[5]]=InvSumWeightCornerConcaveToSolid*(InvSqrt2_5*(Var[Connect[3]]+Var[Connect[4]])+Var[Connect[0]]);
+		break;
+	case 8:
+		Var[Connect[3]]=InvSumWeightCornerWallToSolid*(InvSqrt2*Var[Connect[4]]+Var[Connect[0]]);
+		Var[Connect[2]]=InvSumWeightCornerWallToSolid*(InvSqrt2*Var[Connect[1]]+Var[Connect[0]]);
+		Var[Connect[6]]=InvSumWeightCornerConcaveToSolid*(InvSqrt2_5*(Var[Connect[1]]+Var[Connect[4]])+Var[Connect[0]]);
 
 		break;
 	}
 }
-void ExtrapolationWeightDistance::ExtrapolationCornerConvex (double *Var, int * Connect, int & normal){
+void ExtrapolationWeightDistance::ExtrapolationCornerConvexToSolid (double *Var, int * Connect, int & normal){
 	switch(normal)
 	{
 	case 5:
-		Var[Connect[7]]=InvSumWeightCornerConvex*(Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*Var[Connect[0]]);
+		Var[Connect[7]]=InvSumWeightCornerConvexToSolid*(Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*Var[Connect[0]]);
 		break;
 	case 6:
-		Var[Connect[8]]=InvSumWeightCornerConvex*(Var[Connect[1]]+Var[Connect[4]]+InvSqrt2*Var[Connect[0]]);
+		Var[Connect[8]]=InvSumWeightCornerConvexToSolid*(Var[Connect[1]]+Var[Connect[4]]+InvSqrt2*Var[Connect[0]]);
 		break;
 	case 7:
-		Var[Connect[5]]=InvSumWeightCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+InvSqrt2*Var[Connect[0]]);
-
+		Var[Connect[5]]=InvSumWeightCornerConvexToSolid*(Var[Connect[1]]+Var[Connect[2]]+InvSqrt2*Var[Connect[0]]);
 		break;
 	case 8:
-		Var[Connect[6]]=InvSumWeightCornerConvex*(Var[Connect[3]]+Var[Connect[2]]+InvSqrt2*Var[Connect[0]]);
+		Var[Connect[6]]=InvSumWeightCornerConvexToSolid*(Var[Connect[3]]+Var[Connect[2]]+InvSqrt2*Var[Connect[0]]);
 		break;
 	}
 

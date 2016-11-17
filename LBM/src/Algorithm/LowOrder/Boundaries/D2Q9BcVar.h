@@ -13,6 +13,7 @@
 #ifndef SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9BCVAR_H_
 #define SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9BCVAR_H_
 
+#include "../../Tools/Extrapolation.h"
 #include "../../../Mesh/SingleBlock/Node2D.h"
 #include "../../../Core/Parameters.h"
 #include "../../../Core/GlobalDef.h"

@@ -21,16 +21,19 @@ public:
 	virtual ~D2Q9Periodic();
 
 	void Set_Periodic(Parameters *Param);
-	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const &Rho_def, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V);
+	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const &Rho_def, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V, double weightDensity=1);
 
 private:
-	void ApplyPeriodicBc(int const &BcNormal,int const *Connect, double const &Rho_def, double const *UDef, double *LocalForce, DistriFunct* f_in);
+	void ApplyPeriodicBc(int const &BcNormal,int const *Connect, double const &Rho_def, double & weightDensity, double const *UDef, double *LocalForce, DistriFunct* f_in);
+	void ApplyPeriodicBc_PressureForce(int const &BcNormal,int const *Connect, double const &Rho_def, double & weightDensity, double const *UDef, double *LocalForce, DistriFunct* f_in);
+
 // Pointers on function
 ///Simplify notation for pointer on a member function of D2Q9Periodic class for Periodic model used
-	typedef void(D2Q9Periodic::*PeriodicMethod)(int const &BcNormal,int const *Connect, double const &Rho_def, double const *UDef, double *LocalForce, DistriFunct* f_in);
+	typedef void(D2Q9Periodic::*PeriodicMethod)(int const &BcNormal,int const *Connect, double const &Rho_def, double & weightDensity, double const *UDef, double *LocalForce, DistriFunct* f_in);
 //Define name for pointers on functions
 	PeriodicMethod PtrPeriodicMethod;
 	double *LocalForce;
+	double PressureDrop,PressureDropAdjust;
 };
 
 #endif /* SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9PERIODIC_H_ */

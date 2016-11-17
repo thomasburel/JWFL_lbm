@@ -780,6 +780,7 @@ NodeArrays2D* MultiBlock2D::Get_NodeArrays2D(){
 void MultiBlock2D::reorganizeNodeByType(){
 	Block2D_.reorganizeNodeByType();
 	Block2D_.Set_Connect(*PtrParameters);
+	Block2D_.Mark1stLayerSolid();
 }
 void MultiBlock2D::Correct_SolidGhost()
 {

@@ -16,6 +16,11 @@ public:
 	virtual ~NodeArrays();
     std::map<int,NodeType> TypeOfNode;
     std::map<int,int> NodeIndexByType;
+	std::vector<int> Solid1stLayer;
+	std::vector<int> Solid1stLayerInCornerArray;
+	std::vector<int> CornerConcave;
+	std::vector<int> CornerConvex;
+
     int Get_NodeIndex(int const IndexNodeInDomain){return NodeIndexByType[IndexNodeInDomain];};
 
 };
@@ -36,6 +41,6 @@ public:
 	std::vector<NodeVelocity2D> NodeVelocity;
 	std::vector<NodePressure2D> NodePressure;
 	std::vector<NodeSymmetry2D> NodeSymmetry;
-	int Get_sizeInterior(){return NodeInterior.size();};
+
 };
 #endif /* MESH_SINGLEBLOCK_NODEARRAYS_H_ */

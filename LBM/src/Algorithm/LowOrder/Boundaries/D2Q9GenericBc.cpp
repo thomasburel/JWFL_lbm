@@ -63,12 +63,12 @@ void D2Q9GenericBc::ApplyWall(int const &BcNormal,int const *Connect, DistriFunc
 void D2Q9GenericBc::ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V){
 	D2Q9WallBc.ApplyWall(BcNormal,Connect,f_in,Rho,U,V);
 }
-void D2Q9GenericBc::ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_){
+/*void D2Q9GenericBc::ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_){
 	D2Q9WallBc.ApplySpecialWall(Node,f_in,TypeOfNode_,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
 }
 void D2Q9GenericBc::ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_,double * & Rho, double * &U, double * &V){
 	D2Q9WallBc.ApplySpecialWall(Node,f_in,TypeOfNode_,Rho,U,V);
-}
+}*/
 void D2Q9GenericBc::ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef){
 	D2Q9CornerBc.ApplyCorner(Node,f_in,RhoDef,UDef,VDef,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
 }
@@ -80,4 +80,10 @@ void D2Q9GenericBc::ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in){
 }
 void D2Q9GenericBc::ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V){
 	D2Q9CornerBc.ApplyCornerWall(Node,f_in,Rho,U,V);
+}
+void D2Q9GenericBc::ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V){
+	D2Q9CornerBc.ApplyPreVelSpecialWall(Node,f_in,RhoDef,UDef,VDef);
+}
+void D2Q9GenericBc::ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V){
+	D2Q9CornerBc.ApplyCornerSpecialWall(Node,f_in,Rho,U,V);
 }

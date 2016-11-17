@@ -17,14 +17,31 @@ public:
 	ExtrapolationDEF(int dimension, int nb_vel);
 	virtual ~ExtrapolationDEF();
 	//Extrapolation
-	virtual void ExtrapolationWall (double *Var, int * Connect, int & normal)=0;
-	virtual void ExtrapolationCornerConcave (double *Var, int * Connect, int & normal)=0;
-	virtual void ExtrapolationCornerConvex (double *Var, int * Connect, int & normal)=0;
+	virtual void ExtrapolationOnWall (double *Var, int * Connect, int & normal)=0;
+	virtual void ExtrapolationOnCornerConcave (double *Var, int * Connect, int & normal)=0;
+	virtual void ExtrapolationOnCornerConvex (double *Var, int * Connect, int & normal)=0;
+
+	virtual void ExtrapolationWallToSolid (double *Var, int * Connect, int & normal)=0;
+	virtual void ExtrapolationCornerConcaveToSolid (double *Var, int * Connect, int & normal)=0;
+	virtual void ExtrapolationCornerConvexToSolid (double *Var, int * Connect, int & normal)=0;
 
 protected:
-//	double* gradient_scalar;
-//	double** gradient_vector;
 	int dimension,nb_Vel;
+};
+class NoExtrapolation: public ExtrapolationDEF {
+public:
+	NoExtrapolation();
+	NoExtrapolation(int dimension, int nb_vel);
+	virtual ~NoExtrapolation();
+//Extrapolation
+	void ExtrapolationOnWall (double *Var, int * Connect, int & normal){};
+	void ExtrapolationOnCornerConcave (double *Var, int * Connect, int & normal){};
+	void ExtrapolationOnCornerConvex (double *Var, int * Connect, int & normal){};
+
+	void ExtrapolationWallToSolid (double *Var, int * Connect, int & normal){};
+	void ExtrapolationCornerConcaveToSolid (double *Var, int * Connect, int & normal){};
+	void ExtrapolationCornerConvexToSolid (double *Var, int * Connect, int & normal){};
+
 };
 class ExtrapolationTailor: public ExtrapolationDEF {
 public:
@@ -32,10 +49,13 @@ public:
 	ExtrapolationTailor(int dimension, int nb_vel);
 	virtual ~ExtrapolationTailor();
 //Extrapolation
-	void ExtrapolationWall (double *Var, int * Connect, int & normal);
-	void ExtrapolationCornerConcave (double *Var, int * Connect, int & normal);
-	void ExtrapolationCornerConvex (double *Var, int * Connect, int & normal);
+	void ExtrapolationOnWall (double *Var, int * Connect, int & normal);
+	void ExtrapolationOnCornerConcave (double *Var, int * Connect, int & normal);
+	void ExtrapolationOnCornerConvex (double *Var, int * Connect, int & normal);
 
+	void ExtrapolationWallToSolid (double *Var, int * Connect, int & normal);
+	void ExtrapolationCornerConcaveToSolid (double *Var, int * Connect, int & normal);
+	void ExtrapolationCornerConvexToSolid (double *Var, int * Connect, int & normal);
 };
 class ExtrapolationWeightDistance: public ExtrapolationDEF {
 public:
@@ -43,17 +63,25 @@ public:
 	ExtrapolationWeightDistance(int dimension, int nb_vel);
 	virtual ~ExtrapolationWeightDistance();
 //Extrapolation
-	void ExtrapolationWall (double *Var, int * Connect, int & normal);
-	void ExtrapolationCornerConcave (double *Var, int * Connect, int & normal);
-	void ExtrapolationCornerConvex (double *Var, int * Connect, int & normal);
+	void ExtrapolationOnWall (double *Var, int * Connect, int & normal);
+	void ExtrapolationOnCornerConcave (double *Var, int * Connect, int & normal);
+	void ExtrapolationOnCornerConvex (double *Var, int * Connect, int & normal);
+
+	void ExtrapolationWallToSolid (double *Var, int * Connect, int & normal);
+	void ExtrapolationCornerConcaveToSolid (double *Var, int * Connect, int & normal);
+	void ExtrapolationCornerConvexToSolid (double *Var, int * Connect, int & normal);
 
 
 private:
 	double InvSqrt2;
 	double InvSqrt2_5;
-	double InvSumWeightWall;
-	double InvSumWeightCornerConvex;
-	double InvSumWeightCornerConcave;
-	double InvSumWeightCornerWall;
+	double InvSumWeightWallToSolid;
+	double InvSumWeightCornerConvexToSolid;
+	double InvSumWeightCornerConcaveToSolid;
+	double InvSumWeightCornerWallToSolid;
+	double InvSumWeightOnWall;
+	double InvSumWeightOnCornerConvex;
+	double InvSumWeightOnCornerConcave;
+
 };
 #endif /* ALGORITHM_LOWORDER_EXTRAPOLATIONSDEF_H_ */

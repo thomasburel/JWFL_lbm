@@ -15,8 +15,9 @@
 
 #include "D2Q9GenericBc.h"
 #include "D2Q9GlobalCorner.h"
+#include "D2Q9SpecialWall.h"
 
-class D2Q9Bc: public D2Q9GenericBc, public D2Q9GlobalCorner {
+class D2Q9Bc: public D2Q9GenericBc, public D2Q9GlobalCorner, public D2Q9SpecialWall {
 public:
 	D2Q9Bc();
 	virtual ~D2Q9Bc();

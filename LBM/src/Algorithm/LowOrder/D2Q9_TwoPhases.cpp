@@ -31,8 +31,27 @@ D2Q9TwoPhases::D2Q9TwoPhases() {
 	size_MacroBuf=0;
 	Nd_MacroVariables_sync=0;
 	Rho1=0; Rho2=0;
+	Opposite[0]=0;
+	Opposite[1]=3;
+	Opposite[2]=4;
+	Opposite[3]=1;
+	Opposite[4]=2;
+	Opposite[5]=7;
+	Opposite[6]=8;
+	Opposite[7]=5;
+	Opposite[8]=6;
 }
 void D2Q9TwoPhases::InitD2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini) {
+	Opposite[0]=0;
+	Opposite[1]=3;
+	Opposite[2]=4;
+	Opposite[3]=1;
+	Opposite[4]=2;
+	Opposite[5]=7;
+	Opposite[6]=8;
+	Opposite[7]=5;
+	Opposite[8]=6;
+
 
 	f_tmp=new double[9];
 	f=new DistriFunct*[2];
@@ -45,6 +64,7 @@ void D2Q9TwoPhases::InitD2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* 
 	InvTau=1.0/PtrParameters->Get_Tau();
 	intTmpReturn=0;
 	doubleTmpReturn=0;
+
 
 	EiCollide=Ei;
 	omegaCollide=omega;

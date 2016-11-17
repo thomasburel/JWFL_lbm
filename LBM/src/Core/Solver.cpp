@@ -132,6 +132,7 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	nbvelo=Solver::PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
 	Gradients::initGradients(2,nbvelo,Solver::PtrParameters->Get_GradientType());
+	Extrapolation::initExtrapolation(2,nbvelo,Solver::PtrParameters->Get_ExtrapolationType());
 	Dic=new Dictionary(2,nbnode);
 	PtrDicConv=Dic;
 	Add_TwoDistributionsToDictionary();

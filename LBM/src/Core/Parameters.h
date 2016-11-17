@@ -57,6 +57,7 @@ enum VelocityModel{HeZouV,Ladd};
 enum VelocityType{FixV,zeroVGrad1st};
 enum CornerModel{HoChan};
 enum CornerPressureType{FixCP,ExtrapolCP};
+enum PeriodicType{Simple,PressureForce};
 
 //Two phases enumeration
 enum TetaType{NoTeta, FixTeta, NonCstTeta};
@@ -167,6 +168,7 @@ public:
 	double Get_Tau_1() const {return Tau_1;};
 	void Set_Tau_2(double Tau){Tau_2=Tau;};
 	double Get_Tau_2() const {return Tau_2;};
+
 private:
 	friend class boost::serialization::access;
 	template<class Archive>
@@ -278,6 +280,10 @@ public:
 	CornerModel Get_CornerModel() const {return CornerModelParam;};
 	void Set_CornerPressureType(CornerPressureType CornerPressureType_){CornerPressureTypeParam=CornerPressureType_;};
 	CornerPressureType Get_CornerPressureType() const {return CornerPressureTypeParam;};
+	void Set_PressureDrop(double PressureDropIn){PressureDropParam=PressureDropIn;};
+	double Get_PressureDrop() const {return PressureDropParam;};
+	void Set_PeriodicType(PeriodicType Type){PeriodicTypeParam=Type;};
+	PeriodicType Get_PeriodicType() const {return PeriodicTypeParam;};
 protected:
 	WallType WallTypeParam;
 	SymmetryType SymmetryTypeParam;
@@ -289,6 +295,8 @@ protected:
 	VelocityType VelocityTypeParam;
 	CornerModel CornerModelParam;
 	CornerPressureType CornerPressureTypeParam;
+	PeriodicType PeriodicTypeParam;
+	double PressureDropParam;
 };
 
 class SolverParameters {
@@ -322,6 +330,8 @@ public:
 	double Get_ErrorMax(){return ErrorMax;};
 	void Set_GradientType(GradientType GradientType_){Gradient=GradientType_;};
 	GradientType Get_GradientType() const{return Gradient;};
+	void Set_ExtrapolationType(ExtrapolationType ExtrapolationType_){Extrapol=ExtrapolationType_;};
+	ExtrapolationType Get_ExtrapolationType() const{return Extrapol;};
 	void Set_ContactAngle(double teta_){teta=teta_;};
 	double Get_ContactAngle(){return teta;};
 	void Set_ContactAngleType(TetaType tetaType_){tetaType=tetaType_;};
@@ -342,6 +352,7 @@ protected:
 	modeltype model;
 	FluidType fluid;
 	GradientType Gradient;
+	ExtrapolationType Extrapol;
 	UserForceType UserForce;
 	int NbVelocities;
 	double cs,cs2;

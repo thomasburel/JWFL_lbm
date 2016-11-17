@@ -19,7 +19,9 @@ public:
 	void SetSymmetryType(SymmetryType &Type, double x, double y);
 	//void ChangeNode(Node3D &Node, bool solid );
 protected:
-
+double a,b,epsilon;
+double R,H,L,teta,pi;
+double beta;
 };
 
 #endif /* USER_USERMESH_H_ */

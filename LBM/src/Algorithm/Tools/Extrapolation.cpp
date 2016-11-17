@@ -29,6 +29,9 @@ void Extrapolation::SelectExtrapolationType(ExtrapolationType Type_){
 	// Add new Extrapolation type here
 		switch(Type)
 		{
+		case NoExtrapol:
+			Extrapol=new NoExtrapolation();
+			break;
 		case TailorExtrapol:
 			Extrapol=new ExtrapolationTailor(dimension, nb_Vel);
 			break;
@@ -36,20 +39,30 @@ void Extrapolation::SelectExtrapolationType(ExtrapolationType Type_){
 			Extrapol=new ExtrapolationWeightDistance(dimension, nb_Vel);
 			break;
 		default:
+			Extrapol=new ExtrapolationWeightDistance(dimension, nb_Vel);
 			std::cerr<<" Extrapolation type not found"<<std::endl;
 		}
 //	}
 }
 
 //Scalar Extrapolation
-void Extrapolation::ExtrapolationWall (double *Var, int * Connect, int & normal){
-	Extrapol->ExtrapolationWall(Var,Connect,normal);
+void Extrapolation::ExtrapolationOnWall (double *Var, int * Connect, int & normal){
+	Extrapol->ExtrapolationOnWall(Var,Connect,normal);
 }
-void Extrapolation::ExtrapolationCornerConcave (double *Var, int * Connect, int & normal){
-	Extrapol->ExtrapolationCornerConcave(Var,Connect,normal);
+void Extrapolation::ExtrapolationOnCornerConcave (double *Var, int * Connect, int & normal){
+	Extrapol->ExtrapolationOnCornerConcave(Var,Connect,normal);
 }
-void Extrapolation::ExtrapolationCornerConvex (double *Var, int * Connect, int & normal){
-	Extrapol->ExtrapolationCornerConvex(Var,Connect,normal);
+void Extrapolation::ExtrapolationOnCornerConvex (double *Var, int * Connect, int & normal){
+	Extrapol->ExtrapolationOnCornerConvex(Var,Connect,normal);
+}
+void Extrapolation::ExtrapolationWallToSolid (double * & Var, int * Connect, int & normal){
+	Extrapol->ExtrapolationWallToSolid(Var,Connect,normal);
+}
+void Extrapolation::ExtrapolationCornerConcaveToSolid (double * & Var, int * Connect, int & normal){
+	Extrapol->ExtrapolationCornerConcaveToSolid(Var,Connect,normal);
+}
+void Extrapolation::ExtrapolationCornerConvexToSolid (double * & Var, int * Connect, int & normal){
+	Extrapol->ExtrapolationCornerConvexToSolid(Var,Connect,normal);
 }
 
 

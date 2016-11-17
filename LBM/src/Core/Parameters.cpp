@@ -55,6 +55,8 @@ Parameters::Parameters()
 	tetaType=NoTeta;
 	teta=std::acos(-1)/2;// pi/2
 	ErrorMax=1e-10;
+	PeriodicTypeParam=Simple;
+	PressureDropParam=0;
 }
 
 Parameters::~Parameters() {

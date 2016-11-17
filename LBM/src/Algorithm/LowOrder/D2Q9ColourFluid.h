@@ -79,6 +79,15 @@ private:
 	void CalculNormal_FixTeta(int & nodenumber, int* connect,int & normal);
 	void CalculNormal_NoCstTeta(int & nodenumber, int* connect,int & normal);
 
+	void Extrapolate_NormalInSolid();
+	void Impose_ContactAngleInSolid();
+	void Select_ContactAngle(int & normal,double & Nx, double & Ny);
+	void ContactAngleConcaveCornerInSolid(int* connect, int & normal);
+	void ContactAngleConvexCornerInSolid(int* connect, int & normal);
+	void ContactAngleWallInSolid(int* connect, int & normal);
+	void ContactAngleConcaveCornerOnBc(int* connect, int & normal);
+	void ContactAngleConvexCornerOnBc(int* connect, int & normal);
+	void ContactAngleWallOnBc(int* connect, int & normal);
 	void Synchronise_Colour_gradient();
 
 // Recolouring definition
@@ -108,6 +117,7 @@ private:
 	double Convert_Rho_To_Alpha(double Rho);
 	double Cal_RhoR_Corner(NodeCorner2D& Node);
 	double Cal_RhoB_Corner(NodeCorner2D& Node);
+	void Extrapol_Density_Corner();
 
 	double ExtrapolationSpacial2ndOrder(double* Var,int index1,int index2){return 2.0*Var[index1]-Var[index2];};
 	void NormalDensityExtrapolationSpacial2ndOrder(int const & idxNodeArray, int & nodenumber, int* connect,int & normal);
@@ -140,10 +150,18 @@ private:
 	double A2;///< Guntensen parameter for the blue fluid
 	double Bi[9];///< Reis correction
 	double Rho_limiter;///< Approximation to null density
+	int I_tmp;// Temporary integer
+	int& IntRef(int I_input){I_tmp=I_input;return I_tmp;};
 	double D_tmp;// Temporary double
+	double& doubleRef(int D_input){D_tmp=D_input;return D_tmp;};
 	double* PtrD_tmp;// Temporary pointer for a double
 	double DVec_2D_tmp[2];// Temporary vector 2D for a double
 	double DArray_2D_tmp[2][2];// Temporary vector 2D for a double
+
+	double n1[9][2],n2[9][2];
+	double D1,D2,r,rMinus1;
+	double costeta,sinteta;
+
 // Pointers on function
 
 ///Simplify notation for pointer on a member function of D2Q9ColourFluid class for Colour Gradient methods
