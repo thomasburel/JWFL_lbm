@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
 stringstream FileExportStream;
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 //Domain size
-	double L=400;
-	double H=100;
+	double L=200;
+	double H=200;
 
 	double Diameter=H;
 	double Ca=0;
@@ -58,10 +58,12 @@ stringstream FileExportStream;
 
 	double Mach =U2_ref*std::sqrt(3);
 	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
+//Pressure drop
+	double deltaP=0.001;
 // Pressure inlet
-	double Pmax=1;
+	double Pmax=1+deltaP;
 // Pressure outlet
-	double Pmin=1;
+	double Pmin=1-deltaP;
 
 /// Create object for the simulation.
 	Simulation simu;
@@ -99,7 +101,7 @@ stringstream FileExportStream;
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
-	Param.Set_BcType(Wall,Periodic,Velocity,Periodic);
+	Param.Set_BcType(Symmetry,Pressure,Symmetry,Pressure);
 
 
 /// Set Pressure Type
@@ -109,13 +111,15 @@ stringstream FileExportStream;
 /// Wall boundary condition type (Implemented BounceBack and Diffuse)
 	Param.Set_WallType(BounceBack);//BounceBack,HeZouWall
 	Param.Set_VelocityModel(HeZouV);
-
+/// Set Periodic boundary condition to add a pressure drop term
+	Param.Set_PeriodicType(PressureForce);//Simple,PressureForce
+	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(100000);
+	Param.Set_NbStep(30000);
 /// Interval for output
 	Param.Set_OutPutNSteps(2000);// interval
 ///Display information during the calculation every N iteration
-	Param.Set_listing(20);
+	Param.Set_listing(200);
 	Param.Set_ErrorMax(1e-11);
 
 ///Selection of variables to export
@@ -126,11 +130,11 @@ stringstream FileExportStream;
 			<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
 			<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
 	FileExportStream.str("");
-	FileExportStream<<"TwoPhase_Periodic_M10_sigma0.0001_teta90";
+	FileExportStream<<"Square_Pressure_Pressure";
 	Param.Set_OutputFileName(FileExportStream.str());
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(ColourFluid);
+	Param.Set_Model(SinglePhase);
 	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
 
 	//Gradient definition

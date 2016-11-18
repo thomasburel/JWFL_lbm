@@ -21,7 +21,7 @@ public:
 	virtual ~D2Q9Periodic();
 
 	void Set_Periodic(Parameters *Param);
-	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const &Rho_def, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V, double weightDensity=1);
+	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const &Rho_def, double weightDensity, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V);
 
 private:
 	void ApplyPeriodicBc(int const &BcNormal,int const *Connect, double const &Rho_def, double & weightDensity, double const *UDef, double *LocalForce, DistriFunct* f_in);

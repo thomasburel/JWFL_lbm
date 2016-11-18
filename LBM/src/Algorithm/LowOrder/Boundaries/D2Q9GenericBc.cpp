@@ -31,36 +31,36 @@ void D2Q9GenericBc::SetBcObjects( Parameters *Param){
 	D2Q9PeriodicBc.Set_Periodic(Param);
 }
 ///Apply pressure boundary conditions. Can be used on pressure nodes or global corners)
-void D2Q9GenericBc::ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in){
+void D2Q9GenericBc::ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in, double weightDensity){
 	D2Q9PressureBc.ApplyPressure(BcNormal,Connect, Rho_def,f_in,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
 }
-void D2Q9GenericBc::ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in,double * & Rho, double * &U, double * &V){
+void D2Q9GenericBc::ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity){
 	D2Q9PressureBc.ApplyPressure(BcNormal,Connect, Rho_def,f_in,Rho,U,V);
 }
 //Apply velocity boundary conditions. Can be used on velocity nodes or global corners)
-void D2Q9GenericBc::ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in){
+void D2Q9GenericBc::ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in, double weightDensity){
 	D2Q9VelocityBc.ApplyVelocity(BcNormal,Connect, UDef,f_in,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
 }
-void D2Q9GenericBc::ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V){
+void D2Q9GenericBc::ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity){
 	D2Q9VelocityBc.ApplyVelocity(BcNormal,Connect, UDef,f_in,Rho,U,V);
 }
 //Apply Symmetry boundary conditions. Can be used on Symmetry nodes or global corners)
-void D2Q9GenericBc::ApplySymmetry(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in){
+void D2Q9GenericBc::ApplySymmetry(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in, double weightDensity){
 	D2Q9SymmetryBc.ApplySymmetry(BcNormal,Connect,Rho_def,UDef,f_in,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
 }
-void D2Q9GenericBc::ApplySymmetry(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V){
+void D2Q9GenericBc::ApplySymmetry(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity){
 	D2Q9SymmetryBc.ApplySymmetry(BcNormal,Connect,Rho_def,UDef,f_in,Rho,U,V);
 }
-void D2Q9GenericBc::ApplyPeriodic(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in){
-	D2Q9PeriodicBc.ApplyPeriodic(BcNormal,Connect,Rho_def,UDef,f_in,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
+void D2Q9GenericBc::ApplyPeriodic(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in, double weightDensity){
+	D2Q9PeriodicBc.ApplyPeriodic(BcNormal,Connect,Rho_def,weightDensity,UDef,f_in,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
 }
-void D2Q9GenericBc::ApplyPeriodic(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V){
-	D2Q9PeriodicBc.ApplyPeriodic(BcNormal,Connect,Rho_def,UDef,f_in,Rho,U,V);
+void D2Q9GenericBc::ApplyPeriodic(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity){
+	D2Q9PeriodicBc.ApplyPeriodic(BcNormal,Connect,Rho_def,weightDensity,UDef,f_in,Rho,U,V);
 }
-void D2Q9GenericBc::ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in){
+void D2Q9GenericBc::ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in, double weightDensity){
 	D2Q9WallBc.ApplyWall(BcNormal,Connect,f_in,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
 }
-void D2Q9GenericBc::ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V){
+void D2Q9GenericBc::ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity){
 	D2Q9WallBc.ApplyWall(BcNormal,Connect,f_in,Rho,U,V);
 }
 /*void D2Q9GenericBc::ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_){
@@ -69,21 +69,21 @@ void D2Q9GenericBc::ApplyWall(int const &BcNormal,int const *Connect, DistriFunc
 void D2Q9GenericBc::ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_,double * & Rho, double * &U, double * &V){
 	D2Q9WallBc.ApplySpecialWall(Node,f_in,TypeOfNode_,Rho,U,V);
 }*/
-void D2Q9GenericBc::ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef){
+void D2Q9GenericBc::ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef, double weightDensity){
 	D2Q9CornerBc.ApplyCorner(Node,f_in,RhoDef,UDef,VDef,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
 }
-void D2Q9GenericBc::ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V){
+void D2Q9GenericBc::ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, double weightDensity){
 	D2Q9CornerBc.ApplyCorner(Node,f_in,RhoDef,UDef,VDef,Rho,U,V);
 }
-void D2Q9GenericBc::ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in){
+void D2Q9GenericBc::ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in, double weightDensity){
 	D2Q9CornerBc.ApplyCornerWall(Node,f_in,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
 }
-void D2Q9GenericBc::ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V){
+void D2Q9GenericBc::ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity){
 	D2Q9CornerBc.ApplyCornerWall(Node,f_in,Rho,U,V);
 }
-void D2Q9GenericBc::ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V){
+void D2Q9GenericBc::ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, double weightDensity){
 	D2Q9CornerBc.ApplyPreVelSpecialWall(Node,f_in,RhoDef,UDef,VDef);
 }
-void D2Q9GenericBc::ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V){
+void D2Q9GenericBc::ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity){
 	D2Q9CornerBc.ApplyCornerSpecialWall(Node,f_in,Rho,U,V);
 }

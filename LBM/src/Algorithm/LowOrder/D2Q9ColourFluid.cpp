@@ -1480,13 +1480,13 @@ void D2Q9ColourFluid::ApplyBc(){
 	}
 	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
 	{
-			ApplyPeriodic(NodeArrays->NodePeriodic[j].Get_BcNormal(),NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_RhoDef(),NodeArrays->NodePeriodic[j].Get_UDef(),f[0],Rhor,U[0],U[1]);
-			ApplyPeriodic(NodeArrays->NodePeriodic[j].Get_BcNormal(),NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_RhoDef(),NodeArrays->NodePeriodic[j].Get_UDef(),f[1],Rhob,U[0],U[1]);
+			ApplyPeriodic(NodeArrays->NodePeriodic[j].Get_BcNormal(),NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_RhoDef(),NodeArrays->NodePeriodic[j].Get_UDef(),f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodePeriodic[j].Get_index()]/Rho[NodeArrays->NodePeriodic[j].Get_index()]);
+			ApplyPeriodic(NodeArrays->NodePeriodic[j].Get_BcNormal(),NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_RhoDef(),NodeArrays->NodePeriodic[j].Get_UDef(),f[1],Rhob,U[0],U[1],Rhor[NodeArrays->NodePeriodic[j].Get_index()]/Rho[NodeArrays->NodePeriodic[j].Get_index()]);
 	}
 	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
-		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
-		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],(1-NodeArrays->NodeGlobalCorner[j].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[j].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[j].Get_index()]);
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],(1-NodeArrays->NodeGlobalCorner[j].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],Rhob[NodeArrays->NodeGlobalCorner[j].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[j].Get_index()]);
 //Keep alpha
 		Rhor[NodeArrays->NodeGlobalCorner[j].Get_index()]=0.0;
 		Rhob[NodeArrays->NodeGlobalCorner[j].Get_index()]=0.0;

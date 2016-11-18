@@ -11,7 +11,7 @@ UserMesh::UserMesh() {
 	epsilon=1e-10;
 	pi=std::atan(1.0)*4.0 ;
 
-	H=100;
+	H=200;
 	L=200;
 	R=H/4.0;
 	//Contact angle
@@ -41,11 +41,11 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 		solid=image[0][(int)Node.get_y()-10][(int)Node.get_x()-10];
 	else
 		solid=false;*/
-/*	if(Node.get_x()>=80 &&Node.get_x()<=90 && Node.get_y()>=15 &&Node.get_y()<=26 )
+	if(Node.get_x()>=20 &&Node.get_x()<=180 && Node.get_y()>=20 &&Node.get_y()<=180 )
 		solid=true;
 	else
 		solid=false;
-*/
+
 /*	if(Node.get_y()<=a*Node.get_x()+b+epsilon)
 		solid=true;
 	else
@@ -56,6 +56,10 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 			solid=true;
 		else
 			solid=false;*/
+/*	if(pow(Node.get_x()-L/2.0,2.0)+pow(Node.get_y()-H/2.0,2.0)<=R*R+1e-8)
+		solid=true;
+	else
+		solid=false;*/
 }
 void UserMesh::SetSymmetryType(SymmetryType &Type, double x, double y)
 {

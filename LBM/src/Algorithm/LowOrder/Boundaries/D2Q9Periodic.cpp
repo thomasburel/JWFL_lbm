@@ -24,9 +24,16 @@ D2Q9Periodic::~D2Q9Periodic() {
 }
 
 void D2Q9Periodic::Set_Periodic(Parameters *Param){
-	PtrPeriodicMethod=&D2Q9Periodic::ApplyPeriodicBc;
+	if(Param->Get_PeriodicType()==Simple)
+		PtrPeriodicMethod=&D2Q9Periodic::ApplyPeriodicBc;
+	else
+		if(Param->Get_PeriodicType()==PressureForce)
+		{
+			PtrPeriodicMethod=&D2Q9Periodic::ApplyPeriodicBc_PressureForce;
+			PressureDrop=Param->Get_PressureDrop();
+		}
 }
-void D2Q9Periodic::ApplyPeriodic(int const &BcNormal,int const *Connect, double const &Rho_def, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V, double weightDensity){
+void D2Q9Periodic::ApplyPeriodic(int const &BcNormal,int const *Connect, double const &Rho_def, double weightDensity, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V){
 	(this->*PtrPeriodicMethod)(BcNormal,Connect,Rho_def,weightDensity,UDef,LocalForce,f_in);
 }
 

@@ -33,7 +33,7 @@ Convergence::~Convergence() {
 }
 void Convergence::Set_Convergence(){
 	//Temporary
-	PtrDicConv->Get_PtrVar("RhoN",Scalar_CurrentTime);
+	PtrDicConv->Get_PtrVar("VelocityX",Scalar_CurrentTime);
 	NbNodes=PtrDicConv->Get_NbNodes();
 	PtrDicConv->AddVar(Scalar,"RhoN_last",false,true,false,Scalar_last);
 	for(int i=0;i<NbNodes;i++)

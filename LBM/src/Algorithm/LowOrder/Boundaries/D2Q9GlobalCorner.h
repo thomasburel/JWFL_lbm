@@ -23,12 +23,12 @@ public:
 	virtual ~D2Q9GlobalCorner();
 
 	void Set_GlobalCorner(Parameters *Param,D2Q9GenericBc* D2Q9GenericBc);
-	void ApplyGlobalCorner(NodeCorner2D& Node, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in);
+	void ApplyGlobalCorner(NodeCorner2D& Node, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in, double weightDensity=1);
 	//Specify in the solver: set values (Rho, U) and pointers on macroscopic variables
-	void ApplyGlobalCorner(NodeCorner2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V);
+	void ApplyGlobalCorner(NodeCorner2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
 
 private:
-	void FunctionGlobalCorner(NodeCorner2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V);
+	void FunctionGlobalCorner(NodeCorner2D& Node, double const Rho_def, double weightDensity, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V);
 	D2Q9GenericBc* BcMethods;
 	double RhoDef_tmp,UDef_tmp,VDef_tmp;
 };
