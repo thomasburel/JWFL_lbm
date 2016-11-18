@@ -220,17 +220,16 @@ void ExtrapolationWeightDistance::ExtrapolationOnCornerConvex (double *Var, int 
 	switch(normal)
 	{
 	case 5:
-		Var[Connect[7]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[5]]+Var[Connect[6]]+Var[Connect[8]]));
+		Var[Connect[0]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[5]]+Var[Connect[6]]+Var[Connect[8]]));
 		break;
 	case 6:
-		Var[Connect[8]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[5]]+Var[Connect[6]]+Var[Connect[7]]));
+		Var[Connect[0]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[5]]+Var[Connect[6]]+Var[Connect[7]]));
 		break;
 	case 7:
-		Var[Connect[5]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[6]]+Var[Connect[7]]+Var[Connect[8]]));
-
+		Var[Connect[0]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[6]]+Var[Connect[7]]+Var[Connect[8]]));
 		break;
 	case 8:
-		Var[Connect[6]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[5]]+Var[Connect[7]]+Var[Connect[8]]));
+		Var[Connect[0]]=InvSumWeightOnCornerConvex*(Var[Connect[1]]+Var[Connect[2]]+Var[Connect[3]]+Var[Connect[4]]+InvSqrt2*(Var[Connect[5]]+Var[Connect[7]]+Var[Connect[8]]));
 		break;
 	}
 
