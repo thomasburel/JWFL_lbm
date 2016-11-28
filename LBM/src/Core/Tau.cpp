@@ -13,14 +13,20 @@ Tau::Tau() {
 }
 void Tau::IniTau(Parameters *Param) {
 	// TODO Auto-generated constructor stub
-	if(Param->Get_Model()==SinglePhase)
+	if(Param->Get_Model()==SolverEnum::SinglePhase ||Param->Get_ViscosityType()==ConstViscosity)
 	{
 		tau=new ConstTau();
 		tau->Init_Tau(Param->Get_Tau(),Param->Get_cs2(),Param->Get_deltaT());
 	}
+	else if(Param->Get_ViscosityType()==LinearViscosity)
+	{
+		tau=new LinearVisco();
+		tau->Init_Tau(Param->Get_Tau(),Param->Get_cs2(),Param->Get_deltaT());
+		tau->Set_Tau(Param->Get_Tau_1(),Param->Get_Tau_2());
+	}
 	else
 	{
-		tau=new HarmonicViscosity();
+		tau=new HarmonicVisco();
 		tau->Init_Tau(Param->Get_Tau(),Param->Get_cs2(),Param->Get_deltaT());
 		tau->Set_mu(Param->Convert_NutoMu(Param->Convert_TauToNu(Param->Get_Tau_1()),Param->Get_Rho_1()),Param->Convert_NutoMu(Param->Convert_TauToNu(Param->Get_Tau_2()),Param->Get_Rho_2()));
 	}
@@ -46,22 +52,38 @@ ConstTau::ConstTau() {
 
 ConstTau::~ConstTau() {
 }
-HarmonicViscosity::HarmonicViscosity(){
+HarmonicVisco::HarmonicVisco(){
 	mu2_1=0.01;
 	mu2_2=mu2_1;
 }
 
-HarmonicViscosity::~HarmonicViscosity(){
+HarmonicVisco::~HarmonicVisco(){
 
 }
-double& HarmonicViscosity::Get_InvTau(double const &Rho, double const &RhoN){
-	InvTau=1/CalculTau(Rho,RhoN);
+double& HarmonicVisco::Get_InvTau(double const &Rho, double const &RhoN){
+	InvTau=1.0/CalculTau(Rho,RhoN);
 	return InvTau;}
 
-double HarmonicViscosity::CalculTau(double const &Rho, double const &RhoN){
-	Convert_NuToTau(Convert_MutoNu(CalculHarmonicViscosity(RhoN),Rho));
-	return Convert_NuToTau(Convert_MutoNu(CalculHarmonicViscosity(RhoN),Rho));
+double HarmonicVisco::CalculTau(double const &Rho, double const &RhoN){
+	return Convert_NuToTau(Convert_MutoNu(CalculHarmonicVisco(RhoN),Rho));
 }
-double HarmonicViscosity::CalculHarmonicViscosity(double const &RhoN){
-	return 1/((1+RhoN)/mu2_1+(1-RhoN)/mu2_2);
+double HarmonicVisco::CalculHarmonicVisco(double const &RhoN){
+	return 1.0/((1.0+RhoN)/mu2_1+(1.0-RhoN)/mu2_2);
 }
+
+LinearVisco::LinearVisco(){
+	Tau_1=1;
+	Tau_2=Tau_1;
+}
+
+LinearVisco::~LinearVisco(){
+
+}
+double& LinearVisco::Get_InvTau(double const &Rho, double const &RhoN){
+	InvTau=1.0/CalculTau(RhoN);
+	return InvTau;}
+
+double LinearVisco::CalculTau(double const &RhoN){
+	return 0.5*((1.0+RhoN)*Tau_1+(1.0-RhoN)*Tau_2);
+}
+

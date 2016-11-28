@@ -22,6 +22,7 @@ class WriterManager {
 public:
 	WriterManager();
 	std::string& Get_classtype() {return classtype;};
+	void UpdateFileNames(std::string NewFileName);
 //	virtual CGNS& Get_class(){return *this;}=0;
 	virtual ~WriterManager();
 	virtual void Write_Output(int& Nstep)=0;

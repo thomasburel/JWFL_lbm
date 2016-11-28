@@ -24,14 +24,15 @@ class UserParameters {
 public:
 	UserParameters();
 	virtual ~UserParameters();
+	double Get_UserH()const {return H;};
+	double Get_UserL()const {return L;};
 	void Get_UserParameters(double & Umax_,double & H_,double & L_,double & Pmax_,double & Pmin_);
 	void Set_UserParameters(double  Umax_,double  H_,double  L_,double  Pmax_,double  Pmin_);
-	void Set_TwoPhaseUserParameters(double Re_, double Ca_, double Diameter_, double sigma_);
-	void Get_TwoPhaseUserParameters(double &Re_, double &Ca_, double &Diameter_, double &sigma_);
-
+	void Set_UserDroplets(double angle, double sigma, double diameter, double Re, double Ca);
+	void Get_UserDroplets(double & angle, double & sigma, double & diameter, double & Re, double & Ca);
 private:
 	double Umax,H,L,Pmax,Pmin;
-	double ReUser,CaUser,DiameterUser,sigmaUser;
+	double ReUser,CaUser,DiameterUser,sigmaUser,ContactAngleUser;
 
 };
 

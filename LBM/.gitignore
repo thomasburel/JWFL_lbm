@@ -6,6 +6,12 @@ language.settings.xml
 *.cgns
 *.txt
 *.d
-LBM
-.cproject
-/.settings/
+*.cproject
+*.project
+*/.settings/*
+*/Documentation/*
+*/archer/*
+*/archieW/*
+Doxyfile
+/Debug/
+/Release/

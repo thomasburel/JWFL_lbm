@@ -32,7 +32,10 @@
 *.cgns
 *.txt
 *.xml
-LBM
-.cproject
-.project
-/.settings/
+*.cproject
+*.project
+*/.settings/*
+*/Documentation/*
+*/archer/*
+*/archieW/*
+Doxyfile

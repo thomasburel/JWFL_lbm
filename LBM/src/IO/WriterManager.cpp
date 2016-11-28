@@ -17,4 +17,9 @@ tot_nnodes(0), tot_nelems(0), nnodes(0), nelems(0),outfile(0),VariableOutput(0),
 WriterManager::~WriterManager() {
 	delete outfile,VariableOutput;
 }
-
+void WriterManager::UpdateFileNames(std::string NewFileName){
+    outputfilename=NewFileName;
+	outputfilename+="_";
+	Breakpointfilename=outputfilename;
+	Breakpointfilename+="Breakpoint.cgns";
+}

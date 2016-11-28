@@ -47,13 +47,16 @@ void D2Q9Velocity::SetVelocity(Parameters *Param){
 	case HeZouV:
 		PtrVelocityMethod=&D2Q9Velocity::BC_HeZou_U;
 		break;
+	case Ladd:
+		PtrVelocityMethod=&D2Q9Velocity::BC_Ladd;
+		break;
 	default:
 		std::cerr<<"Velocity model has not been found."<<std::endl;
 	}
 }
 void D2Q9Velocity::ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in, double *Rho, double *U, double *V){
 	(this->*PtrCalculU)(BcNormal,Connect, UDef,U,V);
-	(this->*PtrVelocityMethod)(BcNormal,Connect, UDef, f_in, U[Connect[0]], V[Connect[0]]);
+	(this->*PtrVelocityMethod)(BcNormal,Connect, f_in,Rho[Connect[0]], U[Connect[0]], V[Connect[0]]);
 }
 void D2Q9Velocity::FixU(int const &BcNormal,int const *Connect, double const *UDef, double *U, double *V){
 	U[Connect[0]]=UDef[0];
@@ -94,7 +97,7 @@ void D2Q9Velocity::FUNC_HeZou_U (double & a,double & b,double & c,double & d,dou
 	i=f-ru2*0.5+ru1*q16+feq;
 }
 //     BC He Zou with U impose
-void D2Q9Velocity::BC_HeZou_U(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in, double & U, double & V){
+void D2Q9Velocity::BC_HeZou_U(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double & Rho, double & U, double & V){
 
       switch (BcNormal)
       {
@@ -117,4 +120,34 @@ void D2Q9Velocity::BC_HeZou_U(int const &BcNormal,int const *Connect, double con
           std::cout<<" Problem in the direction of HeZou unknown. Direction is: "<<BcNormal<<std::endl;
           break;
       }
+}
+//     BC moving wall with half way bounce-back
+void D2Q9Velocity::BC_Ladd(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double & Rho, double & U, double & V){
+
+	switch(BcNormal)
+			{
+			case 2:
+				f_in->f[2][Connect[0]]=f_in->f[OppositeBc[2]][Connect[0]]-6*omegaBc[OppositeBc[2]]*Rho*(EiBc[OppositeBc[2]][1]*V);
+				f_in->f[5][Connect[0]]=f_in->f[OppositeBc[5]][Connect[0]]-6*omegaBc[OppositeBc[5]]*Rho*(EiBc[OppositeBc[5]][0]*U+EiBc[OppositeBc[5]][1]*V);
+				f_in->f[6][Connect[0]]=f_in->f[OppositeBc[6]][Connect[0]]-6*omegaBc[OppositeBc[6]]*Rho*(EiBc[OppositeBc[6]][0]*U+EiBc[OppositeBc[6]][1]*V);
+				break;
+			case 4:
+				f_in->f[4][Connect[0]]=f_in->f[OppositeBc[4]][Connect[0]]-6*omegaBc[OppositeBc[4]]*Rho*(EiBc[OppositeBc[4]][1]*V);
+				f_in->f[7][Connect[0]]=f_in->f[OppositeBc[7]][Connect[0]]-6*omegaBc[OppositeBc[7]]*Rho*(EiBc[OppositeBc[7]][0]*U+EiBc[OppositeBc[7]][1]*V);
+				f_in->f[8][Connect[0]]=f_in->f[OppositeBc[8]][Connect[0]]-6*omegaBc[OppositeBc[8]]*Rho*(EiBc[OppositeBc[8]][0]*U+EiBc[OppositeBc[8]][1]*V);
+				break;
+			case 1:
+				f_in->f[1][Connect[0]]=f_in->f[OppositeBc[1]][Connect[0]]-6*omegaBc[OppositeBc[1]]*Rho*(EiBc[OppositeBc[1]][0]*U);
+				f_in->f[5][Connect[0]]=f_in->f[OppositeBc[5]][Connect[0]]-6*omegaBc[OppositeBc[5]]*Rho*(EiBc[OppositeBc[5]][0]*U+EiBc[OppositeBc[5]][1]*V);
+				f_in->f[8][Connect[0]]=f_in->f[OppositeBc[8]][Connect[0]]-6*omegaBc[OppositeBc[8]]*Rho*(EiBc[OppositeBc[8]][0]*U+EiBc[OppositeBc[8]][1]*V);
+				break;
+			case 3:
+				f_in->f[3][Connect[0]]=f_in->f[OppositeBc[3]][Connect[0]]-6*omegaBc[OppositeBc[3]]*Rho*(EiBc[OppositeBc[3]][0]*U);
+				f_in->f[6][Connect[0]]=f_in->f[OppositeBc[6]][Connect[0]]-6*omegaBc[OppositeBc[6]]*Rho*(EiBc[OppositeBc[6]][0]*U+EiBc[OppositeBc[6]][1]*V);
+				f_in->f[7][Connect[0]]=f_in->f[OppositeBc[7]][Connect[0]]-6*omegaBc[OppositeBc[7]]*Rho*(EiBc[OppositeBc[7]][0]*U+EiBc[OppositeBc[7]][1]*V);
+				break;
+			default:
+				std::cerr<<"Direction moving wall half-way bounce back not found. Node Index is: "<<Connect[0]<<" and direction is: "<<BcNormal<<std::endl;
+				break;
+			}
 }

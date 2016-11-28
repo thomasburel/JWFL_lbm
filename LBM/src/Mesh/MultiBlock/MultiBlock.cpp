@@ -18,4 +18,14 @@ parallel(0),PtrParameters(0)
 MultiBlock::~MultiBlock() {
 	// TODO Auto-generated destructor stub
 }
+bool MultiBlock::Check_CleaningMesh(int nbTotalSolidRemoved, int nbTotalSolidadded){
+	int maxnbTotalSolidRemoved=0,maxnbTotalSolidadded=0;
+	MPI_Allreduce(&nbTotalSolidRemoved,&maxnbTotalSolidRemoved,1, MPI_INT , MPI_SUM ,parallel->getGlobalCommunicator());
+	MPI_Allreduce(&nbTotalSolidadded,&maxnbTotalSolidadded,1, MPI_INT , MPI_SUM ,parallel->getGlobalCommunicator());
+//	std::cout<<"processor: "<<parallel->getRank()<<" sum of solid removed: "<<maxnbTotalSolidRemoved<<" sum of solid added: "<<maxnbTotalSolidadded<<std::endl;
+	if(maxnbTotalSolidRemoved>0||maxnbTotalSolidadded>0)
+		return true;
+	else
+		return false;
 
+}

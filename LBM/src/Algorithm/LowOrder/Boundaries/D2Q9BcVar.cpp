@@ -21,6 +21,24 @@ D2Q9BcVar::D2Q9BcVar() {
 	q16=1.0/6.0;
 	q13=1.0/3.0;
 
+	//Distribution velocity
+	EiBc[0][0]= 0.0;
+	EiBc[0][1]= 0.0;
+	EiBc[1][0]= 1.0;
+	EiBc[1][1]= 0.0;
+	EiBc[2][0]= 0.0;
+	EiBc[2][1]= 1.0;
+	EiBc[3][0]= -1.0;
+	EiBc[3][1]= 0.0;
+	EiBc[4][0]= 0.0;
+	EiBc[4][1]= -1.0;
+	EiBc[5][0]= 1.0;
+	EiBc[5][1]= 1.0;
+	EiBc[6][0]= -1.0;
+	EiBc[6][1]= 1.0;
+	EiBc[7][0]= -1.0;
+	EiBc[7][1]= -1.0;
+	EiBc[8][0]= 1.0;
 // OppositeBc direction
 	OppositeBc[0]=0;
 	OppositeBc[1]=3;

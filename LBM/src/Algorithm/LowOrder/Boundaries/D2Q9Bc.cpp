@@ -27,6 +27,7 @@ void D2Q9Bc::InitD2Q9Bc(Dictionary *PtrDic_, Parameters *Param){
 //Initialise the Boundaries conditions classes
 	SetBcObjects(Param);
 	Set_GlobalCorner(Param,this);
+	Set_SpecialWall(Param,this);
 }
 D2Q9Bc::~D2Q9Bc() {
 	// TODO Auto-generated destructor stub

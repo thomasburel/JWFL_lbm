@@ -8,7 +8,7 @@
 #ifndef USER_USERINIT_H_
 #define USER_USERINIT_H_
 #include "../Mesh/SingleBlock.h"
-#include "UserParameters.h"
+#include "../Core/Parameters.h"
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 

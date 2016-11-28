@@ -560,6 +560,7 @@ void  MultiBlock2D::Create_Block2D() {
 		bC[2]=Interior;
 		bC[3]=Interior;
 	}
+	 //MPI_Barrier(parallel->getGlobalCommunicator());
 	if(verbous)
 		if(parallel->isMainProcessor())
 			std::cout<<"processor ID: "<<parallel->getRank() <<" Bc[0]: "<< bC[0]<<" Bc[1]: "<<bC[1]<<" Bc[2]: "<<bC[2]<<" Bc[3]: "<< bC[3]<<std::endl;
@@ -768,8 +769,42 @@ void MultiBlock2D::Get_Connect_Node(std::vector<int> & IdRNodeN_,std::vector<int
 		 MPI_Recv(buf_recv,size_buf,MPI_DOUBLE,BlockNeighbour[blocDirection],tag,parallel->getGlobalCommunicator(),&status);
  }
  void MultiBlock2D::Modify_Block(){
-	 Block2D_.ModifyMeshByUser(*PtrParameters);
+		if(parallel->isMainProcessor())
+			std::cout<<"******BEGGINING MODIFY THE MESH BY THE USERS******"<<std::endl;
+		int NbRealNodes,NbTotalNodes;
+		Block2D_.Get_NbNodes(NbRealNodes,NbTotalNodes);
+		if(PtrParameters->Get_Verbous())
+			std::cout<<"Processor ID: "<<parallel->getRank()<<" Number of node:"<<NbRealNodes<<std::endl;
+		if(parallel->isMainProcessor())
+			std::cout<<"******START GENERATING SOLID IN THE DOMAIN******"<<std::endl;
+		Block2D_.GenerateSolid(*PtrParameters);
+		if(parallel->isMainProcessor())
+			std::cout<<"******END GENERATING SOLID IN THE DOMAIN******"<<std::endl
+			<<"******START CHECKING THE MESH AND REMOVING/ADDING SOLID******"<<std::endl;
+		int nbTotalSolidRemoved=1;
+		int nbTotalSolidadded=1;
+		int maxclean=10;int count=0;
+		bool check_cleaning=true;
+		while( count<maxclean && check_cleaning)
+		{
+			Block2D_.RemoveUnphysicalSolid(nbTotalSolidRemoved,nbTotalSolidadded);
+			//std::cout<<"processor: "<<parallel->getRank()<<" number of solid removed: "<<nbTotalSolidRemoved<<" number of solid added: "<<nbTotalSolidadded<<std::endl;
+			MultiBlock2D::Correct_SolidGhost();
+			check_cleaning=Check_CleaningMesh(nbTotalSolidRemoved,nbTotalSolidadded);
+			//std::cout<<"processor: "<<parallel->getRank()<<" check cleaning: "<<check_cleaning<<std::endl;
+			count++;
+		}
+		//MPI_Barrier(parallel->getGlobalCommunicator());
+		if(parallel->isMainProcessor())
+			std::cout<<"Processor: "<<parallel->getRank() <<" Number of cleaning: "<<count<<std::endl
+			<<"******END CHECKING THE MESH AND REMOVING/ADDING SOLID******"<<std::endl
+			<<"******START GENERATING WALL AND CORNERS******"<<std::endl;
+		Block2D_.SetSolidBoundaries();
+//	 Block2D_.ModifyMeshByUser(*PtrParameters);
 	 MultiBlock2D::Correct_SolidGhost();
+	 Block2D_.RemoveSolidInCommunicator();
+	 if(parallel->isMainProcessor())
+		 std::cout<<"******END GENERATING WALL AND CORNERS******"<<std::endl;
  }
  void MultiBlock2D::ConvertToPhysicalUnit(){
 	 Block2D_.ConvertToPhysicalUnit(*PtrParameters);
@@ -780,7 +815,10 @@ NodeArrays2D* MultiBlock2D::Get_NodeArrays2D(){
 void MultiBlock2D::reorganizeNodeByType(){
 	Block2D_.reorganizeNodeByType();
 	Block2D_.Set_Connect(*PtrParameters);
+	Block2D_.Mark1stLayerSolid();
+
 }
+
 void MultiBlock2D::Correct_SolidGhost()
 {
 	 int tag_x_r=1;
@@ -939,8 +977,16 @@ void MultiBlock2D::Correct_SolidGhost()
 double MultiBlock2D::SumBC(double *value){
 	double sum=0;
 	if(BcW||BcE)
-		MPI_Reduce(value,&sum,1, MPI_REAL , MPI_SUM ,0, VertComm);
+		MPI_Reduce(value,&sum,1, MPI_DOUBLE , MPI_SUM ,0, VertComm);
 	if(BcN||BcS)
-		MPI_Reduce(value,&sum,1, MPI_REAL , MPI_SUM ,0, HorizComm);
+		MPI_Reduce(value,&sum,1, MPI_DOUBLE , MPI_SUM ,0, HorizComm);
 	return sum;
+}
+double MultiBlock2D::SumAllProcessors(double *value){
+	double sum=0;
+	MPI_Allreduce(&value[0],&sum,1, MPI_DOUBLE , MPI_SUM ,parallel->getGlobalCommunicator());
+	return sum;
+}
+int MultiBlock2D::NumberOfProcessors(){
+	return parallel->getSize();
 }

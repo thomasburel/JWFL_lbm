@@ -8,96 +8,63 @@
  ============================================================================
 */
 
-#include <math.h> 
-//#include "mpi.h"
+#include <cmath>
 #include <iostream>
-//#include "Mesh/SingleBlock/Block2D.h"
-//#include "Parrallelism/MpiManager.h"
-//#include "Core/Parameters.h"
+#include <stdlib.h>
+
 #include "Core/Simulation.h"
-//#include <boost/archive/tmpdir.hpp>
-//#include <boost/archive/xml_oarchive.hpp>
-//#include "Core/DefSerialization.h"
+
 using namespace std;
 
  
 int main(int argc, char *argv[]) {
 
+	int idx=0;
+/*	if (argv[1]==0)
+	{
+		std::cout<<"No argument. Index set to 1"<<std::endl;
+		idx=1;
+	}
+	else
+	{
+		idx=atoi(argv[1]);
+	}*/
 
-	double start,end;
-
-
-
-
-
-	//H=re*nu/Umax-1;
-	//H=round(H);
-	//L=H;
-	//re=(H+1)*Umax/nu;
-	//re=re/100;
-	//Pmax=1.0004;
-	//Umax=0.005;
-	//re=(H+1)*Umax/nu;
-
-	//Umax=0.002;//re*nu/(H+1);
-	//********Knudsen formulation*****
-/*	double Kn=0.01; //Knudsen number
-	double pi=atan(1)*4 ;
-	double dt=1.0/(L)/sqrt(3.0);
-	double omega = dt /(Kn*sqrt(2.0/pi)+0.50*dt);
-	tau=1.0/omega;
-	nu=(2.0*tau-1.0)/6.0 ;
-//	nu=Kn*sqrt(2.0/pi);
-	nu=0.01667;
-	tau=(6.0*nu+1.0)*0.5;
-	re=Umax*(H/2+1)/nu;
-	//Umax=re*nu/(H+1);
-	Umax=0.003;*/
-
+	double pi=atan(1.0)*4.0 ;
+stringstream FileExportStream;
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 //Domain size
-	double H=50;
-	double L=100;
-/*
-// Global parameter
-	double Ca=0.2;
-	double Re=0.01;
-	double diameter=50;
-	double R=diameter/2;
+	double L=1289;
+	double H=370;
 
-//Fluid viscosity
-	double Nu_2=0.8;
-	double viscosity_ratio=1;
+	double Diameter=H;
+	double Ca=0;
 
-	double Nu_1=Nu_2*viscosity_ratio;
-	double tau1=(6.0*Nu_1+1.0)*0.5;
-	double tau2=(6.0*Nu_2+1.0)*0.5;
+	double U2_ref=0.01;
+	double Re=1;
 
-	double shear_rate=Re*Nu_2/(R*R);
+	double Rho1_ref=1;
+	double Rho2_ref=Rho1_ref;
 
-//Reference values
-	double Rho1_ref=1.0;
-	double Rho2_ref=1.0;
-	double U1_ref=0.00001;
-	double U2_ref=shear_rate*H/2;
+	double nu_2=1.0/6.0;
+	double lambda=1;
+	double nu_1=lambda*nu_2;
+
+	double tau1=(6.0*nu_1+1.0)*0.5;
+	double tau2=(6.0*nu_2+1.0)*0.5;
+	double La=0;
+	double sigma=0.0001;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
 
 
-//Surface tension
-	double sigma=(Re/Ca)*Nu_2*Nu_2*Rho2_ref/R;
-
+	double Mach =U2_ref*std::sqrt(3);
+	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
+//Pressure drop
+	double deltaP=0.000001;
 // Pressure inlet
-	double Pmax=1;
+	double Pmax=1+deltaP;
 // Pressure outlet
-	double Pmin=1;
+	double Pmin=1-deltaP;
 
-
-
-	cout<<"Reynolds: "<<Re<<" Ca is: "<<Ca<<" Surface tension is: "<<sigma<< " Tau 1: "<<tau1<< " Nu 1: "<<Nu_1<<" U 1: "<<U2_ref<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<endl;
-//	if(std::abs(Re-)>1e-3)
-		std::cout<<"Reynolds imposed: "<<Re<<" Reynolds calculated: "<< shear_rate*R*R/(Nu_2)<<std::endl;
-
-		std::cout<<"Capilary number imposed: "<<Ca<<" Capilary number calculated: "<< shear_rate*R*Nu_2/(sigma*Rho2_ref)<<std::endl;
-*/
 /// Create object for the simulation.
 	Simulation simu;
 	Parameters Param;
@@ -107,24 +74,24 @@ int main(int argc, char *argv[]) {
 
 /// Set Solver type
 // Dimension
-	Param.Set_Dimension(D2);
+	Param.Set_Dimension(SolverEnum::D2);
 // Scheme
-	Param.Set_Scheme(Q9);
+	Param.Set_Scheme(SolverEnum::Q9);
 
 // Set Domain size
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 
-// Set Reynolds
-	double re=20;
-	double u=0.0505051;
-	double nu=u*H/re;
-	double tau1=(6.0*nu+1.0)*0.5;
-	double Rho1_ref=1.0;
-
 // Set User Parameters
-	Param.Set_UserParameters(u,H,L,1.0,1.0);
-//	Param.Set_UserParameters(U2_ref,H,L,Pmax,Pmin);
-//	Param.Set_TwoPhaseUserParameters(Re,Ca,diameter, sigma);
+	//U2_ref=0.01;Pmax=1;Pmin=1;
+	double contactangle=120*pi/180.0;
+	Param.Set_ContactAngleType(FixTeta);//NoTeta, FixTeta or NonCstTeta
+	if(Param.Get_ContactAngleType()==NoTeta)
+		contactangle=pi/2.0;
+	Param.Set_ContactAngle(contactangle);
+
+	Param.Set_UserDroplets(contactangle,sigma,Diameter,Re,Ca);
+	Param.Set_UserParameters(U2_ref,H,L,Pmax,Pmin);
+
 // Set User Force type
 	Param.Set_UserForceType(None);
 // Set delta x for output
@@ -134,41 +101,51 @@ int main(int argc, char *argv[]) {
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
-//	Param.Set_BcType(Velocity,Periodic,Velocity,Periodic);
-//	Param.Set_BcType(Periodic,Periodic,Periodic,Periodic);
-	Param.Set_BcType(Wall,Pressure,Wall,Velocity);
+	Param.Set_BcType(Symmetry,Pressure,Symmetry,Pressure);
 
-//	Param.Set_BcType(Wall,Pressure,Wall,Pressure);
+
 /// Set Pressure Type
-	Param.Set_PressureType(FixP);
+	Param.Set_PressureType(FixP);//FixP,zeroPGrad1st
 /// Set Global Corner type
-	Param.Set_CornerPressureType(FixCP);
+	Param.Set_CornerPressureType(ExtrapolCP);//FixCP,ExtrapolCP
 /// Wall boundary condition type (Implemented BounceBack and Diffuse)
-	Param.Set_WallType(BounceBack);
-
+	Param.Set_WallType(BounceBack);//BounceBack,HeZouWall
+	Param.Set_VelocityModel(HeZouV);
+/// Set Periodic boundary condition to add a pressure drop term
+	Param.Set_PeriodicType(PressureForce);//Simple,PressureForce
+	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(50000);
+	Param.Set_NbStep(500000);
 /// Interval for output
-	Param.Set_OutPutNSteps(5000);// interval
+	Param.Set_OutPutNSteps(10000);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(500);
+	Param.Set_ErrorMax(1e-11);
+	Param.Set_ErrorVariable(SolverEnum::VelocityX);
 
 ///Selection of variables to export
 	Param.Set_VariablesOutput(true,true);// export Rho,U
 
 /// Define the Output filename
-	Param.Set_OutputFileName("Poiseuille");
+/*	FileExportStream<<"Droplet_shear_"<< fixed << setprecision(0)<<H<<"x"<<L
+			<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
+			<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
+	FileExportStream.str("");
+	FileExportStream<<"Debug_poiseuille_serpentine";
+	Param.Set_OutputFileName(FileExportStream.str());
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(SinglePhase);
+	Param.Set_Model(SolverEnum::SinglePhase);
+	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
 
 	//Gradient definition
 	Param.Set_GradientType(LBMStencil); //FD or LBMStencil
+	Param.Set_ExtrapolationType(WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,WeightDistanceExtrapol
 
 /// Singlephase Parameters
 	Param.Set_Tau(tau1);
 	Param.Set_Rho(Rho1_ref);
-/*
+
 /// Multiphase Parameters
 	// Normal density output
 	Param.Set_NormalDensityOutput(true);
@@ -186,15 +163,23 @@ int main(int argc, char *argv[]) {
 	Param.Set_Beta(0.7);// Between 0 and 1
 	Param.Set_ColourGradType(DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
 	Param.Set_RecolouringType(LatvaKokkoRothman);
-	Param.Set_ColourOperatorType(SurfaceForce);//Grunau or SurfaceForce
+	Param.Set_ColourOperatorType(SurfaceForce);//Grunau or Reis or SurfaceForce
 
-*/
+
+
+
 
 /// Initialise the simulation with parameters
 	simu.InitSimu(Param, true);
 	simu.barrier();
 
+		if(simu.Is_MainProcessor())
+			cout<<"Reynolds: "<<Re<<" Surface tension is: "<<sigma<< " Tau 2: "<<tau2<<" U 1: "<<U2_ref<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<std::endl;
+
+//	simu.UpdateAllDomain(Param);
 /// Run the simulation
-	simu.RunSimu();
+	simu.RunSimu(Param);
+
+//	}
 }
 

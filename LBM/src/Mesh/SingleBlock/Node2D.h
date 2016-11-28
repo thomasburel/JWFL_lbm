@@ -27,6 +27,7 @@
 
 enum NodeType {Interior, Solid, Ghost, Corner, Wall, Periodic, Velocity, Symmetry, Pressure,ConcaveCorner,ConvexCorner, SolidGhost,GlobalCorner, SpecialWall};
 enum CornerType {Concave,Convex};
+enum GhostType{InteriorGhostType,SolidGhostType};
 enum SymmetryType{OnNode,HalfWay,SymmetryPressureOnNode};
 enum WallSpecialType{Standard,SymmetryWall, PressureWall, VelocityWall};
 
@@ -144,11 +145,15 @@ public:
 	virtual void Set_UDef(double UDef, double VDef);
 	virtual void Set_RhoDef(double RhoDef);
 
+	void Set_GhostType(GhostType GhostType__){GhostType_=GhostType__;};
+	GhostType& Get_GhostType(){return GhostType_;};
+
 private:
 	int Connect2Rank;
 	int Connect2Cell;
 	int Connect2Node;
 	bool* GhostStream;
+	GhostType GhostType_;
 private:
 	friend class boost::serialization::access;
     template<class Archive>
@@ -178,10 +183,14 @@ public:
 	virtual void Set_UDef(double UDef, double VDef);
 	virtual void Set_RhoDef(double RhoDef);
 
+	virtual void Set_AlphaDef(double Alpha){alphaDef=Alpha;};
+	virtual double Get_AlphaDef(){return alphaDef;};
+
 	void Set_BcNormal(int BcNormal_){BcNormal=BcNormal_;};
 	int& Get_BcNormal(){return BcNormal;};
 
 private:
+	double alphaDef;
 	double UDef[2];
 	bool* VelocityStream;
 	int BcNormal;

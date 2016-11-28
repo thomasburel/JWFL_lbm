@@ -12,6 +12,7 @@
 
 #ifndef SRC_ALGORITHM_LOWORDER_D2Q9COMMONVAR_H_
 #define SRC_ALGORITHM_LOWORDER_D2Q9COMMONVAR_H_
+#include <cmath>
 
 class D2Q9CommonVar {
 public:
@@ -21,6 +22,9 @@ public:
 	short int *Opposite; //< Opposite direction in the distribution function
 	double *omega; //< Weight of the distribution function. It is need for some boundary conditions
 	double **Ei; //< Velocity in the distribution space
+	double *Ei_Norm;//< Velocity Magnitude in the distribution space (only need it in few models)
+	double pi;
+	double epsilon;
 };
 
 #endif /* SRC_ALGORITHM_LOWORDER_D2Q9COMMONVAR_H_ */
