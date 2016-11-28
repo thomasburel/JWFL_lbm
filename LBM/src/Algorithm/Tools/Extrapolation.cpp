@@ -46,13 +46,13 @@ void Extrapolation::SelectExtrapolationType(ExtrapolationType Type_){
 }
 
 //Scalar Extrapolation
-void Extrapolation::ExtrapolationOnWall (double *Var, int * Connect, int & normal){
+void Extrapolation::ExtrapolationOnWall (double * & Var, int * Connect, int & normal){
 	Extrapol->ExtrapolationOnWall(Var,Connect,normal);
 }
-void Extrapolation::ExtrapolationOnCornerConcave (double *Var, int * Connect, int & normal){
+void Extrapolation::ExtrapolationOnCornerConcave (double * & Var, int * Connect, int & normal){
 	Extrapol->ExtrapolationOnCornerConcave(Var,Connect,normal);
 }
-void Extrapolation::ExtrapolationOnCornerConvex (double *Var, int * Connect, int & normal){
+void Extrapolation::ExtrapolationOnCornerConvex (double * & Var, int * Connect, int & normal){
 	Extrapol->ExtrapolationOnCornerConvex(Var,Connect,normal);
 }
 void Extrapolation::ExtrapolationWallToSolid (double * & Var, int * Connect, int & normal){

@@ -33,7 +33,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 	U[0]=0.0;//Umax*pos[1]/H;
 	U[1]=0.0;
 	//Rho=Pmin;
-	Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+	Rho=(Pmax-pos[0]*(Pmax-Pmin)/L);
 	alpha=0.0;
 
 	double R=Diameter/2.0;

@@ -45,7 +45,7 @@ public:
 	virtual void Get_Connect_Node(std::vector<int> & IdNodeN_,std::vector<int> & IdNodeE_,std::vector<int> & IdNodeS_,std::vector<int> & IdNodeW_,
 								  std::vector<int> & IdNodeSW_,std::vector<int> & IdNodeSE_,std::vector<int> & IdNodeNW_,std::vector<int> & IdNodeNE_);
 
-	virtual void ModifyMeshByUser(Parameters &Param);
+	//virtual void ModifyMeshByUser(Parameters &Param);
 	virtual void reorganizeNodeByType();
 	virtual void ConvertToPhysicalUnit(Parameters &Param);
 	virtual NodeArrays2D* Get_NodeArrays2D();
@@ -62,6 +62,11 @@ public:
 			std::vector<int> & IdRNodeSW,std::vector<int> & IdRNodeSE,std::vector<int> & IdRNodeNW,std::vector<int> & IdRNodeNE,
 			std::vector<int> & IdGNodeSW,std::vector<int> & IdGNodeSE,std::vector<int> & IdGNodeNW,std::vector<int> & IdGNodeNE);
 
+public:
+	void GenerateSolid(Parameters &Param);
+	void SetSolidBoundaries();
+	void RemoveUnphysicalSolid(int &nbTotalSolidRemoved,int &nbTotalSolidadded);
+	void RemoveSolidInCommunicator();
 private:
 	void NewCell(NodeType Nodes[4], bool OldNodes[4],bool GhostNodes[4], int Node2D_SubDomain[4],int Node2D_GlobalDomain[4],int x_[4],int y_[4], int FaceConnect[4], int CellConnect[4]);
 	void NewGhostCell(NodeType Nodes[4], bool OldNodes[4], int Node2D_SubDomain[4],int x_[4],int y_[4], int FaceConnect[4], int CellConnect[4]);
@@ -77,10 +82,16 @@ private:
 	void DefinedCornerType(int nodenumber);
 	int Connect_lowOrder(int &NodeNumber,unsigned int& direction);
 	void Connect_highOrder();
-	void GenerateSolid(Parameters &Param,int &ndSolidNode,int &firstSolid);
+
+
+
+	bool DetectSolidBoundaries(int & nodeID);
+	void DetectUnphysicalSolid(int & nodeID);
 	void DetectDirectInterior(int & nodeID, int & nbinterior);
 	void DetectSpecialWall(int & nodeID,int x,int y, bool & specialwall, unsigned int & directionwall);
 	void CreateCorner(int &nodeID);
+	void CreateCornerConcave(int &nodeID);
+	void CreateCornerConvex(int &nodeID);
 	void CreateWall(int &nodeID);
 	void CreateSpecialWall(int &nodeID);
 	void CreateWallandCorners(Parameters &Param, int &nodeID, int & nbinterior, bool SpecialNode);
@@ -100,6 +111,7 @@ private:
 	void Remove_SolidCells();
 	void Correct_GhostType(int  idNode, NodeType RealNodeType);
 	void Set_CommNodes();
+
 /// Private Variables
 private:
 	std::vector<Cell2D*> CellArray,GhostCellArraytmp; //Store cell in the Block
@@ -122,13 +134,16 @@ private:
 	std::vector<int> IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW;
 	std::vector<int> IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE;
 
-	std::vector<int> IdSolidNode,Id_SolidGhost;//Mark solid node to sort the array
+	std::vector<int> IdSolidNode,Id_SolidGhost,IdSolidBc;//Mark solid node to sort the array
+	std::vector<int> IdWalltmp,IdSpecialWalltmp,IdCornerConcavetmp,IdCornerConvextmp,IDRemoveSolidtmp,IDAddSolidtmp,IDRemoveSolidToBctmp;
+	std::vector<int> IDRemoveSolidGhosttmp,IDAddSolidGhosttmp;
 	std::vector<Node2D*> Node_Solidtmp,Node_tmp;
 	int Coord[2],Dims[2];
 	bool periodic[2];
 	bool verbous;
 	double* Coord_physical;
 	int intTmpReturn;
+	NodeType bC[4];
 
 ;
 

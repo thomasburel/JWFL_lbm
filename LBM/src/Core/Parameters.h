@@ -39,10 +39,13 @@ enum OutputFormat {CGNSFormat,TecplotFormat};
 enum DensityExport{Density,NormalDensity,BothDensity};
 
 //Solver enumeration
-enum dimension {D2,D3};
-enum schemetype {Q9,Q16};
-enum modeltype {SinglePhase, ColourFluid};
-
+namespace SolverEnum
+{
+	enum dimension {D2,D3};
+	enum schemetype {Q9,Q16};
+	enum modeltype {SinglePhase, ColourFluid};
+	enum variableErrortype{Density,VelocityX,VelocityY,RhoN};
+}
 //model enumeration
 enum FluidType{Newtonian};
 enum UserForceType{None,LocalForce,BodyForce};
@@ -135,8 +138,8 @@ private:
 		   & BOOST_SERIALIZATION_NVP(NbNodes);
 	}
 public:
-	void Set_Dimension(dimension dim_);
-	dimension Get_Dimension() const;
+	void Set_Dimension(SolverEnum::dimension dim_);
+	SolverEnum::dimension Get_Dimension() const;
 	void set_MeshParameters();
 	void Set_Domain_Size(int nx_=1,int ny_=1,int nz_=1);
 	int Get_Nx() const;
@@ -147,7 +150,7 @@ public:
 	std::string Get_MeshFile() const;
 protected:
 	int nx,ny,nz;
-	dimension dimension_; //2D or 3D
+	SolverEnum::dimension dimension_; //2D or 3D
 	std::string MeshFile;
 	int NbNodes;
 };
@@ -318,16 +321,18 @@ private:
 
 public:
 	void set_SolverParameters();
-	void Set_Scheme(schemetype scheme_);
-	schemetype Get_Scheme() const;
-	void Set_Model(modeltype model_);
-	modeltype Get_Model() const;
+	void Set_Scheme(SolverEnum::schemetype scheme_);
+	SolverEnum::schemetype Get_Scheme() const;
+	void Set_Model(SolverEnum::modeltype model_);
+	SolverEnum::modeltype Get_Model() const;
 	void Set_FluidType(FluidType fluidtype_){fluid=fluidtype_;};
 	FluidType Get_FluidType() const{return fluid;};
 	void Set_UserForceType(UserForceType UserForceType_){UserForce=UserForceType_;};
 	UserForceType Get_UserForceType() const{return UserForce;};
 	void Set_ErrorMax(double ErrorMax_){ErrorMax=ErrorMax_;};
 	double Get_ErrorMax(){return ErrorMax;};
+	void Set_ErrorVariable(SolverEnum::variableErrortype variableError_){variableError=variableError_;};
+	SolverEnum::variableErrortype Get_ErrorVariable(){return variableError;};
 	void Set_GradientType(GradientType GradientType_){Gradient=GradientType_;};
 	GradientType Get_GradientType() const{return Gradient;};
 	void Set_ExtrapolationType(ExtrapolationType ExtrapolationType_){Extrapol=ExtrapolationType_;};
@@ -348,8 +353,9 @@ public:
 	double Get_cs2() const {return cs2;};
 	double Get_deltaT() const {return deltaT;};
 protected:
-	schemetype scheme;
-	modeltype model;
+	SolverEnum::schemetype scheme;
+	SolverEnum::modeltype model;
+	SolverEnum::variableErrortype variableError;
 	FluidType fluid;
 	GradientType Gradient;
 	ExtrapolationType Extrapol;
@@ -461,7 +467,7 @@ public:
 	Parameters();
 	virtual ~Parameters();
 
-	void Change_Dimension(dimension dim_);
+	void Change_Dimension(SolverEnum::dimension dim_);
 	void Set_BcType(NodeType Bc0,NodeType Bc1,NodeType Bc2,NodeType Bc3,NodeType Bc4=Wall,NodeType Bc5=Wall);
 
 	void Set_Arguments(int *argc_,char ***argv_,bool verbous=false);

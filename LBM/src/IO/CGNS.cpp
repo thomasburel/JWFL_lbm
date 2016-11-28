@@ -25,7 +25,7 @@ ncells(0),x(0),y(0),z(0),d(0),e(0),b(0)
     Dimension=true; // True=2D ; False 3D
     outputfilename="LBM_Output";
 }
-CGNS::CGNS(dimension dimension_,std::string outputfilename_, int tot_nodes_, int tot_elems_, int start_nodes_, int end_nodes_, int start_elems_, int end_elems_, const double *x_, const double *y_, const double *z_, int *e_) :
+CGNS::CGNS(SolverEnum::dimension dimension_,std::string outputfilename_, int tot_nodes_, int tot_elems_, int start_nodes_, int end_nodes_, int start_elems_, int end_elems_, const double *x_, const double *y_, const double *z_, int *e_) :
 		F(0),B(0),Z(0),E(0),S(0), Fs(0), A(0), Cx(0), Cy(0), Cz(0),	start_nodes(start_nodes_),end_nodes(end_nodes_),start_elems(start_elems_),end_elems(end_elems_),x(x_),y(y_),z(z_),d(0),b(0)
 {
 	e=e_;
@@ -36,7 +36,7 @@ CGNS::CGNS(dimension dimension_,std::string outputfilename_, int tot_nodes_, int
     ncells = tot_nelems;
     NbVariableOutput=0;
     VariableOutput=0;
-    if(dimension_==D2)
+    if(dimension_==SolverEnum::D2)
     	Dimension=true; // True=2D ; False 3D
     else
     	Dimension=false;

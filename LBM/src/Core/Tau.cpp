@@ -13,7 +13,7 @@ Tau::Tau() {
 }
 void Tau::IniTau(Parameters *Param) {
 	// TODO Auto-generated constructor stub
-	if(Param->Get_Model()==SinglePhase ||Param->Get_ViscosityType()==ConstViscosity)
+	if(Param->Get_Model()==SolverEnum::SinglePhase ||Param->Get_ViscosityType()==ConstViscosity)
 	{
 		tau=new ConstTau();
 		tau->Init_Tau(Param->Get_Tau(),Param->Get_cs2(),Param->Get_deltaT());

@@ -25,9 +25,9 @@ public:
 	void SelectExtrapolationType(ExtrapolationType Type_);
 
 //Scalar Extrapolations
-	void ExtrapolationOnWall (double *Var, int * Connect, int & normal);
-	void ExtrapolationOnCornerConcave (double *Var, int * Connect, int & normal);
-	void ExtrapolationOnCornerConvex (double *Var, int * Connect, int & normal);
+	void ExtrapolationOnWall (double * & Var, int * Connect, int & normal);
+	void ExtrapolationOnCornerConcave (double * & Var, int * Connect, int & normal);
+	void ExtrapolationOnCornerConvex (double * & Var, int * Connect, int & normal);
 
 	void ExtrapolationWallToSolid (double * & Var, int * Connect, int & normal);
 	void ExtrapolationCornerConcaveToSolid (double * & Var, int * Connect, int & normal);

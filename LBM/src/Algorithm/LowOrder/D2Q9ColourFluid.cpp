@@ -701,7 +701,7 @@ void D2Q9ColourFluid::run(){
 	}
 	else
 	{
-		for (int i=1;i<NbStep+1;i++)
+		while(it<NbStep+1)
 		{
 			Colour_gradient();
 			Extrapolate_NormalInSolid();
@@ -711,19 +711,29 @@ void D2Q9ColourFluid::run(){
 			ApplyBc();
 			UpdateMacroVariables();
 			Extrapol_Density_Corner();
-			if(i%OutPutNStep==0)
+			if(it%OutPutNStep==0)
 			{
-				Writer->Write_Output(i);
+				Writer->Write_Output(it);
 			}
-			if(i%listing==0)
+			if(it%listing==0)
 			{
+				Convergence::Calcul_Error();
 				time_run=parallel->getTime()-time_inirun;
-				std::cout<<"Iteration number: "<<i<< " Running time: ";
+
+				std::cout<<"Iteration number: "<<it<< " Running time: ";
 				if(time_run>60.0)
 					std::cout<<trunc(time_run/60)<<"Minutes ";
 				else //less than 1 minute
 				std::cout<<trunc(time_run)<<"Seconds ";
-				std::cout<< " Time per iteration: "<<time_run/i<<"s"<<std::endl;			}
+				std::cout<< " Time per iteration: "<<time_run/it<<"s"<<std::endl;
+				std::cout<<"Error is: "<<Get_Error()<<std::endl;
+				if(Get_Error()<max_error)
+				{
+					Writer->Write_Output(it);
+					it=NbStep;
+				}
+			}
+			it++;
 		}
 	}
 

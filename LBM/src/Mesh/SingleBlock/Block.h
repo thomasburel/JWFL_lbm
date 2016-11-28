@@ -34,7 +34,7 @@ public:
 	virtual Node2D* Get_Node(int NodeNumber)=0;
 	virtual void Get_Connect_Node(std::vector<int> & IdNodeN_,std::vector<int> & IdNodeE_,std::vector<int> & IdNodeS_,std::vector<int> & IdNodeW_,
 								  std::vector<int> & IdNodeSW_,std::vector<int> & IdNodeSE_,std::vector<int> & IdNodeNW_,std::vector<int> & IdNodeNE_)=0;
-	virtual void ModifyMeshByUser(Parameters &Param)=0;
+	//virtual void ModifyMeshByUser(Parameters &Param)=0;
 	virtual void reorganizeNodeByType()=0;
 	virtual void ConvertToPhysicalUnit(Parameters &Param)=0;
 	virtual NodeArrays2D* Get_NodeArrays2D()=0;

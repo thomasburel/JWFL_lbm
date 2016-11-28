@@ -36,7 +36,7 @@ public:
 	void InitSimu(Parameters &Parameters_, bool create_mesh);
 	InitLBM& InitSimu();
 	void Create_Mesh();
-	void Create_Mesh(dimension dim, int Nx, int Ny, int Nz);
+	void Create_Mesh(SolverEnum::dimension dim, int Nx, int Ny, int Nz);
 	void Import_Mesh(string MeshFile);
 	void RunSimu();
 	void RunSimu(Parameters &UpdatedParam);

@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
 stringstream FileExportStream;
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 //Domain size
-	double L=200;
-	double H=200;
+	double L=1289;
+	double H=370;
 
 	double Diameter=H;
 	double Ca=0;
@@ -47,7 +47,7 @@ stringstream FileExportStream;
 	double Rho2_ref=Rho1_ref;
 
 	double nu_2=1.0/6.0;
-	double lambda=10;
+	double lambda=1;
 	double nu_1=lambda*nu_2;
 
 	double tau1=(6.0*nu_1+1.0)*0.5;
@@ -59,7 +59,7 @@ stringstream FileExportStream;
 	double Mach =U2_ref*std::sqrt(3);
 	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
 //Pressure drop
-	double deltaP=0.001;
+	double deltaP=0.000001;
 // Pressure inlet
 	double Pmax=1+deltaP;
 // Pressure outlet
@@ -74,9 +74,9 @@ stringstream FileExportStream;
 
 /// Set Solver type
 // Dimension
-	Param.Set_Dimension(D2);
+	Param.Set_Dimension(SolverEnum::D2);
 // Scheme
-	Param.Set_Scheme(Q9);
+	Param.Set_Scheme(SolverEnum::Q9);
 
 // Set Domain size
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
@@ -95,7 +95,7 @@ stringstream FileExportStream;
 // Set User Force type
 	Param.Set_UserForceType(None);
 // Set delta x for output
-	Param.Set_deltax(1/H);
+	Param.Set_deltax(1);
 
 
 /// Set Boundary condition type for the boundaries of the domain
@@ -115,12 +115,13 @@ stringstream FileExportStream;
 	Param.Set_PeriodicType(PressureForce);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(30000);
+	Param.Set_NbStep(500000);
 /// Interval for output
-	Param.Set_OutPutNSteps(2000);// interval
+	Param.Set_OutPutNSteps(10000);// interval
 ///Display information during the calculation every N iteration
-	Param.Set_listing(200);
+	Param.Set_listing(500);
 	Param.Set_ErrorMax(1e-11);
+	Param.Set_ErrorVariable(SolverEnum::VelocityX);
 
 ///Selection of variables to export
 	Param.Set_VariablesOutput(true,true);// export Rho,U
@@ -130,11 +131,11 @@ stringstream FileExportStream;
 			<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
 			<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
 	FileExportStream.str("");
-	FileExportStream<<"Square_Pressure_Pressure";
+	FileExportStream<<"Debug_poiseuille_serpentine";
 	Param.Set_OutputFileName(FileExportStream.str());
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(SinglePhase);
+	Param.Set_Model(SolverEnum::SinglePhase);
 	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
 
 	//Gradient definition

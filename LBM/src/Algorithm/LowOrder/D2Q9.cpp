@@ -63,6 +63,8 @@ D2Q9::D2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* W
 		Solution2D::Set_output();
 	//Set the variables names and the variable pointers for breakpoints in solution
 		Solution2D::Set_breakpoint();
+	//Set_Convergence
+		Set_Convergence();
 }
 void D2Q9::Set_PointersOnFunctions(){
 // Select the model for two-phase operator in the collision step
@@ -250,14 +252,20 @@ void D2Q9::run(){
 	int listing=PtrParameters->Get_listing();
 	double time_inirun=parallel->getTime();
 	double time_run=0;
+	int it=0;
+	double max_error=PtrParameters->Get_ErrorMax()*listing;
+
+	if(parallel->isMainProcessor())
+		std::cout<<"Error max (listing*"<<PtrParameters->Get_ErrorMax()<<")= "<<max_error<<std::endl<< "Convergence will be checked every: "<<listing<<" iterations"<<std::endl;
 
 	if(parallel->getSize()>1)
 		SyncToGhost();
 	UpdateMacroVariables();
 
 
-	int it=0;
+
 	Writer->Write_Output(it);
+	it++;
  /*	char buffer[50]; // make sure it's big enough
  	std::ofstream myFlux;
  	snprintf(buffer, sizeof(buffer), "after_streaming_%d.txt", parallel->getRank());
@@ -266,7 +274,7 @@ void D2Q9::run(){
  	myFlux.open(buffer);myFlux.close();*/
 	if(parallel->getSize()>1)
 	{
-		for (int i=1;i<NbStep+1;i++)
+		while(it<NbStep+1)
 		{
 			CollideD2Q9();
 			SyncToGhost();
@@ -274,45 +282,66 @@ void D2Q9::run(){
 			ApplyBc();
 			UpdateMacroVariables();
 			SyncMacroVarToGhost();
-			if(i%OutPutNStep==0)
+			if(it%OutPutNStep==0)
 			{
-				Writer->Write_Output(i);
+				Writer->Write_Output(it);
 			}
-			if(i%listing==0 && parallel->isMainProcessor() )
+			if(it%listing==0  )
 			{
-				time_run=parallel->getTime()-time_inirun;
+				Convergence::Calcul_Error();
+				if(parallel->isMainProcessor())
+				{
+					time_run=parallel->getTime()-time_inirun;
 
-				std::cout<<"Iteration number: "<<i<< " Running time: ";
-				if(time_run>60.0)
-					std::cout<<trunc(time_run/60)<<"Minutes ";
-				else //less than 1 minute
-				std::cout<<trunc(time_run)<<"Seconds ";
-				std::cout<< " Time per iteration: "<<time_run/i<<"s"<<std::endl;
+					std::cout<<"Iteration number: "<<it<< " Running time: ";
+					if(time_run>60.0)
+						std::cout<<trunc(time_run/60)<<"Minutes ";
+					else //less than 1 minute
+					std::cout<<trunc(time_run)<<"Seconds ";
+					std::cout<< " Time per iteration: "<<time_run/it<<"s"<<std::endl;
+					std::cout<<"Error is: "<<Get_Error()<<std::endl;
+				}
+				if(Get_Error()<max_error)
+				{
+					Writer->Write_Output(it);
+					it=NbStep;
+				}
 			}
+			it++;
 		}
 	}
 	else
 	{
-		for (int i=1;i<NbStep+1;i++)
+		while(it<NbStep+1)
 		{
 			CollideD2Q9();
 			StreamD2Q9();
 			ApplyBc();
 			UpdateMacroVariables();
 
-			if(i%OutPutNStep==0)
+			if(it%OutPutNStep==0)
 			{
-				Writer->Write_Output(i);
+				Writer->Write_Output(it);
 			}
-			if(i%listing==0)
+			if(it%listing==0  )
 			{
+				Convergence::Calcul_Error();
 				time_run=parallel->getTime()-time_inirun;
-				std::cout<<"Iteration number: "<<i<< " Running time: ";
+				std::cout<<"Iteration number: "<<it<< " Running time: ";
 				if(time_run>60.0)
 					std::cout<<trunc(time_run/60)<<"Minutes ";
 				else //less than 1 minute
 				std::cout<<trunc(time_run)<<"Seconds ";
-				std::cout<< " Time per iteration: "<<time_run/i<<"s"<<std::endl;			}
+				std::cout<< " Time per iteration: "<<time_run/it<<"s"<<std::endl;
+				std::cout<<"Error is: "<<Get_Error()<<std::endl;
+
+				if(Get_Error()<max_error)
+				{
+					Writer->Write_Output(it);
+					it=NbStep;
+				}
+			}
+			it++;
 		}
 	}
 	Writer->Write_breakpoint(*PtrParameters);
@@ -439,6 +468,11 @@ void D2Q9::CollideD2Q9(){
 		{
 			Fx=0; Fy=0;
 			Collide_2D(i, f->f[i][NodeArrays->NodeWall[j].Get_index()],Rho[NodeArrays->NodeWall[j].Get_index()], U[0][NodeArrays->NodeWall[j].Get_index()], U[1][NodeArrays->NodeWall[j].Get_index()], Fx, Fy, Get_InvTau());
+		}
+		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		{
+			Fx=0; Fy=0;
+			Collide_2D(i, f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()],Rho[NodeArrays->NodeSpecialWall[j].Get_index()], U[0][NodeArrays->NodeSpecialWall[j].Get_index()], U[1][NodeArrays->NodeSpecialWall[j].Get_index()], Fx, Fy, Get_InvTau());
 		}
 		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
@@ -630,10 +664,10 @@ void D2Q9::ApplyBc(){
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
 		//ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f,NodeArrays->TypeOfNode);
-		ExtrapolationCornerConcaveToSolid(Rho,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+		ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
 		//ExtrapolationCornerConcaveToSolid(Rhob,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
-		ExtrapolationCornerConcaveToSolid(U[0],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
-		ExtrapolationCornerConcaveToSolid(U[1],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+//		ExtrapolationCornerConcaveToSolid(U[0],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
+//		ExtrapolationCornerConcaveToSolid(U[1],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
 
 //		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
 
@@ -868,6 +902,53 @@ void D2Q9::StreamingOrientation(NodeWall2D& nodeIn, bool Streaming[9]){
 			Streaming[7]=true;
 			Streaming[8]=true;
 			break;
+// For special Walls
+		case 5:
+			Streaming[0]=false;
+			Streaming[1]=true;
+			Streaming[2]=true;
+			Streaming[3]=false;
+			Streaming[4]=false;
+			Streaming[5]=true;
+			Streaming[6]=false;
+			Streaming[7]=false;
+			Streaming[8]=false;
+			break;
+		case 6:
+			Streaming[0]=false;
+			Streaming[1]=false;
+			Streaming[2]=true;
+			Streaming[3]=true;
+			Streaming[4]=false;
+			Streaming[5]=false;
+			Streaming[6]=true;
+			Streaming[7]=false;
+			Streaming[8]=false;
+			break;
+		case 7:
+			Streaming[0]=false;
+			Streaming[1]=false;
+			Streaming[2]=false;
+			Streaming[3]=true;
+			Streaming[4]=true;
+			Streaming[5]=false;
+			Streaming[6]=false;
+			Streaming[7]=true;
+			Streaming[8]=false;
+			break;
+		case 8:
+			Streaming[0]=false;
+			Streaming[1]=true;
+			Streaming[2]=false;
+			Streaming[3]=false;
+			Streaming[4]=true;
+			Streaming[5]=false;
+			Streaming[6]=false;
+			Streaming[7]=false;
+			Streaming[8]=true;
+			break;
+		default:
+			std::cerr<<" Problem in setup streaming; Normal not found."<<std::endl;
 		}
 }
 void D2Q9::StreamingOrientation(NodeSymmetry2D& nodeIn, bool Streaming[9]){

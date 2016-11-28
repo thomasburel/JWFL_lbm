@@ -236,9 +236,16 @@ void Block2D::NewGhostCell(NodeType Nodes[4], bool NewNodes[4], int Node2D_SubDo
 }
 
 /// Method to generate a mesh block inside a MPI Block.
-void Block2D::AddBlock(int TotalNumberCells_x,int TotalNumberCells_y,int dims[2],int periodic_[2],int coord[2],int NyCell_G,int Nx_begin,int Ny_begin,int Nx_last,int Ny_last,NodeType bC[4],int x_last,int y_last,int start_GlobalNodes,int end_GlobalNodes, int start_GlobalElems, int end_GlobalElems)
+void Block2D::AddBlock(int TotalNumberCells_x,int TotalNumberCells_y,int dims[2],int periodic_[2],int coord[2],int NyCell_G,int Nx_begin,int Ny_begin,int Nx_last,int Ny_last,NodeType bCIn[4],int x_last,int y_last,int start_GlobalNodes,int end_GlobalNodes, int start_GlobalElems, int end_GlobalElems)
 {
 	verbous=false;
+	int rank;
+	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	for(int i=0;i<4;i++)
+		{bC[i]=bCIn[i];
+		//std::cout<<"Processor: "<<rank<<" Type: "<<bC[i]<<" in: "<<i<<std::endl;;
+		}
+
 	NodeType Nodes[4];
 	int x_[4];
 	int y_[4];
@@ -267,8 +274,7 @@ void Block2D::AddBlock(int TotalNumberCells_x,int TotalNumberCells_y,int dims[2]
 	int start_GlobalNodes_Domain_N;
 	int start_GlobalNodes_Domain_E;
 
-	int rank;
-	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+
 
 	if(coord[1]==dims[1]-1)// Treat the MPI blocks at the top of the physical domain
 	{
@@ -1842,11 +1848,11 @@ void Block2D::ChangeNodeType(int NodeNumber, NodeType NewNodeType_)
 		Node[NodeNumber]=new NodeInterior2D(x_tmp, y_tmp);
 		break;
 	case Solid:
-		if(OldNodeType_==Ghost)
-			Id_SolidGhost.push_back(NodeNumber);
-			//Node[NodeNumber]=new NodeGhost2D(x_tmp, y_tmp,SolidGhost);
-		//else
 		Node[NodeNumber]=new NodeSolid2D(x_tmp, y_tmp);
+		break;
+	case SolidGhost:
+		Node[NodeNumber]=new NodeGhost2D(x_tmp, y_tmp);
+		Node[NodeNumber]->Set_NodeType(SolidGhost);
 		break;
 	case Ghost:
 		Node[NodeNumber]=new NodeGhost2D(x_tmp, y_tmp);
@@ -1860,7 +1866,16 @@ void Block2D::ChangeNodeType(int NodeNumber, NodeType NewNodeType_)
 	case Periodic:
 		Node[NodeNumber]=new NodePeriodic2D(x_tmp, y_tmp);
 		break;
+	case Symmetry:
+		Node[NodeNumber]=new NodeSymmetry2D(x_tmp, y_tmp);
+		break;
 	case Corner:
+		Node[NodeNumber]=new NodeCorner2D(x_tmp, y_tmp);
+		break;
+	case ConcaveCorner:
+		Node[NodeNumber]=new NodeCorner2D(x_tmp, y_tmp);
+		break;
+	case ConvexCorner:
 		Node[NodeNumber]=new NodeCorner2D(x_tmp, y_tmp);
 		break;
 	case Wall:
@@ -2043,10 +2058,15 @@ void Block2D::Get_NbNodes(int & NbRealNodes_, int & NbTotalNodes_){
 	NbRealNodes_=NbRealNodes;
 	NbTotalNodes_=NbTotalNodes;
 }
-void Block2D::GenerateSolid(Parameters &Param, int &ndSolidNode,int &firstSolid){
+//void Block2D::GenerateSolid(Parameters &Param, int &ndSolidNode,int &firstSolid)
+void Block2D::GenerateSolid(Parameters &Param)
+{
 	bool testSolid;
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	nx=Param.Get_Nx();ny=Param.Get_Ny();
+	PtrParametersUserMesh=&Param;
+	UserMesh::SetUserMeshVariables();
 
 	//for (int i=0;i<NbRealNodes;i++)
 	for (int i=0;i<Node.size();i++)
@@ -2060,12 +2080,13 @@ void Block2D::GenerateSolid(Parameters &Param, int &ndSolidNode,int &firstSolid)
 			if(Param.Get_Verbous())
 				std::cout<<"Node set as Solid: "<<i<< " in processor: "<<rank<<std::endl;
 			//Save the first Solid node in the processor to sort array later on
-			if(ndSolidNode==0)
-				firstSolid=i;
+/*			if(ndSolidNode==0)
+				firstSolid=i;*/
 			//Store the number of Solid node
-			ndSolidNode++;
+//			ndSolidNode++;
 			//store id of solid nodes
 			if(i<NbRealNodes)
+	//		if(Node[i]->get_NodeType()!=Ghost)
 				IdSolidNode.push_back(i);
 			//create the solid node}
 			Block2D::ChangeNodeType(i,Solid);//convert node to solid
@@ -2087,6 +2108,262 @@ void Block2D::GenerateSolid(Parameters &Param, int &ndSolidNode,int &firstSolid)
 	}
 	//Correct_Solid_Ghost();
 	std::cout<<"Processor: "<<rank<<" Number of Solid: "<<IdSolidNode.size()<<" Number of Computation nodes: "<<NbRealNodes-IdSolidNode.size()<<std::endl;
+	if(rank==0)
+		for(int i=0;i<IdCornerConvextmp.size();i++)
+			std::cout<<"x: "<<Node[IdCornerConvextmp[i]]->get_x()<<" y: "<<Node[IdCornerConvextmp[i]]->get_y()<<std::endl;
+}
+void Block2D::SetSolidBoundaries(){
+//Detect boundaries
+	for(int i=0;i<IdSolidNode.size();i++)
+	{
+		if(DetectSolidBoundaries(IdSolidNode[i]))
+			IdSolidBc.push_back(IdSolidNode[i]);
+	}
+//Create wall and corners
+	for (int i=0;i<IdWalltmp.size();i++)
+		CreateWall(IdWalltmp[i]);
+	for (int i=0;i<IdSpecialWalltmp.size();i++)
+		CreateSpecialWall(IdSpecialWalltmp[i]);
+	for (int i=0;i<IdCornerConcavetmp.size();i++)
+		CreateCornerConcave(IdCornerConcavetmp[i]);
+	for (int i=0;i<IdCornerConvextmp.size();i++)
+		CreateCornerConvex(IdCornerConvextmp[i]);
+//Remove wrong solid
+/*	for (int i=0;i<IDRemoveSolidtmp.size();i++)
+	{
+		Block2D::ChangeNodeType(IDRemoveSolidtmp[i],Interior);
+		std::cout<<"ID : "<<IDRemoveSolidtmp[i]<<std::endl;
+	}*/
+
+	Node_tmp.clear();
+	Node_Solidtmp.clear();
+}
+void Block2D::RemoveUnphysicalSolid(int &nbTotalSolidRemoved,int &nbTotalSolidadded){
+	std::vector<int>::iterator position;
+//	int nbTotalSolidRemoved=1;
+//	int nbTotalSolidadded=1;
+//	int maxclean=10;int count=0;
+//	int rank;
+//	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+//	while( count<maxclean && (nbTotalSolidRemoved>0 || nbTotalSolidadded>0))//(count<maxclean ||(nbTotalSolidRemoved>0 && nbTotalSolidadded>0))// &&
+//	{
+		for(int i=0;i<IdSolidNode.size();i++)
+		{
+			DetectUnphysicalSolid(IdSolidNode[i]);
+		}
+
+	//**********Remove wrong solid************
+		//Remove duplicate and sort the array
+		std::sort( IDRemoveSolidtmp.begin(), IDRemoveSolidtmp.end() );
+		IDRemoveSolidtmp.erase( std::unique( IDRemoveSolidtmp.begin(), IDRemoveSolidtmp.end() ), IDRemoveSolidtmp.end() );
+
+		for (int i=0;i<IDRemoveSolidtmp.size();i++)
+		{
+			position = std::find(IdSolidNode.begin(), IdSolidNode.end(), IDRemoveSolidtmp[i]);
+			if (position != IdSolidNode.end()) // == myVector.end() means the element was not found
+				IdSolidNode.erase(position);
+		// Convert node to interior
+			Block2D::ChangeNodeType(IDRemoveSolidtmp[i],Interior);
+		}
+
+		std::sort( IDRemoveSolidToBctmp.begin(), IDRemoveSolidToBctmp.end() );
+		IDRemoveSolidToBctmp.erase( std::unique( IDRemoveSolidToBctmp.begin(), IDRemoveSolidToBctmp.end() ), IDRemoveSolidToBctmp.end() );
+
+		for (int i=0;i<IDRemoveSolidToBctmp.size();i++)
+		{
+			position = std::find(IdSolidNode.begin(), IdSolidNode.end(), IDRemoveSolidToBctmp[i]);
+			if (position != IdSolidNode.end()) // == myVector.end() means the element was not found
+				IdSolidNode.erase(position);
+		// Convert node to boundary condition
+
+			if(Node[IDRemoveSolidToBctmp[i]]->get_x()==0)
+				{
+					Block2D::ChangeNodeType(IDRemoveSolidToBctmp[i],bC[3]);
+				//std::cout<<"Processor: "<<rank<<" Type: "<<bC[3]<<" in: "<<3<<std::endl;
+				}
+			if(Node[IDRemoveSolidToBctmp[i]]->get_x()==nx)
+				{
+					Block2D::ChangeNodeType(IDRemoveSolidToBctmp[i],bC[1]);
+				//	std::cout<<"Processor: "<<rank<<" Type: "<<bC[1]<<" in: "<<1<<std::endl;
+				}
+			if(Node[IDRemoveSolidToBctmp[i]]->get_y()==0)
+				{
+					Block2D::ChangeNodeType(IDRemoveSolidToBctmp[i],bC[0]);
+				//	std::cout<<"Processor: "<<rank<<" Type: "<<bC[0]<<" in: "<<0<<std::endl;
+				}
+			if(Node[IDRemoveSolidToBctmp[i]]->get_y()==ny)
+				{
+					Block2D::ChangeNodeType(IDRemoveSolidToBctmp[i],bC[2]);
+				//	std::cout<<"Processor: "<<rank<<" Type: "<<bC[2]<<" in: "<<2<<std::endl;
+				}
+		}
+		nbTotalSolidRemoved=IDRemoveSolidtmp.size()+IDRemoveSolidToBctmp.size();
+//		std::cout<<"Processor: "<<rank<<"Number of solid removed: "<<nbTotalSolidRemoved<<std::endl;
+		//clear the array
+		IDRemoveSolidtmp.clear();
+		IDRemoveSolidToBctmp.clear();
+		//**********Add solids************
+		//Remove duplicate and sort the array
+		std::sort( IDAddSolidtmp.begin(), IDAddSolidtmp.end() );
+		IDAddSolidtmp.erase( std::unique( IDAddSolidtmp.begin(), IDAddSolidtmp.end() ), IDAddSolidtmp.end() );
+		// Convert node to interior
+		for (int i=0;i<IDAddSolidtmp.size();i++)
+			{Block2D::ChangeNodeType(IDAddSolidtmp[i],Solid);}
+		nbTotalSolidadded=IDAddSolidtmp.size();
+//		std::cout<<"Processor: "<<rank<<"Number of solid added: "<<nbTotalSolidadded<<std::endl;
+		IdSolidNode.insert(IdSolidNode.end(),IDAddSolidtmp.begin(), IDAddSolidtmp.end());
+		//clear the array
+		IDAddSolidtmp.clear();
+//		count++;
+//	}
+	//std::cout<<"number of cleaning: "<<count<<std::endl;
+}
+void Block2D::DetectUnphysicalSolid(int & nodeID){
+	int nbSolidDirect=0;
+	int nbSolidDiagonal=0;
+	int nbWall=0;
+	for(unsigned int j=1;j<5;j++)
+	{
+		if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Solid)
+		{	nbSolidDirect++;	}
+	}
+	for(unsigned int j=4;j<9;j++)
+	{
+		if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Solid)
+		{	nbSolidDiagonal++;	}
+	}
+	if(nbSolidDirect+nbSolidDiagonal<8)
+	{
+		if(nbSolidDirect==3 &&nbSolidDiagonal<2)
+		{
+			//Add solid on the diagonal for wall boundary in order to avoid only solid nodes
+			unsigned int j=0;unsigned int k=0;unsigned int l=0;
+			for(j=2;j<5;j++)
+			{
+				k=j-1;
+				l=j+3;
+					if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Solid &&
+							Node[Connect_lowOrder(nodeID,k)]->get_NodeType()==Solid &&
+							Node[Connect_lowOrder(nodeID,l)]->get_NodeType()!=Solid)
+						IDAddSolidtmp.push_back(Connect_lowOrder(nodeID,l));
+			}
+			j=1;k=4;l=8;
+			if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Solid &&
+					Node[Connect_lowOrder(nodeID,k)]->get_NodeType()==Solid &&
+					Node[Connect_lowOrder(nodeID,l)]->get_NodeType()!=Solid)
+				IDAddSolidtmp.push_back(Connect_lowOrder(nodeID,l));
+		}
+		else if(nbSolidDirect==4 && nbSolidDiagonal<3)
+		{
+			unsigned int j=5;
+			while(nbSolidDiagonal<3)
+			{
+				if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()!=Solid)
+				{
+					IDAddSolidtmp.push_back(Connect_lowOrder(nodeID,j));
+					nbSolidDiagonal++;
+				}
+				j++;
+				if(j>8) {nbSolidDiagonal=3; std::cerr<<"Error for adding solids"<<std::endl;}
+			}
+
+		}
+		else if(nbSolidDirect==2)
+		{
+			if(Node[nodeID]->get_x()==0||Node[nodeID]->get_x()==nx
+			 ||Node[nodeID]->get_y()==0||Node[nodeID]->get_y()==ny)
+				IDRemoveSolidToBctmp.push_back(nodeID);
+
+
+			else if(	Node[Node[nodeID]->Get_connect(0)]->get_NodeType()==Node[Node[nodeID]->Get_connect(1)]->get_NodeType()||
+				Node[Node[nodeID]->Get_connect(0)]->get_NodeType()==Node[Node[nodeID]->Get_connect(3)]->get_NodeType()||
+				Node[Node[nodeID]->Get_connect(2)]->get_NodeType()==Node[Node[nodeID]->Get_connect(1)]->get_NodeType()||
+				Node[Node[nodeID]->Get_connect(2)]->get_NodeType()==Node[Node[nodeID]->Get_connect(3)]->get_NodeType()	)
+			{
+				if(nbSolidDiagonal==0)
+					IDRemoveSolidtmp.push_back(nodeID);
+			}
+			else
+				IDRemoveSolidtmp.push_back(nodeID);
+
+		}
+		else if(nbSolidDirect==0 ||nbSolidDirect==1)//nbSolidDirect==0 or ==1
+		{
+			IDRemoveSolidtmp.push_back(nodeID);
+
+		}
+	}
+}
+
+bool Block2D::DetectSolidBoundaries(int & nodeID){
+	int nbSolidDirect=0;
+	int nbSolidDiagonal=0;
+	int nbWall=0;
+	for(unsigned int j=1;j<5;j++)
+	{
+		if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Solid)
+		{	nbSolidDirect++;	}
+	}
+	for(unsigned int j=5;j<9;j++)
+	{
+		if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Solid)
+		{	nbSolidDiagonal++;	}
+	}
+/*	if(Node[nodeID]->get_y()==100)
+		if(Node[nodeID]->get_x()==112 ||Node[nodeID]->get_x()==113)
+			std::cout<<"Node ID: "<<nodeID<<" x: "<<Node[nodeID]->get_x() <<" y: "<<Node[nodeID]->get_y()<<" nbSolidDirect: "<<nbSolidDirect<<" nbSolidDiagonal: "<<nbSolidDiagonal<<std::endl;
+	if(Node[nodeID]->get_y()==101)
+		if(Node[nodeID]->get_x()==113 ||Node[nodeID]->get_x()==114)
+			std::cout<<"Node ID: "<<nodeID<<" x: "<<Node[nodeID]->get_x() <<" y: "<<Node[nodeID]->get_y()<<" nbSolidDirect: "<<nbSolidDirect<<" nbSolidDiagonal: "<<nbSolidDiagonal<<std::endl;
+*/
+	if(nbSolidDirect+nbSolidDiagonal<8)
+	{
+		if(nbSolidDirect==3)
+		{
+			if(Node[nodeID]->get_x()==0||Node[nodeID]->get_x()==nx
+			 ||Node[nodeID]->get_y()==0||Node[nodeID]->get_y()==ny)
+			{
+				for(unsigned int j=1;j<5;j++)
+					if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Wall)
+						nbWall++;
+				if(nbWall>0)
+					IdCornerConcavetmp.push_back(nodeID);
+				else
+					IdSpecialWalltmp.push_back(nodeID);
+			}
+
+			else
+				IdWalltmp.push_back(nodeID);
+		}
+		else if(nbSolidDirect==4)
+		{
+//			if(nbSolidDiagonal==3)
+				IdCornerConcavetmp.push_back(nodeID);
+//			else
+//				IDRemoveSolidtmp.push_back(nodeID);
+		}
+		else if(nbSolidDirect==2)
+		{
+/*			if(		Node[Node[nodeID]->Get_connect(0)]->get_NodeType()==Node[Node[nodeID]->Get_connect(1)]->get_NodeType()||
+					Node[Node[nodeID]->Get_connect(0)]->get_NodeType()==Node[Node[nodeID]->Get_connect(3)]->get_NodeType()||
+					Node[Node[nodeID]->Get_connect(2)]->get_NodeType()==Node[Node[nodeID]->Get_connect(1)]->get_NodeType()||
+					Node[Node[nodeID]->Get_connect(2)]->get_NodeType()==Node[Node[nodeID]->Get_connect(3)]->get_NodeType()	)
+*/
+				IdCornerConvextmp.push_back(nodeID);
+//			else
+//				IDRemoveSolidtmp.push_back(nodeID);
+		}
+		else
+		{
+			std::cout<<"Solid boundary not found. Number of Solid connected: "<<nbSolidDirect+nbSolidDiagonal<<std::endl;
+			IDRemoveSolidtmp.push_back(nodeID);
+		}
+		return true;
+
+	}
+	else
+		return false;
+
 }
 /*void Block2D::Correct_Solid_Ghost()
 {
@@ -2219,6 +2496,16 @@ void Block2D::CreateCorner(int &nodeID){
 	DefinedCornerType(nodeID);
 	IdBoundaries.push_back(nodeID);
 }
+void Block2D::CreateCornerConcave(int &nodeID){
+	Block2D::ChangeNodeType(nodeID,Corner);
+	Node[nodeID]->Set_CornerType(ConcaveCorner);
+	IdBoundaries.push_back(nodeID);
+}
+void Block2D::CreateCornerConvex(int &nodeID){
+	Block2D::ChangeNodeType(nodeID,Corner);
+	Node[nodeID]->Set_CornerType(ConvexCorner);
+	IdBoundaries.push_back(nodeID);
+}
 void Block2D::CreateWall(int &nodeID){
 	Block2D::ChangeNodeType(nodeID,Wall);
 	IdBoundaries.push_back(nodeID);
@@ -2228,6 +2515,7 @@ void Block2D::CreateSpecialWall(int &nodeID){
 	Node[nodeID]->Set_NodeType(SpecialWall);
 	IdBoundaries.push_back(nodeID);
 }
+/*
 void Block2D::CreateWallandCorners(Parameters &Param, int &nodeID, int & nbinterior, bool SpecialNode)
 {
 	if (nbinterior>0)//else solid or concave corner
@@ -2283,23 +2571,55 @@ void Block2D::CreateWallandCorners(Parameters &Param, int &nodeID, int & nbinter
 	}
 
 }
+
 void Block2D::ModifyMeshByUser(Parameters &Param){
+
+	PtrParametersUserMesh=&Param;
+	UserMesh::SetUserMeshVariables();
 	int ndSolidNode=0;
 	int firstSolid=0;
 	std::vector<int> ndSolidNodetoremove;
 
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	if(rank==0)
+		std::cout<<"******BEGGINING MODIFY THE MESH BY THE USERS******"<<std::endl;
 
 	if(Param.Get_Verbous())
 		std::cout<<"Processor ID: "<<rank<<" Number of node:"<<NbRealNodes<<std::endl;
 	nx=Param.Get_Nx();ny=Param.Get_Ny();
-	GenerateSolid(Param, ndSolidNode,firstSolid);
-	int computenode=Node.size()-NbGhostNode-ndSolidNode;
+	if(rank==0)
+		std::cout<<"******START GENERATING SOLID IN THE DOMAIN******"<<std::endl;
+	GenerateSolid(Param);
+	//int computenode=Node.size()-NbGhostNode-ndSolidNode;
 	int sizeIdBcBeforeSolid=IdBoundaries.size();
-	int nbinterior=0;// detect corners
-	bool specialwall=false;
-	std::vector<int> IdSpecialNode;
+	//int nbinterior=0;// detect corners
+	//bool specialwall=false;
+	//std::vector<int> IdSpecialNode;
+	if(rank==0)
+		std::cout<<"******END GENERATING SOLID IN THE DOMAIN******"<<std::endl
+		<<"******START CHECKING THE MESH AND REMOVING/ADDING SOLID******"<<std::endl;
+//	RemoveUnphysicalSolid();
+	if(rank==0)
+		std::cout<<"******END CHECKING THE MESH AND REMOVING/ADDING SOLID******"<<std::endl
+		<<"******START GENERATING WALL AND CORNERS******"<<std::endl;
+	SetSolidBoundaries();
+	//std::cout<<"Processor: "<<rank<<" Number of Walls: "<<IdWalltmp.size()<<std::endl;
+	//std::cout<<"Processor: "<<rank<<" Number of Special Walls: "<<IdSpecialWalltmp.size()<<std::endl;
+	//std::cout<<"Processor: "<<rank<<" Number of Concave Corners: "<<IdCornerConcavetmp.size()<<std::endl;
+	//std::cout<<"Processor: "<<rank<<" Number of Convex Corners: "<<IdCornerConvextmp.size()<<std::endl;
+/*	for (int i=0;i<IdWalltmp.size();i++)
+		CreateWall(IdWalltmp[i]);
+	for (int i=0;i<IdSpecialWalltmp.size();i++)
+		CreateSpecialWall(IdSpecialWalltmp[i]);
+	for (int i=0;i<IdCornerConcavetmp.size();i++)
+		CreateCornerConcave(IdCornerConcavetmp[i]);
+	for (int i=0;i<IdCornerConvextmp.size();i++)
+		CreateCornerConvex(IdCornerConvextmp[i]);
+//Remove wrong solid
+	for (int i=0;i<IDRemoveSolidtmp.size();i++)
+		{Block2D::ChangeNodeType(IDRemoveSolidtmp[i],Interior); std::cout<<"ID : "<<IDRemoveSolidtmp[i]<<std::endl;}*/
+/*
 	unsigned int directionspecialwall;
 
 	for (int i=0;i<IdSolidNode.size();i++)
@@ -2326,10 +2646,12 @@ void Block2D::ModifyMeshByUser(Parameters &Param){
 	if(Param.Get_Verbous())
 		for(int i=sizeIdBcBeforeSolid;i<IdBoundaries.size();i++)
 			std::cout<<"Processor: "<<rank<<" Node id: "<<IdBoundaries[i]<<" x coordinate: " <<Node[IdBoundaries[i]]->get_x() <<" y coordinate: " << Node[IdBoundaries[i]]->get_y()<<" type of node: "<<Node[IdBoundaries[i]]->get_NodeType()<<std::endl;
-	Node_tmp.clear();
-	Node_Solidtmp.clear();
+
+
+
 
 }
+*/
 void Block2D::DefinedCornerType(int nodenumber){
 	int nbinterior=0;
 	for (unsigned int i=5;i<9;i++)
@@ -2366,9 +2688,9 @@ void Block2D::ConvertToPhysicalUnit(Parameters &Param){
 
 }
 void Block2D::reorganizeNodeByType(){
-/*	int rank;
+	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-	char buffer[50]; // make sure it's big enough
+	/*	char buffer[50]; // make sure it's big enough
 	snprintf(buffer, sizeof(buffer), "CheckNodes_%d.txt", rank);
 	std::ofstream myFlux;
 	myFlux.open(buffer);*/
@@ -2377,6 +2699,8 @@ void Block2D::reorganizeNodeByType(){
 	unsigned int Connect_W_tmp=0;
 	unsigned int Connect_E_tmp=0;
 	unsigned int NbVelocity_tmp=0;
+	int count=0;
+
 	for (int i=0;i<Node.size();i++)
 	{
 		NodeArrays.TypeOfNode[i]=Node[i]->get_NodeType();
@@ -2387,8 +2711,16 @@ void Block2D::reorganizeNodeByType(){
 		Connect_W_tmp=Node[i]->Get_connect(3)+1;
 		Connect_E_tmp=Node[i]->Get_connect(1)+1;
 		NbVelocity_tmp=Node[i]->Get_NbVelocity();
-		//if(x_tmp==3 && y_tmp==0)
-//			myFlux<<"Processor: "<<rank<<" x: "<<x_tmp<<" y: "<<y_tmp<<" Node type is: "<<NodeArrays.TypeOfNode[i]<<std::endl;
+/*		if(y_tmp==100)
+			if(x_tmp==112 ||x_tmp==113)
+				std::cout<<"Processor: "<<rank<<"Node ID: "<<i<<" x: "<<x_tmp <<" y: "<<y_tmp<<" Node type is: "<<NodeArrays.TypeOfNode[i]<<std::endl;
+		if(y_tmp==101)
+			if(x_tmp==113 ||x_tmp==114)
+				std::cout<<"Processor: "<<rank<<"Node ID: "<<i<<" x: "<<x_tmp <<" y: "<<y_tmp<<" Node type is: "<<NodeArrays.TypeOfNode[i]<<std::endl;
+*/
+		//if((x_tmp==250 && y_tmp==0)||(x_tmp==250 && y_tmp==-1))
+		//	std::cout<<"Processor: "<<rank<<" x: "<<x_tmp<<" y: "<<y_tmp<<" Node type is: "<<NodeArrays.TypeOfNode[i]<<std::endl;
+
 		/*		if(x_tmp==20 && y_tmp==20)
 			myFlux<<"Processor: "<<rank<<" x: "<<x_tmp<<" y: "<<y_tmp<<" Node type is: "<<NodeArrays.TypeOfNode[i]<<std::endl;
 		if(x_tmp==20 && y_tmp==21)
@@ -2421,6 +2753,7 @@ void Block2D::reorganizeNodeByType(){
 			NodeArrays.NodeGhost.push_back(NodeGhost2D(x_tmp,y_tmp));
 			NodeArrays.NodeGhost[NodeArrays.NodeGhost.size()-1].Set_Connect(Connect_N_tmp,Connect_S_tmp,Connect_W_tmp,Connect_E_tmp);
 			NodeArrays.NodeGhost[NodeArrays.NodeGhost.size()-1].Set_NbVelocity(NbVelocity_tmp);
+			NodeArrays.NodeGhost[NodeArrays.NodeGhost.size()-1].Set_GhostType(InteriorGhostType);
 			NodeArrays.NodeGhost[NodeArrays.NodeGhost.size()-1].Set_Index(i);
 			break;
 		case GlobalCorner:
@@ -2490,8 +2823,9 @@ void Block2D::reorganizeNodeByType(){
 			NodeArrays.NodeGhost.push_back(NodeGhost2D(x_tmp,y_tmp));
 			NodeArrays.NodeGhost[NodeArrays.NodeGhost.size()-1].Set_Connect(Connect_N_tmp,Connect_S_tmp,Connect_W_tmp,Connect_E_tmp);
 			NodeArrays.NodeGhost[NodeArrays.NodeGhost.size()-1].Set_NbVelocity(NbVelocity_tmp);
-			NodeArrays.NodeGhost[NodeArrays.NodeGhost.size()-1].Set_CornerType(SolidGhost);
+			NodeArrays.NodeGhost[NodeArrays.NodeGhost.size()-1].Set_GhostType(SolidGhostType);
 			NodeArrays.NodeGhost[NodeArrays.NodeGhost.size()-1].Set_Index(i);
+			count++;
 			break;
 		case Symmetry:
 			NodeArrays.NodeIndexByType[i]=NodeArrays.NodeSymmetry.size();
@@ -2514,6 +2848,7 @@ void Block2D::reorganizeNodeByType(){
 			break;
 		}
 	}
+//	std::cout<<"****************Check Solid Ghost "<<Id_SolidGhost.size()<<" "<<count<<" *****"<<std::endl;
 }
 NodeArrays2D* Block2D::Get_NodeArrays2D(){
 	return &NodeArrays;
@@ -2638,15 +2973,18 @@ void Block2D::Set_BcNormal()
 	myFlux.open(buffer);*/
 	for (int i=0;i<NodeArrays.NodeWall.size();i++)
 	{
-			NodeArrays.NodeWall[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeWall[i]));
+		if(NodeArrays.NodeWall[i].get_x()==114&&NodeArrays.NodeWall[i].get_y()==101)
+			std::cout<<"x: "<< NodeArrays.NodeWall[i].get_x()<<" y: "<< NodeArrays.NodeWall[i].get_y()<<" Normal is: "<<Get_BcNormal(NodeArrays.NodeWall[i])<<std::endl;
+		NodeArrays.NodeWall[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeWall[i]));
 	}
 	for (int i=0;i<NodeArrays.NodeSpecialWall.size();i++)
 	{
 			NodeArrays.NodeSpecialWall[i].Set_BcNormal(Get_BcNormal_SpecialWall(NodeArrays.NodeSpecialWall[i]));
-//			std::cout<<std::endl<<"x: "<<NodeArrays.NodeSpecialWall[i].get_x()<<"y: "<<NodeArrays.NodeSpecialWall[i].get_y()<<" Normal: "<<Get_BcNormal_SpecialWall(NodeArrays.NodeSpecialWall[i])<<std::endl;
 	}
 	for (int i=0;i<NodeArrays.NodeCorner.size();i++)
 	{
+		if(NodeArrays.NodeCorner[i].get_x()>111&& NodeArrays.NodeCorner[i].get_x()<115&&NodeArrays.NodeCorner[i].get_y()>99&&NodeArrays.NodeCorner[i].get_y()<102)
+			std::cout<<"x: "<< NodeArrays.NodeCorner[i].get_x()<<" y: "<< NodeArrays.NodeCorner[i].get_y()<<" Normal is: "<<Get_BcNormal(NodeArrays.NodeCorner[i])<<std::endl;
 			NodeArrays.NodeCorner[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeCorner[i]));
 	}
 	for (int i=0;i<NodeArrays.NodeGlobalCorner.size();i++)
@@ -2670,11 +3008,77 @@ void Block2D::Set_BcNormal()
 			NodeArrays.NodeVelocity[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeVelocity[i]));
 	}
 }
-
 int Block2D::Get_BcNormal(NodeCorner2D & nodeIn)
 {
 	int nbinterior=0, count=0;
-	int tmpdirection,intTmpReturn=0;
+	int tmpdirection[4];
+	int intTmpReturn=0;
+//	if(nodeIn.get_x()>111&& nodeIn.get_x()<115&&nodeIn.get_y()>99&&nodeIn.get_y()<102)
+//		std::cout<<"x: "<< nodeIn.get_x()<<" y: "<< nodeIn.get_y()<<" Type of node: "<<nodeIn.Get_CornerType()<<std::endl;
+
+	if(nodeIn.get_NodeType()==GlobalCorner)
+	{
+		for (unsigned int i=5;i<9;i++)
+		{
+			if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Interior )
+			{
+				intTmpReturn=i;
+				nbinterior++;
+			}
+		}
+		if(nbinterior>1)
+		{
+			std::cerr<<"Wrong corner normal detection for Global corner. "<<"x: "<< nodeIn.get_x()<<" y: "<< nodeIn.get_y()<<std::endl;
+		}
+	}
+	else
+	if(nodeIn.Get_CornerType()==Concave)
+	{
+		for (unsigned int i=5;i<9;i++)
+		{
+			if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Interior ||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Ghost)
+			{
+				intTmpReturn=i;
+				nbinterior++;
+			}
+		}
+		if(nbinterior>1)
+		{
+			std::cerr<<"Wrong corner normal detection for Concave corner. "<<"x: "<< nodeIn.get_x()<<" y: "<< nodeIn.get_y()<<std::endl;
+		}
+	}
+	else
+	{
+		for(int i=0;i<4;i++)
+			tmpdirection[i]=0;
+		int count=0;
+		for (unsigned int i=1;i<5;i++)
+		{
+			if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]!=Interior && NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]!=Ghost )
+			{
+				tmpdirection[count]=i;
+				count++;
+			}
+		}
+		if(tmpdirection[0]==3 && tmpdirection[1]==4)
+			intTmpReturn=5;
+		if(tmpdirection[0]==1 && tmpdirection[1]==4)
+			intTmpReturn=6;
+		if(tmpdirection[0]==1 && tmpdirection[1]==2)
+			intTmpReturn=7;
+		if(tmpdirection[0]==2 && tmpdirection[1]==3)
+			intTmpReturn=8;
+		if(intTmpReturn<5)
+			std::cerr<<"Wrong corner normal detection for Convex corner. "<<"x: "<< nodeIn.get_x()<<" y: "<< nodeIn.get_y()<<std::endl;
+	}
+	return intTmpReturn;
+}
+/*
+int Block2D::Get_BcNormal(NodeCorner2D & nodeIn)
+{
+	int nbinterior=0, count=0;
+	int tmpdirection[4];
+	int intTmpReturn=0;
 	if(nodeIn.get_NodeType()==GlobalCorner)
 	{
 		///Normal concave corners
@@ -2706,7 +3110,7 @@ int Block2D::Get_BcNormal(NodeCorner2D & nodeIn)
 ///normal convex corners
 		if(nbinterior>1)
 		{
-/*			for(int i=0;i<4;i++)
+			for(int i=0;i<4;i++)
 				tmpdirection[i]=0;
 			int count=0;
 			for (unsigned int i=1;i<5;i++)
@@ -2725,8 +3129,8 @@ int Block2D::Get_BcNormal(NodeCorner2D & nodeIn)
 				intTmpReturn=7;
 			if(tmpdirection[0]==2 && tmpdirection[1]==3)
 				intTmpReturn=8;
-*/
-			for (unsigned int i=5;i<9;i++)
+
+/*			for (unsigned int i=5;i<9;i++)
 			{
 				if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Solid )
 				{
@@ -2751,12 +3155,13 @@ int Block2D::Get_BcNormal(NodeCorner2D & nodeIn)
 					std::cerr<<"Wrong convex corner normal detection. Detection of direction: "<<tmpdirection<<" x: "<<nodeIn.get_x()<<" y: "<<nodeIn.get_y()<<" node index: "<<nodeIn.Get_index()<<std::endl;
 					break;
 			}
-
-		}
+*/
+/*		}
 	}
 
 	return intTmpReturn;
 }
+*/
 int Block2D::Get_BcNormal(NodeWall2D & nodeIn)
 {
 	intTmpReturn=0;
@@ -2827,6 +3232,9 @@ int Block2D::Get_BcNormal_SpecialWall(NodeWall2D & nodeIn)
 		else
 			intTmpReturn=7;
 	}
+/*	std::cout<<"x: "<<nodeIn.get_x()<<"y: "<<nodeIn.get_y()<<" direction special wall: "<<intTmpReturn<<std::endl
+			<<" Node type in 1 direction:"<<NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]
+			<<" Node type in 3 direction:"<<NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]<<std::endl;*/
 	return intTmpReturn;
 }
 
@@ -2874,7 +3282,10 @@ void Block2D::Get_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & Node
 	for(int i=0;i<IdRNodeE.size();i++)
 		NodeTypeE.push_back((int)Node[IdRNodeE[i]]->get_NodeType());
 	for(int i=0;i<IdRNodeS.size();i++)
-		NodeTypeS.push_back((int)Node[IdRNodeS[i]]->get_NodeType());
+		{NodeTypeS.push_back((int)Node[IdRNodeS[i]]->get_NodeType());
+		if(Node[IdRNodeS[i]]->get_x()>110&&Node[IdRNodeS[i]]->get_x()<115&&Node[IdRNodeS[i]]->get_y()>99&&Node[IdRNodeS[i]]->get_y()<105)
+		std::cout<<"x: "<<Node[IdRNodeS[i]]->get_x()<<" y: "<<Node[IdRNodeS[i]]->get_y()<<std::endl;
+		}
 	for(int i=0;i<IdRNodeW.size();i++)
 		NodeTypeW.push_back((int)Node[IdRNodeW[i]]->get_NodeType());
 // Get Node type of the corners of the 2D block
@@ -2951,7 +3362,9 @@ void Block2D::Get_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & Node
 void Block2D::Set_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
 		  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE)
 {
-
+//	IDRemoveSolidGhosttmp.clear();
+//	IDAddSolidGhosttmp.clear();
+//	Id_SolidGhost.clear();
 	// Get Node type of the sides of the 2D block
 	if(IdGNodeN.size()>0)
 	for(int i=0;i<IdGNodeN.size();i++)
@@ -2978,6 +3391,20 @@ void Block2D::Set_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & Node
 	if(IdGNodeNE.size()>0)
 	for(int i=0;i<IdGNodeNE.size();i++)
 		Correct_GhostType(IdGNodeNE[i], (NodeType)NodeTypeNE[i]);
+
+/*	std::vector<int>::iterator position;
+	position = std::find(IdSolidNode.begin(), IdSolidNode.end(), IDRemoveSolidtmp[i]);
+	if (position != IdSolidNode.end()) // == myVector.end() means the element was not found
+		IdSolidNode.erase(position);	*/
+
+/*	int rank;
+	 MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	char buffer[50]; // make sure it's big enough
+	snprintf(buffer, sizeof(buffer), "NodeType_%d.txt", rank);
+	std::ofstream myFlux; myFlux.open(buffer);
+	for(int i=0;i<NbRealNodes;i++)
+		myFlux<<"x: "<<Node[i]->get_x()<<" y: "<<Node[i]->get_y()<<" Node Type: "<<Node[i]->get_NodeType()<<std::endl;
+*/
 /*
 	int rank;
  	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
@@ -3042,9 +3469,23 @@ void Block2D::Set_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & Node
 void Block2D::Correct_GhostType(int  idNode, NodeType RealNodeType)
 {
 	if(RealNodeType!=Solid)
-		Block2D::ChangeNodeType(idNode, Ghost);
-	/*else
-		Block2D::ChangeNodeType(idNode, Solid);*/
+	{
+		if(RealNodeType==Interior)
+		{
+			Block2D::ChangeNodeType(idNode, Ghost);
+		}
+		else
+		{
+			Block2D::ChangeNodeType(idNode, SolidGhost);
+		}
+	}
+	else
+	{
+		if(Node[idNode]->get_NodeType()!=Solid)
+		{
+			Block2D::ChangeNodeType(idNode, Solid);
+		}
+	}
 }
 //Remove unused mark nodes
 void Block2D::Clear_MarkNode(){
@@ -3465,6 +3906,156 @@ void Block2D::Set_CommNodes()
 	for(int i=0;i<IdGNodeNE.size();i++)
 		myFlux<<IdGNodeNE[i]<<" x: "<< Node[IdGNodeNE[i]]->get_x()<<" y: "<< Node[IdGNodeNE[i]]->get_y()<<" ";
 		*/
+}
+void Block2D::RemoveSolidInCommunicator(){
+	std::vector<int> IdRNodeNtmp,IdRNodeEtmp,IdRNodeStmp,IdRNodeWtmp,IdGNodeNtmp,IdGNodeEtmp,IdGNodeStmp,IdGNodeWtmp;
+	std::vector<int> IdRNodeNWtmp,IdRNodeNEtmp,IdRNodeSWtmp,IdRNodeSEtmp,IdGNodeNWtmp,IdGNodeNEtmp,IdGNodeSWtmp,IdGNodeSEtmp;
+	// Get Node type of the sides of the 2D block
+
+	if(IdGNodeN.size()>0)
+	{
+		for(int i=0;i<IdGNodeN.size();i++)
+			if(Node[IdGNodeN[i]]->get_NodeType()!=Solid)
+				IdGNodeNtmp.push_back(IdGNodeN[i]);
+
+		IdGNodeN=IdGNodeNtmp;
+	}
+
+	if(IdGNodeE.size()>0)
+	{
+		for(int i=0;i<IdGNodeE.size();i++)
+			if(Node[IdGNodeE[i]]->get_NodeType()!=Solid)
+				IdGNodeEtmp.push_back(IdGNodeE[i]);
+
+		IdGNodeE=IdGNodeEtmp;
+	}
+
+	if(IdGNodeS.size()>0)
+	{
+		for(int i=0;i<IdGNodeS.size();i++)
+			if(Node[IdGNodeS[i]]->get_NodeType()!=Solid)
+				IdGNodeStmp.push_back(IdGNodeS[i]);
+
+		IdGNodeS=IdGNodeStmp;
+	}
+
+	if(IdGNodeW.size()>0)
+	{
+		for(int i=0;i<IdGNodeW.size();i++)
+			if(Node[IdGNodeW[i]]->get_NodeType()!=Solid)
+				IdGNodeWtmp.push_back(IdGNodeW[i]);
+
+		IdGNodeW=IdGNodeWtmp;
+	}
+//Real node
+	if(IdRNodeN.size()>0)
+	{
+		for(int i=0;i<IdRNodeN.size();i++)
+			if(Node[IdRNodeN[i]]->get_NodeType()!=Solid)
+				IdRNodeNtmp.push_back(IdRNodeN[i]);
+
+		IdRNodeN=IdRNodeNtmp;
+	}
+
+	if(IdRNodeE.size()>0)
+	{
+		for(int i=0;i<IdRNodeE.size();i++)
+			if(Node[IdRNodeE[i]]->get_NodeType()!=Solid)
+				IdRNodeEtmp.push_back(IdRNodeE[i]);
+
+		IdRNodeE=IdRNodeEtmp;
+	}
+
+	if(IdRNodeS.size()>0)
+	{
+		for(int i=0;i<IdRNodeS.size();i++)
+			if(Node[IdRNodeS[i]]->get_NodeType()!=Solid)
+				IdRNodeStmp.push_back(IdRNodeS[i]);
+
+		IdRNodeS=IdRNodeStmp;
+	}
+
+	if(IdRNodeW.size()>0)
+	{
+		for(int i=0;i<IdRNodeW.size();i++)
+			if(Node[IdRNodeW[i]]->get_NodeType()!=Solid)
+				IdRNodeWtmp.push_back(IdRNodeW[i]);
+
+		IdRNodeW=IdRNodeWtmp;
+	}
+
+// Get Node type of the corners of the 2D block
+	if(IdGNodeSW.size()>0)
+	{
+		for(int i=0;i<IdGNodeSW.size();i++)
+			if(Node[IdGNodeSW[i]]->get_NodeType()!=Solid)
+				IdGNodeSWtmp.push_back(IdGNodeSW[i]);
+
+		IdGNodeSW=IdGNodeSWtmp;
+	}
+
+	if(IdGNodeSE.size()>0)
+	{
+		for(int i=0;i<IdGNodeSE.size();i++)
+			if(Node[IdGNodeSE[i]]->get_NodeType()!=Solid)
+				IdGNodeSEtmp.push_back(IdGNodeSE[i]);
+
+		IdGNodeSE=IdGNodeSEtmp;
+	}
+
+	if(IdGNodeNW.size()>0)
+	{
+		for(int i=0;i<IdGNodeNW.size();i++)
+			if(Node[IdGNodeNW[i]]->get_NodeType()!=Solid)
+				IdGNodeNWtmp.push_back(IdGNodeNW[i]);
+
+		IdGNodeNW=IdGNodeNWtmp;
+	}
+
+	if(IdGNodeNE.size()>0)
+	{
+		for(int i=0;i<IdGNodeNE.size();i++)
+			if(Node[IdGNodeNE[i]]->get_NodeType()!=Solid)
+				IdGNodeNEtmp.push_back(IdGNodeNE[i]);
+
+		IdGNodeNE=IdGNodeNEtmp;
+	}
+	//Real node
+	if(IdRNodeSW.size()>0)
+	{
+		for(int i=0;i<IdRNodeSW.size();i++)
+			if(Node[IdRNodeSW[i]]->get_NodeType()!=Solid)
+				IdRNodeSWtmp.push_back(IdRNodeSW[i]);
+
+		IdRNodeSW=IdRNodeSWtmp;
+	}
+
+	if(IdRNodeSE.size()>0)
+	{
+		for(int i=0;i<IdRNodeSE.size();i++)
+			if(Node[IdRNodeSE[i]]->get_NodeType()!=Solid)
+				IdRNodeSEtmp.push_back(IdRNodeSE[i]);
+
+		IdRNodeSE=IdRNodeSEtmp;
+	}
+
+	if(IdRNodeNW.size()>0)
+	{
+		for(int i=0;i<IdRNodeNW.size();i++)
+			if(Node[IdRNodeNW[i]]->get_NodeType()!=Solid)
+				IdRNodeNWtmp.push_back(IdRNodeNW[i]);
+
+		IdRNodeNW=IdRNodeNWtmp;
+	}
+
+	if(IdRNodeNE.size()>0)
+	{
+		for(int i=0;i<IdRNodeNE.size();i++)
+			if(Node[IdRNodeNE[i]]->get_NodeType()!=Solid)
+				IdRNodeNEtmp.push_back(IdRNodeNE[i]);
+
+		IdRNodeNE=IdRNodeNEtmp;
+	}
 }
 void Block2D::Mark1stLayerSolid(){
 	for(int i=0;i<NodeArrays.NodeWall.size();i++)

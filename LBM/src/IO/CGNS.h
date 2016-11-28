@@ -22,7 +22,7 @@
 class CGNS : public WriterManager{
 public:
 	CGNS();
-	CGNS(dimension dimension_,std::string outputfilename_,int tot_nodes_, int tot_elems_, int start_nodes_, int end_nodes_, int start_elems_, int end_elems_, const double *x_, const double *y_, const double *z_,int *e_);
+	CGNS(SolverEnum::dimension dimension_,std::string outputfilename_,int tot_nodes_, int tot_elems_, int start_nodes_, int end_nodes_, int start_elems_, int end_elems_, const double *x_, const double *y_, const double *z_,int *e_);
 	virtual ~CGNS();
 	virtual CGNS& Get_class(){return *this;};
 	virtual void Write_Output(int& Nstep);

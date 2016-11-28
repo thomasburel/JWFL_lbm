@@ -53,6 +53,7 @@ public:
 	virtual double SumBC(double *value);
 	virtual double SumAllProcessors(double *value);
 	virtual int NumberOfProcessors();
+
 private:
 	int Nx_G,Ny_G;
 	int  Nx_size, Ny_size;//For serialization of Nx and Ny

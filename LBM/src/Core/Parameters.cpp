@@ -12,9 +12,9 @@ Parameters::Parameters()
 	nx=1;
 	ny=1;
 	nz=1;
-	dimension_=D2;
-	scheme=Q9;
-	model=SinglePhase;
+	dimension_=SolverEnum::D2;
+	scheme=SolverEnum::Q9;
+	model=SolverEnum::SinglePhase;
 	fluid=Newtonian;
 	UserForce=None;
 	argc=0;
@@ -79,13 +79,13 @@ char*** Parameters::Get_Argv() const {
 bool Parameters::Get_Verbous() const {
 	return verbous;
 }
-void Parameters::Change_Dimension(dimension dim_)
+void Parameters::Change_Dimension(SolverEnum::dimension dim_)
 {
 	if (dimension_!=dim_)
 	{
 		delete GlobalBcType;
 		dimension_=dim_;
-		if (dimension_==D2)
+		if (dimension_==SolverEnum::D2)
 		{
 			NbGlobalBcType=4;
 			GlobalBcType=new NodeType [NbGlobalBcType];// Bottom: Wall, Outlet: Pressure, Top: Wall, Inlet: Velocity
@@ -109,12 +109,12 @@ void Parameters::Change_Dimension(dimension dim_)
 
 }
 
-void MeshParameters::Set_Dimension(dimension dim_)
+void MeshParameters::Set_Dimension(SolverEnum::dimension dim_)
 {
 		dimension_=dim_;
 
 }
-dimension MeshParameters::Get_Dimension() const {
+SolverEnum::dimension MeshParameters::Get_Dimension() const {
 	return dimension_;
 }
 
@@ -132,7 +132,7 @@ void Parameters::Set_BcType(NodeType Bc0,NodeType Bc1,NodeType Bc2,NodeType Bc3,
 			Bc1=Periodic;
 			Bc3=Periodic;
 		}
-	if (MeshParameters::Get_Dimension()==D2)
+	if (MeshParameters::Get_Dimension()==SolverEnum::D2)
 		{
 			NbGlobalBcType=4;
 			GlobalBcType[0]=Bc0;
@@ -181,19 +181,19 @@ string MeshParameters::Get_MeshFile() const {
 	return MeshFile;
 }
 
-void SolverParameters::Set_Scheme(schemetype scheme_)
+void SolverParameters::Set_Scheme(SolverEnum::schemetype scheme_)
 {
 	scheme=scheme_;
 }
-schemetype SolverParameters::Get_Scheme() const
+SolverEnum::schemetype SolverParameters::Get_Scheme() const
 {
 	return scheme;
 }
-void SolverParameters::Set_Model(modeltype model_)
+void SolverParameters::Set_Model(SolverEnum::modeltype model_)
 {
 	model=model_;
 }
-modeltype SolverParameters::Get_Model() const
+SolverEnum::modeltype SolverParameters::Get_Model() const
 {
 	return model;
 }
@@ -206,7 +206,7 @@ parralleltype CalculationParameters::Get_Parallel() const {
 
 void MeshParameters::set_MeshParameters()
 {
-	if(dimension_==D2)
+	if(dimension_==SolverEnum::D2)
 	{
 		NbNodes=(nx+1)*(ny+1);
 	}
@@ -221,7 +221,7 @@ void SolverParameters::set_SolverParameters()
 {
 	switch(scheme)
 		{
-		case Q9:
+		case SolverEnum::Q9:
 			NbVelocities=9;
 			cs=1/std::sqrt(3);
 			cs2=cs*cs;
@@ -250,102 +250,6 @@ int CalculationParameters::Get_OutPutNSteps() const{
 	return IntervalOutput;
 }
 
-/*
- * void CalculationParameters::Set_VariablesOutput(int nbvar, std::string * strinput)
-{
-	NbVariablesOutput=nbvar;
-	if(VariablesOutput!=0)
-		delete [] VariablesOutput;
-	VariablesOutput=new string[NbVariablesOutput];
-//	if(VariablesOutputSeria==0)
-//		delete VariablesOutputSeria;
-//	VariablesOutputSeria=new XStringXml[NbVariablesOutput];
-	for (int i=0;i<nbvar;i++)
-	{
-		VariablesOutput[i]=strinput[i];
-//		VariablesOutputSeria[i]=VariablesOutput[i];
-	}
-}
-*/
-/*void Parameters::Set_VariablesOutput (bool Rho, bool U) {
-	std::string *strtmp=0;
-	int nbvar=0;
-	if(MeshParameters::Get_Dimension()==D2)
-		if (Rho)
-			if(U)
-			{
-				nbvar=3;
-				strtmp=new string[nbvar];
-				strtmp[0]="Rho"; strtmp[1]="VelocityX"; strtmp[2]="VelocityY";
-				CalculationParameters::Set_VariablesOutput(nbvar,strtmp);
-				density=true; velocity=true;
-			}
-			else
-			{
-				nbvar=1;
-				strtmp=new string[nbvar];
-				strtmp[0]="Rho";
-				CalculationParameters::Set_VariablesOutput(nbvar,strtmp);
-				density=true; velocity=false;
-			}
-		else
-			if(U)
-			{
-				nbvar=2;
-				strtmp=new string[nbvar];
-				strtmp[0]="VelocityX"; strtmp[1]="VelocityY";
-				CalculationParameters::Set_VariablesOutput(nbvar,strtmp);
-				density=false; velocity=true;
-			}
-			else //no variables
-			{
-				nbvar=0;
-				CalculationParameters::Set_VariablesOutput(nbvar,strtmp);
-				density=false; velocity=false;
-			}
-	else
-		if (Rho)
-			if(U)
-			{
-				nbvar=4;
-				strtmp=new string[nbvar];
-				strtmp[0]="Rho"; strtmp[1]="VelocityX"; strtmp[2]="VelocityY"; strtmp[3]="VelocityZ";
-				CalculationParameters::Set_VariablesOutput(nbvar,strtmp);
-				density=true; velocity=true;
-			}
-			else
-			{
-				nbvar=1;
-				strtmp=new string[nbvar];
-				strtmp[0]="Rho";
-				CalculationParameters::Set_VariablesOutput(nbvar,strtmp);
-				density=true; velocity=false;
-			}
-		else
-			if(U)
-			{
-				nbvar=3;
-				strtmp=new string[nbvar];
-				strtmp[0]="VelocityX"; strtmp[1]="VelocityY"; strtmp[2]="VelocityZ";
-				density=false; velocity=true;
-				CalculationParameters::Set_VariablesOutput(nbvar,strtmp);
-			}
-			else//no variables
-			{
-				nbvar=0;
-				CalculationParameters::Set_VariablesOutput(nbvar,strtmp);
-				density=false; velocity=false;
-			}
-
-}
-std::string* CalculationParameters::Get_PtrVariablesOutput() const{
-	return VariablesOutput;
-}
-int CalculationParameters::Get_NbVariablesOutput() const {
-	return NbVariablesOutput;
-
-}
-*/
 void BoundaryParameters::Set_WallType(WallType WallType_){ WallTypeParam= WallType_;}
 WallType BoundaryParameters::Get_WallType() const {return WallTypeParam;}
 void BoundaryParameters::Set_SymmetryType(SymmetryType SymmetryType_){ SymmetryTypeParam= SymmetryType_;}

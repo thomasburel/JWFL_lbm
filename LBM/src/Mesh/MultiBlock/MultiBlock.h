@@ -51,6 +51,9 @@ public:
 	virtual double SumBC(double *value)=0;
 	virtual double SumAllProcessors(double *value)=0;
 	virtual int NumberOfProcessors()=0;
+
+protected:
+	bool Check_CleaningMesh(int nbTotalSolidRemoved, int nbTotalSolidadded);
 protected:
 	int ndims;
 	Parameters * PtrParameters;

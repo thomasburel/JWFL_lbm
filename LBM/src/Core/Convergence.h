@@ -33,6 +33,7 @@ private:
 protected:
 	MultiBlock *PtrMultiBlockConv;
 	Dictionary *PtrDicConv;
+	Parameters *PtrParmConv;
 
 private:
 	double Sum_Current;
