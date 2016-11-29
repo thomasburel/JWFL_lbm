@@ -76,6 +76,7 @@ void SolverSinglePhaseLowOrder2D::get_time() {
 }
 void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelManager* PtrParallel_,WriterManager* PtrWriter_, Parameters* PtrParameters_){
 	MultiBlock_=PtrMultiBlock_;
+	PtrMultiBlockConv=PtrMultiBlock_;
 	parallel=PtrParallel_;
 	Writer=PtrWriter_;
 	Solver::PtrParameters=PtrParameters_;
@@ -89,9 +90,13 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 	nbvelo=Solver::PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
 //	Gradients::initGradients(2,nbvelo,PtrParameters->Get_GradientType());
+	Extrapolation::initExtrapolation(2,nbvelo,Solver::PtrParameters->Get_ExtrapolationType());
 	Dic=new Dictionary(2,nbnode);
+	PtrDicConv=Dic;
+	PtrParmConv=PtrParameters_;
 	Add_OneDistributionToDictionary();
 	Set_Solution(PtrParameters);
+
 }
 void SolverSinglePhaseLowOrder2D::Add_OneDistributionToDictionary(){
 	//First distribution
@@ -117,6 +122,7 @@ void SolverTwoPhasesLowOrder2D::get_time() {
 }
 void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelManager* PtrParallel_,WriterManager* PtrWriter_, Parameters* PtrParameters_){
 	MultiBlock_=PtrMultiBlock_;
+	PtrMultiBlockConv=PtrMultiBlock_;
 	parallel=PtrParallel_;
 	Writer=PtrWriter_;
 	Solver::PtrParameters=PtrParameters_;
@@ -128,7 +134,10 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	nbvelo=Solver::PtrParameters->Get_NbVelocities();
 	nbnode=MultiBlock_->Get_nnodes();
 	Gradients::initGradients(2,nbvelo,Solver::PtrParameters->Get_GradientType());
+	Extrapolation::initExtrapolation(2,nbvelo,Solver::PtrParameters->Get_ExtrapolationType());
 	Dic=new Dictionary(2,nbnode);
+	PtrDicConv=Dic;
+	PtrParmConv=PtrParameters_;
 	Add_TwoDistributionsToDictionary();
 	Set_Solution(PtrParameters);
 }

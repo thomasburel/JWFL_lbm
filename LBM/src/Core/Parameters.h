@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <iostream>
 #include <fstream>
+#include <cmath>
 //#include <string>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/nvp.hpp>
@@ -38,26 +39,32 @@ enum OutputFormat {CGNSFormat,TecplotFormat};
 enum DensityExport{Density,NormalDensity,BothDensity};
 
 //Solver enumeration
-enum dimension {D2,D3};
-enum schemetype {Q9,Q16};
-enum modeltype {SinglePhase, ColourFluid};
-
+namespace SolverEnum
+{
+	enum dimension {D2,D3};
+	enum schemetype {Q9,Q16};
+	enum modeltype {SinglePhase, ColourFluid};
+	enum variableErrortype{Density,VelocityX,VelocityY,RhoN};
+}
 //model enumeration
 enum FluidType{Newtonian};
 enum UserForceType{None,LocalForce,BodyForce};
 enum GradientType{FD,LBMStencil};
+enum ExtrapolationType{NoExtrapol,TailorExtrapol,WeightDistanceExtrapol};
 
 //Boundary conditions enumeration
 enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular,HeZouWall,HeZouWallVel};
 enum PressureModel{HeZouP};
 enum PressureType{FixP,zeroPGrad1st};
-enum VelocityModel{HeZouV};
+enum VelocityModel{HeZouV,Ladd};
 enum VelocityType{FixV,zeroVGrad1st};
 enum CornerModel{HoChan};
 enum CornerPressureType{FixCP,ExtrapolCP};
+enum PeriodicType{Simple,PressureForce};
 
 //Two phases enumeration
 enum TetaType{NoTeta, FixTeta, NonCstTeta};
+enum ViscosityType{ConstViscosity,LinearViscosity,HarmonicViscosity};
 //Colour fluid enumeration
 enum ColourGradType{Gunstensen,DensityGrad,DensityNormalGrad};
 enum RecolouringType{LatvaKokkoRothman};
@@ -131,8 +138,8 @@ private:
 		   & BOOST_SERIALIZATION_NVP(NbNodes);
 	}
 public:
-	void Set_Dimension(dimension dim_);
-	dimension Get_Dimension() const;
+	void Set_Dimension(SolverEnum::dimension dim_);
+	SolverEnum::dimension Get_Dimension() const;
 	void set_MeshParameters();
 	void Set_Domain_Size(int nx_=1,int ny_=1,int nz_=1);
 	int Get_Nx() const;
@@ -143,7 +150,7 @@ public:
 	std::string Get_MeshFile() const;
 protected:
 	int nx,ny,nz;
-	dimension dimension_; //2D or 3D
+	SolverEnum::dimension dimension_; //2D or 3D
 	std::string MeshFile;
 	int NbNodes;
 };
@@ -164,6 +171,7 @@ public:
 	double Get_Tau_1() const {return Tau_1;};
 	void Set_Tau_2(double Tau){Tau_2=Tau;};
 	double Get_Tau_2() const {return Tau_2;};
+
 private:
 	friend class boost::serialization::access;
 	template<class Archive>
@@ -275,6 +283,10 @@ public:
 	CornerModel Get_CornerModel() const {return CornerModelParam;};
 	void Set_CornerPressureType(CornerPressureType CornerPressureType_){CornerPressureTypeParam=CornerPressureType_;};
 	CornerPressureType Get_CornerPressureType() const {return CornerPressureTypeParam;};
+	void Set_PressureDrop(double PressureDropIn){PressureDropParam=PressureDropIn;};
+	double Get_PressureDrop() const {return PressureDropParam;};
+	void Set_PeriodicType(PeriodicType Type){PeriodicTypeParam=Type;};
+	PeriodicType Get_PeriodicType() const {return PeriodicTypeParam;};
 protected:
 	WallType WallTypeParam;
 	SymmetryType SymmetryTypeParam;
@@ -286,6 +298,8 @@ protected:
 	VelocityType VelocityTypeParam;
 	CornerModel CornerModelParam;
 	CornerPressureType CornerPressureTypeParam;
+	PeriodicType PeriodicTypeParam;
+	double PressureDropParam;
 };
 
 class SolverParameters {
@@ -299,27 +313,36 @@ private:
 		   & BOOST_SERIALIZATION_NVP(fluid)
 		   & BOOST_SERIALIZATION_NVP(Gradient)
 		   & BOOST_SERIALIZATION_NVP(UserForce)
-		   & BOOST_SERIALIZATION_NVP(NbVelocities);
+		   & BOOST_SERIALIZATION_NVP(NbVelocities)
+		   & BOOST_SERIALIZATION_NVP(ErrorMax);
 
 
 	}
 
 public:
 	void set_SolverParameters();
-	void Set_Scheme(schemetype scheme_);
-	schemetype Get_Scheme() const;
-	void Set_Model(modeltype model_);
-	modeltype Get_Model() const;
+	void Set_Scheme(SolverEnum::schemetype scheme_);
+	SolverEnum::schemetype Get_Scheme() const;
+	void Set_Model(SolverEnum::modeltype model_);
+	SolverEnum::modeltype Get_Model() const;
 	void Set_FluidType(FluidType fluidtype_){fluid=fluidtype_;};
 	FluidType Get_FluidType() const{return fluid;};
 	void Set_UserForceType(UserForceType UserForceType_){UserForce=UserForceType_;};
 	UserForceType Get_UserForceType() const{return UserForce;};
+	void Set_ErrorMax(double ErrorMax_){ErrorMax=ErrorMax_;};
+	double Get_ErrorMax(){return ErrorMax;};
+	void Set_ErrorVariable(SolverEnum::variableErrortype variableError_){variableError=variableError_;};
+	SolverEnum::variableErrortype Get_ErrorVariable(){return variableError;};
 	void Set_GradientType(GradientType GradientType_){Gradient=GradientType_;};
 	GradientType Get_GradientType() const{return Gradient;};
+	void Set_ExtrapolationType(ExtrapolationType ExtrapolationType_){Extrapol=ExtrapolationType_;};
+	ExtrapolationType Get_ExtrapolationType() const{return Extrapol;};
 	void Set_ContactAngle(double teta_){teta=teta_;};
 	double Get_ContactAngle(){return teta;};
 	void Set_ContactAngleType(TetaType tetaType_){tetaType=tetaType_;};
 	TetaType Get_ContactAngleType(){return tetaType;};
+	void Set_ViscosityType(ViscosityType viscosityType_){viscosityType=viscosityType_;};
+	ViscosityType Get_ViscosityType(){return viscosityType;};
 	int Get_NbVelocities() const;
 	double Convert_TauToNu(double Tau_){return (Tau_-0.5)*cs2*deltaT;};
 	double Convert_MutoNu(double mu_,double rho){return mu_/rho;};
@@ -330,17 +353,21 @@ public:
 	double Get_cs2() const {return cs2;};
 	double Get_deltaT() const {return deltaT;};
 protected:
-	schemetype scheme;
-	modeltype model;
+	SolverEnum::schemetype scheme;
+	SolverEnum::modeltype model;
+	SolverEnum::variableErrortype variableError;
 	FluidType fluid;
 	GradientType Gradient;
+	ExtrapolationType Extrapol;
 	UserForceType UserForce;
 	int NbVelocities;
 	double cs,cs2;
 	double deltaT;
+	double ErrorMax;
 
 	TetaType tetaType;
 	double teta;
+	ViscosityType viscosityType;
 
 
 
@@ -440,7 +467,7 @@ public:
 	Parameters();
 	virtual ~Parameters();
 
-	void Change_Dimension(dimension dim_);
+	void Change_Dimension(SolverEnum::dimension dim_);
 	void Set_BcType(NodeType Bc0,NodeType Bc1,NodeType Bc2,NodeType Bc3,NodeType Bc4=Wall,NodeType Bc5=Wall);
 
 	void Set_Arguments(int *argc_,char ***argv_,bool verbous=false);

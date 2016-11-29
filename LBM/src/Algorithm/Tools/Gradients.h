@@ -15,7 +15,7 @@
 #ifndef ALGORITHM_LOWORDER_GRADIENTS_H_
 #define ALGORITHM_LOWORDER_GRADIENTS_H_
 
-#include "GradientsDEF.h"
+#include "../Tools/GradientsDEF.h"
 
 class Gradients {
 public:

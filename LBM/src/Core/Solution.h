@@ -21,15 +21,14 @@
 /*
  *
  */
-class Solution2D {
-public:
-	Solution2D();
-	virtual ~Solution2D();
-	void Set_Solution(Parameters *Param);
 
-protected:
-	void Set_output();
-	void Set_breakpoint();
+class Solution{
+public:
+	Solution();
+	virtual ~Solution();
+	virtual void Set_Solution(Parameters *Param)=0;
+	virtual void Set_output()=0;
+	virtual void Set_breakpoint()=0;
 
 protected:
 //Pointer to general objects
@@ -40,12 +39,24 @@ protected:
 //Solution variables
 	Dictionary* Dic;
 	double **U, *Rho;
+	int nbnodes_real, nbnodes_total; //total include ghost nodes, real without ghost nodes
+};
+class Solution2D:public Solution {
+public:
+	Solution2D();
+	virtual ~Solution2D();
+	virtual void Set_Solution(Parameters *Param);
 
+protected:
+	void Set_output();
+	void Set_breakpoint();
+
+protected:
 //Mesh variables
 	//std::vector<Node2D*> *Node;
 	NodeArrays2D* NodeArrays;
 	std::vector<int> IdBoundaries;
-	int nbnodes_real, nbnodes_total; //total include ghost nodes, real without ghost nodes
+
 
 
 private:

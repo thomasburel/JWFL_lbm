@@ -13,6 +13,7 @@
 #ifndef SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9BCVAR_H_
 #define SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9BCVAR_H_
 
+#include "../../Tools/Extrapolation.h"
 #include "../../../Mesh/SingleBlock/Node2D.h"
 #include "../../../Core/Parameters.h"
 #include "../../../Core/GlobalDef.h"
@@ -28,6 +29,7 @@ protected:
 	double q23,q16,q13;
 	short int OppositeBc[9]; //opposite direction in the distribution function
 	double omegaBc[9]; //Weight of the distribution function. It is need for some boundary conditions
+	double EiBc[9][2];
 	double rhodiff;
 	double SumWeightS,SumWeightE,SumWeightN,SumWeightW;
 	double SumWeightConcaveSE,SumWeightConcaveNE,SumWeightConcaveNW,SumWeightConcaveSW;

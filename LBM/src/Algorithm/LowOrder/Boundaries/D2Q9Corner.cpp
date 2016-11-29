@@ -47,9 +47,11 @@ void D2Q9Corner::Set_Corner(Parameters *Param){
 	switch(Param->Get_CornerPressureType())
 	{
 	case FixCP:
+		Extrapol.SelectExtrapolationType(NoExtrapol);
 		PtrCalculRhoCornerWall=&D2Q9Corner::FixRho;
 		break;
 	case ExtrapolCP:
+		Extrapol.SelectExtrapolationType(WeightDistanceExtrapol);
 		PtrCalculRhoCornerWall=&D2Q9Corner::ExtrapolationAvgRho;
 		break;
 	default:
@@ -61,10 +63,17 @@ void D2Q9Corner::ApplyCorner(NodeCorner2D& Node, DistriFunct* f_in,double const 
 	Rho[Node.Get_index()]=RhoDef;
 	U[Node.Get_index()]=UDef;
 	V[Node.Get_index()]=VDef;
-	(this->*PtrCornerMethod)(Node, f_in, Rho[Node.Get_index()], U[Node.Get_index()], V[Node.Get_index()]);
+	(this->*PtrCornerMethod)(Node.Get_BcNormal(),Node.Get_connect(),Node.Get_CornerType()==::Concave, f_in, GetRho(Node, Rho), U[Node.Get_index()], V[Node.Get_index()]);
 }
 void D2Q9Corner::ApplyCornerWall(NodeCorner2D& Node, DistriFunct* f_in, double *Rho, double *U, double *V){
-	(this->*PtrCornerWallMethod)(Node, f_in, (this->*PtrCalculRhoCornerWall)(Node, Rho), U[Node.Get_index()], V[Node.Get_index()]);
+	(this->*PtrCornerWallMethod)(Node.Get_BcNormal(),Node.Get_connect(),Node.Get_CornerType()==::Concave,f_in, GetRho(Node, Rho), U[Node.Get_index()], V[Node.Get_index()]);
+}
+
+void D2Q9Corner::ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct* f_in, double *Rho, double *U, double *V){
+	(this->*PtrCornerMethod)(Node.Get_BcNormal(),Node.Get_connect(),true, f_in, Rho[Node.Get_index()], U[Node.Get_index()], V[Node.Get_index()]);
+}
+void D2Q9Corner::ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct* f_in,double const & RhoDef,double const & UDef,double const & VDef){
+	(this->*PtrCornerWallMethod)(Node.Get_BcNormal(),Node.Get_connect(),true,f_in, RhoDef, UDef, VDef);
 }
 /// Corner treat by Chih-Fung Ho, Cheng Chang, Kuen-Hau Lin and Chao-An Lin
 /// Consistent Boundary Conditions for 2D and 3D Lattice Boltzmann Simulations
@@ -85,208 +94,229 @@ void D2Q9Corner::FUNC_corner_no_vel (double & a,double & b,double & c,double & d
 	f=e;
 }
 
-void D2Q9Corner::ApplyHoChan(NodeCorner2D& Node, DistriFunct* f_in, double Rho, double U, double V){
+void D2Q9Corner::ApplyHoChan(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V){
 
-      switch (Node.Get_BcNormal())
+      switch (BcNormal)
       {
 
       case 8: //Top West
     	  InvV=-V;
-    	  FUNC_corner(f_in->f[0][Node.Get_index()],f_in->f[1][Node.Get_index()],f_in->f[4][Node.Get_index()],f_in->f[8][Node.Get_index()],f_in->f[7][Node.Get_index()],f_in->f[5][Node.Get_index()],f_in->f[3][Node.Get_index()],f_in->f[2][Node.Get_index()],f_in->f[6][Node.Get_index()],U,InvV,Rho);
-//    	  std::cout<<"Rho def: "<<Rho<<" Rho cal: "<<f_in->f[0][Node.Get_index()]+f_in->f[1][Node.Get_index()]+f_in->f[2][Node.Get_index()]+f_in->f[3][Node.Get_index()]+f_in->f[4][Node.Get_index()]+f_in->f[5][Node.Get_index()]+f_in->f[6][Node.Get_index()]+f_in->f[7][Node.Get_index()]+f_in->f[8][Node.Get_index()]<<std::endl;
+    	  FUNC_corner(f_in->f[0][Connect[0]],f_in->f[1][Connect[0]],f_in->f[4][Connect[0]],f_in->f[8][Connect[0]],f_in->f[7][Connect[0]],f_in->f[5][Connect[0]],f_in->f[3][Connect[0]],f_in->f[2][Connect[0]],f_in->f[6][Connect[0]],U,InvV,Rho);
     	  break;
       case 5: //Bottom West
-    	  FUNC_corner(f_in->f[0][Node.Get_index()],f_in->f[1][Node.Get_index()],f_in->f[2][Node.Get_index()],f_in->f[5][Node.Get_index()],f_in->f[6][Node.Get_index()],f_in->f[8][Node.Get_index()],f_in->f[3][Node.Get_index()],f_in->f[4][Node.Get_index()],f_in->f[7][Node.Get_index()],U,V,Rho);
+    	  FUNC_corner(f_in->f[0][Connect[0]],f_in->f[1][Connect[0]],f_in->f[2][Connect[0]],f_in->f[5][Connect[0]],f_in->f[6][Connect[0]],f_in->f[8][Connect[0]],f_in->f[3][Connect[0]],f_in->f[4][Connect[0]],f_in->f[7][Connect[0]],U,V,Rho);
     	  break;
       case 7 : //Top East
     	  InvU=-U;
     	  InvV=-V;
-    	  FUNC_corner(f_in->f[0][Node.Get_index()],f_in->f[3][Node.Get_index()],f_in->f[4][Node.Get_index()],f_in->f[7][Node.Get_index()],f_in->f[8][Node.Get_index()],f_in->f[6][Node.Get_index()],f_in->f[1][Node.Get_index()],f_in->f[2][Node.Get_index()],f_in->f[5][Node.Get_index()],InvU,InvV,Rho);
+    	  FUNC_corner(f_in->f[0][Connect[0]],f_in->f[3][Connect[0]],f_in->f[4][Connect[0]],f_in->f[7][Connect[0]],f_in->f[8][Connect[0]],f_in->f[6][Connect[0]],f_in->f[1][Connect[0]],f_in->f[2][Connect[0]],f_in->f[5][Connect[0]],InvU,InvV,Rho);
     	  break;
       case 6: //Bottom East
     	  InvU=-U;
-    	  FUNC_corner(f_in->f[0][Node.Get_index()],f_in->f[3][Node.Get_index()],f_in->f[2][Node.Get_index()],f_in->f[6][Node.Get_index()],f_in->f[5][Node.Get_index()],f_in->f[7][Node.Get_index()],f_in->f[1][Node.Get_index()],f_in->f[4][Node.Get_index()],f_in->f[8][Node.Get_index()],InvU,V,Rho);
+    	  FUNC_corner(f_in->f[0][Connect[0]],f_in->f[3][Connect[0]],f_in->f[2][Connect[0]],f_in->f[6][Connect[0]],f_in->f[5][Connect[0]],f_in->f[7][Connect[0]],f_in->f[1][Connect[0]],f_in->f[4][Connect[0]],f_in->f[8][Connect[0]],InvU,V,Rho);
     	  break;
 
       default :
-          std::cout<<" Problem in the direction of HeZou Corner unknown. Direction is: "<<Node.Get_BcNormal()<<std::endl;
+          std::cout<<" Problem in the direction of HeZou Corner unknown. Direction is: "<<BcNormal<<std::endl;
       }
 }
-void D2Q9Corner::ApplyHoChanNoVel(NodeCorner2D& Node, DistriFunct* f_in, double Rho, double U, double V){
-    switch (Node.Get_BcNormal())
+void D2Q9Corner::ApplyHoChanNoVel(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V){
+    switch (BcNormal)
       {
-
       case 8: //Top West
 
-    	  FUNC_corner_no_vel(f_in->f[0][Node.Get_index()],f_in->f[1][Node.Get_index()],f_in->f[4][Node.Get_index()],f_in->f[8][Node.Get_index()],f_in->f[7][Node.Get_index()],f_in->f[5][Node.Get_index()],f_in->f[3][Node.Get_index()],f_in->f[2][Node.Get_index()],f_in->f[6][Node.Get_index()],Rho);
+    	  FUNC_corner_no_vel(f_in->f[0][Connect[0]],f_in->f[1][Connect[0]],f_in->f[4][Connect[0]],f_in->f[8][Connect[0]],f_in->f[7][Connect[0]],f_in->f[5][Connect[0]],f_in->f[3][Connect[0]],f_in->f[2][Connect[0]],f_in->f[6][Connect[0]],Rho);
    	  break;
       case 5: //Bottom West
-    	  FUNC_corner_no_vel(f_in->f[0][Node.Get_index()],f_in->f[1][Node.Get_index()],f_in->f[2][Node.Get_index()],f_in->f[5][Node.Get_index()],f_in->f[6][Node.Get_index()],f_in->f[8][Node.Get_index()],f_in->f[3][Node.Get_index()],f_in->f[4][Node.Get_index()],f_in->f[7][Node.Get_index()],Rho);
+    	  FUNC_corner_no_vel(f_in->f[0][Connect[0]],f_in->f[1][Connect[0]],f_in->f[2][Connect[0]],f_in->f[5][Connect[0]],f_in->f[6][Connect[0]],f_in->f[8][Connect[0]],f_in->f[3][Connect[0]],f_in->f[4][Connect[0]],f_in->f[7][Connect[0]],Rho);
     	  break;
       case 7 : //Top East
 
-    	  FUNC_corner_no_vel(f_in->f[0][Node.Get_index()],f_in->f[3][Node.Get_index()],f_in->f[4][Node.Get_index()],f_in->f[7][Node.Get_index()],f_in->f[8][Node.Get_index()],f_in->f[6][Node.Get_index()],f_in->f[1][Node.Get_index()],f_in->f[2][Node.Get_index()],f_in->f[5][Node.Get_index()],Rho);
+    	  FUNC_corner_no_vel(f_in->f[0][Connect[0]],f_in->f[3][Connect[0]],f_in->f[4][Connect[0]],f_in->f[7][Connect[0]],f_in->f[8][Connect[0]],f_in->f[6][Connect[0]],f_in->f[1][Connect[0]],f_in->f[2][Connect[0]],f_in->f[5][Connect[0]],Rho);
     	  break;
       case 6: //Bottom East
 
-    	  FUNC_corner_no_vel(f_in->f[0][Node.Get_index()],f_in->f[3][Node.Get_index()],f_in->f[2][Node.Get_index()],f_in->f[6][Node.Get_index()],f_in->f[5][Node.Get_index()],f_in->f[7][Node.Get_index()],f_in->f[1][Node.Get_index()],f_in->f[4][Node.Get_index()],f_in->f[8][Node.Get_index()],Rho);
+    	  FUNC_corner_no_vel(f_in->f[0][Connect[0]],f_in->f[3][Connect[0]],f_in->f[2][Connect[0]],f_in->f[6][Connect[0]],f_in->f[5][Connect[0]],f_in->f[7][Connect[0]],f_in->f[1][Connect[0]],f_in->f[4][Connect[0]],f_in->f[8][Connect[0]],Rho);
     	  break;
       default :
-          std::cout<<"Corner direction is unknown. Direction is: "<<Node.Get_BcNormal()<<std::endl;
+          std::cout<<"Corner direction is unknown. Direction is: "<<BcNormal<<std::endl;
       }
 }
-void D2Q9Corner::ApplyBounceBack(NodeCorner2D& Node, DistriFunct* f_in, double Rho, double U, double V){
+void D2Q9Corner::ApplyBounceBack(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V){
 	double tmp=0;
-	switch(Node.Get_BcNormal())
+	switch(BcNormal)
 			{
 			case 5:
-				f_in->f[5][Node.Get_index()]=f_in->f[OppositeBc[5]][Node.Get_index()];
-				f_in->f[1][Node.Get_index()]=f_in->f[OppositeBc[1]][Node.Get_index()];
-				f_in->f[2][Node.Get_index()]=f_in->f[OppositeBc[2]][Node.Get_index()];
-				if (Node.stream()[3]==false)
+				f_in->f[5][Connect[0]]=f_in->f[OppositeBc[5]][Connect[0]];
+				f_in->f[1][Connect[0]]=f_in->f[OppositeBc[1]][Connect[0]];
+				f_in->f[2][Connect[0]]=f_in->f[OppositeBc[2]][Connect[0]];
+				if (concave)
 				{
 
-					double sumfi=f_in->f[0][Node.Get_index()]+f_in->f[1][Node.Get_index()]+f_in->f[2][Node.Get_index()]+f_in->f[3][Node.Get_index()]+f_in->f[4][Node.Get_index()]+f_in->f[5][Node.Get_index()]+f_in->f[7][Node.Get_index()];
-					f_in->f[6][Node.Get_index()]=(Rho-sumfi)/2;
-					f_in->f[8][Node.Get_index()]=(Rho-sumfi)/2;
+					double sumfi=f_in->f[0][Connect[0]]+f_in->f[1][Connect[0]]+f_in->f[2][Connect[0]]+f_in->f[3][Connect[0]]+f_in->f[4][Connect[0]]+f_in->f[5][Connect[0]]+f_in->f[7][Connect[0]];
+					f_in->f[6][Connect[0]]=(Rho-sumfi)/2;
+					f_in->f[8][Connect[0]]=(Rho-sumfi)/2;
 				}
 				else
 				{
-					tmp=f_in->f[6][Node.Get_index()]+f_in->f[8][Node.Get_index()];
-					f_in->f[6][Node.Get_index()]=tmp*0.5;
-					f_in->f[8][Node.Get_index()]=tmp*0.5;
+					tmp=f_in->f[6][Connect[0]]+f_in->f[8][Connect[0]];
+					f_in->f[6][Connect[0]]=tmp*0.5;
+					f_in->f[8][Connect[0]]=tmp*0.5;
 				}
 				break;
 			case 6:
-				f_in->f[6][Node.Get_index()]=f_in->f[OppositeBc[6]][Node.Get_index()];
-				f_in->f[2][Node.Get_index()]=f_in->f[OppositeBc[2]][Node.Get_index()];
-				f_in->f[3][Node.Get_index()]=f_in->f[OppositeBc[3]][Node.Get_index()];
-				if (Node.stream()[1]==false)
+				f_in->f[6][Connect[0]]=f_in->f[OppositeBc[6]][Connect[0]];
+				f_in->f[2][Connect[0]]=f_in->f[OppositeBc[2]][Connect[0]];
+				f_in->f[3][Connect[0]]=f_in->f[OppositeBc[3]][Connect[0]];
+				if (concave)
 				{
-					double sumfi=f_in->f[0][Node.Get_index()]+f_in->f[1][Node.Get_index()]+f_in->f[2][Node.Get_index()]+f_in->f[3][Node.Get_index()]+f_in->f[4][Node.Get_index()]+f_in->f[6][Node.Get_index()]+f_in->f[8][Node.Get_index()];
-					f_in->f[5][Node.Get_index()]=(Rho-sumfi)/2;
-					f_in->f[7][Node.Get_index()]=(Rho-sumfi)/2;
+					double sumfi=f_in->f[0][Connect[0]]+f_in->f[1][Connect[0]]+f_in->f[2][Connect[0]]+f_in->f[3][Connect[0]]+f_in->f[4][Connect[0]]+f_in->f[6][Connect[0]]+f_in->f[8][Connect[0]];
+					f_in->f[5][Connect[0]]=(Rho-sumfi)/2;
+					f_in->f[7][Connect[0]]=(Rho-sumfi)/2;
 				}
 				else
 				{
-					tmp=f_in->f[7][Node.Get_index()]+f_in->f[5][Node.Get_index()];
-					f_in->f[5][Node.Get_index()]=tmp*0.5;
-					f_in->f[7][Node.Get_index()]=tmp*0.5;
+					tmp=f_in->f[7][Connect[0]]+f_in->f[5][Connect[0]];
+					f_in->f[5][Connect[0]]=tmp*0.5;
+					f_in->f[7][Connect[0]]=tmp*0.5;
 				}
 				break;
 			case 7:
-				f_in->f[7][Node.Get_index()]=f_in->f[OppositeBc[7]][Node.Get_index()];
-				f_in->f[3][Node.Get_index()]=f_in->f[OppositeBc[3]][Node.Get_index()];
-				f_in->f[4][Node.Get_index()]=f_in->f[OppositeBc[4]][Node.Get_index()];
-				if (Node.stream()[1]==false)
+				f_in->f[7][Connect[0]]=f_in->f[OppositeBc[7]][Connect[0]];
+				f_in->f[3][Connect[0]]=f_in->f[OppositeBc[3]][Connect[0]];
+				f_in->f[4][Connect[0]]=f_in->f[OppositeBc[4]][Connect[0]];
+				if (concave)
 				{
-					double sumfi=f_in->f[0][Node.Get_index()]+f_in->f[1][Node.Get_index()]+f_in->f[2][Node.Get_index()]+f_in->f[3][Node.Get_index()]+f_in->f[4][Node.Get_index()]+f_in->f[5][Node.Get_index()]+f_in->f[7][Node.Get_index()];
-					f_in->f[6][Node.Get_index()]=(Rho-sumfi)/2;
-					f_in->f[8][Node.Get_index()]=(Rho-sumfi)/2;
+					double sumfi=f_in->f[0][Connect[0]]+f_in->f[1][Connect[0]]+f_in->f[2][Connect[0]]+f_in->f[3][Connect[0]]+f_in->f[4][Connect[0]]+f_in->f[5][Connect[0]]+f_in->f[7][Connect[0]];
+					f_in->f[6][Connect[0]]=(Rho-sumfi)/2;
+					f_in->f[8][Connect[0]]=(Rho-sumfi)/2;
 				}
 				else
 				{
-					tmp=f_in->f[6][Node.Get_index()]+f_in->f[8][Node.Get_index()];
-					f_in->f[6][Node.Get_index()]=tmp*0.5;
-					f_in->f[8][Node.Get_index()]=tmp*0.5;
+					tmp=f_in->f[6][Connect[0]]+f_in->f[8][Connect[0]];
+					f_in->f[6][Connect[0]]=tmp*0.5;
+					f_in->f[8][Connect[0]]=tmp*0.5;
 				}
 				break;
 			case 8:
-				f_in->f[8][Node.Get_index()]=f_in->f[OppositeBc[8]][Node.Get_index()];
-				f_in->f[1][Node.Get_index()]=f_in->f[OppositeBc[1]][Node.Get_index()];
-				f_in->f[4][Node.Get_index()]=f_in->f[OppositeBc[4]][Node.Get_index()];
-				if (Node.stream()[2]==false)
+				f_in->f[8][Connect[0]]=f_in->f[OppositeBc[8]][Connect[0]];
+				f_in->f[1][Connect[0]]=f_in->f[OppositeBc[1]][Connect[0]];
+				f_in->f[4][Connect[0]]=f_in->f[OppositeBc[4]][Connect[0]];
+				if (concave)
 				{
 
-					double sumfi=f_in->f[0][Node.Get_index()]+f_in->f[1][Node.Get_index()]+f_in->f[2][Node.Get_index()]+f_in->f[3][Node.Get_index()]+f_in->f[4][Node.Get_index()]+f_in->f[6][Node.Get_index()]+f_in->f[8][Node.Get_index()];
-					f_in->f[5][Node.Get_index()]=(Rho-sumfi)/2;
-					f_in->f[7][Node.Get_index()]=(Rho-sumfi)/2;
+					double sumfi=f_in->f[0][Connect[0]]+f_in->f[1][Connect[0]]+f_in->f[2][Connect[0]]+f_in->f[3][Connect[0]]+f_in->f[4][Connect[0]]+f_in->f[6][Connect[0]]+f_in->f[8][Connect[0]];
+					f_in->f[5][Connect[0]]=(Rho-sumfi)/2;
+					f_in->f[7][Connect[0]]=(Rho-sumfi)/2;
 				}
 				else
 				{
-					tmp=f_in->f[5][Node.Get_index()]+f_in->f[7][Node.Get_index()];
-					f_in->f[5][Node.Get_index()]=tmp*0.5;
-					f_in->f[7][Node.Get_index()]=tmp*0.5;
+					tmp=f_in->f[5][Connect[0]]+f_in->f[7][Connect[0]];
+					f_in->f[5][Connect[0]]=tmp*0.5;
+					f_in->f[7][Connect[0]]=tmp*0.5;
 				}
 				break;
 			default:
-				std::cerr<<"Direction corner bounce back not found. x:"<<Node.get_x()<<" y: "<<Node.get_y()<<std::endl;
+				std::cerr<<"Direction corner bounce back not found. "<<std::endl;
 				break;
 			}
 }
+
 //Get the density from the global variable
-double D2Q9Corner::FixRho(NodeCorner2D& Node, double *Rho){
+double D2Q9Corner::GetRho(NodeCorner2D& Node, double *Rho){
+	(this->*PtrCalculRhoCornerWall)(Node, Rho);
 	return Rho[Node.Get_index()];
 }
+//double D2Q9Corner::FixRho(NodeCorner2D& Node, double *Rho){
+void D2Q9Corner::FixRho(NodeCorner2D& Node, double *Rho){
+//	Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
+//	return Rho[Node.Get_index()];
+}
 //Get the density by using the two direct neighbours
-double D2Q9Corner::ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho){
+//double D2Q9Corner::ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho){
+void D2Q9Corner::ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho){
+//	double SumWeightCornerConvex=1.0/(4.0+3.0*std::sqrt(0.5));
+//	double Invsqrt2=std::sqrt(0.5);
 	switch(Node.Get_BcNormal())
 	{
 	case 5:
-		direction1=1;
-		direction2=2;
-		doubleTmpReturn=(Rho[Node.Get_connect()[direction1]]+Rho[Node.Get_connect()[direction2]])*0.5;
+		if(Node.Get_CornerType()==Concave)
+			Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
+			//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]])*0.5;
+		else
+			Extrapol.ExtrapolationOnCornerConvex(Rho,Node.Get_connect(),Node.Get_BcNormal());
+//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[5]]+Rho[Node.Get_connect()[6]]+Rho[Node.Get_connect()[8]]))*SumWeightCornerConvex;
 		break;
 	case 6:
-		direction1=2;
-		direction2=3;
-		doubleTmpReturn=(Rho[Node.Get_connect()[direction1]]+Rho[Node.Get_connect()[direction2]])*0.5;
+		if(Node.Get_CornerType()==Concave)
+			Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
+//			doubleTmpReturn=(Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]])*0.5;
+		else
+			Extrapol.ExtrapolationOnCornerConvex(Rho,Node.Get_connect(),Node.Get_BcNormal());
+//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[5]]+Rho[Node.Get_connect()[6]]+Rho[Node.Get_connect()[7]]))*SumWeightCornerConvex;
 		break;
 	case 7:
-		direction1=3;
-		direction2=4;
-		doubleTmpReturn=(Rho[Node.Get_connect()[direction1]]+Rho[Node.Get_connect()[direction2]])*0.5;
+		if(Node.Get_CornerType()==Concave)
+			Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
+//			doubleTmpReturn=(Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]])*0.5;
+		else
+			Extrapol.ExtrapolationOnCornerConvex(Rho,Node.Get_connect(),Node.Get_BcNormal());
+//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[6]]+Rho[Node.Get_connect()[7]]+Rho[Node.Get_connect()[8]]))*SumWeightCornerConvex;
 		break;
 	case 8:
-		direction1=1;
-		direction2=4;
-		doubleTmpReturn=(Rho[Node.Get_connect()[direction1]]+Rho[Node.Get_connect()[direction2]])*0.5;
+		if(Node.Get_CornerType()==Concave)
+			Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
+//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[4]])*0.5;
+		else
+			Extrapol.ExtrapolationOnCornerConvex(Rho,Node.Get_connect(),Node.Get_BcNormal());
+//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[5]]+Rho[Node.Get_connect()[7]]+Rho[Node.Get_connect()[8]]))*SumWeightCornerConvex;
+
 		break;
 	}
 
-	return doubleTmpReturn;
+//	return doubleTmpReturn;
 }
-void D2Q9Corner::ApplyDiffuseWall(NodeCorner2D& Node, DistriFunct* f_in, double Rho, double U, double V){
-	double tmp=0;
-	switch(Node.Get_BcNormal())
+void D2Q9Corner::ApplyDiffuseWall(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V){
+	//double tmp=0;
+	switch(BcNormal)
 			{
 			case 5:
-					rhodiff=(f_in->f[3][Node.Get_index()]+f_in->f[4][Node.Get_index()]+f_in->f[7][Node.Get_index()])/SumWeightConvexNE;
-					f_in->f[5][Node.Get_index()]=omegaBc[5]*rhodiff;
-					f_in->f[1][Node.Get_index()]=omegaBc[1]*rhodiff;
-					f_in->f[2][Node.Get_index()]=omegaBc[2]*rhodiff;
-					f_in->f[6][Node.Get_index()]=omegaBc[6]*rhodiff;
-					f_in->f[8][Node.Get_index()]=omegaBc[8]*rhodiff;
+					rhodiff=(f_in->f[3][Connect[0]]+f_in->f[4][Connect[0]]+f_in->f[7][Connect[0]])/SumWeightConvexNE;
+					f_in->f[5][Connect[0]]=omegaBc[5]*rhodiff;
+					f_in->f[1][Connect[0]]=omegaBc[1]*rhodiff;
+					f_in->f[2][Connect[0]]=omegaBc[2]*rhodiff;
+					f_in->f[6][Connect[0]]=omegaBc[6]*rhodiff;
+					f_in->f[8][Connect[0]]=omegaBc[8]*rhodiff;
 				break;
 			case 6:
 
-					rhodiff=(f_in->f[1][Node.Get_index()]+f_in->f[4][Node.Get_index()]+f_in->f[8][Node.Get_index()])/SumWeightConvexNW;
-					f_in->f[6][Node.Get_index()]=omegaBc[6]*rhodiff;
-					f_in->f[2][Node.Get_index()]=omegaBc[2]*rhodiff;
-					f_in->f[3][Node.Get_index()]=omegaBc[3]*rhodiff;
-					f_in->f[5][Node.Get_index()]=omegaBc[5]*rhodiff;
-					f_in->f[7][Node.Get_index()]=omegaBc[7]*rhodiff;
+					rhodiff=(f_in->f[1][Connect[0]]+f_in->f[4][Connect[0]]+f_in->f[8][Connect[0]])/SumWeightConvexNW;
+					f_in->f[6][Connect[0]]=omegaBc[6]*rhodiff;
+					f_in->f[2][Connect[0]]=omegaBc[2]*rhodiff;
+					f_in->f[3][Connect[0]]=omegaBc[3]*rhodiff;
+					f_in->f[5][Connect[0]]=omegaBc[5]*rhodiff;
+					f_in->f[7][Connect[0]]=omegaBc[7]*rhodiff;
 				break;
 			case 7:
 
-					rhodiff=(f_in->f[1][Node.Get_index()]+f_in->f[2][Node.Get_index()]+f_in->f[5][Node.Get_index()])/SumWeightConvexSW;
-					f_in->f[7][Node.Get_index()]=omegaBc[7]*rhodiff;
-					f_in->f[3][Node.Get_index()]=omegaBc[3]*rhodiff;
-					f_in->f[4][Node.Get_index()]=omegaBc[4]*rhodiff;
-					f_in->f[6][Node.Get_index()]=omegaBc[6]*rhodiff;
-					f_in->f[8][Node.Get_index()]=omegaBc[8]*rhodiff;
+					rhodiff=(f_in->f[1][Connect[0]]+f_in->f[2][Connect[0]]+f_in->f[5][Connect[0]])/SumWeightConvexSW;
+					f_in->f[7][Connect[0]]=omegaBc[7]*rhodiff;
+					f_in->f[3][Connect[0]]=omegaBc[3]*rhodiff;
+					f_in->f[4][Connect[0]]=omegaBc[4]*rhodiff;
+					f_in->f[6][Connect[0]]=omegaBc[6]*rhodiff;
+					f_in->f[8][Connect[0]]=omegaBc[8]*rhodiff;
 				break;
 			case 8:
 
-					rhodiff=(f_in->f[2][Node.Get_index()]+f_in->f[3][Node.Get_index()]+f_in->f[6][Node.Get_index()])/SumWeightConvexSE;
-					f_in->f[8][Node.Get_index()]=omegaBc[8]*rhodiff;
-					f_in->f[1][Node.Get_index()]=omegaBc[1]*rhodiff;
-					f_in->f[4][Node.Get_index()]=omegaBc[4]*rhodiff;
-					f_in->f[5][Node.Get_index()]=omegaBc[5]*rhodiff;
-					f_in->f[7][Node.Get_index()]=omegaBc[7]*rhodiff;
+					rhodiff=(f_in->f[2][Connect[0]]+f_in->f[3][Connect[0]]+f_in->f[6][Connect[0]])/SumWeightConvexSE;
+					f_in->f[8][Connect[0]]=omegaBc[8]*rhodiff;
+					f_in->f[1][Connect[0]]=omegaBc[1]*rhodiff;
+					f_in->f[4][Connect[0]]=omegaBc[4]*rhodiff;
+					f_in->f[5][Connect[0]]=omegaBc[5]*rhodiff;
+					f_in->f[7][Connect[0]]=omegaBc[7]*rhodiff;
 				break;
 			default:
-				std::cerr<<"Direction: "<< Node.Get_BcNormal()<<" (Corner diffuse boundary conditions) not found"<<std::endl;
+				std::cerr<<"Direction: "<< BcNormal<<" (Corner diffuse boundary conditions) not found"<<std::endl;
 				break;
 			}
 }

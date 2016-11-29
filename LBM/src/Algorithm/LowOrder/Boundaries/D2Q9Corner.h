@@ -15,6 +15,7 @@
 
 #include "D2Q9BcVar.h"
 
+
 class D2Q9Corner: public D2Q9BcVar {
 public:
 	D2Q9Corner();
@@ -23,16 +24,18 @@ public:
 	void Set_Corner(Parameters *Param);
 	void ApplyCorner(NodeCorner2D& Node, DistriFunct* f_in,double const & RhoDef,double const & UDef,double const & VDef, double *Rho, double *U, double *V);
 	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct* f_in, double *Rho, double *U, double *V);
+	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct* f_in, double *Rho, double *U, double *V);
+	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct* f_in,double const & RhoDef,double const & UDef,double const & VDef);
 
 private:
 
-	void ApplyBounceBack(NodeCorner2D& Node, DistriFunct* f_in, double Rho, double U, double V);
-	void ApplyDiffuseWall(NodeCorner2D& Node, DistriFunct* f_in, double Rho, double U, double V);
+	void ApplyBounceBack(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
+	void ApplyDiffuseWall(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
 
 	/// Corner treat by Chih-Fung Ho, Cheng Chang, Kuen-Hau Lin and Chao-An Lin
 	/// Consistent Boundary Conditions for 2D and 3D Lattice Boltzmann Simulations
-	void ApplyHoChan(NodeCorner2D& Node, DistriFunct* f_in, double Rho, double U, double V);
-	void ApplyHoChanNoVel(NodeCorner2D& Node, DistriFunct* f_in, double Rho, double U, double V);
+	void ApplyHoChan(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
+	void ApplyHoChanNoVel(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
 
 
 	void FUNC_corner (double & a,double & b,double & c,double & d,double & e,double & f,double & g,double & h,double & i,double & U,double & V,double & Rho);
@@ -40,23 +43,25 @@ private:
 
 //Function for calculating the density and setting in the global variable
 	//Get the density from the global variable
-	double FixRho(NodeCorner2D& Node, double *Rho);
+	double GetRho(NodeCorner2D& Node, double *Rho);
+	void FixRho(NodeCorner2D& Node, double *Rho);
 	//Get the density by using the two direct neighbours
-	double ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho);
+	void ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho);
 
 // Pointers on function
 ///Simplify notation for pointer on a member function of D2Q9Pressure class for Pressure model used
 	//Corner inside the domain
-	typedef void(D2Q9Corner::*CornerWallMethod)(NodeCorner2D& Node, DistriFunct* f_in, double Rho, double U, double V);
-	typedef double(D2Q9Corner::*CalculRhoCornerWall)(NodeCorner2D& Node, double *Rho);
+	typedef void(D2Q9Corner::*CornerWallMethod)(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
+	typedef void(D2Q9Corner::*CalculRhoCornerWall)(NodeCorner2D& Node, double *Rho);
 	//Corner in the corner of the domain
-	typedef void(D2Q9Corner::*CornerMethod)(NodeCorner2D& Node, DistriFunct* f_in, double Rho, double U, double V);
+	typedef void(D2Q9Corner::*CornerMethod)(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
 
 
 //Define name for pointers on functions
 	CornerMethod PtrCornerMethod;
 	CornerWallMethod PtrCornerWallMethod;
 	CalculRhoCornerWall PtrCalculRhoCornerWall;
+	Extrapolation Extrapol;
 	double InvRho,InvU,InvV;
 	double doubleTmpReturn;
 	short int direction1,direction2;

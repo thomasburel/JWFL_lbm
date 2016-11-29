@@ -25,6 +25,7 @@ C_DEPS :=
 SUBDIRS := \
 src/Algorithm/LowOrder/Boundaries \
 src/Algorithm/LowOrder \
+src/Algorithm/Tools \
 src/Core \
 src \
 src/IO \

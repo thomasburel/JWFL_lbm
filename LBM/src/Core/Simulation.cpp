@@ -50,7 +50,7 @@ InitLBM& Simulation::InitSimu(){
 	return ini;
 }
 void Simulation::Create_Mesh(){ //(dimension dim, int Nx, int Ny, int Nz) {
-	if(PtrParameters->Get_Dimension()==D2)
+	if(PtrParameters->Get_Dimension()==SolverEnum::D2)
 	{
 
 		//MultiBlock_=new MultiBlock2D(parrallel,PtrParameters->Get_Nx(),PtrParameters->Get_Ny());
@@ -97,17 +97,43 @@ void Simulation::RunSimu()
 	Save_Simulation();
 
 }
+void Simulation::RunSimu(Parameters &UpdatedParam)
+{
+	PtrParameters=&UpdatedParam;
+	Writer->UpdateFileNames(PtrParameters->Get_OutputFileName());
+	Solver_->run(PtrParameters);
+	if (parallel->isMainProcessor())
+	cout<< "Time to run the simulation:    "<<get_time()-time << endl;
+	time=get_time();
+
+}
+void Simulation::UpdateAllDomain(Parameters &UpdatedParam){
+	ini.Set_Parameters(&UpdatedParam);
+	Solver_->UpdateAllDomain(&UpdatedParam,ini);
+}
+void Simulation::UpdateDomainBc(Parameters &UpdatedParam){
+	ini.Set_Parameters(&UpdatedParam);
+	Solver_->UpdateDomainBc(&UpdatedParam,ini);
+}
+void Simulation::UpdateWall(Parameters &UpdatedParam){
+	ini.Set_Parameters(&UpdatedParam);
+	Solver_->UpdateWall(&UpdatedParam,ini);
+}
+void Simulation::UpdateInterior(Parameters &UpdatedParam){
+	ini.Set_Parameters(&UpdatedParam);
+	Solver_->UpdateInterior(&UpdatedParam,ini);
+}
 void Simulation::SelectSolver()
 {
-	if(PtrParameters->Get_Dimension()==D2)
+	if(PtrParameters->Get_Dimension()==SolverEnum::D2)
 	{
 		switch(PtrParameters->Get_Model())
 		{
-		case SinglePhase:
+		case SolverEnum::SinglePhase:
 			SolverD2Q9=new D2Q9(MultiBlock_,parallel,Writer,PtrParameters,InitSimu());
 			Solver_= SolverD2Q9;
 			break;
-		case ColourFluid:
+		case SolverEnum::ColourFluid:
 			//SolverD2Q9=new D2Q9(MultiBlock_,parrallel,Writer,PtrParameters,InitSimu());
 			SolverD2Q9TwoPhases=new D2Q9ColourFluid(MultiBlock_,parallel,Writer,PtrParameters,InitSimu());
 			Solver_= SolverD2Q9TwoPhases;
@@ -221,7 +247,7 @@ void Simulation::Save_MultiBlock(std::string &filename,ios_base::openmode mode){
 	// make an archive
 	std::ofstream ofs(filename.c_str(),mode);
 	boost::archive::text_oarchive oa(ofs);
-	if (PtrParameters->Get_Dimension()==D2)
+	if (PtrParameters->Get_Dimension()==SolverEnum::D2)
 		oa << *MultiBlock2D_;
 	else
 		oa << *MultiBlock_;
@@ -231,9 +257,9 @@ void Simulation::Save_Solver(std::string &filename,ios_base::openmode mode){
 	// make an archive
 	std::ofstream ofs(filename.c_str(),mode);
 	boost::archive::text_oarchive oa(ofs);
-	if (PtrParameters->Get_Dimension()==D2)
-		if(PtrParameters->Get_Scheme()==Q9)
-			if(PtrParameters->Get_Model()==SinglePhase)
+	if (PtrParameters->Get_Dimension()==SolverEnum::D2)
+		if(PtrParameters->Get_Scheme()==SolverEnum::Q9)
+			if(PtrParameters->Get_Model()==SolverEnum::SinglePhase)
 				oa << *SolverD2Q9;
 			else
 				oa << *SolverD2Q9TwoPhases;

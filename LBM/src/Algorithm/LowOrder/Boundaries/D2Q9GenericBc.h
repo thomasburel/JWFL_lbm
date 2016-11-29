@@ -21,37 +21,45 @@ public:
 	virtual ~D2Q9GenericBc();
 	void SetBcObjects( Parameters *Param);
 	///Apply Pressure as one 0-moment variable (single phase = 1 density)
-	void ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in);
+	void ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in, double weightDensity=1);
 	///Apply Pressure as  several 0-moment variables
-	void ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in,double * & Rho, double * &U, double * &V);
+	void ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
 	///Apply Velocity as one 0-moment variable (single phase = 1 density)
-	void ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in);
+	void ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in, double weightDensity=1);
 	///Apply Velocity as  several 0-moment variables
-	void ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V);
+	void ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
+	///Apply Pressure/Velocity Special Wall as one 0-moment variable (single phase = 1 density)
+	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, double weightDensity=1);
+	///Apply Pressure/Velocity Special Wall as  several 0-moment variables
+//	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V);
 	///Apply Corner as one 0-moment variable (single phase = 1 density)
-	void ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef);
+	void ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef, double weightDensity=1);
 	///Apply Corner as  several 0-moment variables
-	void ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V);
+	void ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, double weightDensity=1);
 	///Apply CornerWall as one 0-moment variable (single phase = 1 density)
-	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in);
+	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in, double weightDensity=1);
 	///Apply CornerWall as  several 0-moment variables
-	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V);
+	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
+	///Apply Corner for SpecialWall as one 0-moment variable (single phase = 1 density)
+	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
+	///Apply Corner for SpecialWall as  several 0-moment variables
+//	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V);
 	///Apply Wall as one 0-moment variable (single phase = 1 density)
-	void ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in);
+	void ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in, double weightDensity=1);
 	///Apply Wall as  several 0-moment variables
-	void ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V);
+	void ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
 	///Apply SpecialWall as one 0-moment variable (single phase = 1 density)
-	void ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_);
+//	void ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_);
 	///Apply SpecialWall as  several 0-moment variables
-	void ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_,double * & Rho, double * &U, double * &V);
+//	void ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_,double * & Rho, double * &U, double * &V);
 	///Apply Symmetry as one 0-moment variable (single phase = 1 density)
-	void ApplySymmetry(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in);
+	void ApplySymmetry(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in, double weightDensity=1);
 	///Apply Symmetry as  several 0-moment variables
-	void ApplySymmetry(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V);
+	void ApplySymmetry(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
 	///Apply Periodic as one 0-moment variable (single phase = 1 density)
-	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in);
+	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in, double weightDensity=1);
 	///Apply Periodic as  several 0-moment variables
-	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V);
+	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
 
 	const double& Get_Rho(int index){return PtrD2Q9BcRho[index];};
 	const double& Get_U(int index){return PtrD2Q9BcU[index];};

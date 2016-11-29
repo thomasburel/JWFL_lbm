@@ -7,26 +7,29 @@
 
 #include "Solution.h"
 
-Solution2D::Solution2D() {
+Solution::Solution(){
 	MultiBlock_=0;
 	parallel=0;
 	Writer=0;
 	U=0;
 	Rho=0;
+	Dic=0;
 	nbnodes_total=0;
 	nbnodes_real=0;
+	}
+Solution::~Solution(){
+
+	delete Dic;
+	}
+Solution2D::Solution2D() {
+
 	NodeArrays=0;
-	Dic=0;
 
 }
 
 Solution2D::~Solution2D() {
-	for (int i=0;i<2;i++)
-	{
-		for (int j=0;j<nbnodes_total;j++)
-			delete U[i];
-	}
-	delete U,Rho,NodeArrays,Dic;
+
+	delete NodeArrays;
 
 }
 

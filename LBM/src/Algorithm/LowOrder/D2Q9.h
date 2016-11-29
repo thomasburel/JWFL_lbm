@@ -22,19 +22,29 @@ public:
 	virtual ~D2Q9();
 	virtual void init(InitLBM& ini);
 	virtual void run();
+	virtual void run(Parameters* UpdatedParam);
+	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini);
+	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini);
+	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini);
+	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini);
 
 
 private:
-	template <typename T>
-	void Collide(T node);
+
+	void Set_Collide();
 	void CollideD2Q9();
-	void CollideD2Q9_node();
 	void StreamD2Q9();
 
+	void Set_PointersOnFunctions();
+
+// Macroscopic calculation
+	void Set_Macro();
 	//void UpdateMacroVariables();
-	void UpdateMacroVariables_node();
+	void UpdateMacroVariables();
 	/// Calculate \f$\rho\f$ and \f$\vec{U}\f$ in the local domain
 	void MacroVariables(int& idx);
+	/// Calculate \f$\rho\f$ and \f$\vec{U}\f$ in the local domain with including the external force
+	void MacroVariablesWithForce(int& idx);
 
 private:
 	//Streaming by type of node
@@ -94,6 +104,7 @@ private:
 	void SyncMacroVarToGhost();
 
 private:
+	double **F;///< Surface Force and Colour gradient/density gradient
 	double* tmp;// variable to copy tmp to distribution function
 //	double Ei[9][2]; //Velocity in the distribution function
 //	double omega[9];//Weight in the distribution function
@@ -111,6 +122,10 @@ private:
 	int Nd_MacroVariables_sync;//number of variable has to be synchronise
 	double ***buf_MacroSend, ***buf_MacroRecv; //buffers to send and receive
 	int *size_MacroBuf; // size of buffers
+
+///Simplify notation for pointer on a member function of D2Q9ColourFluid class for macroscopic variables calculation methods
+	typedef void(D2Q9::*Macro)(int & nodenumber);
+	Macro PtrMacro;///< Macroscopic pointer
 
 private:
 	friend class boost::serialization::access;

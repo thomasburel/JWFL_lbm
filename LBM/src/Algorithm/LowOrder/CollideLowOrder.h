@@ -15,6 +15,7 @@
 
 #include "../../Core/GlobalDef.h"
 #include "../../Core/Parameters.h"
+#include "../../Core/Dictionary.h"
 #include "../../Mesh/SingleBlock.h"
 #include "../../User/UserForce.h"
 #include <boost/archive/text_oarchive.hpp>
@@ -35,12 +36,12 @@ public:
 	void Collide_2D_SinglePhase(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_With_LocalForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_With_BodyForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
-	double Collide_2D_BodyForce(int & i, double &u, double &v, double & Fx, double & Fy);
+	double Collide_2D_BodyForce(int & i, double &u, double &v, double Fx, double Fy);
 
 	void Collide_2D_SinglePhase_Non_Constant_Tau(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
-	double Collide_2D_BodyForce_Non_Constant_Tau(int & i, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+	double Collide_2D_BodyForce_Non_Constant_Tau(int & i, double &u, double &v, double Fx, double Fy, double & InvTau_tmp);
 
 protected:
 	double InvTau;
@@ -59,6 +60,10 @@ protected:
 	typedef void(CollideLowOrder::*Collide_2D_TypeDef)(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	Collide_2D_TypeDef PtrCollide_2D;
 
+
+	Dictionary *PtrDicCollide;//For debugging
+	double **ColSingle,**ColTwoPhase;
+	double ColSingle_tmp,ColTwoPhase_tmp;
 private:
 	friend class boost::serialization::access;
     template<class Archive>
@@ -78,7 +83,7 @@ private:
 */
 inline double CollideLowOrder::EquiDistriFunct2D(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega){
 	double dot_E_U=(u_i[0]*u_macro+u_i[1]*v_macro);
-	return rho_macro*omega*(1+3*dot_E_U+4.5*dot_E_U*dot_E_U-1.5*(u_macro*u_macro+v_macro*v_macro));
+	return rho_macro*omega*(1.0+3.0*dot_E_U+4.5*dot_E_U*dot_E_U-1.5*(u_macro*u_macro+v_macro*v_macro));
 }
 /*class CollideD2Q9Colour: public CollideLowOrder {
 public:
