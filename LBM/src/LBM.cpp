@@ -59,7 +59,7 @@ stringstream FileExportStream;
 	double Mach =U2_ref*std::sqrt(3);
 	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
 //Pressure drop
-	double deltaP=0.000001;
+	double deltaP=0.0001;
 // Pressure inlet
 	double Pmax=1+deltaP;
 // Pressure outlet
@@ -83,7 +83,7 @@ stringstream FileExportStream;
 
 // Set User Parameters
 	//U2_ref=0.01;Pmax=1;Pmin=1;
-	double contactangle=120*pi/180.0;
+	double contactangle=90*pi/180.0;
 	Param.Set_ContactAngleType(FixTeta);//NoTeta, FixTeta or NonCstTeta
 	if(Param.Get_ContactAngleType()==NoTeta)
 		contactangle=pi/2.0;
@@ -99,7 +99,7 @@ stringstream FileExportStream;
 
 
 /// Set Boundary condition type for the boundaries of the domain
-/// Boundary condition accepted: Wall, Pressure, Velocity and Symmetry
+/// Boundary condition accepted: Wall, Pressure, Velocity, Periodic and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
 	Param.Set_BcType(Symmetry,Pressure,Symmetry,Pressure);
 
@@ -112,14 +112,14 @@ stringstream FileExportStream;
 	Param.Set_WallType(BounceBack);//BounceBack,HeZouWall
 	Param.Set_VelocityModel(HeZouV);
 /// Set Periodic boundary condition to add a pressure drop term
-	Param.Set_PeriodicType(PressureForce);//Simple,PressureForce
+	Param.Set_PeriodicType(Simple);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(500000);
+	Param.Set_NbStep(200000);
 /// Interval for output
-	Param.Set_OutPutNSteps(10000);// interval
+	Param.Set_OutPutNSteps(1000);// interval
 ///Display information during the calculation every N iteration
-	Param.Set_listing(500);
+	Param.Set_listing(100);
 	Param.Set_ErrorMax(1e-11);
 	Param.Set_ErrorVariable(SolverEnum::VelocityX);
 
@@ -131,12 +131,12 @@ stringstream FileExportStream;
 			<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
 			<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
 	FileExportStream.str("");
-	FileExportStream<<"Debug_poiseuille_serpentine";
+	FileExportStream<<"Debug_poiseuille_straight_Channel_TwoPhase";
 	Param.Set_OutputFileName(FileExportStream.str());
 
 	// Multiphase model (SinglePhase or ColourFluid)
 	Param.Set_Model(SolverEnum::SinglePhase);
-	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
+	Param.Set_ViscosityType(ConstViscosity);//ConstViscosity,HarmonicViscosity
 
 	//Gradient definition
 	Param.Set_GradientType(LBMStencil); //FD or LBMStencil
@@ -167,10 +167,23 @@ stringstream FileExportStream;
 
 
 
-
-
+//	Param.Set_OutputFileName("Testread");
+/*	Param.Add_VariableToInit("Debug_poiseuille_serpentine_105000.cgns",SolverEnum::Density);
+	Param.Add_VariableToInit("Debug_poiseuille_serpentine_105000.cgns",SolverEnum::VelocityX);
+	Param.Add_VariableToInit("Debug_poiseuille_serpentine_105000.cgns",SolverEnum::VelocityY);*/
 /// Initialise the simulation with parameters
 	simu.InitSimu(Param, true);
+/*	double *d_=0;
+	std::string variablename("Density");
+	std::string filename("Debug_poiseuille_serpentine_105000.cgns");
+	simu.Test_ReadData(d_,variablename,filename);
+	if(d_==0)
+		std::cout<<"Error reading data"<<std::endl;
+	else
+		if(simu.Is_MainProcessor())
+		for (int i=0;i<20;i++)
+			std::cout<<i<<" "<<d_[i]<<std::endl;
+*/
 	simu.barrier();
 
 		if(simu.Is_MainProcessor())

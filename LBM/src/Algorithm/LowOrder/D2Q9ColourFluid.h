@@ -188,6 +188,8 @@ private:
 	Collision PtrCollisionWall;///< Collision pointer
 	CalNormal PtrCalNormal;///< Calcul Normal
 	CalNormal PtrCalNormalWall;///< Calcul or fix normal at the wall
+
+	int idxcheck;
 };
 
 #endif /* SRC_ALGORITHM_LOWORDER_D2Q9COLOURFLUID_H_ */

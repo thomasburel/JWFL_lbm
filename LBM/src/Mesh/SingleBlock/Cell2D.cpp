@@ -20,7 +20,7 @@ Cell2D::Cell2D()
 }
 
 Cell2D::~Cell2D() {
-	delete [] Connect;
+//	delete [] Connect;
 }
 
 Node2D* Cell2D::NewNode(NodeType NodeType_, unsigned int x, unsigned int y)

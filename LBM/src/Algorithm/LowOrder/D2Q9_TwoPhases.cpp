@@ -95,6 +95,13 @@ D2Q9TwoPhases::~D2Q9TwoPhases() {
 void D2Q9TwoPhases::init(InitLBM& ini){
 	InitAllDomain(ini);
 	Set_BcType();
+	if(PtrParameters->IsInitFromFile())
+	{
+		for(int i=0;i<PtrParameters->Get_NumberVariableToInit();i++)
+		{
+			Read_Variable(PtrParameters->Get_VariableNameToInit(i),PtrParameters->Get_FileNameToInit(i));
+		}
+	}
 	if(PtrParameters->Get_Verbous())
 		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
@@ -165,15 +172,6 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 		NodeArrays->NodePressure[j].Set_RhoDef(Rho[idx]);
 		NodeArrays->NodePressure[j].Set_AlphaDef(alpha);
 	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
-	{
-		idx=NodeArrays->NodeSpecialWall[j].Get_index();
-		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
-		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
-		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, idx,pos,Rho[idx],U_,alpha);
-		U[0][idx]=U_[0];
-		U[1][idx]=U_[1];
-	}
 	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 		idx=NodeArrays->NodeSymmetry[j].Get_index();
@@ -218,6 +216,15 @@ void D2Q9TwoPhases::InitWall(InitLBM& ini){
 		pos[0]=NodeArrays->NodeWall[j].get_x();
 		pos[1]=NodeArrays->NodeWall[j].get_y();
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeWall[j],0, idx,pos,Rho[idx],U_,alpha);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+	}
+	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	{
+		idx=NodeArrays->NodeSpecialWall[j].Get_index();
+		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
+		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
+		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, idx,pos,Rho[idx],U_,alpha);
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
 	}
@@ -1016,7 +1023,58 @@ void D2Q9TwoPhases::StreamingOrientation(NodeWall2D& nodeIn, bool Streaming[9]){
 			Streaming[7]=true;
 			Streaming[8]=true;
 			break;
+// For special Walls
+		case 5:
+			Streaming[0]=false;
+			Streaming[1]=true;
+			Streaming[2]=true;
+			Streaming[3]=false;
+			Streaming[4]=false;
+			Streaming[5]=true;
+			Streaming[6]=false;
+			Streaming[7]=false;
+			Streaming[8]=false;
+			break;
+		case 6:
+			Streaming[0]=false;
+			Streaming[1]=false;
+			Streaming[2]=true;
+			Streaming[3]=true;
+			Streaming[4]=false;
+			Streaming[5]=false;
+			Streaming[6]=true;
+			Streaming[7]=false;
+			Streaming[8]=false;
+			break;
+		case 7:
+			Streaming[0]=false;
+			Streaming[1]=false;
+			Streaming[2]=false;
+			Streaming[3]=true;
+			Streaming[4]=true;
+			Streaming[5]=false;
+			Streaming[6]=false;
+			Streaming[7]=true;
+			Streaming[8]=false;
+			break;
+		case 8:
+			Streaming[0]=false;
+			Streaming[1]=true;
+			Streaming[2]=false;
+			Streaming[3]=false;
+			Streaming[4]=true;
+			Streaming[5]=false;
+			Streaming[6]=false;
+			Streaming[7]=false;
+			Streaming[8]=true;
+			break;
+		default:
+			std::cerr<<" Problem in setup streaming; Normal not found."<<std::endl;
 		}
+/*	if(nodeIn.get_x()==206 && (nodeIn.get_y()<182||nodeIn.get_y()<187))
+		std::cout<<"processor: "<<parallel->getRank()<<" X: "<<nodeIn.get_x()<<" y: "<<nodeIn.get_y()<<" normal: "<<nodeIn.Get_BcNormal()<<std::endl;
+	sleep(0.5);*/
+
 }
 void D2Q9TwoPhases::StreamingOrientation(NodeSymmetry2D& nodeIn, bool Streaming[9]){
 	switch(nodeIn.Get_BcNormal())

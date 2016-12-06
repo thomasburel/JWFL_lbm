@@ -24,6 +24,13 @@ Block2D::Block2D(int dx_, int dy_) : dx(dx_),dy(dy_)
 
 Block2D::~Block2D() {
 	delete [] Coord_physical;
+	for(int i=0;i<CellArray.size();i++) delete CellArray[i];
+	for(int i=0;i<GhostCellArraytmp.size();i++) delete GhostCellArraytmp[i];
+	for(int i=0;i<Node.size();i++) delete Node[i];
+	for(int i=0;i<Node_Ghosttmp.size();i++) delete Node_Ghosttmp[i];
+	for(int i=0;i<Node_Solidtmp.size();i++) delete Node_Solidtmp[i];
+	for(int i=0;i<Node_tmp.size();i++) delete Node_tmp[i];
+
 }
 ///Correct Ordering Ghost node for real cells
 void Block2D::Correct_OrderingGhostNode()
@@ -2090,16 +2097,29 @@ void Block2D::GenerateSolid(Parameters &Param)
 				IdSolidNode.push_back(i);
 			//create the solid node}
 			Block2D::ChangeNodeType(i,Solid);//convert node to solid
-			//Extend the solid to the ghost of the domain for the automatic wall detection functions. Otherwise, the wall can be consider as a corner
-			if(Node[i]->get_y()==0)//Convert ghost node to solid at the border of the domain (bottom)
-				Block2D::ChangeNodeType(Node[i]->Get_connect(0),Solid);//convert node to solid
-			if(Node[i]->get_y()==Param.Get_Ny())//Convert ghost node to solid at the border of the domain (North)
-				Block2D::ChangeNodeType(Node[i]->Get_connect(2),Solid);//convert node to solid
-			if(Node[i]->get_x()==0)//Convert ghost node to solid at the border of the domain (West)
-				Block2D::ChangeNodeType(Node[i]->Get_connect(3),Solid);//convert node to solid
-			if(Node[i]->get_x()==Param.Get_Nx())//Convert ghost node to solid at the border of the domain (East)
-				Block2D::ChangeNodeType(Node[i]->Get_connect(1),Solid);//convert node to solid
 		}
+		//Extend the solid to the ghost of the domain for the automatic wall detection functions. Otherwise, the wall can be consider as a corner
+		if(Node[i]->get_y()==0 && (testSolid||Node[i]->get_NodeType()==Wall))//Convert ghost node to solid at the border of the domain (bottom)
+		{
+			Block2D::ChangeNodeType(Node[i]->Get_connect(0),Solid);//convert node to solid
+			if(Node[i]->get_x()==0)//Correct Global corner
+				Block2D::ChangeNodeType(Node[Node[i]->Get_connect(0)]->Get_connect(3),Solid);//convert node to solid
+			if(Node[i]->get_x()==Param.Get_Nx())//Correct Global corner
+				Block2D::ChangeNodeType(Node[Node[i]->Get_connect(0)]->Get_connect(1),Solid);//convert node to solid
+		}
+		if(Node[i]->get_y()==Param.Get_Ny() && (testSolid||Node[i]->get_NodeType()==Wall))//Convert ghost node to solid at the border of the domain (North)
+		{
+			Block2D::ChangeNodeType(Node[i]->Get_connect(2),Solid);//convert node to solid
+			if(Node[i]->get_x()==0)//Correct Global corner
+				Block2D::ChangeNodeType(Node[Node[i]->Get_connect(2)]->Get_connect(3),Solid);//convert node to solid
+			if(Node[i]->get_x()==Param.Get_Nx())//Correct Global corner
+				Block2D::ChangeNodeType(Node[Node[i]->Get_connect(2)]->Get_connect(1),Solid);//convert node to solid
+		}
+		if(Node[i]->get_x()==0 && (testSolid||Node[i]->get_NodeType()==Wall))//Convert ghost node to solid at the border of the domain (West)
+			Block2D::ChangeNodeType(Node[i]->Get_connect(3),Solid);//convert node to solid
+		if(Node[i]->get_x()==Param.Get_Nx() && (testSolid||Node[i]->get_NodeType()==Wall))//Convert ghost node to solid at the border of the domain (East)
+			Block2D::ChangeNodeType(Node[i]->Get_connect(1),Solid);//convert node to solid
+
 		//Save nodes which are not solid. To reduce memory consumption, only nodes after the first solid are stored
 		/*if(ndSolidNode>0 && Solid==false)
 			Node_tmp.push_back(Node[i]);
@@ -2473,23 +2493,7 @@ void Block2D::DetectSpecialWall(int & nodeID,int x,int y, bool & specialwall, un
 	else
 		specialwall=false;
 
-/*		for (unsigned int j=0;j<4;j++)
-	{
-		if(Node[Node[nodeID]->Get_connect(j)]->get_NodeType()!=Interior && Node[Node[nodeID]->Get_connect(j)]->get_NodeType()!=Corner && Node[Node[nodeID]->Get_connect(j)]->get_NodeType()!=ConcaveCorner && Node[Node[nodeID]->Get_connect(j)]->get_NodeType()!=ConvexCorner && Node[Node[nodeID]->Get_connect(j)]->get_NodeType()!=Wall && Node[Node[nodeID]->Get_connect(j)]->get_NodeType()!=Solid)
-		{
-			nbspecialwall++;
-			directionwall=j;
-		}
-	}
-	if(nbspecialwall==0)
-		specialwall=false;
-	if(nbspecialwall==1)
-	{
-		specialwall=true;
-		//std::cout<<"**** Detect Special Wall *****    nodeID: "<< nodeID<<" type connect 0: "<<Node[Node[nodeID]->Get_connect(0)]->get_NodeType()<<" type connect 1: "<<Node[Node[nodeID]->Get_connect(1)]->get_NodeType()<<" type connect 2: "<<Node[Node[nodeID]->Get_connect(2)]->get_NodeType()<<" type connect 3: "<<Node[Node[nodeID]->Get_connect(3)]->get_NodeType()<<std::endl;
-	}
-	if(nbspecialwall>1)
-		std::cerr<<" Error detection special wall    nodeID: "<< nodeID<<std::endl;*/
+
 }
 void Block2D::CreateCorner(int &nodeID){
 	Block2D::ChangeNodeType(nodeID,Corner);
@@ -2515,143 +2519,7 @@ void Block2D::CreateSpecialWall(int &nodeID){
 	Node[nodeID]->Set_NodeType(SpecialWall);
 	IdBoundaries.push_back(nodeID);
 }
-/*
-void Block2D::CreateWallandCorners(Parameters &Param, int &nodeID, int & nbinterior, bool SpecialNode)
-{
-	if (nbinterior>0)//else solid or concave corner
-	{
-			if(nbinterior>1)//else convex corner
-			{
-				if(Param.Get_Verbous())
-					std::cout<<"Corner number: "<<nodeID<<std::endl;
-				CreateCorner(nodeID);
-			}
-			else
-			{
-				CreateWall(nodeID);
-			}
-	}
-	else
-	{
-			nbinterior=0;// detect corners
-			//North East direction
-			if(Node[Node[Node[nodeID]->Get_connect(1)]->Get_connect(2)]->get_NodeType()==Interior||Node[Node[Node[nodeID]->Get_connect(1)]->Get_connect(2)]->get_NodeType()==Ghost)
-			{
-				if(Param.Get_Verbous())
-					std::cout<<"Corner number: "<<nodeID<<std::endl;
-				CreateCorner(nodeID);
-				nbinterior++;
-			}
-			//North West direction
-			if(Node[Node[Node[nodeID]->Get_connect(3)]->Get_connect(2)]->get_NodeType()==Interior||Node[Node[Node[nodeID]->Get_connect(3)]->Get_connect(2)]->get_NodeType()==Ghost)
-			{
-				if(Param.Get_Verbous())
-					std::cout<<"Corner number: "<<nodeID<<std::endl;
-				CreateCorner(nodeID);
-				nbinterior++;
-			}
-			//South West direction
-			if(Node[Node[Node[nodeID]->Get_connect(3)]->Get_connect(0)]->get_NodeType()==Interior||Node[Node[Node[nodeID]->Get_connect(3)]->Get_connect(0)]->get_NodeType()==Ghost)
-			{
-				if(Param.Get_Verbous())
-					std::cout<<"Corner number: "<<nodeID<<std::endl;
-				CreateCorner(nodeID);
-				nbinterior++;
-			}
-			//South East direction
-			if(Node[Node[Node[nodeID]->Get_connect(1)]->Get_connect(0)]->get_NodeType()==Interior||Node[Node[Node[nodeID]->Get_connect(1)]->Get_connect(0)]->get_NodeType()==Ghost)
-			{
-				if(Param.Get_Verbous())
-					std::cout<<"Corner number: "<<nodeID<<std::endl;
-				CreateCorner(nodeID);
-				nbinterior++;
-			}
-			if(nbinterior++>1 &&SpecialNode==false)
-				std::cerr<<"Error detection concave corners; Node ID: "<<nodeID<<" x coordinate: "<<Node[nodeID]->get_x()<<" y coordinate: "<<Node[nodeID]->get_y()<<std::endl;
-	}
 
-}
-
-void Block2D::ModifyMeshByUser(Parameters &Param){
-
-	PtrParametersUserMesh=&Param;
-	UserMesh::SetUserMeshVariables();
-	int ndSolidNode=0;
-	int firstSolid=0;
-	std::vector<int> ndSolidNodetoremove;
-
-	int rank;
-	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-	if(rank==0)
-		std::cout<<"******BEGGINING MODIFY THE MESH BY THE USERS******"<<std::endl;
-
-	if(Param.Get_Verbous())
-		std::cout<<"Processor ID: "<<rank<<" Number of node:"<<NbRealNodes<<std::endl;
-	nx=Param.Get_Nx();ny=Param.Get_Ny();
-	if(rank==0)
-		std::cout<<"******START GENERATING SOLID IN THE DOMAIN******"<<std::endl;
-	GenerateSolid(Param);
-	//int computenode=Node.size()-NbGhostNode-ndSolidNode;
-	int sizeIdBcBeforeSolid=IdBoundaries.size();
-	//int nbinterior=0;// detect corners
-	//bool specialwall=false;
-	//std::vector<int> IdSpecialNode;
-	if(rank==0)
-		std::cout<<"******END GENERATING SOLID IN THE DOMAIN******"<<std::endl
-		<<"******START CHECKING THE MESH AND REMOVING/ADDING SOLID******"<<std::endl;
-//	RemoveUnphysicalSolid();
-	if(rank==0)
-		std::cout<<"******END CHECKING THE MESH AND REMOVING/ADDING SOLID******"<<std::endl
-		<<"******START GENERATING WALL AND CORNERS******"<<std::endl;
-	SetSolidBoundaries();
-	//std::cout<<"Processor: "<<rank<<" Number of Walls: "<<IdWalltmp.size()<<std::endl;
-	//std::cout<<"Processor: "<<rank<<" Number of Special Walls: "<<IdSpecialWalltmp.size()<<std::endl;
-	//std::cout<<"Processor: "<<rank<<" Number of Concave Corners: "<<IdCornerConcavetmp.size()<<std::endl;
-	//std::cout<<"Processor: "<<rank<<" Number of Convex Corners: "<<IdCornerConvextmp.size()<<std::endl;
-/*	for (int i=0;i<IdWalltmp.size();i++)
-		CreateWall(IdWalltmp[i]);
-	for (int i=0;i<IdSpecialWalltmp.size();i++)
-		CreateSpecialWall(IdSpecialWalltmp[i]);
-	for (int i=0;i<IdCornerConcavetmp.size();i++)
-		CreateCornerConcave(IdCornerConcavetmp[i]);
-	for (int i=0;i<IdCornerConvextmp.size();i++)
-		CreateCornerConvex(IdCornerConvextmp[i]);
-//Remove wrong solid
-	for (int i=0;i<IDRemoveSolidtmp.size();i++)
-		{Block2D::ChangeNodeType(IDRemoveSolidtmp[i],Interior); std::cout<<"ID : "<<IDRemoveSolidtmp[i]<<std::endl;}*/
-/*
-	unsigned int directionspecialwall;
-
-	for (int i=0;i<IdSolidNode.size();i++)
-	{
-
-		DetectSpecialWall(IdSolidNode[i], Node[IdSolidNode[i]]->get_x(),Node[IdSolidNode[i]]->get_y(),specialwall,directionspecialwall);
-		if(specialwall)
-			IdSpecialNode.push_back(IdSolidNode[i]);
-
-		DetectDirectInterior(IdSolidNode[i], nbinterior);
-		CreateWallandCorners(Param,IdSolidNode[i] , nbinterior,specialwall);
-	}
-	//Remove Solid Ghost node convert to wall or corner
-	for(int i=0;i<Id_SolidGhost.size();i++)
-	{
-		Block2D::ChangeNodeType(Id_SolidGhost[i],Solid);
-	}
-	for(int i=0;i<IdSpecialNode.size();i++)
-	{
-		DetectSpecialWall(IdSpecialNode[i], Node[IdSpecialNode[i]]->get_x(),Node[IdSpecialNode[i]]->get_y(),specialwall,directionspecialwall);
-		if(specialwall)
-			CreateSpecialWall(IdSpecialNode[i]);
-	}
-	if(Param.Get_Verbous())
-		for(int i=sizeIdBcBeforeSolid;i<IdBoundaries.size();i++)
-			std::cout<<"Processor: "<<rank<<" Node id: "<<IdBoundaries[i]<<" x coordinate: " <<Node[IdBoundaries[i]]->get_x() <<" y coordinate: " << Node[IdBoundaries[i]]->get_y()<<" type of node: "<<Node[IdBoundaries[i]]->get_NodeType()<<std::endl;
-
-
-
-
-}
-*/
 void Block2D::DefinedCornerType(int nodenumber){
 	int nbinterior=0;
 	for (unsigned int i=5;i<9;i++)
@@ -2973,9 +2841,7 @@ void Block2D::Set_BcNormal()
 	myFlux.open(buffer);*/
 	for (int i=0;i<NodeArrays.NodeWall.size();i++)
 	{
-		if(NodeArrays.NodeWall[i].get_x()==114&&NodeArrays.NodeWall[i].get_y()==101)
-			std::cout<<"x: "<< NodeArrays.NodeWall[i].get_x()<<" y: "<< NodeArrays.NodeWall[i].get_y()<<" Normal is: "<<Get_BcNormal(NodeArrays.NodeWall[i])<<std::endl;
-		NodeArrays.NodeWall[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeWall[i]));
+			NodeArrays.NodeWall[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeWall[i]));
 	}
 	for (int i=0;i<NodeArrays.NodeSpecialWall.size();i++)
 	{
@@ -2983,8 +2849,6 @@ void Block2D::Set_BcNormal()
 	}
 	for (int i=0;i<NodeArrays.NodeCorner.size();i++)
 	{
-		if(NodeArrays.NodeCorner[i].get_x()>111&& NodeArrays.NodeCorner[i].get_x()<115&&NodeArrays.NodeCorner[i].get_y()>99&&NodeArrays.NodeCorner[i].get_y()<102)
-			std::cout<<"x: "<< NodeArrays.NodeCorner[i].get_x()<<" y: "<< NodeArrays.NodeCorner[i].get_y()<<" Normal is: "<<Get_BcNormal(NodeArrays.NodeCorner[i])<<std::endl;
 			NodeArrays.NodeCorner[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeCorner[i]));
 	}
 	for (int i=0;i<NodeArrays.NodeGlobalCorner.size();i++)
@@ -3045,6 +2909,14 @@ int Block2D::Get_BcNormal(NodeCorner2D & nodeIn)
 		if(nbinterior>1)
 		{
 			std::cerr<<"Wrong corner normal detection for Concave corner. "<<"x: "<< nodeIn.get_x()<<" y: "<< nodeIn.get_y()<<std::endl;
+			for (unsigned int i=5;i<9;i++)
+			{
+				if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Interior ||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Ghost)
+				{
+					std::cerr<<"Direction "<<i<<" is an interior"<<std::endl;
+				}
+			}
+
 		}
 	}
 	else
@@ -3073,95 +2945,7 @@ int Block2D::Get_BcNormal(NodeCorner2D & nodeIn)
 	}
 	return intTmpReturn;
 }
-/*
-int Block2D::Get_BcNormal(NodeCorner2D & nodeIn)
-{
-	int nbinterior=0, count=0;
-	int tmpdirection[4];
-	int intTmpReturn=0;
-	if(nodeIn.get_NodeType()==GlobalCorner)
-	{
-		///Normal concave corners
-			for (unsigned int i=5;i<9;i++)
-			{
-				if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Interior )
-				{
-					intTmpReturn=i;
-					nbinterior++;
-				}
-				if(nbinterior>1)
-				{
-					std::cerr<<"Wrong corner normal detection for Global corner. "<<std::endl;
-				}
-			}
-	}
-	else
-	{
-///Normal concave corners
-	for (unsigned int i=5;i<9;i++)
-	{
-//		if (!(nodeIn.Get_connect()[i]==nodeIn.Get_index()||nodeIn.get_NodeType()==Solid||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Solid) && (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Interior ||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Ghost))
-		if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Interior ||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Ghost)
-		{
-			intTmpReturn=i;
-			nbinterior++;
-		}
-	}
-///normal convex corners
-		if(nbinterior>1)
-		{
-			for(int i=0;i<4;i++)
-				tmpdirection[i]=0;
-			int count=0;
-			for (unsigned int i=1;i<5;i++)
-			{
-				if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]!=Interior && NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]!=Ghost )
-				{
-					tmpdirection[count]=i;
-					count++;
-				}
-			}
-			if(tmpdirection[0]==3 && tmpdirection[1]==4)
-				intTmpReturn=5;
-			if(tmpdirection[0]==1 && tmpdirection[1]==4)
-				intTmpReturn=6;
-			if(tmpdirection[0]==1 && tmpdirection[1]==2)
-				intTmpReturn=7;
-			if(tmpdirection[0]==2 && tmpdirection[1]==3)
-				intTmpReturn=8;
 
-/*			for (unsigned int i=5;i<9;i++)
-			{
-				if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Solid )
-				{
-					tmpdirection=i;
-					count++;
-				}			}
-			switch(tmpdirection)
-			{
-				case 5:	
-					intTmpReturn=7;
-					break;	
-				case 6:	
-					intTmpReturn=8;
-					break;	
-				case 7:	
-					intTmpReturn=5;
-					break;	
-				case 8:	
-					intTmpReturn=6;
-					break;	
-				default:
-					std::cerr<<"Wrong convex corner normal detection. Detection of direction: "<<tmpdirection<<" x: "<<nodeIn.get_x()<<" y: "<<nodeIn.get_y()<<" node index: "<<nodeIn.Get_index()<<std::endl;
-					break;
-			}
-*/
-/*		}
-	}
-
-	return intTmpReturn;
-}
-*/
 int Block2D::Get_BcNormal(NodeWall2D & nodeIn)
 {
 	intTmpReturn=0;

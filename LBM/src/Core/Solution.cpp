@@ -69,3 +69,7 @@ void Solution2D::Set_breakpoint()
 	Writer->Set_breakpoint(Dic->Get_PtrExportVarBreakpoint(),Dic->Get_PtrExportVarBreakpointName(),Dic->Get_NbExportVarBreakpoint());
 }
 
+void Solution2D::Read_Variable(std::string variablename, std::string filename){
+//	double *d=Dic->Get_PtrVar(Dic->Get_Id_Var(variablename));
+	Writer->Read_data(Dic->Get_PtrVar(Dic->Get_Id_Var(variablename)),variablename,filename);
+}

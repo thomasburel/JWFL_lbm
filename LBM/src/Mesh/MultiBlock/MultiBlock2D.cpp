@@ -802,7 +802,7 @@ void MultiBlock2D::Get_Connect_Node(std::vector<int> & IdRNodeN_,std::vector<int
 		Block2D_.SetSolidBoundaries();
 //	 Block2D_.ModifyMeshByUser(*PtrParameters);
 	 MultiBlock2D::Correct_SolidGhost();
-	 Block2D_.RemoveSolidInCommunicator();
+//	 Block2D_.RemoveSolidInCommunicator();
 	 if(parallel->isMainProcessor())
 		 std::cout<<"******END GENERATING WALL AND CORNERS******"<<std::endl;
  }

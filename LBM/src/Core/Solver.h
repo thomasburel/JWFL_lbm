@@ -155,6 +155,8 @@ public:
 	virtual ~SolverSinglePhaseLowOrder2D();
 	virtual void get_time();
 	void Add_OneDistributionToDictionary();
+	void Updated_OneDistributionToDictionary();
+	void Write_Breakpoint(Parameters *Param);
 	void Set_Solver(MultiBlock* PtrMultiBlock_,ParallelManager* PtrParallel_,WriterManager* PtrWriter_, Parameters* PtrParameters_);
 	virtual void run()=0;
 	virtual void run(Parameters *UpdatedParam)=0;
@@ -186,6 +188,8 @@ public:
 	virtual ~SolverTwoPhasesLowOrder2D();
 	virtual void get_time();
 	void Add_TwoDistributionsToDictionary();
+	void Updated_TwoDistributionsToDictionary();
+	void Write_Breakpoint(Parameters *Param);
 	void Set_Solver(MultiBlock* PtrMultiBlock_,ParallelManager* PtrParallel_,WriterManager* PtrWriter_, Parameters* PtrParameters_);
 	virtual void run()=0;
 	virtual void run(Parameters *UpdatedParam)=0;

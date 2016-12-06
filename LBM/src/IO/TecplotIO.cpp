@@ -28,3 +28,6 @@ void TecplotIO::Set_solution(double **d_, std::string *str, int nbvar){
 void TecplotIO::Set_breakpoint(double **b_, std::string *str, int nbvar){
 
 }
+void TecplotIO::Read_data(double * &d_, std::string variablename, std::string filename){
+
+}

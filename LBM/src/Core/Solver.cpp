@@ -107,6 +107,13 @@ void SolverSinglePhaseLowOrder2D::Add_OneDistributionToDictionary(){
 		Dic->AddDistributionBreakpoint(sstm.str(),f->f[i]);
 	}
 }
+void SolverSinglePhaseLowOrder2D::Updated_OneDistributionToDictionary(){
+	//First distribution
+	for(int i=0;i<nbvelo;i++)
+	{
+		Dic->UpdatedDistributionBreakpoint(i,f->f[i]);
+	}
+}
 SolverTwoPhasesLowOrder2D::SolverTwoPhasesLowOrder2D() {
 	Solver::PtrParameters=0;
 
@@ -157,4 +164,27 @@ void SolverTwoPhasesLowOrder2D::Add_TwoDistributionsToDictionary(){
 		sstm<<"f[1]_"<<i;
 		Dic->AddDistributionBreakpoint(sstm.str(),f[1]->f[i]);
 	}
+}
+void SolverTwoPhasesLowOrder2D::Updated_TwoDistributionsToDictionary(){
+
+	//First distribution
+	for(int i=0;i<nbvelo;i++)
+	{
+		Dic->UpdatedDistributionBreakpoint(i,f[0]->f[i]);
+	}
+	//Second distribution
+	for(int i=0;i<nbvelo;i++)
+	{
+		Dic->UpdatedDistributionBreakpoint(i+nbvelo,f[1]->f[i]);
+	}
+}
+void SolverSinglePhaseLowOrder2D::Write_Breakpoint(Parameters *Param){
+	Updated_OneDistributionToDictionary();
+	Writer->Set_breakpoint(Dic->Get_PtrExportVarBreakpoint(),Dic->Get_PtrExportVarBreakpointName(),Dic->Get_NbExportVarBreakpoint());
+	Writer->Write_breakpoint(*Param);
+}
+void SolverTwoPhasesLowOrder2D::Write_Breakpoint(Parameters *Param){
+	Updated_TwoDistributionsToDictionary();
+	Writer->Set_breakpoint(Dic->Get_PtrExportVarBreakpoint(),Dic->Get_PtrExportVarBreakpointName(),Dic->Get_NbExportVarBreakpoint());
+	Writer->Write_breakpoint(*Param);
 }
