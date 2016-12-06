@@ -53,6 +53,7 @@ CGNS::~CGNS() {
 void CGNS::Set_solution(double **d_, std::string *str, int nbvar){
 	NbVariableOutput=nbvar;
 	d=new double* [NbVariableOutput];
+	Fs=new int [NbVariableOutput];
 	VariableOutput=new std::string [NbVariableOutput];
 	for (int i=0;i<NbVariableOutput;i++)
 	{
@@ -61,6 +62,128 @@ void CGNS::Set_solution(double **d_, std::string *str, int nbvar){
 	}
 
 }
+#pragma optimize("", off)
+void CGNS::Read_data(double * &d_, std::string variablename, std::string filename){
+
+	int Ftmp=0; int Btmp=0; int Ztmp=0;int Stmp=0; int Fstmp=0;
+	char basenametmp[50];
+	int cell_dimtmp;
+	int phys_dimtmp;
+	cgsize_t sizetmp;
+	char zonenametmp[50];
+	char solnametmp[50];
+	char fieldname[50];
+	GridLocation_t locationtmp;
+	DataType_t datatypetmp;
+
+	char *ary = new char[filename.size()+1];
+	std::strcpy ( ary, filename.c_str() );
+	char *ary2 = new char[variablename.size()+1];
+	std::strcpy ( ary2, variablename.c_str() );
+
+	//ary=filename.c_str();
+	int nbases=0;
+	int nzones=0;
+	int nsols=0;
+	int nfields=0;
+
+	if(d_!=0)
+	//	d_=new double[end_nodes-start_nodes+1];
+	{
+//open the cgns file in reading mode
+	if (cgp_open(ary, CG_MODE_READ, &Ftmp))
+		cgp_error_exit();
+
+//Find the base called "Base"
+	if (cg_nbases(Ftmp, &nbases))
+		cgp_error_exit();
+	if(nbases>0)
+	{
+		for(int i=1;i<nbases+1;i++)
+		{
+			if (cg_base_read(Ftmp, i, &basenametmp[0], &cell_dimtmp,&phys_dimtmp))
+				cgp_error_exit();
+			if(strcmp (basenametmp,"Base")==0)
+				Btmp=i;
+		}
+		if(Btmp>0)
+		{
+			std::cout<<"Base is: "<<Btmp<<std::endl;
+	//Get number of zones
+			if (cg_nzones(Ftmp, Btmp, &nzones))
+				cgp_error_exit();
+			if(nzones>0)
+			{
+		//Find the zone called "Zone"
+				for(int i=1;i<nzones+1;i++)
+				{
+					if (cg_zone_read(Ftmp, Btmp, i, &zonenametmp[0], &sizetmp))
+						cgp_error_exit();
+					if(strcmp (zonenametmp,"Zone")==0)
+						Ztmp=i;
+				}
+				if(Ztmp>0)
+				{
+					std::cout<<"Zone is: "<<Ztmp<<std::endl;
+		//Get number of solutions
+					if(cg_nsols(Ftmp, Btmp, Ztmp, &nsols))
+						cgp_error_exit();
+					if(nsols>0)
+					{
+						//ary=variablename.c_str();
+			//Find the variable in the solution list
+						for(int i=1;i<nsols+1;i++)
+						{
+							if (cg_sol_info(Ftmp, Btmp, Ztmp, i, &solnametmp[0], &locationtmp))
+								cg_error_exit();
+							if(strcmp ("Solution",solnametmp)==0)
+								Stmp=i;
+						}
+			//Read the data
+						if(Stmp>0)
+						{
+							std::cout<<"Solution is: "<<Stmp<<std::endl;
+							cg_nfields(Ftmp, Btmp, Ztmp, Stmp, &nfields);
+							if(nfields>0)
+							{
+								for(int i=1;i<nfields+1;i++)
+								{
+									if (cg_field_info(Ftmp, Btmp, Ztmp, Stmp, i, &datatypetmp, &fieldname[0]))
+										cg_error_exit();
+									if(strcmp (ary2,fieldname)==0)
+										Fstmp=i;
+								}
+								std::cout<<"Field is: "<<Fstmp<<std::endl;
+								if(Fstmp>0)
+								{
+									std::cout<<"Start node: "<<start_nodes<<" End node: "<<end_nodes<<std::endl;
+									if (cgp_field_read_data(Ftmp, Btmp, Ztmp, Stmp, Fstmp, &start_nodes, &end_nodes, d_))
+										cgp_error_exit();
+								}
+							}
+
+						}
+					}
+				}
+				else
+					std::cerr<<"No Zone found in the file"<<std::endl;
+			}
+		}
+		else
+			std::cerr<<"Base is unfound in the file"<<std::endl;
+	}
+	else
+		std::cerr<<"No Base found in the file"<<std::endl;
+
+    /* close the file and terminate MPI */
+    cgp_close(Ftmp);
+	}
+	else
+		std::cerr<<"Pointer not initialised before passing in the function Read_data"<<std::endl;
+
+	delete ary,ary2;
+}
+#pragma optimize("", on)
 void CGNS::Write_Output(int& Noutput) {
    /*  Tmp data   */
 
@@ -123,7 +246,7 @@ void CGNS::Write_Output(int& Noutput) {
            cgp_error_exit();
 
 
-      /* create a centered solution */
+      /* create a vertex solution */
       if (cg_sol_write(F, B, Z, "Solution", Vertex, &S))
           cgp_error_exit();
 
@@ -135,9 +258,9 @@ void CGNS::Write_Output(int& Noutput) {
     	  {
 			  char buffer[50];
 			  std::strcpy(buffer,VariableOutput[i].c_str());
-			  if (cgp_field_write(F, B, Z, S, RealDouble, buffer , &Fs))
+			  if (cgp_field_write(F, B, Z, S, RealDouble, buffer , &Fs[i]))
 				  cgp_error_exit();
-			  if (cgp_field_write_data(F, B, Z, S, Fs, &start_nodes, &end_nodes, d[i]))
+			  if (cgp_field_write_data(F, B, Z, S, Fs[i], &start_nodes, &end_nodes, d[i]))
 				  cgp_error_exit();
     	  }
       }
@@ -213,9 +336,9 @@ void CGNS::Write_breakpoint(Parameters &Parameters){
     	  {
 			  char buffer[50];
 			  std::strcpy(buffer,VariableBreakpoint[i].c_str());
-			  if (cgp_field_write(F, B, Z, S, RealDouble, buffer , &Fs))
+			  if (cgp_field_write(F, B, Z, S, RealDouble, buffer , &Fs[i]))
 				  cgp_error_exit();
-			  if (cgp_field_write_data(F, B, Z, S, Fs, &start_nodes, &end_nodes, b[i]))
+			  if (cgp_field_write_data(F, B, Z, S, Fs[i], &start_nodes, &end_nodes, b[i]))
 				  cgp_error_exit();
     	  }
       }

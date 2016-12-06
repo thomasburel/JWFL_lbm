@@ -116,6 +116,12 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 			solid=image[0][(int)Node.get_y()][(int)Node.get_x()];
 		else
 			solid=false;
+	//if((Node.get_x()<10 || Node.get_x()>90) &&(Node.get_y()<10 || Node.get_y()>40 ))
+/*	if((Node.get_y()<10 || Node.get_y()>40 ))
+		solid=true;
+	else
+		solid=false;
+		*/
 }
 void UserMesh::SetSymmetryType(SymmetryType &Type, double x, double y)
 {

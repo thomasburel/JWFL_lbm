@@ -44,8 +44,12 @@ Dictionary::~Dictionary() {
 
 void Dictionary::AddDistributionBreakpoint(std::string VarName,double* & Var_x)
 {
-	ExportVarBreakpoint.push_back(Var_x);
-	StringExportVarBreakpoint.push_back(VarName);
+	ExportVarBreakpointDistriTmp.push_back(Var_x);
+	StringExportVarBreakpointDistriTmp.push_back(VarName);
+}
+void Dictionary::UpdatedDistributionBreakpoint(int idx,double* & Var_x)
+{
+	ExportVarBreakpointDistriTmp[idx]=Var_x;
 }
 void Dictionary::AddSync(std::string VarName,double* & Var_x){
 	SyncVar.push_back(Var_x);
@@ -70,8 +74,8 @@ void Dictionary::AddVar(dataType type,std::string VarName,bool BoolExportVar, bo
 
 		if(BoolExportBreakpoint)
 		{
-			ExportVarBreakpoint.push_back(Var_x);
-			StringExportVarBreakpoint.push_back(VarName);
+			ExportVarBreakpointTmp.push_back(Var_x);
+			StringExportVarBreakpointTmp.push_back(VarName);
 		}
 
 		if(BoolSynchronise)
@@ -109,11 +113,11 @@ void Dictionary::AddVar(dataType type,std::string VarName,bool BoolExportVar, bo
 
 		if(BoolExportBreakpoint)
 		{
-			ExportVarBreakpoint.push_back(Var_x);
-			ExportVarBreakpoint.push_back(Var_y);
+			ExportVarBreakpointTmp.push_back(Var_x);
+			ExportVarBreakpointTmp.push_back(Var_y);
 
-			StringExportVarBreakpoint.push_back(VarName+"X");
-			StringExportVarBreakpoint.push_back(VarName+"Y");
+			StringExportVarBreakpointTmp.push_back(VarName+"X");
+			StringExportVarBreakpointTmp.push_back(VarName+"Y");
 		}
 
 		if(BoolSynchronise)
@@ -158,13 +162,13 @@ void Dictionary::AddVar(dataType type,std::string VarName,bool BoolExportVar, bo
 
 		if(BoolExportBreakpoint)
 		{
-			ExportVarBreakpoint.push_back(Var_x);
-			ExportVarBreakpoint.push_back(Var_y);
-			ExportVarBreakpoint.push_back(Var_z);
+			ExportVarBreakpointTmp.push_back(Var_x);
+			ExportVarBreakpointTmp.push_back(Var_y);
+			ExportVarBreakpointTmp.push_back(Var_z);
 
-			StringExportVarBreakpoint.push_back(VarName+"X");
-			StringExportVarBreakpoint.push_back(VarName+"Y");
-			StringExportVarBreakpoint.push_back(VarName+"Z");
+			StringExportVarBreakpointTmp.push_back(VarName+"X");
+			StringExportVarBreakpointTmp.push_back(VarName+"Y");
+			StringExportVarBreakpointTmp.push_back(VarName+"Z");
 		}
 
 		if(BoolSynchronise)
@@ -201,8 +205,19 @@ std::string* Dictionary::Get_PtrExportVarName()
 		PtrStringExportVar[i]=StringExportVar[i];
 	return PtrStringExportVar;
 }
+int Dictionary::Get_NbExportVarBreakpoint()
+{
+	ExportVarBreakpoint.clear();
+	ExportVarBreakpoint.insert(ExportVarBreakpoint.end(),ExportVarBreakpointTmp.begin(),ExportVarBreakpointTmp.end());
+	ExportVarBreakpoint.insert(ExportVarBreakpoint.end(),ExportVarBreakpointDistriTmp.begin(),ExportVarBreakpointDistriTmp.end());
+	return ExportVarBreakpoint.size();
+}
+
 double** Dictionary::Get_PtrExportVarBreakpoint()
 {
+	ExportVarBreakpoint.clear();
+	ExportVarBreakpoint.insert(ExportVarBreakpoint.end(),ExportVarBreakpointTmp.begin(),ExportVarBreakpointTmp.end());
+	ExportVarBreakpoint.insert(ExportVarBreakpoint.end(),ExportVarBreakpointDistriTmp.begin(),ExportVarBreakpointDistriTmp.end());
 	if(PtrExportVarBreakpoint!=0)
 		delete PtrExportVarBreakpoint;
 	PtrExportVarBreakpoint=new double*[Get_NbExportVarBreakpoint()];
@@ -212,6 +227,9 @@ double** Dictionary::Get_PtrExportVarBreakpoint()
 }
 std::string* Dictionary::Get_PtrExportVarBreakpointName()
 {
+	StringExportVarBreakpoint.clear();
+	StringExportVarBreakpoint.insert(StringExportVarBreakpoint.end(),StringExportVarBreakpointTmp.begin(),StringExportVarBreakpointTmp.end());
+	StringExportVarBreakpoint.insert(StringExportVarBreakpoint.end(),StringExportVarBreakpointDistriTmp.begin(),StringExportVarBreakpointDistriTmp.end());
 	if(PtrStringExportVarBreakpoint!=0)
 		delete [] PtrStringExportVarBreakpoint;
 	PtrStringExportVarBreakpoint=new std::string[Get_NbExportVarBreakpoint()];

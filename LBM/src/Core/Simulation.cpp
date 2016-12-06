@@ -40,9 +40,17 @@ void Simulation::InitSimu(Parameters &Parameters_, bool create_mesh)
 
 
 Simulation::~Simulation() {
-	Simulation::FinalizeSimu();
-	delete MultiBlock_,SolverD2Q9,SolverD2Q9TwoPhases,Solver_;
+/*	Simulation::FinalizeSimu();
+	delete MultiBlock_;
+	//delete Writer;
+	delete SolverD2Q9;
+	delete SolverD2Q9TwoPhases;
+	delete Solver_;*/
 }
+/*
+void Simulation::Test_ReadData(double * &d_, std::string variablename, std::string filename){
+	Writer->Read_data(d_,variablename,filename);
+}*/
 double Simulation::get_time() {
 		return parallel->getTime();
 }

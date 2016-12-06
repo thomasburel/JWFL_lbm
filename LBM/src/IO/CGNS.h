@@ -25,6 +25,7 @@ public:
 	CGNS(SolverEnum::dimension dimension_,std::string outputfilename_,int tot_nodes_, int tot_elems_, int start_nodes_, int end_nodes_, int start_elems_, int end_elems_, const double *x_, const double *y_, const double *z_,int *e_);
 	virtual ~CGNS();
 	virtual CGNS& Get_class(){return *this;};
+	virtual void Read_data(double * &d_, std::string variablename, std::string filename);
 	virtual void Write_Output(int& Nstep);
 	virtual void Write_breakpoint(Parameters &Parameters);
 	virtual void Set_solution(double **d_, std::string *str, int nbvar);
@@ -32,7 +33,8 @@ public:
 	void Write_nodeproperties(Parameters &Parameters);///To keep the connectivity, the type of node with their specific property...
 	void Write_ParametersProperties(Parameters &Parameters);
 private:
-    int F, B, Z, E, S, Fs, A, Cx, Cy, Cz;
+    int F, B, Z, E, S, A, Cx, Cy, Cz;
+    int* Fs;
     const double* x, *y, *z;
     double  **d,**b;
     cgsize_t sizes[3], *e, start_nodes, end_nodes, start_elems, end_elems, ncells;
@@ -44,7 +46,7 @@ private:
     void serialize(Archive &ar, const unsigned int version)
     {
     	ar & boost::serialization::base_object<WriterManager>(*this);
-       ar & F & B & Z & E & S & Fs & Cx & Cy & Cz ;
+       ar & F & B & Z & E & S & Cx & Cy & Cz ;
    //    ar & x & y & z;
 
       ar & sizes & start_nodes & end_nodes & start_elems & end_elems & ncells;

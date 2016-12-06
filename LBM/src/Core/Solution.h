@@ -50,6 +50,9 @@ public:
 protected:
 	void Set_output();
 	void Set_breakpoint();
+	//Read a variable from file
+	void Read_Variable(std::string variablename, std::string filename);
+
 
 protected:
 //Mesh variables

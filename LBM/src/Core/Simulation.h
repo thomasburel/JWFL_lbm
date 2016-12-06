@@ -53,6 +53,8 @@ public:
 
 	void Save_Simulation();
 
+//	void Test_ReadData(double * &d_, std::string variablename, std::string filename);
+
 	void barrier();
 private:
 	void SelectSolver();
