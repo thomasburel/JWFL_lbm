@@ -25,6 +25,7 @@ public:
 	void UpdateFileNames(std::string NewFileName);
 //	virtual CGNS& Get_class(){return *this;}=0;
 	virtual ~WriterManager();
+	virtual void Read_data(double * &d_, std::string variablename, std::string filename)=0;
 	virtual void Write_Output(int& Nstep)=0;
 	virtual void Write_breakpoint(Parameters &Parameters)=0;
 	virtual void Set_solution(double **d_, std::string *str, int nbvar)=0;

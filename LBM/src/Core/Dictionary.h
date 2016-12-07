@@ -20,6 +20,7 @@ public:
 	virtual ~Dictionary();
 
 	void AddDistributionBreakpoint(std::string VarName,double* & Var_x);
+	void UpdatedDistributionBreakpoint(int idx,double* & Var_x);
 	void AddSync(std::string VarName,double* & Var_x);
 
 	void AddVar(dataType type,std::string VarName,bool ExportVar, bool ExportBreakpoint, bool Synchronise, double* & Var_x);
@@ -32,11 +33,9 @@ public:
 	double** Get_PtrExportVar();//{return PtrExportVar;};
 	int Get_NbExportVar(){return ExportVar.size();};
 
-	std::vector<std::string> Get_ExportVarBreakpointName(){return StringExportVarBreakpoint;};
 	std::string *Get_PtrExportVarBreakpointName();
-	std::vector<double*> Get_ExportVarBreakpoint(){return ExportVarBreakpoint;};
 	double** Get_PtrExportVarBreakpoint();
-	int Get_NbExportVarBreakpoint(){return ExportVarBreakpoint.size();};
+	int Get_NbExportVarBreakpoint();
 
 	std::vector<double*> Get_SyncVar(){return SyncVar;};
 	int Get_NbSyncVar(){return SyncVar.size();};
@@ -44,12 +43,14 @@ public:
 	/// Get the ID of the variable from its name. It is a slow access.
 	int Get_Id_Var(std::string VarName);
 	/// Get the pointer of the variable from its Id. It is a quick access.
-	double* Get_PtrVar(int Id_Var){return Var[Id_Var];};
+	double* &Get_PtrVar(int Id_Var){return Var[Id_Var];};
 	/// Get the pointer of the variable from its name. It is a slow access.
 	void Get_PtrVar(std::string VarName, double* & Var_out){Var_out=Var[Get_Id_Var(VarName)];};
 
 	/// Get number of nodes per variable
 	int Get_NbNodes(){return numberNodes;};
+
+
 private:
 	int dimension;
 	int numberNodes;//with ghost
@@ -67,8 +68,12 @@ private:
 
 //Save breakpoint variables (array of pointers)
 	std::vector<std::string> StringExportVarBreakpoint;
+	std::vector<std::string> StringExportVarBreakpointTmp;
+	std::vector<std::string> StringExportVarBreakpointDistriTmp;
 	std::string* PtrStringExportVarBreakpoint;
 	std::vector<double*> ExportVarBreakpoint;
+	std::vector<double*> ExportVarBreakpointTmp;
+	std::vector<double*> ExportVarBreakpointDistriTmp;
 	double** PtrExportVarBreakpoint;
 
 

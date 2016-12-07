@@ -219,6 +219,14 @@ void D2Q9::init(InitLBM& ini){
 		U[0][NodeArrays->NodeSolid[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSolid[j].Get_index()]=U_[1];
 	}
+
+	if(PtrParameters->IsInitFromFile())
+	{
+		for(int i=0;i<PtrParameters->Get_NumberVariableToInit();i++)
+		{
+			Read_Variable(PtrParameters->Get_VariableNameToInit(i),PtrParameters->Get_FileNameToInit(i));
+		}
+	}
 	for (int i=0;i<nbvelo;i++)
 	{
 		for (int j=0;j<nbnode;j++)
@@ -263,7 +271,7 @@ void D2Q9::run(){
 	UpdateMacroVariables();
 
 
-
+	//Write_Breakpoint(PtrParameters);
 	Writer->Write_Output(it);
 	it++;
  /*	char buffer[50]; // make sure it's big enough
@@ -344,7 +352,8 @@ void D2Q9::run(){
 			it++;
 		}
 	}
-	Writer->Write_breakpoint(*PtrParameters);
+	Write_Breakpoint(PtrParameters);
+	//Writer->Write_breakpoint(*PtrParameters);
 }
 void D2Q9::run(Parameters* UpdatedParam){
 
@@ -513,6 +522,10 @@ void D2Q9::UpdateMacroVariables(){
 		{
 			MacroVariables(NodeArrays->NodeWall[j].Get_index());
 		}
+		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		{
+			MacroVariables(NodeArrays->NodeSpecialWall[j].Get_index());
+		}
 		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
 			MacroVariables(NodeArrays->NodeSymmetry[j].Get_index());
@@ -521,6 +534,7 @@ void D2Q9::UpdateMacroVariables(){
 		{
 			MacroVariables(NodeArrays->NodePeriodic[j].Get_index());
 		}
+
 	}
 }
 void D2Q9::MacroVariables(int& idx){
@@ -663,6 +677,8 @@ void D2Q9::ApplyBc(){
 	}
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
+		if(NodeArrays->NodeSpecialWall[j].get_x()==9&&NodeArrays->NodeSpecialWall[j].get_y()==50)
+			std::cout<<"check"<<std::endl;
 		//ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f,NodeArrays->TypeOfNode);
 		ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
 		//ExtrapolationCornerConcaveToSolid(Rhob,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());

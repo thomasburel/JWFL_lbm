@@ -31,6 +31,7 @@ Parameters::Parameters()
 	GlobalBcType[2]=Wall;
 	GlobalBcType[3]=Velocity;
 	restart=false;
+	InitFromFile=false;
 	Format=CGNSFormat;
 	OutputFileName="output";
 	Rho_1=1;
@@ -270,4 +271,37 @@ void PhysicalParameters::Set_deltax(double dx_)
 }
 double PhysicalParameters::Get_deltax() const {
 	return dx;
+}
+void Parameters::Add_VariableToInit(std::string filename,SolverEnum::variablesSolver variablesSolvertype){
+	switch(variablesSolvertype)
+	{
+	case SolverEnum::Density:
+		InitFromFile=true;
+		NameInitFromFile.push_back(filename);
+		VariableInitFromFile.push_back("Density");
+		NbVariablesInitFromFile=VariableInitFromFile.size();
+		break;
+	case  SolverEnum::VelocityX:
+		InitFromFile=true;
+		NameInitFromFile.push_back(filename);
+		VariableInitFromFile.push_back("VelocityX");
+		NbVariablesInitFromFile=VariableInitFromFile.size();
+		break;
+	case  SolverEnum::VelocityY:
+		InitFromFile=true;
+		NameInitFromFile.push_back(filename);
+		VariableInitFromFile.push_back("VelocityY");
+		NbVariablesInitFromFile=VariableInitFromFile.size();
+		break;
+	case  SolverEnum::VelocityZ:
+		if(dimension_==SolverEnum::D3){
+			InitFromFile=true;
+			NameInitFromFile.push_back(filename);
+			VariableInitFromFile.push_back("VelocityZ");
+			NbVariablesInitFromFile=VariableInitFromFile.size();
+		}
+		break;
+	default:
+		std::cout<<"Variable to Init is not found"<<std::endl;
+	}
 }

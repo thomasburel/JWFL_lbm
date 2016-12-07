@@ -24,7 +24,10 @@
 #include <boost/archive/tmpdir.hpp>
 #include <boost/archive/xml_oarchive.hpp>
 #include <boost/archive/xml_iarchive.hpp>
-
+// include this header to serialize vectors
+#include <boost/serialization/vector.hpp>
+// include this header to serialize string
+#include <boost/serialization/string.hpp>
 
 /*
  *
@@ -44,7 +47,7 @@ namespace SolverEnum
 	enum dimension {D2,D3};
 	enum schemetype {Q9,Q16};
 	enum modeltype {SinglePhase, ColourFluid};
-	enum variableErrortype{Density,VelocityX,VelocityY,RhoN};
+	enum variablesSolver{Density,VelocityX,VelocityY,VelocityZ,RhoN};
 }
 //model enumeration
 enum FluidType{Newtonian};
@@ -331,8 +334,8 @@ public:
 	UserForceType Get_UserForceType() const{return UserForce;};
 	void Set_ErrorMax(double ErrorMax_){ErrorMax=ErrorMax_;};
 	double Get_ErrorMax(){return ErrorMax;};
-	void Set_ErrorVariable(SolverEnum::variableErrortype variableError_){variableError=variableError_;};
-	SolverEnum::variableErrortype Get_ErrorVariable(){return variableError;};
+	void Set_ErrorVariable(SolverEnum::variablesSolver variableError_){variableError=variableError_;};
+	SolverEnum::variablesSolver Get_ErrorVariable(){return variableError;};
 	void Set_GradientType(GradientType GradientType_){Gradient=GradientType_;};
 	GradientType Get_GradientType() const{return Gradient;};
 	void Set_ExtrapolationType(ExtrapolationType ExtrapolationType_){Extrapol=ExtrapolationType_;};
@@ -355,7 +358,7 @@ public:
 protected:
 	SolverEnum::schemetype scheme;
 	SolverEnum::modeltype model;
-	SolverEnum::variableErrortype variableError;
+	SolverEnum::variablesSolver variableError;
 	FluidType fluid;
 	GradientType Gradient;
 	ExtrapolationType Extrapol;
@@ -428,12 +431,26 @@ private:
 	{
 		ar & BOOST_SERIALIZATION_NVP(restart);
 		ar & BOOST_SERIALIZATION_NVP(RestartFile);
+		ar & BOOST_SERIALIZATION_NVP(InitFromFile);
+		ar & BOOST_SERIALIZATION_NVP(NbVariablesInitFromFile);
+		ar & BOOST_SERIALIZATION_NVP(NameInitFromFile);
+		ar & BOOST_SERIALIZATION_NVP(VariableInitFromFile);
 	}
 public:
 	void set_RestartParameters();
+	bool IsInitFromFile() const {return InitFromFile;};
+	int Get_NumberVariableToInit() const {return NbVariablesInitFromFile;};
+	std::string Get_FileNameToInit(int IdVariable) const {return NameInitFromFile[IdVariable];};
+	std::string Get_VariableNameToInit(int IdVariable) const {return VariableInitFromFile[IdVariable];};
+
+
 protected:
 	bool restart;
 	std::string RestartFile;
+	bool InitFromFile;
+	int NbVariablesInitFromFile;
+	std::vector<std::string> NameInitFromFile;
+	std::vector<std::string> VariableInitFromFile;
 };
 class Parameters :
 		public UserParameters,
@@ -469,6 +486,7 @@ public:
 
 	void Change_Dimension(SolverEnum::dimension dim_);
 	void Set_BcType(NodeType Bc0,NodeType Bc1,NodeType Bc2,NodeType Bc3,NodeType Bc4=Wall,NodeType Bc5=Wall);
+	void Add_VariableToInit(std::string filename,SolverEnum::variablesSolver variablesSolvertype);
 
 	void Set_Arguments(int *argc_,char ***argv_,bool verbous=false);
 
