@@ -67,6 +67,7 @@ public:
 	void SetSolidBoundaries();
 	void RemoveUnphysicalSolid(int &nbTotalSolidRemoved,int &nbTotalSolidadded);
 	void RemoveSolidInCommunicator();
+	void RemoveSolid();
 private:
 	void NewCell(NodeType Nodes[4], bool OldNodes[4],bool GhostNodes[4], int Node2D_SubDomain[4],int Node2D_GlobalDomain[4],int x_[4],int y_[4], int FaceConnect[4], int CellConnect[4]);
 	void NewGhostCell(NodeType Nodes[4], bool OldNodes[4], int Node2D_SubDomain[4],int x_[4],int y_[4], int FaceConnect[4], int CellConnect[4]);

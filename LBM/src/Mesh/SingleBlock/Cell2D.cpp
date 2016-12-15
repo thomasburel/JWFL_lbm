@@ -90,7 +90,7 @@ void Cell2D::Set_Face(int FaceNumber, int& node1, int& node2)
 	        break;
 	}
 }
-unsigned int* Cell2D::Get_Face(int FaceNumber)const
+short int* Cell2D::Get_Face(int FaceNumber)const
 {
 	unsigned int* Face_=new unsigned int[2];
 	switch(FaceNumber)
@@ -122,13 +122,13 @@ void Cell2D::Set_Connect(int FaceNumber, int face_, int cell_)
 	Connect[FaceNumber][0]=face_;
 	Connect[FaceNumber][1]=cell_;
 }
-unsigned int* Cell2D::Get_Connect(int FaceNumber)const
+short int* Cell2D::Get_Connect(int FaceNumber)const
 {
 	Connect_[0]=Connect[FaceNumber][0];
 	Connect_[1]=Connect[FaceNumber][1];
 	return Connect_;
 }
-unsigned int Cell2D::Get_NodeNumber(int NodeNumber_) const
+short int Cell2D::Get_NodeNumber(int NodeNumber_) const
 {
 	return NodeNumber[NodeNumber_];
 }

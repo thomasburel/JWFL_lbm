@@ -3919,3 +3919,131 @@ void Block2D::Mark1stLayerSolid(){
 	NodeArrays.Solid1stLayer.erase( std::unique( NodeArrays.Solid1stLayer.begin(), NodeArrays.Solid1stLayer.end() ), NodeArrays.Solid1stLayer.end() );
 
 }
+void  Block2D::RemoveSolid(){
+	std::vector<Cell2D*> CellArraytmp;
+	std::vector<Node2D*> NodeArraytmp,NodeFirstWallLayerArraytmp;
+	std::map<int,int> MapCellArraytmp,MapNodeArraytmp,MapFirstWallLayerArraytmp;
+	std::vector<int> IdCellSolid,IdCellGhost,IdCellFirstWallLayer,IdCellFirstGhostLayer;
+	int countSolid,countGhost;
+	for(int i=0;i<CellArray.size();i++)
+	{
+		countSolid=0;countGhost=0;
+		for(int j=0;j<4;j++)
+		{
+			if(Node[CellArray[i]->Get_NodeNumber(j)]->get_NodeType()==Solid)
+				countSolid++;
+			if(Node[CellArray[i]->Get_NodeNumber(j)]->get_NodeType()==Ghost)
+				countGhost++;
+		}
+		if(countSolid>0)
+			if(countSolid>=4)
+			{
+				IdCellSolid.push_back(i);
+				//Remove connection between the Solid cell and others cell (can be also a solid cell)
+				for(int j=0;j<4;j++)
+				{
+					//Remove the connection in the solid cell
+					CellArray[i]->Set_Connect(j,j,i);
+					//Remove the connection with the connected cells
+					CellArray[CellArray[i]->Get_Connect(j)[1]]->Set_Connect(CellArray[i]->Get_Connect(j)[0],CellArray[i]->Get_Connect(j)[0],CellArray[i]->Get_Connect(j)[1]);
+
+				}
+			}
+			else
+				IdCellFirstWallLayer.push_back(i);
+		if(countGhost>0)
+			if(countGhost>=4)
+			{
+				IdCellGhost.push_back(i);
+				for(int j=0;j<4;j++)
+				{
+					//Remove the connection in the solid cell
+					CellArray[i]->Set_Connect(j,j,i);
+					//Remove the connection with the connected cells
+					CellArray[CellArray[i]->Get_Connect(j)[1]]->Set_Connect(CellArray[i]->Get_Connect(j)[0],CellArray[i]->Get_Connect(j)[0],CellArray[i]->Get_Connect(j)[1]);
+				}
+			}
+			else
+				IdCellFirstGhostLayer.push_back(i);
+		//Save computational cells
+		if(countSolid==0&&countGhost==0)
+		{
+			MapCellArraytmp[CellArraytmp.size()]=i;
+			CellArraytmp.push_back(CellArray[i]);
+		}
+	}
+	int nbSolidToRemove=0; int nbGhostToRemove=0; int notSolid=0; int nbGhostConnect=0;
+	//Removing Solid nodes in the node array
+	for(int i=0;i<Node.size();i++)
+	{
+		if(Node[i]->get_NodeType()==Ghost)
+		{
+			nbGhostConnect=0;
+			for(unsigned int j=1;j<9;j++)
+			{
+				//Check if ghost node is used or not
+				if(Node[Connect_lowOrder(i,j)]->get_NodeType()==Ghost || Node[Connect_lowOrder(i,j)]->get_NodeType()==Solid)
+					nbGhostConnect++;
+			}
+			//Keep ghost
+			if(nbGhostConnect!=8)
+			{
+				//map the new node array to old node array to keep node informations
+				MapNodeArraytmp[i]=NodeArraytmp.size();
+				//Update the index by removing solid
+				Node[i]->Set_Index(Node[i]->Get_index()-nbSolidToRemove-nbGhostToRemove);
+				//Store the nodes
+				NodeArraytmp.push_back(Node[i]);
+			}//Remove ghost
+			else
+			{
+				nbGhostToRemove++;
+			}
+		}
+		else if(Node[i]->get_NodeType()!=Solid)
+		{
+			//map the new node array to old node array to keep node informations
+			MapNodeArraytmp[i]=NodeArraytmp.size();
+			//Update the index by removing solid
+			Node[i]->Set_Index(Node[i]->Get_index()-nbSolidToRemove);
+			//Store the nodes
+			NodeArraytmp.push_back(Node[i]);
+		}
+		else
+		{
+			//Count number of solid to remove it
+			nbSolidToRemove++;
+			//Keep the first layer
+			notSolid=0;
+			for(unsigned int j=1;j<9;j++)
+			{
+				//Get first layer to do not remove it
+				if(Node[Connect_lowOrder(i,j)]->get_NodeType()==Wall && Node[Connect_lowOrder(i,j)]->get_NodeType()==Corner)
+					notSolid++;
+			}
+			if(notSolid>0)
+			{
+				//map the new node array to old node array to keep node informations
+				MapNodeArraytmp[i]=NodeArraytmp.size();
+				//Update the index by removing solid
+				Node[i]->Set_Index(Node[i]->Get_index()-nbSolidToRemove);
+				//Store the nodes
+				NodeArraytmp.push_back(Node[i]);
+			}
+
+
+		}
+
+	}
+	//Correct numbering for the connections between cells
+	for(int i=0;i<CellArraytmp.size();i++)
+	{
+		for(int j=0;j<4;j++)
+		{
+			//Set the connection for the j face to cell
+			CellArraytmp[i]->Set_Connect(j,CellArraytmp[i]->Get_Connect(j)[0],MapCellArraytmp[i]);
+			//Adjust the numbering
+			CellArraytmp[i]->Set_NodeNumber(j,MapNodeArraytmp[CellArraytmp[i]->Get_NodeNumber(j)]);
+		}
+	}
+}
