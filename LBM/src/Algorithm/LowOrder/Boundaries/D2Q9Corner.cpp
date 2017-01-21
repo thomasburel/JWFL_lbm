@@ -233,48 +233,34 @@ void D2Q9Corner::FixRho(NodeCorner2D& Node, double *Rho){
 //	return Rho[Node.Get_index()];
 }
 //Get the density by using the two direct neighbours
-//double D2Q9Corner::ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho){
 void D2Q9Corner::ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho){
-//	double SumWeightCornerConvex=1.0/(4.0+3.0*std::sqrt(0.5));
-//	double Invsqrt2=std::sqrt(0.5);
 	switch(Node.Get_BcNormal())
 	{
 	case 5:
 		if(Node.Get_CornerType()==Concave)
 			Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
-			//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]])*0.5;
 		else
 			Extrapol.ExtrapolationOnCornerConvex(Rho,Node.Get_connect(),Node.Get_BcNormal());
-//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[5]]+Rho[Node.Get_connect()[6]]+Rho[Node.Get_connect()[8]]))*SumWeightCornerConvex;
 		break;
 	case 6:
 		if(Node.Get_CornerType()==Concave)
 			Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
-//			doubleTmpReturn=(Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]])*0.5;
 		else
 			Extrapol.ExtrapolationOnCornerConvex(Rho,Node.Get_connect(),Node.Get_BcNormal());
-//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[5]]+Rho[Node.Get_connect()[6]]+Rho[Node.Get_connect()[7]]))*SumWeightCornerConvex;
 		break;
 	case 7:
 		if(Node.Get_CornerType()==Concave)
 			Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
-//			doubleTmpReturn=(Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]])*0.5;
 		else
 			Extrapol.ExtrapolationOnCornerConvex(Rho,Node.Get_connect(),Node.Get_BcNormal());
-//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[6]]+Rho[Node.Get_connect()[7]]+Rho[Node.Get_connect()[8]]))*SumWeightCornerConvex;
 		break;
 	case 8:
 		if(Node.Get_CornerType()==Concave)
 			Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
-//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[4]])*0.5;
 		else
 			Extrapol.ExtrapolationOnCornerConvex(Rho,Node.Get_connect(),Node.Get_BcNormal());
-//			doubleTmpReturn=(Rho[Node.Get_connect()[1]]+Rho[Node.Get_connect()[2]]+Rho[Node.Get_connect()[3]]+Rho[Node.Get_connect()[4]]+Invsqrt2*(Rho[Node.Get_connect()[5]]+Rho[Node.Get_connect()[7]]+Rho[Node.Get_connect()[8]]))*SumWeightCornerConvex;
-
 		break;
 	}
-
-//	return doubleTmpReturn;
 }
 void D2Q9Corner::ApplyDiffuseWall(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V){
 	//double tmp=0;

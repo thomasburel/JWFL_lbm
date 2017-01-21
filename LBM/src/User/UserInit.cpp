@@ -33,11 +33,11 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 	U[0]=0.0;//Umax*pos[1]/H;
 	U[1]=0.0;
 	//Rho=Pmin;
-	Rho=(Pmax-pos[0]*(Pmax-Pmin)/L);
+	Rho=1.0;//(Pmax-pos[0]*(Pmax-Pmin)/L);
 	alpha=1.0;
 
-	double R=40;//Diameter/2.0;
-	if(pow(pos[0]-50,2.0)+pow(pos[1]-9,2.0)<=R*R+1e-8)
+	double R=20;//Diameter/2.0;
+	if(pow(pos[0]-50,2.0)+pow(pos[1],2.0)<=R*R+1e-8)
 	{
 		alpha=0.0;
 	}
@@ -100,11 +100,11 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 	U[0]=0.0;//Umax*pos[1]/H;
 		U[1]=0.0;
 		//Rho=Pmin;
-		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+		Rho=1.0;//Pmax-pos[0]*(Pmax-Pmin)/L;
 		alpha=1.0;
 
-		double R=40;//Diameter/2.0;
-		if(pow(pos[0]-50,2.0)+pow(pos[1]-9,2.0)<=R*R+1e-8)
+		double R=20;//Diameter/2.0;
+		if(pow(pos[0]-50,2.0)+pow(pos[1],2.0)<=R*R+1e-8)
 		{
 			alpha=0.0;
 		}

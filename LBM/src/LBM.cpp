@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
 stringstream FileExportStream;
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 //Domain size
-	double L=1289;
-	double H=370;
+	double L=100;
+	double H=100;
 
 	double Diameter=H;
 	double Ca=0;
@@ -53,7 +53,7 @@ stringstream FileExportStream;
 	double tau1=(6.0*nu_1+1.0)*0.5;
 	double tau2=(6.0*nu_2+1.0)*0.5;
 	double La=0;
-	double sigma=0.0001;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
+	double sigma=0.001;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
 
 
 	double Mach =U2_ref*std::sqrt(3);
@@ -83,9 +83,14 @@ stringstream FileExportStream;
 
 // Set User Parameters
 	//U2_ref=0.01;Pmax=1;Pmin=1;
+//Contact angle parameters
 	double contactangle=90*pi/180.0;
-	Param.Set_ContactAngleType(FixTeta);//NoTeta, FixTeta or NonCstTeta
-	if(Param.Get_ContactAngleType()==NoTeta)
+	Param.Set_ContactAngleType(ContactAngleEnum::FixTeta);//NoTeta, FixTeta or NonCstTeta
+	Param.Set_ContactAngleModel(ContactAngleEnum::Standard);//Standard or Interpol
+	Param.Set_SwitchSelectTeta(ContactAngleEnum::Binary);//Binary or Linear
+	Param.Set_NormalExtrapolType(ContactAngleEnum::WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,or WeightDistanceExtrapol
+	Param.Set_NormalInterpolType(ContactAngleEnum::LinearLeastSquareInterpol);//NoInterpol,LinearInterpol,LinearLeastSquareInterpol
+	if(Param.Get_ContactAngleType()==ContactAngleEnum::NoTeta)
 		contactangle=pi/2.0;
 	Param.Set_ContactAngle(contactangle);
 
@@ -101,7 +106,7 @@ stringstream FileExportStream;
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity, Periodic and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
-	Param.Set_BcType(Symmetry,Pressure,Symmetry,Pressure);
+	Param.Set_BcType(Wall,Wall,Wall,Wall);
 
 
 /// Set Pressure Type
@@ -115,13 +120,13 @@ stringstream FileExportStream;
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(200000);
+	Param.Set_NbStep(100000);
 /// Interval for output
 	Param.Set_OutPutNSteps(1000);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(100);
 	Param.Set_ErrorMax(1e-11);
-	Param.Set_ErrorVariable(SolverEnum::VelocityX);
+	Param.Set_ErrorVariable(SolverEnum::RhoN);
 
 ///Selection of variables to export
 	Param.Set_VariablesOutput(true,true);// export Rho,U
@@ -131,11 +136,11 @@ stringstream FileExportStream;
 			<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
 			<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
 	FileExportStream.str("");
-	FileExportStream<<"Debug_poiseuille_straight_Channel_TwoPhase";
+	FileExportStream<<"Debug_shrink_droplets";
 	Param.Set_OutputFileName(FileExportStream.str());
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(SolverEnum::SinglePhase);
+	Param.Set_Model(SolverEnum::ColourFluid);
 	Param.Set_ViscosityType(ConstViscosity);//ConstViscosity,HarmonicViscosity
 
 	//Gradient definition
@@ -161,9 +166,9 @@ stringstream FileExportStream;
 	Param.Set_A1(0.00001);
 	Param.Set_A2(Param.Get_A1());
 	Param.Set_Beta(0.7);// Between 0 and 1
-	Param.Set_ColourGradType(DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
-	Param.Set_RecolouringType(LatvaKokkoRothman);
-	Param.Set_ColourOperatorType(SurfaceForce);//Grunau or Reis or SurfaceForce
+	Param.Set_ColourGradType(ColourFluidEnum::DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
+	Param.Set_RecolouringType(ColourFluidEnum::LatvaKokkoRothman);
+	Param.Set_ColourOperatorType(ColourFluidEnum::SurfaceForce);//Grunau or Reis or SurfaceForce
 
 
 

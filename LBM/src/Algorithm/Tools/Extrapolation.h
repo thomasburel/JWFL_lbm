@@ -15,7 +15,7 @@
 #ifndef ALGORITHM_LOWORDER_ExtrapolationS_H_
 #define ALGORITHM_LOWORDER_ExtrapolationS_H_
 
-#include "../Tools/ExtrapolationDEF.h"
+#include "ExtrapolationDEF.h"
 
 class Extrapolation {
 public:

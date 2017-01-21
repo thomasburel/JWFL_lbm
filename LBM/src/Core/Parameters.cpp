@@ -44,16 +44,21 @@ Parameters::Parameters()
 	U_ini=0;V_ini=0;W_ini=0;
 	Re=1;
 	l=1;t=1;dx=1;dt=1;
-	ColourGrad=Gunstensen;
-	Recolouring=LatvaKokkoRothman;
-	ColourOperator=Grunau;
+	ColourGrad=ColourFluidEnum::Gunstensen;
+	Recolouring=ColourFluidEnum::LatvaKokkoRothman;
+	ColourOperator=ColourFluidEnum::Grunau;
+	ColourExtrapolNoramlDensity=true;ColourExtrapolNoramlInterface=true;
 	PressureModelParam=HeZouP;
 	PressureTypeParam=FixP;
 	VelocityModelParam=HeZouV;
 	VelocityTypeParam=FixV;
 	CornerModelParam=HoChan;
 	CornerPressureTypeParam=ExtrapolCP;
-	tetaType=NoTeta;
+	tetaType=ContactAngleEnum::NoTeta;
+	tetaModel=ContactAngleEnum::Interpol;
+	NormalExtrapol=ContactAngleEnum::WeightDistanceExtrapol;
+	NormalInterpol=ContactAngleEnum::LinearLeastSquareInterpol;
+	Switchteta=ContactAngleEnum::Binary;
 	teta=std::acos(-1)/2;// pi/2
 	ErrorMax=1e-10;
 	PeriodicTypeParam=Simple;

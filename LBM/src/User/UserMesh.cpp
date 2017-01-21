@@ -29,9 +29,10 @@ UserMesh::UserMesh() {
 	std::cout<<"**** check read file***"<<std::endl;
 */
 //	std::string filename("../Pipe_1290_455.raw");
-	std::string filename("../Perpentine_1290_371.raw");
-		ReadBinaryImage(filename,1290, 371, 1);// double resolution
-		std::cout<<"**** check read file***"<<std::endl;
+
+//	std::string filename("../Perpentine_1290_371.raw");
+//		ReadBinaryImage(filename,1290, 371, 1);// double resolution
+//		std::cout<<"**** check read file***"<<std::endl;
 }
 void UserMesh::SetUserMeshVariables(){
 	H=PtrParametersUserMesh->Get_UserH();
@@ -112,16 +113,23 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 	else
 		solid=false;*/
 
+
+/*
 	if(Node.get_x()>-1&& Node.get_x()<1290 && Node.get_y()>-1 && Node.get_y()<371 )
 			solid=image[0][(int)Node.get_y()][(int)Node.get_x()];
 		else
 			solid=false;
+	*/
+
+
+
 	//if((Node.get_x()<10 || Node.get_x()>90) &&(Node.get_y()<10 || Node.get_y()>40 ))
 /*	if((Node.get_y()<10 || Node.get_y()>40 ))
 		solid=true;
 	else
 		solid=false;
 		*/
+
 }
 void UserMesh::SetSymmetryType(SymmetryType &Type, double x, double y)
 {

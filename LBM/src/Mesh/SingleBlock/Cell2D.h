@@ -27,14 +27,14 @@ public:
 	void Set_Face(int FaceNumber, int& node1, int& node2);
 	short int* Get_Face(int FaceNumber)const;
 	void Set_Connect(int FaceNumber, int face_, int cell_);
-	short int* Get_Connect(int FaceNumber)const;
+	int* Get_Connect(int FaceNumber)const;
 	void Set_NodeNumber(int NodeNumber_[4]);
 	void Set_NodeNumber(int NodeNumber_, int IdNode);
-	short int Get_NodeNumber(int NodeNumber_) const;
+	int Get_NodeNumber(int NodeNumber_) const;
 private:
-	short int NodeNumber[4]; // Map the node number from the block to the cell
-	short int Connect[4][2]; // Map the Face connect to the Face a in the cell b [Facenumber][Face/Cell] Face=0 and Cell=1
-	short int* Connect_;
+	int NodeNumber[4]; // Map the node number from the block to the cell
+	int Connect[4][2]; // Map the Face connect to the Face a in the cell b [Facenumber][Face/Cell] Face=0 and Cell=1
+	int* Connect_;
 private:
 	friend class boost::serialization::access;
     template<class Archive>

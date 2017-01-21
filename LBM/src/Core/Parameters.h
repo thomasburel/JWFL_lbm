@@ -54,6 +54,7 @@ enum FluidType{Newtonian};
 enum UserForceType{None,LocalForce,BodyForce};
 enum GradientType{FD,LBMStencil};
 enum ExtrapolationType{NoExtrapol,TailorExtrapol,WeightDistanceExtrapol};
+enum InterpolationType{NoInterpol,LinearInterpol,LinearLeastSquareInterpol};
 
 //Boundary conditions enumeration
 enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular,HeZouWall,HeZouWallVel};
@@ -66,12 +67,21 @@ enum CornerPressureType{FixCP,ExtrapolCP};
 enum PeriodicType{Simple,PressureForce};
 
 //Two phases enumeration
-enum TetaType{NoTeta, FixTeta, NonCstTeta};
+namespace ContactAngleEnum{
+	enum TetaType{NoTeta, FixTeta, NonCstTeta};
+	enum TetaModel{Standard,Interpol};
+	enum ExtrapolNormal{yes,no};
+	enum SwitchSelect{Binary,Linear};
+	enum ExtrapolationType{NoExtrapol,TailorExtrapol,WeightDistanceExtrapol};
+	enum InterpolationType{NoInterpol,LinearInterpol,LinearLeastSquareInterpol};
+}
 enum ViscosityType{ConstViscosity,LinearViscosity,HarmonicViscosity};
 //Colour fluid enumeration
-enum ColourGradType{Gunstensen,DensityGrad,DensityNormalGrad};
-enum RecolouringType{LatvaKokkoRothman};
-enum ColourOperatorType {Grunau,Reis,SurfaceForce};
+namespace ColourFluidEnum{
+	enum ColourGradType{Gunstensen,DensityGrad,DensityNormalGrad};
+	enum RecolouringType{LatvaKokkoRothman};
+	enum ColourOperatorType {Grunau,Reis,SurfaceForce};
+}
 
 class ColourFluid{
 private:
@@ -93,18 +103,23 @@ public:
 	double Get_A1() const{return A2;};
 	void Set_A2(double A_=0){A1=A_;};
 	double Get_A2() const{return A1;};
-	void Set_ColourGradType(ColourGradType type){ColourGrad=type;};
-	ColourGradType Get_ColourGradType(){return ColourGrad;};
-	void Set_RecolouringType(RecolouringType type){Recolouring=type;};
-	RecolouringType Get_RecolouringType(){return Recolouring;};
-	void Set_ColourOperatorType(ColourOperatorType type){ColourOperator=type;};
-	ColourOperatorType Get_ColourOperatorType(){return ColourOperator;};
+	void Set_ColourGradType(ColourFluidEnum::ColourGradType type){ColourGrad=type;};
+	ColourFluidEnum::ColourGradType Get_ColourGradType(){return ColourGrad;};
+	void Set_RecolouringType(ColourFluidEnum::RecolouringType type){Recolouring=type;};
+	ColourFluidEnum::RecolouringType Get_RecolouringType(){return Recolouring;};
+	void Set_ColourOperatorType(ColourFluidEnum::ColourOperatorType type){ColourOperator=type;};
+	ColourFluidEnum::ColourOperatorType Get_ColourOperatorType(){return ColourOperator;};
+	void Set_ColourExtrapolNoramlDensity(bool extrapol){if(extrapol==true) ColourExtrapolNoramlDensity=true; else ColourExtrapolNoramlDensity=false;};
+	bool Get_ColourExtrapolNoramlDensity(){return ColourExtrapolNoramlDensity;};
+	void Set_ColourExtrapolNoramlInterface(bool extrapol){if(extrapol==true) ColourExtrapolNoramlInterface=true; else ColourExtrapolNoramlInterface=false;};
+	bool Get_ColourExtrapolNoramlInterface(){return ColourExtrapolNoramlInterface;};
 protected:
 	double beta;
 	double A1,A2;
-	ColourGradType ColourGrad;
-	RecolouringType Recolouring;
-	ColourOperatorType ColourOperator;
+	ColourFluidEnum::ColourGradType ColourGrad;
+	ColourFluidEnum::RecolouringType Recolouring;
+	ColourFluidEnum::ColourOperatorType ColourOperator;
+	bool ColourExtrapolNoramlDensity,ColourExtrapolNoramlInterface;
 
 };
 
@@ -342,8 +357,16 @@ public:
 	ExtrapolationType Get_ExtrapolationType() const{return Extrapol;};
 	void Set_ContactAngle(double teta_){teta=teta_;};
 	double Get_ContactAngle(){return teta;};
-	void Set_ContactAngleType(TetaType tetaType_){tetaType=tetaType_;};
-	TetaType Get_ContactAngleType(){return tetaType;};
+	void Set_ContactAngleType(ContactAngleEnum::TetaType tetaType_){tetaType=tetaType_;};
+	ContactAngleEnum::TetaType Get_ContactAngleType(){return tetaType;};
+	void Set_ContactAngleModel(ContactAngleEnum::TetaModel tetaModel_){tetaModel=tetaModel_;};
+	ContactAngleEnum::TetaModel Get_ContactAngleModel(){return tetaModel;};
+	void Set_NormalExtrapolType(ContactAngleEnum::ExtrapolationType NormalExtrapol_){NormalExtrapol=NormalExtrapol_;};
+	ContactAngleEnum::ExtrapolationType Get_NormalExtrapolType(){return NormalExtrapol;};
+	void Set_NormalInterpolType(ContactAngleEnum::InterpolationType NormalInterpol_){NormalInterpol=NormalInterpol_;};
+	ContactAngleEnum::InterpolationType Get_NormalInterpolType(){return NormalInterpol;};
+	void Set_SwitchSelectTeta(ContactAngleEnum::SwitchSelect Switchteta_){Switchteta=Switchteta_;};
+	ContactAngleEnum::SwitchSelect Get_SwitchSelectTeta(){return Switchteta;};
 	void Set_ViscosityType(ViscosityType viscosityType_){viscosityType=viscosityType_;};
 	ViscosityType Get_ViscosityType(){return viscosityType;};
 	int Get_NbVelocities() const;
@@ -368,7 +391,11 @@ protected:
 	double deltaT;
 	double ErrorMax;
 
-	TetaType tetaType;
+	ContactAngleEnum::TetaType tetaType;
+	ContactAngleEnum::TetaModel tetaModel;
+	ContactAngleEnum::ExtrapolationType NormalExtrapol;
+	ContactAngleEnum::InterpolationType NormalInterpol;
+	ContactAngleEnum::SwitchSelect Switchteta;
 	double teta;
 	ViscosityType viscosityType;
 
