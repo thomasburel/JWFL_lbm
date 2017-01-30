@@ -124,11 +124,16 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 
 
 	//if((Node.get_x()<10 || Node.get_x()>90) &&(Node.get_y()<10 || Node.get_y()>40 ))
-/*	if((Node.get_y()<10 || Node.get_y()>40 ))
-		solid=true;
+	if(Node.get_y()<20 || Node.get_y()>40)
+		if(Node.get_x()>140 && Node.get_x()<160)
+			solid=true;
+		else
+			solid=false;
 	else
 		solid=false;
-		*/
+//	if(Node.get_y()<2 || Node.get_y()>18)
+//		solid=true;
+
 
 }
 void UserMesh::SetSymmetryType(SymmetryType &Type, double x, double y)

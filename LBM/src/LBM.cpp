@@ -34,8 +34,8 @@ int main(int argc, char *argv[]) {
 stringstream FileExportStream;
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 //Domain size
-	double L=100;
-	double H=100;
+	double L=300;
+	double H=60;
 
 	double Diameter=H;
 	double Ca=0;
@@ -47,7 +47,7 @@ stringstream FileExportStream;
 	double Rho2_ref=Rho1_ref;
 
 	double nu_2=1.0/6.0;
-	double lambda=1;
+	double lambda=0.7;
 	double nu_1=lambda*nu_2;
 
 	double tau1=(6.0*nu_1+1.0)*0.5;
@@ -59,7 +59,7 @@ stringstream FileExportStream;
 	double Mach =U2_ref*std::sqrt(3);
 	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
 //Pressure drop
-	double deltaP=0.0001;
+	double deltaP=0.01;
 // Pressure inlet
 	double Pmax=1+deltaP;
 // Pressure outlet
@@ -84,12 +84,13 @@ stringstream FileExportStream;
 // Set User Parameters
 	//U2_ref=0.01;Pmax=1;Pmin=1;
 //Contact angle parameters
-	double contactangle=90*pi/180.0;
+	double contactangle=(10)*pi/180.0;
 	Param.Set_ContactAngleType(ContactAngleEnum::FixTeta);//NoTeta, FixTeta or NonCstTeta
-	Param.Set_ContactAngleModel(ContactAngleEnum::Standard);//Standard or Interpol
-	Param.Set_SwitchSelectTeta(ContactAngleEnum::Binary);//Binary or Linear
+	Param.Set_ContactAngleModel(ContactAngleEnum::Interpol);//Standard or Interpol
+	Param.Set_SwitchSelectTeta(ContactAngleEnum::Linear);//Binary or Linear
 	Param.Set_NormalExtrapolType(ContactAngleEnum::WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,or WeightDistanceExtrapol
-	Param.Set_NormalInterpolType(ContactAngleEnum::LinearLeastSquareInterpol);//NoInterpol,LinearInterpol,LinearLeastSquareInterpol
+	Param.Set_NormalInterpolType(ContactAngleEnum::LinearInterpol);//NoInterpol,LinearInterpol,LinearLeastSquareInterpol
+	Param.Set_NumberOfInterpolNodeInSolid(1);
 	if(Param.Get_ContactAngleType()==ContactAngleEnum::NoTeta)
 		contactangle=pi/2.0;
 	Param.Set_ContactAngle(contactangle);
@@ -106,7 +107,7 @@ stringstream FileExportStream;
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity, Periodic and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
-	Param.Set_BcType(Wall,Wall,Wall,Wall);
+	Param.Set_BcType(Wall,Pressure,Wall,Pressure);
 
 
 /// Set Pressure Type
@@ -120,12 +121,12 @@ stringstream FileExportStream;
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(100000);
+	Param.Set_NbStep(30000);
 /// Interval for output
-	Param.Set_OutPutNSteps(1000);// interval
+	Param.Set_OutPutNSteps(500);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(100);
-	Param.Set_ErrorMax(1e-11);
+	Param.Set_ErrorMax(1e-18);
 	Param.Set_ErrorVariable(SolverEnum::RhoN);
 
 ///Selection of variables to export
@@ -136,7 +137,8 @@ stringstream FileExportStream;
 			<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
 			<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
 	FileExportStream.str("");
-	FileExportStream<<"Debug_shrink_droplets";
+//	FileExportStream<<"LinearLeastSquareInterpol_1nodes_linearswitch";
+	FileExportStream<<"LinearInterpol_linearswitch_teta10";
 	Param.Set_OutputFileName(FileExportStream.str());
 
 	// Multiphase model (SinglePhase or ColourFluid)

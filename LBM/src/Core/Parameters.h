@@ -14,6 +14,7 @@
 #include <iostream>
 #include <fstream>
 #include <cmath>
+
 //#include <string>
 #include <boost/serialization/string.hpp>
 #include <boost/serialization/nvp.hpp>
@@ -365,6 +366,9 @@ public:
 	ContactAngleEnum::ExtrapolationType Get_NormalExtrapolType(){return NormalExtrapol;};
 	void Set_NormalInterpolType(ContactAngleEnum::InterpolationType NormalInterpol_){NormalInterpol=NormalInterpol_;};
 	ContactAngleEnum::InterpolationType Get_NormalInterpolType(){return NormalInterpol;};
+	void Set_NumberOfInterpolNode(int nNodes);
+	void Set_NumberOfInterpolNodeInSolid(int nNodes);
+	int Get_NumberOfInterpolNode(){return nNodesInterpol;};
 	void Set_SwitchSelectTeta(ContactAngleEnum::SwitchSelect Switchteta_){Switchteta=Switchteta_;};
 	ContactAngleEnum::SwitchSelect Get_SwitchSelectTeta(){return Switchteta;};
 	void Set_ViscosityType(ViscosityType viscosityType_){viscosityType=viscosityType_;};
@@ -397,6 +401,7 @@ protected:
 	ContactAngleEnum::InterpolationType NormalInterpol;
 	ContactAngleEnum::SwitchSelect Switchteta;
 	double teta;
+	int nNodesInterpol;
 	ViscosityType viscosityType;
 
 

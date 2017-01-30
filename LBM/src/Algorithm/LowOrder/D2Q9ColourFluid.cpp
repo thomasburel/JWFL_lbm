@@ -46,7 +46,7 @@ D2Q9ColourFluid::~D2Q9ColourFluid() {
 
 D2Q9ColourFluid::D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini){
 	Rho_limiter=1.e-5;
-	LimitGNorm=0.05;
+	LimitGNorm=0.01;
 	//Initialise the common variables for the two phase models.
 	InitD2Q9TwoPhases(MultiBlock__,parallel__,Writer__, Parameters__, ini);
 //Initialise variables of the colour fluid model.
@@ -1417,7 +1417,7 @@ void D2Q9ColourFluid::ApplyBc(){
 	{
 //		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_AlphaDef()*NodeArrays->NodePressure[j].Get_RhoDef(), f[0],Rhor,U[0],U[1]);
 //		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),(1-NodeArrays->NodePressure[j].Get_AlphaDef())*NodeArrays->NodePressure[j].Get_RhoDef(), f[1],Rhob,U[0],U[1]);
-		//ExtrapolationOnWall(RhoN,NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_BcNormal());
+		ExtrapolationOnWall(RhoN,NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_BcNormal());
 		alpha=(RhoN[NodeArrays->NodePressure[j].Get_index()]+1.0)*0.5;
 		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),alpha*NodeArrays->NodePressure[j].Get_RhoDef(), f[0],Rhor,U[0],U[1]);
 		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),(1-alpha)*NodeArrays->NodePressure[j].Get_RhoDef(), f[1],Rhob,U[0],U[1]);

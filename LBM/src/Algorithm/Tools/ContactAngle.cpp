@@ -308,14 +308,18 @@ void ContactAngle::Impose_ContactAngleInSolidAndInterpol2DFixTeta(double **&Norm
 	for (int j=0;j<PtrNodeCa->CornerConcave.size();j++)
 	{
 		InterPolNormalCa.InterpolationOnCornerConcave(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal());
+		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_index());
 	}
 	for (int j=0;j<PtrNodeCa->NodeWall.size();j++)
 	{
 		InterPolNormalCa.InterpolationOnWall(Normal[0],Normal[1],PtrNodeCa->NodeWall[j].Get_connect(),PtrNodeCa->NodeWall[j].Get_BcNormal());
+		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeWall[j].Get_index());
 	}
 	for (int j=0;j<PtrNodeCa->CornerConvex.size();j++)
 	{
 		InterPolNormalCa.InterpolationOnCornerConvex(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_BcNormal());
+		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_index());
+
 	}
 }
 void ContactAngle::Impose_ContactAngleInSolidAndInterpol2DNonCstTeta(double **&Normal){
@@ -355,7 +359,10 @@ void ContactAngle::Select_ContactAngle2D(int &nodeWallIdx, int & Bcnormal,double
 	D1=std::sqrt((Nx-n1[nodeWallIdx][Bcnormal][0])*(Nx-n1[nodeWallIdx][Bcnormal][0])+(Ny-n1[nodeWallIdx][Bcnormal][1])*(Ny-n1[nodeWallIdx][Bcnormal][1]));
 	D2=std::sqrt((Nx-n2[nodeWallIdx][Bcnormal][0])*(Nx-n2[nodeWallIdx][Bcnormal][0])+(Ny-n2[nodeWallIdx][Bcnormal][1])*(Ny-n2[nodeWallIdx][Bcnormal][1]));
 	//calculate the ratio
-	r=D1/(D1+D2);
+	if(D1+D2>0)
+		r=D1/(D1+D2);
+	else
+		r=0.5;
 	//Select binary switch or linear switch (quicker but less precise)
 	(this->*Switch2D)(nodeWallIdx,r,Bcnormal,Nx,Ny);
 

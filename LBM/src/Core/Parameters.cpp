@@ -203,6 +203,17 @@ SolverEnum::modeltype SolverParameters::Get_Model() const
 {
 	return model;
 }
+void SolverParameters::Set_NumberOfInterpolNode(int nNodes){
+	if(nNodes<2)
+	{
+		std::cout<<"Number of node for interpolation is not enough. It will be set to 2."<<std::endl;
+		nNodesInterpol=1;
+	}
+	nNodesInterpol=round(nNodes/2.0);
+}
+void SolverParameters::Set_NumberOfInterpolNodeInSolid(int nNodes){
+	nNodesInterpol=nNodes;
+}
 void CalculationParameters::Set_Parallel(parralleltype parrallel_) {
 	parrallel=parrallel_;
 }
