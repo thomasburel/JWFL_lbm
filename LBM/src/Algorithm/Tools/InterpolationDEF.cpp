@@ -73,7 +73,7 @@ InterpolationInverseWeightDistance::~InterpolationInverseWeightDistance(){
 InterpolationLinearLeastSquare::InterpolationLinearLeastSquare(){
 	sumX=0;	sumY=0;sumXY=0;sumX2=0;
 	MapWallId=0;
-	nNodes=0;nNodes2=0;nWalls=0;
+	nWalls=0;
 	x0=0;y0=0;
 	result1=0;result2=0;
 }
@@ -83,7 +83,7 @@ InterpolationLinearLeastSquare::InterpolationLinearLeastSquare(int dimension_,in
 	PtrOppositeInterpol=PtrOppositeInterpol_;
 	sumX=0;	sumY=0;sumXY=0;sumX2=0;
 	MapWallId=0;
-	nNodes=0;nNodes2=0;	nWalls=0;
+	nWalls=0;
 	x0=0;y0=0;
 	result1=0;result2=0;
 }
@@ -94,10 +94,11 @@ InterpolationLinearLeastSquare::~InterpolationLinearLeastSquare(){
 void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parameters *PtrParam){
 	MapWallId=new int [PtrNodes->TypeOfNode.size()];
 	nWalls=PtrNodes->NodeWall.size()+PtrNodes->CornerConcave.size()+PtrNodes->CornerConvex.size();
-	nNodes=PtrParam->Get_NumberOfInterpolNode();
-	nNodes2=2*nNodes;
 
-	int countfluid=0;int countsolid=0; int maxwhile=nNodes2; int countwhile=0; int countnWalls=0;
+	nSolidNodes=PtrParam->Get_NumberOfInterpolNodeInSolid();
+	nFluidNodes=PtrParam->Get_NumberOfInterpolNodeInFluid();
+
+	int countfluid=0;int countsolid=0; int maxwhile=2*max(nSolidNodes,nFluidNodes); int countwhile=0; int countnWalls=0;
 	NextNode Nodetmp;
 
 	if(PtrNodes->CornerConcave.size()>0)
@@ -119,16 +120,16 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		Nodetmp.rankMarkNodes=0;
 		nextinterior.push_back(Nodetmp);
 
-		while((countfluid<nNodes || countsolid<nNodes) && countwhile < maxwhile)
+		while((countfluid<nFluidNodes || countsolid<nSolidNodes) && countwhile < maxwhile)
 		{
-			if(nextwall.size()>0 && countsolid<nNodes)
+			if(nextwall.size()>0 && countsolid<nSolidNodes)
 			{
 				Mark_SolidIds(PtrNodes,nextwall,countnWalls,countsolid);
 				nextwallprevious=nextwall;
 				nextwall.clear();
 				Next_WallId(PtrNodes,nextwallprevious,nextwall);
 			}
-			if(nextinterior.size()>0 && countfluid<nNodes)
+			if(nextinterior.size()>0 && countfluid<nFluidNodes)
 			{
 				Mark_FluidIds(PtrNodes,nextinterior,countnWalls,countfluid);
 				nextinteriorprevious=nextinterior;
@@ -166,16 +167,16 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		Nodetmp.rankMarkNodes=0;
 		nextinterior.push_back(Nodetmp);
 
-		while((countfluid<nNodes || countsolid<nNodes) && countwhile < maxwhile)
+		while((countfluid<nFluidNodes || countsolid<nSolidNodes) && countwhile < maxwhile)
 		{
-			if(nextwall.size()>0 && countsolid<nNodes)
+			if(nextwall.size()>0 && countsolid<nSolidNodes)
 			{
 				Mark_SolidIds(PtrNodes,nextwall,countnWalls,countsolid);
 				nextwallprevious=nextwall;
 				nextwall.clear();
 				Next_WallId(PtrNodes,nextwallprevious,nextwall);
 			}
-			if(nextinterior.size()>0 && countfluid<nNodes)
+			if(nextinterior.size()>0 && countfluid<nFluidNodes)
 			{
 				Mark_FluidIds(PtrNodes,nextinterior,countnWalls,countfluid);
 				nextinteriorprevious=nextinterior;
@@ -212,16 +213,16 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		Nodetmp.distance=DistToWall(PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_x(),PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_y());
 		Nodetmp.rankMarkNodes=0;
 		nextinterior.push_back(Nodetmp);
-		while((countfluid<nNodes || countsolid<nNodes) && countwhile < maxwhile)
+		while((countfluid<nFluidNodes || countsolid<nSolidNodes) && countwhile < maxwhile)
 		{
-			if(nextwall.size()>0 && countsolid<nNodes)
+			if(nextwall.size()>0 && countsolid<nSolidNodes)
 			{
 				Mark_SolidIds(PtrNodes,nextwall,countnWalls,countsolid);
 				nextwallprevious=nextwall;
 				nextwall.clear();
 				Next_WallId(PtrNodes,nextwallprevious,nextwall);
 			}
-			if(nextinterior.size()>0 && countfluid<nNodes)
+			if(nextinterior.size()>0 && countfluid<nFluidNodes)
 			{
 				Mark_FluidIds(PtrNodes,nextinterior,countnWalls,countfluid);
 				nextinteriorprevious=nextinterior;
@@ -246,7 +247,7 @@ void InterpolationLinearLeastSquare::Mark_FluidIds(NodeArrays2D *PtrNodes,std::v
 	int nodeIdlocal=0;
 	for(int i=0;i<next.size();i++)
 	{
-		if(countfluid<nNodes)
+		if(countfluid<nFluidNodes)
 		{
 			countfluid++;
 			nodeIdlocal=PtrNodes->NodeIndexByType[next[i].index];
@@ -270,7 +271,7 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 		switch (PtrNodes->TypeOfNode[next[i]])
 		{
 		case Wall:
-			if(countsolid<nNodes)
+			if(countsolid<nSolidNodes)
 			{
 				countsolid++;
 				solidIdtmp.push_back(PtrNodes->NodeWall[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeWall[nodeIdlocal].Get_BcNormal()]]);
@@ -289,7 +290,7 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 			}
 			break;
 		case Corner:
-			if(countsolid<nNodes)
+			if(countsolid<nSolidNodes)
 			{
 				countsolid++;
 				solidIdtmp.push_back(PtrNodes->NodeCorner[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeCorner[nodeIdlocal].Get_BcNormal()]]);
@@ -307,7 +308,7 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 			}
 			break;
 		case ConcaveCorner:
-			if(countsolid<nNodes)
+			if(countsolid<nSolidNodes)
 			{
 				countsolid++;
 				solidIdtmp.push_back(PtrNodes->NodeCorner[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeCorner[nodeIdlocal].Get_BcNormal()]]);
@@ -325,7 +326,7 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 			}
 			break;
 		case ConvexCorner:
-			if(countsolid<nNodes)
+			if(countsolid<nSolidNodes)
 			{
 				countsolid++;
 				solidIdtmp.push_back(PtrNodes->NodeCorner[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeCorner[nodeIdlocal].Get_BcNormal()]]);
@@ -372,71 +373,7 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 
 	}
 }
-/*
-void InterpolationLinearLeastSquare::Mark_FluidSolidIds(NodeArrays2D *PtrNodes,std::vector<int>& nextwall,std::vector<NextNode>& nextinterior, int &countfluid, int &countsolid){
 
-		int nodeIdlocal=PtrNodes->NodeIndexByType[nodeId];
-		int nodeIdlocaltmp=0;
-		switch (PtrNodes->TypeOfNode[nodeId])
-		{
-		case Wall:
-			if(countfluid<nNodes)
-			{
-				fluidId[countnwalls][countfluid]=(PtrNodes->NodeWall[nodeIdlocal].Get_connect()[PtrNodes->NodeWall[nodeIdlocal].Get_BcNormal()]);
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[fluidId[countnwalls][countfluid]];
-				fluidDist[countnwalls][countfluid]=DistToWall(PtrNodes->NodeInterior[nodeIdlocaltmp].get_x(),PtrNodes->NodeInterior[nodeIdlocaltmp].get_y());
-			}
-			if(countsolid<nNodes)
-			{
-				solidId[countnwalls][countsolid]=(PtrNodes->NodeWall[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeWall[nodeIdlocal].Get_BcNormal()]]);
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidId[countnwalls][countsolid]];
-				solidDist[countnwalls][countsolid]=-DistToWall(PtrNodes->NodeSolid[nodeIdlocal].get_x(),PtrNodes->NodeSolid[nodeIdlocal].get_y());
-				WallChecked.push_back(nextwall[countnextWall]);
-			}
-			break;
-		case Corner:
-			if(countfluid<nNodes)
-			{
-				fluidId[countnwalls][countfluid]=(PtrNodes->NodeCorner[nodeIdlocal].Get_connect()[PtrNodes->NodeCorner[nodeIdlocal].Get_BcNormal()]);
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[fluidId[countnwalls][countfluid]];
-				fluidDist[countnwalls][countfluid]=DistToWall(PtrNodes->NodeInterior[nodeIdlocaltmp].get_x(),PtrNodes->NodeInterior[nodeIdlocaltmp].get_y());
-			}
-			if(countsolid<nNodes)
-			{
-				solidId[countnwalls][countsolid]=(PtrNodes->NodeCorner[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeCorner[nodeIdlocal].Get_BcNormal()]]);
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidId[countnwalls][countsolid]];
-				solidDist[countnwalls][countsolid]=-DistToWall(PtrNodes->NodeSolid[nodeIdlocal].get_x(),PtrNodes->NodeSolid[nodeIdlocal].get_y());
-			}
-			break;
-		case SolidGhost:
-			break;
-		case GlobalCorner:
-			break;
-		case SpecialWall:
-			if(countfluid<nNodes)
-			{
-				fluidId[countnwalls][countfluid]=(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[PtrNodes->NodeSpecialWall[nodeIdlocal].Get_BcNormal()]);
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[fluidId[countnwalls][countfluid]];
-				fluidDist[countnwalls][countfluid]=DistToWall(PtrNodes->NodeInterior[nodeIdlocaltmp].get_x(),PtrNodes->NodeInterior[nodeIdlocaltmp].get_y());
-			}
-			if(countsolid<nNodes)
-			{
-				solidId[countnwalls][countsolid]=(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeSpecialWall[nodeIdlocal].Get_BcNormal()]]);
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidId[countnwalls][countsolid]];
-				solidDist[countnwalls][countsolid]=-DistToWall(PtrNodes->NodeSolid[nodeIdlocal].get_x(),PtrNodes->NodeSolid[nodeIdlocal].get_y());
-			}
-			break;
-		default:
-			std::cerr<<"Node type not found for interpolation. Type of Node :"<<PtrNodes->TypeOfNode[nodeId]<<std::endl;
-			break;
-		}
-		if(countfluid<nNodes)
-			countfluid++;
-		if(countsolid<nNodes)
-			countsolid++;
-
-}
-*/
 void InterpolationLinearLeastSquare::Next_WallId(NodeArrays2D *PtrNodes,std::vector<int> nextback,std::vector<int>& next){
 	int nodeIdlocal=0;
 	next.clear();
@@ -798,29 +735,10 @@ void InterpolationLinearLeastSquare::CalculLeastSquareMethod(double *Var,int wal
 		sumXY+=solidDist[wallId][i]*Var[solidId[wallId][i]];
 	}
 	result1=(sumY*sumX2-sumX*sumXY)/((fluidId[wallId].size()+solidId[wallId].size())*sumX2-sumX*sumX);
-	/*	for(int i=0;i<nNodes;i++)
-	{
-		sumX+=fluidDist[wallId][i]+solidDist[wallId][i];
-		sumX2+=fluidDist[wallId][i]*fluidDist[wallId][i]+solidDist[wallId][i]*solidDist[wallId][i];
-		sumY+=Var[fluidId[wallId][i]]+Var[solidId[wallId][i]];
-		sumXY+=fluidDist[wallId][i]*Var[fluidId[wallId][i]]+solidDist[wallId][i]*Var[solidId[wallId][i]];
-
-	}
-	result1=(sumY*sumX2-sumX*sumXY)/(nNodes2*sumX2-sumX*sumX);
-	*/
 
 }
 void InterpolationLinearLeastSquare::CalculLeastSquareMethod(double *Var1,double *Var2,int wallId){
 	sumX=0;	sumY=0;sumXY=0;sumX2=0;
-/*	for(int i=0;i<nNodes;i++)
-	{
-		sumX+=fluidDist[wallId][i]+solidDist[wallId][i];
-		sumX2+=fluidDist[wallId][i]*fluidDist[wallId][i]+solidDist[wallId][i]*solidDist[wallId][i];
-		sumY+=Var1[fluidId[wallId][i]]+Var1[solidId[wallId][i]];
-		sumXY+=fluidDist[wallId][i]*Var1[fluidId[wallId][i]]+solidDist[wallId][i]*Var1[solidId[wallId][i]];
-	}
-	result1=(sumY*sumX2-sumX*sumXY)/(nNodes2*sumX2-sumX*sumX);
-	*/
 	for(int i=0;i< fluidId[wallId].size();i++)
 	{
 		sumX+=fluidDist[wallId][i];
@@ -837,14 +755,7 @@ void InterpolationLinearLeastSquare::CalculLeastSquareMethod(double *Var1,double
 	}
 	result1=(sumY*sumX2-sumX*sumXY)/((fluidId[wallId].size()+solidId[wallId].size())*sumX2-sumX*sumX);
 	sumY=0;sumXY=0;
-	/*
-	for(int i=0;i<nNodes;i++)
-	{
-		sumY+=Var2[fluidId[wallId][i]]+Var2[solidId[wallId][i]];
-		sumXY+=fluidDist[wallId][i]*Var2[fluidId[wallId][i]]+solidDist[wallId][i]*Var2[solidId[wallId][i]];
-	}
-	result2=(sumY*sumX2-sumX*sumXY)/(nNodes2*sumX2-sumX*sumX);
-	*/
+
 	for(int i=0;i< fluidId[wallId].size();i++)
 	{
 		sumY+=Var2[fluidId[wallId][i]];

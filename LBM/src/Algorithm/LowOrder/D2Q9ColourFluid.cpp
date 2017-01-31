@@ -45,8 +45,6 @@ D2Q9ColourFluid::~D2Q9ColourFluid() {
 }
 
 D2Q9ColourFluid::D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini){
-	Rho_limiter=1.e-5;
-	LimitGNorm=0.01;
 	//Initialise the common variables for the two phase models.
 	InitD2Q9TwoPhases(MultiBlock__,parallel__,Writer__, Parameters__, ini);
 //Initialise variables of the colour fluid model.
@@ -214,6 +212,8 @@ void D2Q9ColourFluid::Set_Recolouring(){
 }
 void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 //Initialise parameters
+	Rho_limiter=PtrParameters->Get_RhoLimiter();
+	LimitGNorm=PtrParameters->Get_ColourGradLimiter();
 	beta=PtrParameters->Get_Beta();
 	A1=PtrParameters->Get_A1();
 	A2=PtrParameters->Get_A2();

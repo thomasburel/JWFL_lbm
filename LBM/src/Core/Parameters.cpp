@@ -63,6 +63,10 @@ Parameters::Parameters()
 	ErrorMax=1e-10;
 	PeriodicTypeParam=Simple;
 	PressureDropParam=0;
+	RhoLimiter=1e-7;
+	GNormLimiter=0.01;
+	nNodesInterpolInSolid=1;
+	nNodesInterpolInFluid=1;
 }
 
 Parameters::~Parameters() {
@@ -207,12 +211,17 @@ void SolverParameters::Set_NumberOfInterpolNode(int nNodes){
 	if(nNodes<2)
 	{
 		std::cout<<"Number of node for interpolation is not enough. It will be set to 2."<<std::endl;
-		nNodesInterpol=1;
+		nNodesInterpolInSolid=1;
+		nNodesInterpolInFluid=1;
 	}
-	nNodesInterpol=round(nNodes/2.0);
+	nNodesInterpolInSolid=round(nNodes/2.0);
+	nNodesInterpolInFluid=nNodes-nNodesInterpolInSolid;
 }
 void SolverParameters::Set_NumberOfInterpolNodeInSolid(int nNodes){
-	nNodesInterpol=nNodes;
+	nNodesInterpolInSolid=nNodes;
+}
+void SolverParameters::Set_NumberOfInterpolNodeInFluid(int nNodes){
+	nNodesInterpolInFluid=nNodes;
 }
 void CalculationParameters::Set_Parallel(parralleltype parrallel_) {
 	parrallel=parrallel_;

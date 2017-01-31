@@ -84,13 +84,14 @@ stringstream FileExportStream;
 // Set User Parameters
 	//U2_ref=0.01;Pmax=1;Pmin=1;
 //Contact angle parameters
-	double contactangle=(10)*pi/180.0;
+	double contactangle=(150)*pi/180.0;
 	Param.Set_ContactAngleType(ContactAngleEnum::FixTeta);//NoTeta, FixTeta or NonCstTeta
 	Param.Set_ContactAngleModel(ContactAngleEnum::Interpol);//Standard or Interpol
 	Param.Set_SwitchSelectTeta(ContactAngleEnum::Linear);//Binary or Linear
 	Param.Set_NormalExtrapolType(ContactAngleEnum::WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,or WeightDistanceExtrapol
-	Param.Set_NormalInterpolType(ContactAngleEnum::LinearInterpol);//NoInterpol,LinearInterpol,LinearLeastSquareInterpol
-	Param.Set_NumberOfInterpolNodeInSolid(1);
+	Param.Set_NormalInterpolType(ContactAngleEnum::LinearLeastSquareInterpol);//NoInterpol,LinearInterpol,LinearLeastSquareInterpol
+	Param.Set_NumberOfInterpolNodeInSolid(3);
+	Param.Set_NumberOfInterpolNodeInFluid(8);
 	if(Param.Get_ContactAngleType()==ContactAngleEnum::NoTeta)
 		contactangle=pi/2.0;
 	Param.Set_ContactAngle(contactangle);
@@ -132,18 +133,11 @@ stringstream FileExportStream;
 ///Selection of variables to export
 	Param.Set_VariablesOutput(true,true);// export Rho,U
 
-/// Define the Output filename
-/*	FileExportStream<<"Droplet_shear_"<< fixed << setprecision(0)<<H<<"x"<<L
-			<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
-			<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
-	FileExportStream.str("");
-//	FileExportStream<<"LinearLeastSquareInterpol_1nodes_linearswitch";
-	FileExportStream<<"LinearInterpol_linearswitch_teta10";
-	Param.Set_OutputFileName(FileExportStream.str());
-
 	// Multiphase model (SinglePhase or ColourFluid)
 	Param.Set_Model(SolverEnum::ColourFluid);
 	Param.Set_ViscosityType(ConstViscosity);//ConstViscosity,HarmonicViscosity
+	if(Param.Get_ViscosityType()==ConstViscosity)
+		lambda=1;
 
 	//Gradient definition
 	Param.Set_GradientType(LBMStencil); //FD or LBMStencil
@@ -165,6 +159,7 @@ stringstream FileExportStream;
 	//Surface tension
 	Param.Set_SurfaceTension(sigma);
 	//Colour fluid Parameters
+	Param.Set_ColourGradLimiter(0.05);
 	Param.Set_A1(0.00001);
 	Param.Set_A2(Param.Get_A1());
 	Param.Set_Beta(0.7);// Between 0 and 1
@@ -172,7 +167,30 @@ stringstream FileExportStream;
 	Param.Set_RecolouringType(ColourFluidEnum::LatvaKokkoRothman);
 	Param.Set_ColourOperatorType(ColourFluidEnum::SurfaceForce);//Grunau or Reis or SurfaceForce
 
+	/// Define the Output filename
+	/*	FileExportStream<<"Droplet_shear_"<< fixed << setprecision(0)<<H<<"x"<<L
+				<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
+				<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
+		FileExportStream.str("");
+		FileExportStream<<"Contraction_"<< fixed << setprecision(0)<<L<<"x"<<H;
+//		FileExportStream<<"LinearLeastSquareInterpol_linearswitch_teta170_beta0.7_5fluids_3Solid";
+		if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearLeastSquareInterpol)
+		{
+			FileExportStream<<"LinearLeastSquareInterpol_"
+					<<Param.Get_NumberOfInterpolNodeInFluid()<<"-Fluids_"
+					<<Param.Get_NumberOfInterpolNodeInSolid()<<"-Solids_";
+		}
+		if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearInterpol)
+				FileExportStream<<"LinearInterpol_";
+		if(Param.Get_SwitchSelectTeta()==ContactAngleEnum::Linear)
+			FileExportStream<<"LinearSwitch_";
+		if(Param.Get_SwitchSelectTeta()==ContactAngleEnum::Binary)
+			FileExportStream<<"BinarySwitch_";
+		FileExportStream<<setprecision(2)<<lambda<<"-lambda_"
+				<<Param.Get_Beta()<<"-beta_"<<Param.Get_ContactAngle()*180.0/pi<<"-teta_"
+						<< scientific<<setprecision(3)<<"sigma_"<<sigma<<"_ColourGradLimiter"<<Param.Get_ColourGradLimiter();
 
+		Param.Set_OutputFileName(FileExportStream.str());
 
 //	Param.Set_OutputFileName("Testread");
 /*	Param.Add_VariableToInit("Debug_poiseuille_serpentine_105000.cgns",SolverEnum::Density);

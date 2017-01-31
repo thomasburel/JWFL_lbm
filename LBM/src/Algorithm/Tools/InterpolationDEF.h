@@ -119,7 +119,7 @@ private:
 	std::vector<double>  solidDisttmp,fluidDisttmp;//keep distance
 //	double **solidDist,**fluidDist;//keep distance
 	int *MapWallId;//Map WallId To LocalId
-	int nNodes,nNodes2, nWalls;
+	int nSolidNodes,nFluidNodes, nWalls;
 	std::vector<NextNode> SolidChecked;
 	std::vector<NextNode> FluidChecked;
 	std::vector<int> nextwall,nextwallprevious;

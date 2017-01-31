@@ -100,6 +100,10 @@ private:
 public:
 	void Set_Beta(double beta_=0.7){beta=beta_;};
 	double Get_Beta() const{return beta;};
+	void Set_RhoLimiter(double RhoLimiter_=1e-07){RhoLimiter=RhoLimiter_;};
+	double Get_RhoLimiter(){return RhoLimiter;};
+	void Set_ColourGradLimiter(double GNormLimiter_=0.01){GNormLimiter=GNormLimiter_;};
+	double Get_ColourGradLimiter(){return GNormLimiter;};
 	void Set_A1(double A_=0){A2=A_;};
 	double Get_A1() const{return A2;};
 	void Set_A2(double A_=0){A1=A_;};
@@ -115,7 +119,7 @@ public:
 	void Set_ColourExtrapolNoramlInterface(bool extrapol){if(extrapol==true) ColourExtrapolNoramlInterface=true; else ColourExtrapolNoramlInterface=false;};
 	bool Get_ColourExtrapolNoramlInterface(){return ColourExtrapolNoramlInterface;};
 protected:
-	double beta;
+	double beta,RhoLimiter,GNormLimiter;
 	double A1,A2;
 	ColourFluidEnum::ColourGradType ColourGrad;
 	ColourFluidEnum::RecolouringType Recolouring;
@@ -368,7 +372,10 @@ public:
 	ContactAngleEnum::InterpolationType Get_NormalInterpolType(){return NormalInterpol;};
 	void Set_NumberOfInterpolNode(int nNodes);
 	void Set_NumberOfInterpolNodeInSolid(int nNodes);
-	int Get_NumberOfInterpolNode(){return nNodesInterpol;};
+	void Set_NumberOfInterpolNodeInFluid(int nNodes);
+	int Get_NumberOfInterpolNode(){return nNodesInterpolInSolid+nNodesInterpolInFluid;};
+	int Get_NumberOfInterpolNodeInSolid(){return nNodesInterpolInSolid;};
+	int Get_NumberOfInterpolNodeInFluid(){return nNodesInterpolInFluid;};
 	void Set_SwitchSelectTeta(ContactAngleEnum::SwitchSelect Switchteta_){Switchteta=Switchteta_;};
 	ContactAngleEnum::SwitchSelect Get_SwitchSelectTeta(){return Switchteta;};
 	void Set_ViscosityType(ViscosityType viscosityType_){viscosityType=viscosityType_;};
@@ -401,7 +408,7 @@ protected:
 	ContactAngleEnum::InterpolationType NormalInterpol;
 	ContactAngleEnum::SwitchSelect Switchteta;
 	double teta;
-	int nNodesInterpol;
+	int nNodesInterpolInSolid,nNodesInterpolInFluid;
 	ViscosityType viscosityType;
 
 
