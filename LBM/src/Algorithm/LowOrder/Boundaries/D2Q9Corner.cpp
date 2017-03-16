@@ -28,7 +28,7 @@ D2Q9Corner::D2Q9Corner() {
 D2Q9Corner::~D2Q9Corner() {
 	// TODO Auto-generated destructor stub
 }
-void D2Q9Corner::Set_Corner(Parameters *Param){
+void D2Q9Corner::Set_Corner(Parameters *Param, double ** &Ei){
 	PtrCornerMethod=&D2Q9Corner::ApplyHoChan;
 	switch(Param->Get_WallType())
 	{
@@ -57,7 +57,7 @@ void D2Q9Corner::Set_Corner(Parameters *Param){
 	default:
 		std::cerr<<"Corner pressure type not found."<<std::endl;
 	}
-
+	EiBc=Ei;
 }
 void D2Q9Corner::ApplyCorner(NodeCorner2D& Node, DistriFunct* f_in,double const & RhoDef,double const & UDef,double const & VDef, double *Rho, double *U, double *V){
 	Rho[Node.Get_index()]=RhoDef;

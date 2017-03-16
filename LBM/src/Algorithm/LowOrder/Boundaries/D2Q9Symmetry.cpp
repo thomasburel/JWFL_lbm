@@ -20,7 +20,14 @@ D2Q9Symmetry::D2Q9Symmetry() {
 D2Q9Symmetry::~D2Q9Symmetry() {
 	// TODO Auto-generated destructor stub
 }
-void D2Q9Symmetry::Set_Symmetry(Parameters *Param){
+void D2Q9Symmetry::Set_Symmetry(Parameters *Param, double ** &Ei){
+	SetSymmetry(Param->Get_SymmetryType());
+	EiBc=Ei;
+}
+void D2Q9Symmetry::SetSymmetry(SymmetryType SymmetryType_){
+	SetSymmetryType(SymmetryType_);
+}
+void D2Q9Symmetry::SetSymmetryType(SymmetryType SymmetryType_){
 	PtrSymmetryMethod=&D2Q9Symmetry::ApplySymmetryOnNode;
 }
 void D2Q9Symmetry::ApplySymmetry(int const &BcNormal,int const *Connect, double const &Rho_def, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V){

@@ -30,9 +30,11 @@ public:
 	virtual ~CollideLowOrder();
 
 	void Collide_2D(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double InvTau_tmp);
-	void Select_Collide_2D(CollideType Type);
+	void Select_Collide_2D(CollideType Type,double Cs2,double referenceDensity=1);
+	double CollideEquillibrium(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);
 
-	double EquiDistriFunct2D(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);
+	double CompressibleEquiDistriFunct2D(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);
+	double IncompressibleEquiDistriFunct2D(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);
 	void Collide_2D_SinglePhase(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_With_LocalForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_With_BodyForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
@@ -49,6 +51,9 @@ protected:
 	DistriFunct* PtrFiCollide;
 	double **EiCollide;
 	double *omegaCollide;
+	double InvCs2Collide,InvCs2_2Collide,InvCs4_2Collide;
+	double RefDensity;
+	double dot_E_U;
 //	double Ei[9][2];
 //	double omega[9];
 	double D_tmp;// Temporary double
@@ -60,6 +65,8 @@ protected:
 	typedef void(CollideLowOrder::*Collide_2D_TypeDef)(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	Collide_2D_TypeDef PtrCollide_2D;
 
+	typedef double(CollideLowOrder::*EquiDistri)(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);
+	EquiDistri PtrEquiDistri;
 
 	Dictionary *PtrDicCollide;//For debugging
 	double **ColSingle,**ColTwoPhase;
@@ -81,31 +88,15 @@ private:
   -\frac{3}{2}{\vec{u}}^2]
 \f]
 */
-inline double CollideLowOrder::EquiDistriFunct2D(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega){
-	double dot_E_U=(u_i[0]*u_macro+u_i[1]*v_macro);
-	return rho_macro*omega*(1.0+3.0*dot_E_U+4.5*dot_E_U*dot_E_U-1.5*(u_macro*u_macro+v_macro*v_macro));
+inline double CollideLowOrder::CompressibleEquiDistriFunct2D(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega){
+	dot_E_U=(u_i[0]*u_macro+u_i[1]*v_macro);
+	return rho_macro*omega*(1.0+InvCs2Collide*dot_E_U+InvCs4_2Collide*dot_E_U*dot_E_U-InvCs2_2Collide*(u_macro*u_macro+v_macro*v_macro));
 }
-/*class CollideD2Q9Colour: public CollideLowOrder {
-public:
-	CollideD2Q9Colour();
-	virtual ~CollideD2Q9Colour();
-	void Collide_ColorFluid(int & direction, double & fi,double &rho,double*  F,double & F_Norm, double & InvTau_, double &u, double &v);
-	void Recoloring(double & f, double & fr, double & fb, double & Rho, double & Rho_r, double & Rho_b);
-protected:
-	double Ak;
-
-private:
-	double TwoPhase_Collision_operator(int & i, double* F, double & F_Norm);
-
-};
-inline 	double CollideD2Q9Colour::TwoPhase_Collision_operator(int & i, double* F, double & F_Norm){
-	double EiGperGNorm=(F[0]* Ei[i][0]+F[1]* Ei[i][1])/F_Norm;
-	 return Ak*0.5*F_Norm*(EiGperGNorm*EiGperGNorm-3/4);
+inline double CollideLowOrder::IncompressibleEquiDistriFunct2D(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega){
+	dot_E_U=(u_i[0]*u_macro+u_i[1]*v_macro);
+	return omega*(rho_macro+RefDensity*(InvCs2Collide*dot_E_U+InvCs4_2Collide*dot_E_U*dot_E_U-InvCs2_2Collide*(u_macro*u_macro+v_macro*v_macro)));
 }
-inline void CollideD2Q9Colour::Recoloring(double & f, double & fr, double & fb, double & Rho, double & Rho_r, double & Rho_b)
-{
-		fr=Rho_r*f/Rho;
-		fb=f-fr;
-
-}*/
+inline double CollideLowOrder::CollideEquillibrium(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega){
+	return (this->*PtrEquiDistri)(rho_macro, u_macro, v_macro,u_i, omega);
+}
 #endif /* ALGORITHM_LOWORDER_COLLIDELOWORDER_H_ */

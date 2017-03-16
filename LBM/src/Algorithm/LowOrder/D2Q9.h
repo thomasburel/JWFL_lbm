@@ -88,6 +88,10 @@ private:
 
 	//Apply boundary conditions
 	void ApplyBc();
+	void ApplyPatchPressure(PressurePatchBc& PresPatchBc);
+	void ApplyPatchVelocity(VelocityPatchBc& VelPatchBc);
+	void ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc);
+	void ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc);
 	unsigned int& Connect (int &NodeNumber,unsigned int& direction);
 	//void Set_Connect(int &NodeNumber,unsigned int& direction);
 	double Cal_RhoCorner(int &normalBc, int &nodenumber);

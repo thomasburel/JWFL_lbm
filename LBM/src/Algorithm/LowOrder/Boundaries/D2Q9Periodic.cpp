@@ -23,15 +23,29 @@ D2Q9Periodic::~D2Q9Periodic() {
 	// TODO Auto-generated destructor stub
 }
 
-void D2Q9Periodic::Set_Periodic(Parameters *Param){
-	if(Param->Get_PeriodicType()==Simple)
+void D2Q9Periodic::Set_Periodic(Parameters *Param, double ** &Ei){
+	SetPeriodic(Param->Get_PeriodicType());
+	if(Param->Get_PeriodicType()==PressureForce)
+		PressureDrop=Param->Get_PressureDrop();
+	EiBc=Ei;
+}
+void D2Q9Periodic::SetPeriodic(PeriodicType PeriodicType_){
+	SetPeriodicType(PeriodicType_);
+}
+void D2Q9Periodic::SetPeriodicType(PeriodicType PeriodicType_){
+	switch(PeriodicType_)
+	{
+	case Simple:
 		PtrPeriodicMethod=&D2Q9Periodic::ApplyPeriodicBc;
-	else
-		if(Param->Get_PeriodicType()==PressureForce)
-		{
-			PtrPeriodicMethod=&D2Q9Periodic::ApplyPeriodicBc_PressureForce;
-			PressureDrop=Param->Get_PressureDrop();
-		}
+		break;
+	case PressureForce:
+		PtrPeriodicMethod=&D2Q9Periodic::ApplyPeriodicBc_PressureForce;
+		break;
+	default:
+
+		break;
+	}
+
 }
 void D2Q9Periodic::ApplyPeriodic(int const &BcNormal,int const *Connect, double const &Rho_def, double weightDensity, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V){
 	(this->*PtrPeriodicMethod)(BcNormal,Connect,Rho_def,weightDensity,UDef,LocalForce,f_in);

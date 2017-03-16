@@ -22,7 +22,8 @@ D2Q9BcVar::D2Q9BcVar() {
 	q13=1.0/3.0;
 
 	//Distribution velocity
-	EiBc[0][0]= 0.0;
+	EiBc=0;
+/*	EiBc[0][0]= 0.0;
 	EiBc[0][1]= 0.0;
 	EiBc[1][0]= 1.0;
 	EiBc[1][1]= 0.0;
@@ -38,7 +39,7 @@ D2Q9BcVar::D2Q9BcVar() {
 	EiBc[6][1]= 1.0;
 	EiBc[7][0]= -1.0;
 	EiBc[7][1]= -1.0;
-	EiBc[8][0]= 1.0;
+	EiBc[8][0]= 1.0;*/
 // OppositeBc direction
 	OppositeBc[0]=0;
 	OppositeBc[1]=3;
@@ -74,6 +75,20 @@ D2Q9BcVar::D2Q9BcVar() {
 	SumWeightConvexNE=omegaBc[3]+omegaBc[4]+omegaBc[7];
 	SumWeightConvexNW=omegaBc[1]+omegaBc[4]+omegaBc[8];
 	SumWeightConvexSW=omegaBc[1]+omegaBc[2]+omegaBc[5];
+
+	for(int i=0;i<2;i++)
+	{
+		BounceBackWallConnect[0][i]=0;
+		DiffusekWallConnect[0][i]=0;
+	}
+	BounceBackWallConnect[1][0]=5;
+	BounceBackWallConnect[1][1]=8;
+	BounceBackWallConnect[2][0]=5;
+	BounceBackWallConnect[2][1]=6;
+	BounceBackWallConnect[3][0]=6;
+	BounceBackWallConnect[3][1]=7;
+	BounceBackWallConnect[4][0]=7;
+	BounceBackWallConnect[4][1]=8;
 }
 
 D2Q9BcVar::~D2Q9BcVar() {

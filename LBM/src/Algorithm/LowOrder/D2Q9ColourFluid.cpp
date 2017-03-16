@@ -45,14 +45,14 @@ D2Q9ColourFluid::~D2Q9ColourFluid() {
 }
 
 D2Q9ColourFluid::D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters__,InitLBM& ini){
-	//Initialise the common variables for the two phase models.
+//Initialise the common variables for the two phase models.
 	InitD2Q9TwoPhases(MultiBlock__,parallel__,Writer__, Parameters__, ini);
-//Initialise variables of the colour fluid model.
-	InitColourFluid(ini);
 //Set Pointers On Functions for selecting the right model dynamically
 	Set_PointersOnFunctions();
+//Initialise variables of the colour fluid model.
+	InitColourFluid(ini);
 //Initialise boundary conditions.
-	InitD2Q9Bc(Dic, Parameters__);
+	InitD2Q9Bc(Dic, Parameters__,Ei);
 //Initialise communication between processors
 	IniComVariables();
 //Set the variables names and the variable pointers for output in solution
@@ -121,24 +121,24 @@ if(PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::SurfaceForce && Pt
 	{
 
 		if(PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::SurfaceForce)
-			{Select_Collide_2D(Std2DBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{Select_Collide_2D(Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::LocalForce)
-			{Select_Collide_2D(Std2DLocal);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{Select_Collide_2D(Std2DLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			{Select_Collide_2D(Std2DBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{Select_Collide_2D(Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else
-			{Select_Collide_2D(Std2D);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{Select_Collide_2D(Std2D,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 	}
 	else
 	{
 		if(PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::SurfaceForce)
-			{Select_Collide_2D(Std2DNonCstTauBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{Select_Collide_2D(Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::LocalForce)
-			{Select_Collide_2D(Std2DNonCstTauLocal);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{Select_Collide_2D(Std2DNonCstTauLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			{Select_Collide_2D(Std2DNonCstTauBody);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{Select_Collide_2D(Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 		else
-			{Select_Collide_2D(Std2DNonCstTau);Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{Select_Collide_2D(Std2DNonCstTau,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
 	}
 
 }
@@ -228,15 +228,15 @@ void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 	Normal=new double*[2];
 	CAngle.AllocateTeta(NodeArrays,PtrParameters,teta);
 	Dic->AddSync("Rho",Rho);
-	Dic->AddVar(Vector,"ColourGrad",true,true,false,G[0],G[1]);
+	Dic->AddVar(Vector,"ColourGrad",false,true,false,G[0],G[1]);
 	Dic->AddVar(Scalar,"ColourGrad_Norm",true,true,false,G_Norm);
 	Dic->AddVar(Vector,"Normal",true,true,false,Normal[0],Normal[1]);
 	Dic->AddVar(Vector,"SurfaceForce",false,true,false,F[0],F[1]);
 	Dic->AddVar(Scalar,"RhoRed",false,true,true,Rhor);
 	Dic->AddVar(Scalar,"RhoBlue",false,true,true,Rhob);
 	Dic->AddVar(Scalar,"RhoN",true,true,true,RhoN);
-	Dic->AddVar(Scalar,"Curvature",true,false,false,Curv);
-	Dic->AddVar(Scalar,"Check",false,false,false,testVar);
+	Dic->AddVar(Scalar,"Curvature",false,false,false,Curv);
+//	Dic->AddVar(Scalar,"Check",false,false,false,testVar);
 	for(int i=0;i<nbnodes_total;i++)
 	{
 		G[0][i]=0;
@@ -244,12 +244,15 @@ void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 		G_Norm[i]=0;
 		Normal[0][i]=0;
 		Normal[1][i]=0;
-		testVar[i]=0.0;
+	//	testVar[i]=0.0;
 		F[0][i]=0;
 		F[1][i]=0;
 	}
-
 	InitColourFluidAllDomain(ini);
+	//Initialise from file or Restart
+	InitialiseFromFile();
+	//Initialise distribution
+	InitDistColourFluidAllDomain();
 }
 void D2Q9ColourFluid::InitColourFluidAllDomain(InitLBM& ini){
 	InitColourFluidDomainBc(ini);
@@ -276,11 +279,6 @@ void D2Q9ColourFluid::InitColourFluidAllDomain(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=-2;
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=0;
-			f[1]->f[i][idx]=0;
-		}
 	}
 	delete [] pos;
 	delete [] U_;
@@ -304,11 +302,6 @@ void D2Q9ColourFluid::InitColourFluidDomainBc(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 	}
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
@@ -323,11 +316,6 @@ void D2Q9ColourFluid::InitColourFluidDomainBc(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 	}
 	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
@@ -342,11 +330,6 @@ void D2Q9ColourFluid::InitColourFluidDomainBc(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 	}
 
 	for (int j=0;j<NodeArrays->NodePressure.size();j++)
@@ -362,11 +345,6 @@ void D2Q9ColourFluid::InitColourFluidDomainBc(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 	}
 	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
@@ -381,11 +359,6 @@ void D2Q9ColourFluid::InitColourFluidDomainBc(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 	}
 	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
 	{
@@ -400,11 +373,6 @@ void D2Q9ColourFluid::InitColourFluidDomainBc(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 	}
 	delete [] pos;
 	delete [] U_;
@@ -433,11 +401,6 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 		count++;
 	}
 
@@ -457,11 +420,6 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 		count++;
 	}
 
@@ -481,75 +439,9 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 		count++;
 	}
 	CAngle.InitContactAngle(NodeArrays,PtrParameters,Opposite,teta);
-/*	if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::FixTeta)
-	{
-		teta[0]=PtrParameters->Get_ContactAngle();costeta=std::cos(teta[0]);sinteta=std::sin(teta[0]);
-	}
-
-
-
-	if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::FixTeta)
-	{
-		teta[0]=PtrParameters->Get_ContactAngle();
-		costeta=std::cos(teta[0]);
-		sinteta=std::sin(teta[0]);
-		if (std::abs(costeta)<epsilon) {
-			costeta=0.0;
-			sinteta=copysign(1.0,sinteta);
-		}
-		if (std::abs(costeta)>1.0-epsilon) {
-			costeta=copysign(1.0,costeta);
-			sinteta=0.0;
-		}
-		n1[0][0]=0.0;
-		n2[0][0]=n1[0][0];
-		n1[0][1]=0.0;
-		n2[0][1]=n1[0][1];
-		n1[1][0]=costeta;
-		n2[1][0]=n1[1][0];
-		n1[1][1]=sinteta;
-		n2[1][1]=-n1[1][1];
-		n1[2][0]=sinteta;
-		n2[2][0]=-n1[2][0];
-		n1[2][1]=costeta;
-		n2[2][1]=n1[2][1];
-		n1[3][0]=-costeta;
-		n2[3][0]=n1[3][0];
-		n1[3][1]=sinteta;
-		n2[3][1]=-n1[3][1];
-		n1[4][0]=sinteta;
-		n2[4][0]=-n1[4][0];
-		n1[4][1]=-costeta;
-		n2[4][1]=n1[4][1];
-		double InvSqrt2=1.0/std::sqrt(2.0);
-		n1[5][0]=InvSqrt2*(costeta-sinteta);
-		n1[5][1]=InvSqrt2*(costeta+sinteta);
-		n2[5][0]=InvSqrt2*(costeta+sinteta);
-		n2[5][1]=InvSqrt2*(costeta-sinteta);
-
-		n1[6][0]=InvSqrt2*(-costeta+sinteta);
-		n1[6][1]=InvSqrt2*(costeta+sinteta);
-		n2[6][0]=InvSqrt2*(-costeta-sinteta);
-		n2[6][1]=InvSqrt2*(costeta-sinteta);
-
-		n1[7][0]=InvSqrt2*(-costeta-sinteta);
-		n1[7][1]=InvSqrt2*(-costeta+sinteta);
-		n2[7][0]=InvSqrt2*(-costeta+sinteta);
-		n2[7][1]=InvSqrt2*(-costeta-sinteta);
-
-		n1[8][0]=InvSqrt2*(costeta+sinteta);
-		n1[8][1]=InvSqrt2*(-costeta+sinteta);
-		n2[8][0]=InvSqrt2*(costeta-sinteta);
-		n2[8][1]=InvSqrt2*(-costeta-sinteta);
-	}*/
 	delete [] pos;
 	delete [] U_;
 }
@@ -573,11 +465,6 @@ void D2Q9ColourFluid::InitColourFluidInterior(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 	}
 
 	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
@@ -593,15 +480,247 @@ void D2Q9ColourFluid::InitColourFluidInterior(InitLBM& ini){
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
-		for (int i=0;i<nbvelo;i++)
-		{
-			f[0]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-			f[1]->f[i][idx]=CollideLowOrder::EquiDistriFunct2D(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
-		}
 	}
 
 	delete [] pos;
 	delete [] U_;
+}
+void D2Q9ColourFluid::InitDistColourFluidAllDomain(){
+	InitDistColourFluidDomainBc();
+	InitDistColourFluidWall();
+	InitDistColourFluidInterior();
+
+// Init Solid
+	double alpha=0;
+	double* pos =new double[2];
+	double* U_=new double[2];
+	double Rho_tmp;
+	int idx=0;
+
+	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeSolid[j].Get_index();
+// Get initialise values from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=-2;
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=0;
+			f[1]->f[i][idx]=0;
+		}
+	}
+}
+void D2Q9ColourFluid::InitDistColourFluidDomainBc(){
+	double alpha=0;
+	double* pos =new double[2];
+	double* U_=new double[2];
+	double Rho_tmp;
+	int idx=0;
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeGlobalCorner[j].Get_index();
+// Get initialise values from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeSpecialWall[j].Get_index();
+// Get initialise values from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeVelocity[j].Get_index();
+// Get initialise values from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodePressure[j].Get_index();
+// Get initialise values from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeSymmetry[j].Get_index();
+// Get initialise values from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodePeriodic[j].Get_index();
+// Get initialise values from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+}
+void D2Q9ColourFluid::InitDistColourFluidWall(){
+	double alpha=0;
+	double* pos =new double[2];
+	double* U_=new double[2];
+	double Rho_tmp;
+	int idx=0;
+	int count=0;
+
+	for (int j=0;j<NodeArrays->CornerConcave.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_index();
+// Get initialise value from the user
+		alpha=(RhoN[idx]+1.0)*0.5;// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+		count++;
+	}
+
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeWall[j].Get_index();
+// Get initialise values from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+		count++;
+	}
+
+	for (int j=0;j<NodeArrays->CornerConvex.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_index();
+// Get initialise value from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+		count++;
+	}
+}
+void D2Q9ColourFluid::InitDistColourFluidInterior(){
+	double alpha=0;
+	double* pos =new double[2];
+	double* U_=new double[2];
+	double Rho_tmp;
+	int idx=0;
+
+	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeInterior[j].Get_index();
+// Get initialise value from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeGhost[j].Get_index();
+// Get initialise values from the user
+		alpha=(RhoN[idx]+1.0)*0.5;
+// Initialise the blue and red densities
+		Rhor[idx]=alpha*Rho[idx];
+		Rhob[idx]=(1- alpha) *Rho[idx];
+		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		for (int i=0;i<nbvelo;i++)
+		{
+			f[0]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhor[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
 }
 void D2Q9ColourFluid::UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini){
 	UpdateDomainBc(UpdatedParam,ini);
@@ -1388,10 +1507,286 @@ double D2Q9ColourFluid::CurvatureCorner(int & nodenumber, int* connect,int & nor
 	GradCorner(&tmp_1[0],&Normal[1][0],connect,normal);//d(Ny)/dx and d(Ny)/dy
 	return -(tmp_0[0]+tmp_1[1]);//Dot product
 }
+//
+void D2Q9ColourFluid::ApplyPatchVelocity(VelocityPatchBc& VelPatchBc){
+	SetVelocity(VelPatchBc.Get_VelocityModel(),VelPatchBc.Get_VelocityType());
+	std::vector<int> NodeIdx=VelPatchBc.Get_NodeIndexByType();
+	std::vector<int> NodeIdxSpecialWalls=VelPatchBc.Get_NodeIndexSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=VelPatchBc.Get_NodeIndexGlobalCorner();
+	double alpha=0;
+	if(VelPatchBc.Get_extrapolationAlpha())
+	{
+		for (int j=0;j<NodeIdx.size();j++)
+		{
+			ApplyVelocity(NodeArrays->NodeVelocity[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_connect(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_UDef(), f[0],Rhor,U[0],U[1]);
+			ApplyVelocity(NodeArrays->NodeVelocity[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_connect(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_UDef(), f[1],Rhob,U[0],U[1]);
+			//Impose alpha
+			ExtrapolationOnWall(RhoN,NodeArrays->NodeVelocity[NodeIdx[j]].Get_connect(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_BcNormal());
+			alpha=(RhoN[NodeArrays->NodeVelocity[NodeIdx[j]].Get_index()]+1.0)*0.5;
+			ImposeAlpha(NodeArrays->NodeVelocity[NodeIdx[j]].Get_index(), alpha);
+		}
+		for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+		{
+			ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhor,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhob,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			alpha=(RhoN[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()]+1.0)*0.5;
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],alpha*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],(1.0-alpha)*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+		{
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],(1-NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],Rhob[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+		}
+	}
+	else
+	{
+		for (int j=0;j<NodeIdx.size();j++)
+		{
+			ApplyVelocity(NodeArrays->NodeVelocity[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_connect(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_UDef(), f[0],Rhor,U[0],U[1]);
+			ApplyVelocity(NodeArrays->NodeVelocity[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_connect(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_UDef(), f[1],Rhob,U[0],U[1]);
+			//Impose alpha
+			ImposeAlpha(NodeArrays->NodeVelocity[NodeIdx[j]].Get_index(), NodeArrays->NodeVelocity[NodeIdx[j]].Get_AlphaDef());
+		}
+		for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+		{
+			alpha=NodeArrays->NodeVelocity[NodeIdx[j]].Get_AlphaDef();
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],alpha*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],(1.0-alpha)*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+		{
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],(1-NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],Rhob[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+		}
+	}
+}
+void D2Q9ColourFluid::ApplyPatchPressure(PressurePatchBc& PresPatchBc){
+	SetPressure(PresPatchBc.Get_PressureModel(),PresPatchBc.Get_PressureType());
+	std::vector<int> NodeIdx=PresPatchBc.Get_NodeIndexByType();
+	std::vector<int> NodeIdxSpecialWalls=PresPatchBc.Get_NodeIndexSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=PresPatchBc.Get_NodeIndexGlobalCorner();
+	double alpha=0;
+	if(PresPatchBc.Get_extrapolationAlpha())
+	{
+		for (int j=0;j<NodeIdx.size();j++)
+		{
+			ExtrapolationOnWall(RhoN,NodeArrays->NodePressure[NodeIdx[j]].Get_connect(),NodeArrays->NodePressure[NodeIdx[j]].Get_BcNormal());
+			alpha=(RhoN[NodeArrays->NodePressure[NodeIdx[j]].Get_index()]+1.0)*0.5;
+			ApplyPressure(NodeArrays->NodePressure[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePressure[NodeIdx[j]].Get_connect(),alpha*NodeArrays->NodePressure[NodeIdx[j]].Get_RhoDef(), f[0],Rhor,U[0],U[1]);
+			ApplyPressure(NodeArrays->NodePressure[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePressure[NodeIdx[j]].Get_connect(),(1-alpha)*NodeArrays->NodePressure[NodeIdx[j]].Get_RhoDef(), f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+		{
+			ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhor,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhob,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			alpha=(RhoN[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()]+1.0)*0.5;
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],alpha*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],(1.0-alpha)*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+		{
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],(1-NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],Rhob[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+/*		//Keep alpha
+			Rhor[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]=0.0;
+			Rhob[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]=0.0;
+			for(int i=0;i<9;i++)
+			{
+				fi_tmp=f[0]->f[i][NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]+f[1]->f[i][NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()];
+				f[0]->f[i][NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]=NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef()*fi_tmp;
+				f[1]->f[i][NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]=(1-NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef())*fi_tmp;
+				Rhor[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]+=f[0]->f[i][NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()];
+				Rhob[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]+=f[1]->f[i][NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()];
+			}*/
+		}
+	}
+	else
+	{
+		for (int j=0;j<NodeIdx.size();j++)
+		{
+			alpha=NodeArrays->NodePressure[NodeIdx[j]].Get_AlphaDef();
+			ApplyPressure(NodeArrays->NodePressure[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePressure[NodeIdx[j]].Get_connect(),alpha*NodeArrays->NodePressure[NodeIdx[j]].Get_RhoDef(), f[0],Rhor,U[0],U[1]);
+			ApplyPressure(NodeArrays->NodePressure[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePressure[NodeIdx[j]].Get_connect(),(1-alpha)*NodeArrays->NodePressure[NodeIdx[j]].Get_RhoDef(), f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+		{
+			alpha=NodeArrays->NodePressure[NodeIdx[j]].Get_AlphaDef();
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],alpha*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],(1.0-alpha)*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+		{
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],(1-NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],Rhob[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+		}
+	}
+}
+void D2Q9ColourFluid::ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc){
+	SetSymmetry(SymPatchBc.Get_SymmetryType());
+	std::vector<int> NodeIdx=SymPatchBc.Get_NodeIndexByType();
+	std::vector<int> NodeIdxSpecialWalls=SymPatchBc.Get_NodeIndexSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=SymPatchBc.Get_NodeIndexGlobalCorner();
+	double alpha=0;
+	if(SymPatchBc.Get_extrapolationAlpha())
+	{
+		for (int j=0;j<NodeIdx.size();j++)
+		{
+				ApplySymmetry(NodeArrays->NodeSymmetry[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_connect(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_UDef(),f[0],Rhor,U[0],U[1]);
+				ApplySymmetry(NodeArrays->NodeSymmetry[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_connect(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_UDef(),f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+		{
+			ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhor,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhob,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			alpha=(RhoN[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()]+1.0)*0.5;
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],alpha*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],(1.0-alpha)*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+		{
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],(1-NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],Rhob[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+		}
+	}
+	else
+	{
+		for (int j=0;j<NodeIdx.size();j++)
+		{
+				ApplySymmetry(NodeArrays->NodeSymmetry[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_connect(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_UDef(),f[0],Rhor,U[0],U[1]);
+				ApplySymmetry(NodeArrays->NodeSymmetry[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_connect(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_UDef(),f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+		{
+			ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhor,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhob,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			alpha=(RhoN[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()]+1.0)*0.5;
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],alpha*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],(1.0-alpha)*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+		{
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],(1-NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],Rhob[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+		}
+	}
+}
+void D2Q9ColourFluid::ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc){
+	SetPeriodic(PerPatchBc.Get_PeriodicType());
+	std::vector<int> NodeIdx=PerPatchBc.Get_NodeIndexByType();
+	std::vector<int> NodeIdxSpecialWalls=PerPatchBc.Get_NodeIndexSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=PerPatchBc.Get_NodeIndexGlobalCorner();
+	double alpha=0;
+	if(PerPatchBc.Get_extrapolationAlpha())
+	{
+		for (int j=0;j<NodeIdx.size();j++)
+		{
+				ApplyPeriodic(NodeArrays->NodePeriodic[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_connect(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_UDef(),f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodePeriodic[NodeIdx[j]].Get_index()]/Rho[NodeArrays->NodePeriodic[NodeIdx[j]].Get_index()]);
+				ApplyPeriodic(NodeArrays->NodePeriodic[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_connect(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_UDef(),f[1],Rhob,U[0],U[1],Rhor[NodeArrays->NodePeriodic[NodeIdx[j]].Get_index()]/Rho[NodeArrays->NodePeriodic[NodeIdx[j]].Get_index()]);
+		}
+		for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+		{
+			ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhor,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhob,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			alpha=(RhoN[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()]+1.0)*0.5;
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],alpha*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],(1.0-alpha)*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+		{
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],(1-NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],Rhob[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+		}
+	}
+	else
+	{
+		for (int j=0;j<NodeIdx.size();j++)
+		{
+				ApplyPeriodic(NodeArrays->NodePeriodic[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_connect(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_UDef(),f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodePeriodic[NodeIdx[j]].Get_index()]/Rho[NodeArrays->NodePeriodic[NodeIdx[j]].Get_index()]);
+				ApplyPeriodic(NodeArrays->NodePeriodic[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_connect(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_UDef(),f[1],Rhob,U[0],U[1],Rhor[NodeArrays->NodePeriodic[NodeIdx[j]].Get_index()]/Rho[NodeArrays->NodePeriodic[NodeIdx[j]].Get_index()]);
+		}
+		for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+		{
+			ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhor,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			ExtrapolationOnCornerConcave(Rhob,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+			alpha=(RhoN[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()]+1.0)*0.5;
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],alpha*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
+			ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],(1.0-alpha)*Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
+		}
+		for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+		{
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+			ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],(1-NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],Rhob[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+		}
+	}
+}
+/*
+void D2Q9ColourFluid::ApplyPatchGlobalCorner(GlobalCornerPatchBc& PerPatchBc){
+	double fi_tmp=0;
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[j].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[j].Get_index()]);
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],(1-NodeArrays->NodeGlobalCorner[j].Get_AlphaDef())*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],Rhob[NodeArrays->NodeGlobalCorner[j].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[j].Get_index()]);
+	//Keep alpha
+		Rhor[NodeArrays->NodeGlobalCorner[j].Get_index()]=0.0;
+		Rhob[NodeArrays->NodeGlobalCorner[j].Get_index()]=0.0;
+		for(int i=0;i<9;i++)
+		{
+			fi_tmp=f[0]->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]+f[1]->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];
+			f[0]->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]=NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*fi_tmp;
+			f[1]->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]=(1-NodeArrays->NodeGlobalCorner[j].Get_AlphaDef())*fi_tmp;
+			Rhor[NodeArrays->NodeGlobalCorner[j].Get_index()]+=f[0]->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];
+			Rhob[NodeArrays->NodeGlobalCorner[j].Get_index()]+=f[1]->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];
+		}
+	}
+}*/
+
+void  D2Q9ColourFluid::ImposeAlpha(int &index, double alpha)
+{
+	Rhor[index]=0.0;
+	Rhob[index]=0.0;
+	for(int i=0;i<9;i++)
+	{
+		f[0]->f[i][index]=alpha*f[0]->f[i][index];//fi_tmp;
+		f[1]->f[i][index]=(1-alpha)*f[1]->f[i][index];//fi_tmp;
+		Rhor[index]+=f[0]->f[i][index];
+		Rhob[index]+=f[1]->f[i][index];
+	}
+}
 ///Select and apply boundary conditions
 void D2Q9ColourFluid::ApplyBc(){
+	std::vector<SolverEnum::PatchType> PatchType=PatchBc->Get_PatchTypeInType();
+	std::vector<int> PatchIdInType=PatchBc->Get_PatchIdInType();
 
+	for (int i=0;i<PatchBc->Get_NumberOfPatchBc();i++)
+	{
+		switch(PatchType[i])
+		{
+		case SolverEnum::Periodic:
+			ApplyPatchPeriodic(PatchBc->Get_PeriodicPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Symmetry:
+			ApplyPatchSymmetry(PatchBc->Get_SymmetryPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Pressure:
+			ApplyPatchPressure(PatchBc->Get_PressurePatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Velocity:
+			ApplyPatchVelocity(PatchBc->Get_VelocityPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Wall:
+			break;
+		}
+	}
 	double fi_tmp;
+	double alpha=0;
+/*
 	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		ApplyVelocity(NodeArrays->NodeVelocity[j].Get_BcNormal(),NodeArrays->NodeVelocity[j].Get_connect(),NodeArrays->NodeVelocity[j].Get_UDef(), f[0],Rhor,U[0],U[1]);
@@ -1402,9 +1797,9 @@ void D2Q9ColourFluid::ApplyBc(){
 		Rhob[NodeArrays->NodeVelocity[j].Get_index()]=0.0;
 		for(int i=0;i<9;i++)
 		{
-			fi_tmp=f[0]->f[i][NodeArrays->NodeVelocity[j].Get_index()]+f[1]->f[i][NodeArrays->NodeVelocity[j].Get_index()];
-			f[0]->f[i][NodeArrays->NodeVelocity[j].Get_index()]=NodeArrays->NodeVelocity[j].Get_AlphaDef()*fi_tmp;
-			f[1]->f[i][NodeArrays->NodeVelocity[j].Get_index()]=(1-NodeArrays->NodeVelocity[j].Get_AlphaDef())*fi_tmp;
+			//fi_tmp=f[0]->f[i][NodeArrays->NodeVelocity[j].Get_index()];//+f[1]->f[i][NodeArrays->NodeVelocity[j].Get_index()];
+			f[0]->f[i][NodeArrays->NodeVelocity[j].Get_index()]=NodeArrays->NodeVelocity[j].Get_AlphaDef()*f[0]->f[i][NodeArrays->NodeVelocity[j].Get_index()];//fi_tmp;
+			f[1]->f[i][NodeArrays->NodeVelocity[j].Get_index()]=(1-NodeArrays->NodeVelocity[j].Get_AlphaDef())*f[1]->f[i][NodeArrays->NodeVelocity[j].Get_index()];//fi_tmp;
 			Rhor[NodeArrays->NodeVelocity[j].Get_index()]+=f[0]->f[i][NodeArrays->NodeVelocity[j].Get_index()];
 			Rhob[NodeArrays->NodeVelocity[j].Get_index()]+=f[1]->f[i][NodeArrays->NodeVelocity[j].Get_index()];
 
@@ -1412,7 +1807,7 @@ void D2Q9ColourFluid::ApplyBc(){
 
 	}
 
-	double alpha=0;
+
 	for (int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
 //		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_AlphaDef()*NodeArrays->NodePressure[j].Get_RhoDef(), f[0],Rhor,U[0],U[1]);
@@ -1423,6 +1818,7 @@ void D2Q9ColourFluid::ApplyBc(){
 		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),(1-alpha)*NodeArrays->NodePressure[j].Get_RhoDef(), f[1],Rhob,U[0],U[1]);
 
 	}
+*/
 	for (int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f[0],Rhor,U[0],U[1]);
@@ -1430,17 +1826,10 @@ void D2Q9ColourFluid::ApplyBc(){
 
 	}
 
-
+/*
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
-		if(NodeArrays->NodeSpecialWall[j].get_x()==9&&NodeArrays->NodeSpecialWall[j].get_y()==50)
-			idxcheck=NodeArrays->NodeSpecialWall[j].Get_index();
-//		ExtrapolationCornerConcaveToSolid(Rhor,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
-//		ExtrapolationCornerConcaveToSolid(Rhob,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
-//		ExtrapolationCornerConcaveToSolid(U[0],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
-//		ExtrapolationCornerConcaveToSolid(U[1],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
 
-//		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
 		ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
 		ExtrapolationOnCornerConcave(Rhor,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
 		ExtrapolationOnCornerConcave(Rhob,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
@@ -1448,23 +1837,8 @@ void D2Q9ColourFluid::ApplyBc(){
 
 		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],alpha*Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U[0][NodeArrays->NodeSpecialWall[j].Get_index()],U[1][NodeArrays->NodeSpecialWall[j].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
 		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],(1.0-alpha)*Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U[0][NodeArrays->NodeSpecialWall[j].Get_index()],U[1][NodeArrays->NodeSpecialWall[j].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
-
-/*		//Keep alpha
-				Rhor[NodeArrays->NodeSpecialWall[j].Get_index()]=0.0;
-				Rhob[NodeArrays->NodeSpecialWall[j].Get_index()]=0.0;
-				for(int i=0;i<9;i++)
-				{
-					fi_tmp=f[0]->f[i][NodeArrays->NodeSpecialWall[j].Get_index()]+f[1]->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];
-					f[0]->f[i][NodeArrays->NodeSpecialWall[j].Get_index()]=alpha*fi_tmp;
-					f[1]->f[i][NodeArrays->NodeSpecialWall[j].Get_index()]=(1-alpha)*fi_tmp;
-					Rhor[NodeArrays->NodeSpecialWall[j].Get_index()]+=f[0]->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];
-					Rhob[NodeArrays->NodeSpecialWall[j].Get_index()]+=f[1]->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];
-				}
-				*/
-//		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1]);
-//		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f[0],NodeArrays->TypeOfNode,Rhor,U[0],U[1]);
-//		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f[1],NodeArrays->TypeOfNode,Rhob,U[0],U[1]);
 	}
+*/
 //	std::cout<<"Apply bc "<<"f6: "<<f[1]->f[6][idxcheck]<<" f8: "<<f[1]->f[8][idxcheck];
 
 	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
@@ -1472,6 +1846,7 @@ void D2Q9ColourFluid::ApplyBc(){
 		ApplyCornerWall(NodeArrays->NodeCorner[j], f[0],Rhor,U[0],U[1]);
 		ApplyCornerWall(NodeArrays->NodeCorner[j], f[1],Rhob,U[0],U[1]);
 	}
+/*
 	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 			ApplySymmetry(NodeArrays->NodeSymmetry[j].Get_BcNormal(),NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_RhoDef(),NodeArrays->NodeSymmetry[j].Get_UDef(),f[0],Rhor,U[0],U[1]);
@@ -1482,6 +1857,8 @@ void D2Q9ColourFluid::ApplyBc(){
 			ApplyPeriodic(NodeArrays->NodePeriodic[j].Get_BcNormal(),NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_RhoDef(),NodeArrays->NodePeriodic[j].Get_UDef(),f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodePeriodic[j].Get_index()]/Rho[NodeArrays->NodePeriodic[j].Get_index()]);
 			ApplyPeriodic(NodeArrays->NodePeriodic[j].Get_BcNormal(),NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_RhoDef(),NodeArrays->NodePeriodic[j].Get_UDef(),f[1],Rhob,U[0],U[1],Rhor[NodeArrays->NodePeriodic[j].Get_index()]/Rho[NodeArrays->NodePeriodic[j].Get_index()]);
 	}
+*/
+	/*
 	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
 		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],Rhor[NodeArrays->NodeGlobalCorner[j].Get_index()]/Rho[NodeArrays->NodeGlobalCorner[j].Get_index()]);
@@ -1498,6 +1875,7 @@ void D2Q9ColourFluid::ApplyBc(){
 			Rhob[NodeArrays->NodeGlobalCorner[j].Get_index()]+=f[1]->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];
 		}
 	}
+*/
 	parallel->barrier();
 
 

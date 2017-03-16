@@ -20,7 +20,7 @@ public:
 	D2Q9Wall();
 	virtual ~D2Q9Wall();
 
-	void SetWall(Parameters *Param);
+	void SetWall(Parameters *Param, double ** &Ei);
 	// Apply wall treatment depending of the parameters
 	void ApplyWall(int const &BcNormal,int const *Connect, DistriFunct* f_in, double const *Rho, double const *U, double const *V);
 	//Special Walls are the wall on the boundary of the domain. They need two treatments: The boundary treatment and the wall treatment
@@ -49,6 +49,8 @@ private:
 	SpecialWallMethod PtrSpecialWallMethod;
 
 	double feq,Rho;
+
+
 };
 
 #endif /* SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9WALL_H_ */

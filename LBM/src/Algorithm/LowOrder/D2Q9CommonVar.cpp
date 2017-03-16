@@ -70,4 +70,11 @@ D2Q9CommonVar::D2Q9CommonVar() {
 D2Q9CommonVar::~D2Q9CommonVar() {
 	// TODO Auto-generated destructor stub
 }
-
+void D2Q9CommonVar::AdjustVelocityDistri(double VelocityInLattice){
+	for(int i=0;i<9;i++)
+	{
+		Ei_Norm[i]*=VelocityInLattice;
+		Ei[i][0]*=VelocityInLattice;
+		Ei[i][1]*=VelocityInLattice;
+	}
+}

@@ -33,6 +33,11 @@ UserMesh::UserMesh() {
 //	std::string filename("../Perpentine_1290_371.raw");
 //		ReadBinaryImage(filename,1290, 371, 1);// double resolution
 //		std::cout<<"**** check read file***"<<std::endl;
+
+//	std::string filename("../rooster_363_470.raw");
+//		ReadBinaryImage(filename,363, 470, 1);// double resolution
+	std::string filename("../Image_1162_filtered_filled_404_201.raw");
+		ReadBinaryImage(filename,404, 201, 1);// double resolution
 }
 void UserMesh::SetUserMeshVariables(){
 	H=PtrParametersUserMesh->Get_UserH();
@@ -124,17 +129,27 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 
 
 	//if((Node.get_x()<10 || Node.get_x()>90) &&(Node.get_y()<10 || Node.get_y()>40 ))
-	if(Node.get_y()<20 || Node.get_y()>40)
-		if(Node.get_x()>140 && Node.get_x()<160)
+/*	if(Node.get_y()<20 || Node.get_y()>40)
+		if((Node.get_x()>140 && Node.get_x()<160)||(Node.get_x()>190 && Node.get_x()<210)||(Node.get_x()>240 && Node.get_x()<260)||(Node.get_x()>290 && Node.get_x()<310)||(Node.get_x()>340 && Node.get_x()<360))
 			solid=true;
 		else
 			solid=false;
 	else
 		solid=false;
+	//force walls
+	if(Node.get_x()>10 && Node.get_x()<490)
+	if(Node.get_y()<=1 ||Node.get_y()>=59)
+		solid=true;
 //	if(Node.get_y()<2 || Node.get_y()>18)
 //		solid=true;
-
-
+*/
+	if(Node.get_x()>100 && Node.get_x()<504)
+		if(Node.get_y()<=0 || Node.get_y()>=194)
+			solid=true;
+		else
+			solid=image[0][(int)Node.get_y()+1][(int)Node.get_x()-100];
+		else
+			solid=false;
 }
 void UserMesh::SetSymmetryType(SymmetryType &Type, double x, double y)
 {

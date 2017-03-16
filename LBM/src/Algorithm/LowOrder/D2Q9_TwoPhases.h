@@ -30,6 +30,7 @@ protected:
 	void InitWall(InitLBM& ini);
 	void InitInterior(InitLBM& ini);
 	void StreamD2Q9();
+	void InitialiseFromFile();
 
 
 protected:

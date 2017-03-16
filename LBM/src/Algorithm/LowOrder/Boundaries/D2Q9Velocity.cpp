@@ -28,31 +28,48 @@ D2Q9Velocity::D2Q9Velocity() {
 D2Q9Velocity::~D2Q9Velocity() {
 	// TODO Auto-generated destructor stub
 }
-void D2Q9Velocity::SetVelocity(Parameters *Param){
+
+void D2Q9Velocity::SetVelocity(Parameters *Param, double ** &Ei){
 //Setup the velocity assumptions
-	switch(Param->Get_VelocityType())
-	{
-	case FixV:
-		PtrCalculU=&D2Q9Velocity::FixU;
-		break;
-	case zeroVGrad1st:
-		PtrCalculU=&D2Q9Velocity::NoGradU_1stOrder;
-		break;
-	default:
-		std::cerr<<"Velocity Type has not been found."<<std::endl;
-	}
+	SetVelocityModel(Param->Get_VelocityModel());
 //Setup the velocity model
-	switch(Param->Get_VelocityModel())
-	{
-	case HeZouV:
-		PtrVelocityMethod=&D2Q9Velocity::BC_HeZou_U;
-		break;
-	case Ladd:
-		PtrVelocityMethod=&D2Q9Velocity::BC_Ladd;
-		break;
-	default:
-		std::cerr<<"Velocity model has not been found."<<std::endl;
-	}
+	SetVelocityType(Param->Get_VelocityType());
+
+	EiBc=Ei;
+}
+void D2Q9Velocity::SetVelocityModel(VelocityModel VelocityModel_){
+	//Setup the velocity model
+		switch(VelocityModel_)
+		{
+		case HeZouV:
+			PtrVelocityMethod=&D2Q9Velocity::BC_HeZou_U;
+			break;
+		case Ladd:
+			PtrVelocityMethod=&D2Q9Velocity::BC_Ladd;
+			break;
+		default:
+			std::cerr<<"Velocity model has not been found."<<std::endl;
+		}
+}
+void D2Q9Velocity::SetVelocityType(VelocityType VelocityType_){
+	//Setup the velocity assumptions
+		switch(VelocityType_)
+		{
+		case FixV:
+			PtrCalculU=&D2Q9Velocity::FixU;
+			break;
+		case zeroVGrad1st:
+			PtrCalculU=&D2Q9Velocity::NoGradU_1stOrder;
+			break;
+		default:
+			std::cerr<<"Velocity Type has not been found."<<std::endl;
+		}
+}
+void D2Q9Velocity::SetVelocity(VelocityModel VelocityModel_,VelocityType VelocityType_){
+	//Setup the velocity assumptions
+		SetVelocityModel(VelocityModel_);
+	//Setup the velocity model
+		SetVelocityType(VelocityType_);
 }
 void D2Q9Velocity::ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in, double *Rho, double *U, double *V){
 	(this->*PtrCalculU)(BcNormal,Connect, UDef,U,V);

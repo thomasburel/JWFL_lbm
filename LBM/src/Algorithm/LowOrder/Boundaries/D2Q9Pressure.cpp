@@ -24,28 +24,41 @@ D2Q9Pressure::~D2Q9Pressure() {
 	// TODO Auto-generated destructor stub
 }
 
-void D2Q9Pressure::Set_PressureBcs(Parameters *Param){
-//Setup the pressure assumptions
-	switch(Param->Get_PressureType())
-	{
-	case FixP:
-		PtrCalculRho=&D2Q9Pressure::FixRho;
-		break;
-	case zeroPGrad1st:
-		PtrCalculRho=&D2Q9Pressure::NoGradRho_1stOrder;
-		break;
-	default:
-		std::cerr<<"Pressure Type has not been found."<<std::endl;
-	}
-//Setup the Pressure model
-	switch(Param->Get_PressureModel())
-	{
-	case HeZouP:
-		PtrPressureMethod=&D2Q9Pressure::BC_HeZou_P;
-		break;
-	default:
-		std::cerr<<"Pressure model has not been found."<<std::endl;
-	}
+void D2Q9Pressure::Set_PressureBcs(Parameters *Param, double ** &Ei){
+//Setup the pressure assumptions and the model
+	SetPressure(Param->Get_PressureModel(),Param->Get_PressureType());
+	EiBc=Ei;
+}
+void D2Q9Pressure::SetPressure(PressureModel PressureModel_,PressureType PressureType_){
+	//Setup the Pressure model
+	SetPressureModel(PressureModel_);
+	//Setup the pressure assumptions
+	SetPressureType(PressureType_);
+}
+void D2Q9Pressure::SetPressureModel(PressureModel PressureModel_){
+	//Setup the Pressure model
+		switch(PressureModel_)
+		{
+		case HeZouP:
+			PtrPressureMethod=&D2Q9Pressure::BC_HeZou_P;
+			break;
+		default:
+			std::cerr<<"Pressure model has not been found."<<std::endl;
+		}
+}
+void D2Q9Pressure::SetPressureType(PressureType PressureType_){
+	//Setup the pressure assumptions
+		switch(PressureType_)
+		{
+		case FixP:
+			PtrCalculRho=&D2Q9Pressure::FixRho;
+			break;
+		case zeroPGrad1st:
+			PtrCalculRho=&D2Q9Pressure::NoGradRho_1stOrder;
+			break;
+		default:
+			std::cerr<<"Pressure Type has not been found."<<std::endl;
+		}
 }
 void D2Q9Pressure::ApplyPressure(int const &BcNormal,int const *Connect, double const &Rho_def, DistriFunct* f_in, double *Rho, double *U, double *V){
 	(this->*PtrCalculRho)(BcNormal,Connect, Rho_def,Rho);

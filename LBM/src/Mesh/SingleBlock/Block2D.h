@@ -46,9 +46,12 @@ public:
 								  std::vector<int> & IdNodeSW_,std::vector<int> & IdNodeSE_,std::vector<int> & IdNodeNW_,std::vector<int> & IdNodeNE_);
 
 	//virtual void ModifyMeshByUser(Parameters &Param);
+	virtual void InitPatchBc(Parameters *PtrParam);
+	virtual void Set_NodeIndexByTypeForPatchBc();
 	virtual void reorganizeNodeByType();
 	virtual void ConvertToPhysicalUnit(Parameters &Param);
 	virtual NodeArrays2D* Get_NodeArrays2D();
+
 	virtual void Set_Connect(Parameters& Param);
 	virtual void Mark1stLayerSolid();
 

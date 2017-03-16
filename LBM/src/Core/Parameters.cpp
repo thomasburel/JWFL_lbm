@@ -14,6 +14,7 @@ Parameters::Parameters()
 	nz=1;
 	dimension_=SolverEnum::D2;
 	scheme=SolverEnum::Q9;
+	deltaT=1;deltaX=1;
 	model=SolverEnum::SinglePhase;
 	fluid=Newtonian;
 	UserForce=None;
@@ -67,6 +68,7 @@ Parameters::Parameters()
 	GNormLimiter=0.01;
 	nNodesInterpolInSolid=1;
 	nNodesInterpolInFluid=1;
+	refDensity=1;
 }
 
 Parameters::~Parameters() {
@@ -249,9 +251,8 @@ void SolverParameters::set_SolverParameters()
 		{
 		case SolverEnum::Q9:
 			NbVelocities=9;
-			cs=1/std::sqrt(3);
+			cs=1/std::sqrt(3)*deltaX/deltaT;
 			cs2=cs*cs;
-			deltaT=1;
 			break;
 		default:
 			std::cout<< "Scheme not found" << std::endl;
@@ -326,7 +327,29 @@ void Parameters::Add_VariableToInit(std::string filename,SolverEnum::variablesSo
 			NbVariablesInitFromFile=VariableInitFromFile.size();
 		}
 		break;
+	case  SolverEnum::RhoN:
+		if(model==SolverEnum::ColourFluid){
+			InitFromFile=true;
+			NameInitFromFile.push_back(filename);
+			VariableInitFromFile.push_back("RhoN");
+			NbVariablesInitFromFile=VariableInitFromFile.size();
+		}
+		break;
 	default:
 		std::cout<<"Variable to Init is not found"<<std::endl;
 	}
+}
+void Parameters::CheckParameters()
+{
+	switch(scheme)
+		{
+		case SolverEnum::Q9:
+			NbVelocities=9;
+			cs=1/std::sqrt(3)*deltaX/deltaT;
+			cs2=cs*cs;
+			break;
+		default:
+			std::cout<< "Scheme not found" << std::endl;
+	        break;
+		}
 }

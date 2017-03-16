@@ -22,13 +22,25 @@ D2Q9GenericBc::~D2Q9GenericBc() {
 	// TODO Auto-generated destructor stub
 }
 
-void D2Q9GenericBc::SetBcObjects( Parameters *Param){
-	D2Q9PressureBc.Set_PressureBcs(Param);
-	D2Q9VelocityBc.SetVelocity(Param);
-	D2Q9CornerBc.Set_Corner(Param);
-	D2Q9WallBc.SetWall(Param);
-	D2Q9SymmetryBc.Set_Symmetry(Param);
-	D2Q9PeriodicBc.Set_Periodic(Param);
+void D2Q9GenericBc::SetBcObjects( Parameters *Param, double ** &Ei){
+	D2Q9PressureBc.Set_PressureBcs(Param,Ei);
+	D2Q9VelocityBc.SetVelocity(Param,Ei);
+	D2Q9CornerBc.Set_Corner(Param,Ei);
+	D2Q9WallBc.SetWall(Param,Ei);
+	D2Q9SymmetryBc.Set_Symmetry(Param,Ei);
+	D2Q9PeriodicBc.Set_Periodic(Param,Ei);
+}
+void D2Q9GenericBc::SetVelocity(VelocityModel VelocityModel_,VelocityType VelocityType_){
+	D2Q9VelocityBc.SetVelocity(VelocityModel_,VelocityType_);
+}
+void D2Q9GenericBc::SetPressure(PressureModel PressureModel_,PressureType PressureType_){
+	D2Q9PressureBc.SetPressure(PressureModel_,PressureType_);
+}
+void D2Q9GenericBc::SetSymmetry(SymmetryType SymmetryType_){
+	D2Q9SymmetryBc.SetSymmetry(SymmetryType_);
+}
+void D2Q9GenericBc::SetPeriodic(PeriodicType PeriodicType_){
+	D2Q9PeriodicBc.SetPeriodic(PeriodicType_);
 }
 ///Apply pressure boundary conditions. Can be used on pressure nodes or global corners)
 void D2Q9GenericBc::ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in, double weightDensity){

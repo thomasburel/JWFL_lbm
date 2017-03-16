@@ -14,8 +14,10 @@ class NodeArrays {
 public:
 	NodeArrays();
 	virtual ~NodeArrays();
+	//Map variables
     std::map<int,NodeType> TypeOfNode;
     std::map<int,int> NodeIndexByType;
+    //Save Index for models
 	std::vector<int> Solid1stLayer;
 	std::vector<int> Solid1stLayerInCornerArray;
 	std::vector<int> CornerConcave;

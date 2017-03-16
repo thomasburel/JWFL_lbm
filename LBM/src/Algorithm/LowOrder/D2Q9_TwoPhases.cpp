@@ -95,18 +95,6 @@ D2Q9TwoPhases::~D2Q9TwoPhases() {
 void D2Q9TwoPhases::init(InitLBM& ini){
 	InitAllDomain(ini);
 	Set_BcType();
-	if(PtrParameters->IsInitFromFile())
-	{
-		for(int i=0;i<PtrParameters->Get_NumberVariableToInit();i++)
-		{
-			Read_Variable(PtrParameters->Get_VariableNameToInit(i),PtrParameters->Get_FileNameToInit(i));
-		}
-	}
-	if(PtrParameters->Get_Verbous())
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
-		{
-			std::cout<<"Processor: "<<parallel->getRank()<<" corner number: "<<j<<" Node index: "<<NodeArrays->NodeCorner[j].Get_index() <<" x: "<<NodeArrays->NodeCorner[j].get_x()<<" y: "<<NodeArrays->NodeCorner[j].get_y()<<" orientation: "<<NodeArrays->NodeCorner[j].Get_BcNormal()<<std::endl;
-		}
 	parallel->barrier();
 
 }
@@ -1755,4 +1743,14 @@ double D2Q9TwoPhases::Convert_Rho_To_Alpha(double Rho)
 {
 
 	return (Rho-PtrParameters->Get_Rho_2()) /(PtrParameters->Get_Rho_1() - PtrParameters->Get_Rho_2());
+}
+void D2Q9TwoPhases::InitialiseFromFile(){
+	//Read From file
+	if(PtrParameters->IsInitFromFile())
+	{
+		for(int i=0;i<PtrParameters->Get_NumberVariableToInit();i++)
+		{
+			Read_Variable(PtrParameters->Get_VariableNameToInit(i),PtrParameters->Get_FileNameToInit(i));
+		}
+	}
 }

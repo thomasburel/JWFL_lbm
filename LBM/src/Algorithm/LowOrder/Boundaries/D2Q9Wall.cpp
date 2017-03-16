@@ -23,7 +23,7 @@ D2Q9Wall::~D2Q9Wall() {
 	// TODO Auto-generated destructor stub
 }
 
-void D2Q9Wall::SetWall(Parameters *Param){
+void D2Q9Wall::SetWall(Parameters *Param, double ** &Ei){
 	switch(Param->Get_WallType())
 	{
 	case Diffuse:
@@ -41,6 +41,7 @@ void D2Q9Wall::SetWall(Parameters *Param){
 	default:
 		std::cerr<<"Wall node type not found."<<std::endl;
 	}
+	EiBc=Ei;
 }
 void D2Q9Wall::ApplyWall(int const &BcNormal,int const *Connect, DistriFunct* f_in, double const *Rho, double const *U, double const *V){
 	(this->*PtrWallMethod)(BcNormal,Connect,f_in);
@@ -86,7 +87,10 @@ void D2Q9Wall::ApplyDiffuseWall(int const &BcNormal,int const *Connect, DistriFu
 
 ///Bounceback Wall treatment
 void D2Q9Wall::ApplyBounceBackWall(int const &BcNormal,int const *Connect, DistriFunct* f_in){
-
+	f_in->f[BcNormal][Connect[0]]=f_in->f[OppositeBc[BcNormal]][Connect[0]];
+	f_in->f[BounceBackWallConnect[BcNormal][0]][Connect[0]]=f_in->f[OppositeBc[BounceBackWallConnect[BcNormal][0]]][Connect[0]];
+	f_in->f[BounceBackWallConnect[BcNormal][1]][Connect[0]]=f_in->f[OppositeBc[BounceBackWallConnect[BcNormal][1]]][Connect[0]];
+/*
 	switch(BcNormal)
 			{
 			case 2:
@@ -113,6 +117,7 @@ void D2Q9Wall::ApplyBounceBackWall(int const &BcNormal,int const *Connect, Distr
 				std::cerr<<"Direction wall bounce back not found. Node Index is: "<<Connect[0]<<" and direction is: "<<BcNormal<<std::endl;
 				break;
 			}
+			*/
 }
 void D2Q9Wall::ApplyHeZouWall(int const &BcNormal,int const *Connect, DistriFunct* f_in){
     switch (BcNormal)

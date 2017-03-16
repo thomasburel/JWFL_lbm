@@ -9,6 +9,7 @@
 #define MESH_MULTIBLOCK_MULTIBLOCK2D_H_
 #include"MultiBlock.h"
 #include "../SingleBlock/Block2D.h"
+
 #include <numeric>      // std::accumulate
 /*
  *
@@ -21,6 +22,7 @@ public:
 	virtual void Partitioning();
 	void Create_Block2D();
 	virtual void Modify_Block();
+	virtual void GeneratePatchBc();
 	virtual Block2D* Get_Block();
 	virtual int Get_Nx();
 	virtual int Get_Ny();

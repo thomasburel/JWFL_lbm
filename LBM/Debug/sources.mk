@@ -31,6 +31,7 @@ src \
 src/IO \
 src/Mesh/MultiBlock \
 src/Mesh/SingleBlock \
+src/Mesh/SingleBlock/Patch \
 src/Parallelism \
 src/SpecialTreatment \
 src/User \

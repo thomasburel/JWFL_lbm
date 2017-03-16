@@ -27,11 +27,12 @@ PorousMedia::~PorousMedia() {
 	delete[] image;
 }
 
-void PorousMedia::ReadBinaryImage(std::string filename,int nx, int ny, int nz)
+void PorousMedia::ReadBinaryImage(std::string filename, int nx, int ny, int nz)
 {
 	image_nx=nx;
 	image_ny=ny;
 	image_nz=nz;
+	int solidValue=1;
 	std::ifstream in(filename.c_str(), std::ios::in|std::ios::binary|std::ios::ate);
 	std::streampos size;
 	char * memblock;
@@ -61,7 +62,7 @@ void PorousMedia::ReadBinaryImage(std::string filename,int nx, int ny, int nz)
 			for (int j=0;j<image_ny;j++)
 				for (int i=0;i<image_nx;i++)
 				{
-					if((int)memblock[idx]==1)
+					if((int)memblock[idx]==solidValue)
 						image[k][j][i]=true;
 					else
 						image[k][j][i]=false;

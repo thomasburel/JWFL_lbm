@@ -21,7 +21,7 @@ public:
 	D2Q9Corner();
 	virtual ~D2Q9Corner();
 
-	void Set_Corner(Parameters *Param);
+	void Set_Corner(Parameters *Param, double ** &Ei);
 	void ApplyCorner(NodeCorner2D& Node, DistriFunct* f_in,double const & RhoDef,double const & UDef,double const & VDef, double *Rho, double *U, double *V);
 	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct* f_in, double *Rho, double *U, double *V);
 	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct* f_in, double *Rho, double *U, double *V);

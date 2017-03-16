@@ -36,6 +36,12 @@ private:
 	void InitColourFluidDomainBc(InitLBM& ini);
 	void InitColourFluidWall(InitLBM& ini);
 	void InitColourFluidInterior(InitLBM& ini);
+	//! Initialise the distributions.
+	void InitDistColourFluid();
+	void InitDistColourFluidAllDomain();
+	void InitDistColourFluidDomainBc();
+	void InitDistColourFluidWall();
+	void InitDistColourFluidInterior();
     //! Set Pointers On Functions for selecting the right model dynamically.
     /*!
      *
@@ -133,6 +139,11 @@ private:
 	void NormalDensityNoTeta(int const & idxNodeArray, int & nodenumber, int* connect,int & normal);
 // Boundary conditions depend of the model. Some functions has to be rewritten.
 	void ApplyBc();
+	void ImposeAlpha(int &index, double alpha);
+	void ApplyPatchPressure(PressurePatchBc& PresPatchBc);
+	void ApplyPatchVelocity(VelocityPatchBc& VelPatchBc);
+	void ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc);
+	void ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc);
 /*	void ApplyGlobalCorner(NodeCorner2D& NodeIn);
 	void ApplyBounceBack(NodeWall2D& Node);
 	void ApplyCorner(NodeCorner2D& Node);

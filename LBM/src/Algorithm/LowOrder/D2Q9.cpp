@@ -51,14 +51,14 @@ D2Q9::D2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* W
 		for(int i=0;i<nbnodes_total;i++)
 			{F[0][i]=0;	F[1][i]=0;}
 	}
-
-	init(ini);
-	//Initialise boundary conditions.
-		InitD2Q9Bc(Dic, Parameters_);
 	//Initialise communication between processors
 		IniComVariables();
 	//Set Pointers On Functions for selecting the right model dynamically
 		Set_PointersOnFunctions();
+	// Initialise domain
+		init(ini);
+	//Initialise boundary conditions.
+		InitD2Q9Bc(Dic, Parameters_,Ei);
 	//Set the variables names and the variable pointers for output in solution
 		Solution2D::Set_output();
 	//Set the variables names and the variable pointers for breakpoints in solution
@@ -78,20 +78,20 @@ void D2Q9::Set_Collide(){
 	if(PtrParameters->Get_FluidType()==Newtonian )
 	{
 		if(PtrParameters->Get_UserForceType()== ::LocalForce)
-			{Select_Collide_2D(Std2DLocal);}
+			{Select_Collide_2D(Std2DLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
 		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			{Select_Collide_2D(Std2DBody);}
+			{Select_Collide_2D(Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
 		else
-			{Select_Collide_2D(Std2D);}
+			{Select_Collide_2D(Std2D,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
 	}
 	else
 	{
 		if(PtrParameters->Get_UserForceType()== ::LocalForce)
-			{Select_Collide_2D(Std2DNonCstTauLocal);}
+			{Select_Collide_2D(Std2DNonCstTauLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
 		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			{Select_Collide_2D(Std2DNonCstTauBody);}
+			{Select_Collide_2D(Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
 		else
-			{Select_Collide_2D(Std2DNonCstTau);}
+			{Select_Collide_2D(Std2DNonCstTau,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
 	}
 
 }
@@ -231,7 +231,7 @@ void D2Q9::init(InitLBM& ini){
 	{
 		for (int j=0;j<nbnode;j++)
 		{
-			f->f[i][j]=CollideLowOrder::EquiDistriFunct2D(Rho[j], U[0][j], U[1][j], &Ei[i][0], omega[i]);
+			f->f[i][j]=CollideLowOrder::CollideEquillibrium(Rho[j], U[0][j], U[1][j], &Ei[i][0], omega[i]);
 		}
 	}
 
@@ -658,9 +658,111 @@ void D2Q9::Set_PressureType(NodePressure2D& NodeIn){
 	NodeIn.Set_stream(PressureStreaming,nbvelo);
 	NodeIn.Set_RhoDef(Rho[NodeIn.Get_index()]);
 }
+void D2Q9::ApplyPatchVelocity(VelocityPatchBc& VelPatchBc){
+	SetVelocity(VelPatchBc.Get_VelocityModel(),VelPatchBc.Get_VelocityType());
+	std::vector<int> NodeIdx=VelPatchBc.Get_NodeIndexByType();
+	std::vector<int> NodeIdxSpecialWalls=VelPatchBc.Get_NodeIndexSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=VelPatchBc.Get_NodeIndexGlobalCorner();
 
+	for (int j=0;j<NodeIdx.size();j++)
+	{
+		ApplyVelocity(NodeArrays->NodeVelocity[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_connect(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_UDef(), f,Rho,U[0],U[1]);
+	}
+	for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+		ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+	for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+	{
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+
+}
+void D2Q9::ApplyPatchPressure(PressurePatchBc& PresPatchBc){
+	SetPressure(PresPatchBc.Get_PressureModel(),PresPatchBc.Get_PressureType());
+	std::vector<int> NodeIdx=PresPatchBc.Get_NodeIndexByType();
+	std::vector<int> NodeIdxSpecialWalls=PresPatchBc.Get_NodeIndexSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=PresPatchBc.Get_NodeIndexGlobalCorner();
+
+	for (int j=0;j<NodeIdx.size();j++)
+	{
+		ApplyPressure(NodeArrays->NodePressure[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePressure[NodeIdx[j]].Get_connect(),NodeArrays->NodePressure[NodeIdx[j]].Get_RhoDef(), f,Rho,U[0],U[1]);
+	}
+	for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
+		ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+	for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+	{
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f,Rho,U[0],U[1],Rho[NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_index()]);
+	}
+
+}
+void D2Q9::ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc){
+	SetSymmetry(SymPatchBc.Get_SymmetryType());
+	std::vector<int> NodeIdx=SymPatchBc.Get_NodeIndexByType();
+	std::vector<int> NodeIdxSpecialWalls=SymPatchBc.Get_NodeIndexSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=SymPatchBc.Get_NodeIndexGlobalCorner();
+
+	for (int j=0;j<NodeIdx.size();j++)
+	{
+			ApplySymmetry(NodeArrays->NodeSymmetry[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_connect(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_UDef(),f,Rho,U[0],U[1]);
+	}
+	for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+	for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+	{
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+
+}
+void D2Q9::ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc){
+	SetPeriodic(PerPatchBc.Get_PeriodicType());
+	std::vector<int> NodeIdx=PerPatchBc.Get_NodeIndexByType();
+	std::vector<int> NodeIdxSpecialWalls=PerPatchBc.Get_NodeIndexSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=PerPatchBc.Get_NodeIndexGlobalCorner();
+	for (int j=0;j<NodeIdx.size();j++)
+	{
+			ApplyPeriodic(NodeArrays->NodePeriodic[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_connect(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_UDef(),f,Rho,U[0],U[1]);
+	}
+	for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ApplySpecialWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+	for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+	{
+		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+}
 void D2Q9::ApplyBc(){
+	std::vector<SolverEnum::PatchType> PatchType=PatchBc->Get_PatchTypeInType();
+	std::vector<int> PatchIdInType=PatchBc->Get_PatchIdInType();
 
+	for (int i=0;i<PatchBc->Get_NumberOfPatchBc();i++)
+	{
+		switch(PatchType[i])
+		{
+		case SolverEnum::Periodic:
+			ApplyPatchPeriodic(PatchBc->Get_PeriodicPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Symmetry:
+			ApplyPatchSymmetry(PatchBc->Get_SymmetryPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Pressure:
+			ApplyPatchPressure(PatchBc->Get_PressurePatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Velocity:
+			ApplyPatchVelocity(PatchBc->Get_VelocityPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Wall:
+			break;
+		}
+	}
+/*
 	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		ApplyVelocity(NodeArrays->NodeVelocity[j].Get_BcNormal(),NodeArrays->NodeVelocity[j].Get_connect(),NodeArrays->NodeVelocity[j].Get_UDef(), f);
@@ -671,29 +773,24 @@ void D2Q9::ApplyBc(){
 	{
 		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_RhoDef(), f);
 	}
+	*/
 	for (int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f);
 	}
+	/*
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
-		if(NodeArrays->NodeSpecialWall[j].get_x()==9&&NodeArrays->NodeSpecialWall[j].get_y()==50)
-			std::cout<<"check"<<std::endl;
-		//ApplySpecialWall(NodeArrays->NodeSpecialWall[j],f,NodeArrays->TypeOfNode);
 		ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
-		//ExtrapolationCornerConcaveToSolid(Rhob,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
-//		ExtrapolationCornerConcaveToSolid(U[0],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
-//		ExtrapolationCornerConcaveToSolid(U[1],NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
-
-//		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->NodeGlobalCorner[j].Get_AlphaDef()*NodeArrays->NodeGlobalCorner[j].Get_RhoDef(),NodeArrays->NodeGlobalCorner[j].Get_UDef(),NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1]);
-
 		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U[0][NodeArrays->NodeSpecialWall[j].Get_index()],U[1][NodeArrays->NodeSpecialWall[j].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
 
 	}
+	*/
 	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 		ApplyCornerWall(NodeArrays->NodeCorner[j], f);
 	}
+	/*
 	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 			ApplySymmetry(NodeArrays->NodeSymmetry[j].Get_BcNormal(),NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_RhoDef(),NodeArrays->NodeSymmetry[j].Get_UDef(),f);
@@ -706,6 +803,7 @@ void D2Q9::ApplyBc(){
 	{
 		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->TypeOfNode,f);
 	}
+	*/
 
    parallel->barrier();
 

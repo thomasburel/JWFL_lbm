@@ -812,8 +812,13 @@ void MultiBlock2D::Get_Connect_Node(std::vector<int> & IdRNodeN_,std::vector<int
 NodeArrays2D* MultiBlock2D::Get_NodeArrays2D(){
 	return Block2D_.Get_NodeArrays2D();
 }
+void MultiBlock2D::GeneratePatchBc(){
+	Block2D_.InitPatchBc(PtrParameters);
+}
 void MultiBlock2D::reorganizeNodeByType(){
+
 	Block2D_.reorganizeNodeByType();
+	Block2D_.Set_NodeIndexByTypeForPatchBc();
 	Block2D_.Set_Connect(*PtrParameters);
 	Block2D_.Mark1stLayerSolid();
 

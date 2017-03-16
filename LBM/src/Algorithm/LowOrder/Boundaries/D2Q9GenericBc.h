@@ -19,7 +19,12 @@ class D2Q9GenericBc {
 public:
 	D2Q9GenericBc();
 	virtual ~D2Q9GenericBc();
-	void SetBcObjects( Parameters *Param);
+	//Set Pointer on Function for Boundary conditions
+	void SetBcObjects( Parameters *Param, double ** &Ei);
+	void SetPressure(PressureModel PressureModel_,PressureType PressureType_);
+	void SetVelocity(VelocityModel VelocityModel_,VelocityType VelocityType_);
+	void SetSymmetry(SymmetryType SymmetryType_);
+	void SetPeriodic(PeriodicType PeriodicType_);
 	///Apply Pressure as one 0-moment variable (single phase = 1 density)
 	void ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in, double weightDensity=1);
 	///Apply Pressure as  several 0-moment variables

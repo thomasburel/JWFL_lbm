@@ -16,7 +16,7 @@
 D2Q9Bc::D2Q9Bc() {
 
 }
-void D2Q9Bc::InitD2Q9Bc(Dictionary *PtrDic_, Parameters *Param){
+void D2Q9Bc::InitD2Q9Bc(Dictionary *PtrDic_, Parameters *Param, double ** &Ei){
 //Initialise Variables shared between boundary conditions
 	PtrD2Q9BcDic=	PtrDic_;
 	//pointers for generic boundary conditions
@@ -25,7 +25,7 @@ void D2Q9Bc::InitD2Q9Bc(Dictionary *PtrDic_, Parameters *Param){
 	PtrD2Q9BcDic->Get_PtrVar("VelocityY",PtrD2Q9BcV);
 
 //Initialise the Boundaries conditions classes
-	SetBcObjects(Param);
+	SetBcObjects(Param,Ei);
 	Set_GlobalCorner(Param,this);
 	Set_SpecialWall(Param,this);
 }

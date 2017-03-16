@@ -20,7 +20,10 @@ public:
 	D2Q9Velocity();
 	virtual ~D2Q9Velocity();
 
-	void SetVelocity(Parameters *Param);
+	void SetVelocity(Parameters *Param, double ** &Ei);
+	void SetVelocity(VelocityModel VelocityModel_,VelocityType VelocityType_);
+	void SetVelocityModel(VelocityModel VelocityModel_);
+	void SetVelocityType(VelocityType VelocityType_);
 	void ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in, double *Rho, double *U, double *V);
 	inline void Get_CalculU(int const &BcNormal,int const *Connect, double const *UDef, double *U, double *V, double & Ureturn,double & Vreturn){(this->*PtrCalculU)(BcNormal,Connect,UDef,U,V); Ureturn=U[Connect[0]];Vreturn=V[Connect[0]];};
 

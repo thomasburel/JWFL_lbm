@@ -4047,3 +4047,141 @@ void  Block2D::RemoveSolid(){
 		}
 	}
 }
+void Block2D::InitPatchBc(Parameters *PtrParam){
+	PatchBc.initPatchBc(Node, PtrParam);
+	std::vector<int> PatchIdInType=PatchBc.Get_PatchIdInType();
+	std::vector<SolverEnum::PatchType> PatchTypeInType=PatchBc.Get_PatchTypeInType();
+	int NumberOfPatchBc=PatchBc.Get_NumberOfPatchBc();
+	std::vector<int> NodeIdx;
+	for(int j=0;j<NumberOfPatchBc;j++)
+	{
+		switch(PatchTypeInType[j])
+		{
+			case SolverEnum::Pressure:
+				NodeIdx=PatchBc.Get_PressurePatch()[PatchIdInType[j]].Get_NodeIndex();
+				for (int i=0;i<NodeIdx.size();i++)
+					if(Node[NodeIdx[i]]->get_NodeType()!=GlobalCorner && Node[NodeIdx[i]]->get_NodeType()!=Ghost)
+						ChangeNodeType(NodeIdx[i], Pressure);
+			break;
+			case SolverEnum::Velocity:
+				NodeIdx=PatchBc.Get_VelocityPatch()[PatchIdInType[j]].Get_NodeIndex();
+				for (int i=0;i<NodeIdx.size();i++)
+					if(Node[NodeIdx[i]]->get_NodeType()!=GlobalCorner && Node[NodeIdx[i]]->get_NodeType()!=Ghost)
+						ChangeNodeType(NodeIdx[i], Velocity);
+			break;
+			case SolverEnum::Periodic:
+				NodeIdx=PatchBc.Get_PeriodicPatch()[PatchIdInType[j]].Get_NodeIndex();
+				for (int i=0;i<NodeIdx.size();i++)
+					if(Node[NodeIdx[i]]->get_NodeType()!=GlobalCorner && Node[NodeIdx[i]]->get_NodeType()!=Ghost)
+						ChangeNodeType(NodeIdx[i], Periodic);
+			break;
+			case SolverEnum::Symmetry:
+				NodeIdx=PatchBc.Get_SymmetryPatch()[PatchIdInType[j]].Get_NodeIndex();
+				for (int i=0;i<NodeIdx.size();i++)
+					if(Node[NodeIdx[i]]->get_NodeType()!=GlobalCorner && Node[NodeIdx[i]]->get_NodeType()!=Ghost)
+						ChangeNodeType(NodeIdx[i], Symmetry);
+			break;
+			case SolverEnum::Wall:
+				NodeIdx=PatchBc.Get_WallPatch()[PatchIdInType[j]].Get_NodeIndex();
+				for (int i=0;i<NodeIdx.size();i++)
+					if(Node[NodeIdx[i]]->get_NodeType()!=GlobalCorner && Node[NodeIdx[i]]->get_NodeType()!=Ghost)
+						ChangeNodeType(NodeIdx[i], Wall);
+			break;
+		}
+	}
+}
+void Block2D::Set_NodeIndexByTypeForPatchBc(){
+	std::vector<int> PatchIdInType=PatchBc.Get_PatchIdInType();
+	std::vector<SolverEnum::PatchType> PatchTypeInType=PatchBc.Get_PatchTypeInType();
+	int NumberOfPatchBc=PatchBc.Get_NumberOfPatchBc();
+	std::vector<int> NodeIdx,NodeIdxbyTypetmp,NodeIdxbyTypeSpecialWallstmp,NodeIdxbyTypeGlobalCornertmp;
+	for(int j=0;j<NumberOfPatchBc;j++)
+	{
+		switch(PatchTypeInType[j])
+		{
+			case SolverEnum::Pressure:
+				NodeIdx=PatchBc.Get_PressurePatch()[PatchIdInType[j]].Get_NodeIndex();
+				NodeIdxbyTypetmp.clear();
+				NodeIdxbyTypeSpecialWallstmp.clear();
+				NodeIdxbyTypeGlobalCornertmp.clear();
+				for (int i=0;i<NodeIdx.size();i++)
+				{
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==Pressure)//Removing solid and special wall
+						NodeIdxbyTypetmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==SpecialWall)//Mark Special wall
+						NodeIdxbyTypeSpecialWallstmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==GlobalCorner)//Mark Global Corner
+						NodeIdxbyTypeGlobalCornertmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+				}
+				PatchBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);
+				PatchBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
+				PatchBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
+			break;
+			case SolverEnum::Velocity:
+				NodeIdx=PatchBc.Get_VelocityPatch()[PatchIdInType[j]].Get_NodeIndex();
+				NodeIdxbyTypetmp.clear();
+				NodeIdxbyTypeSpecialWallstmp.clear();
+				NodeIdxbyTypeGlobalCornertmp.clear();
+				for (int i=0;i<NodeIdx.size();i++)
+				{
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==Velocity)//Removing solid and special wall
+						NodeIdxbyTypetmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==SpecialWall)//Mark Special wall
+						NodeIdxbyTypeSpecialWallstmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==GlobalCorner)//Mark Global Corner
+						NodeIdxbyTypeGlobalCornertmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+				}
+				PatchBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);
+				PatchBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
+				PatchBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
+			break;
+			case SolverEnum::Periodic:
+				NodeIdx=PatchBc.Get_PeriodicPatch()[PatchIdInType[j]].Get_NodeIndex();
+				NodeIdxbyTypetmp.clear();
+				NodeIdxbyTypeSpecialWallstmp.clear();
+				NodeIdxbyTypeGlobalCornertmp.clear();
+				for (int i=0;i<NodeIdx.size();i++)
+				{
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==Periodic)//Removing solid and special wall
+						NodeIdxbyTypetmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==SpecialWall)//Mark Special wall
+						NodeIdxbyTypeSpecialWallstmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==GlobalCorner)//Mark Global Corner
+						NodeIdxbyTypeGlobalCornertmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+				}
+				PatchBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);
+				PatchBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
+				PatchBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
+			break;
+			case SolverEnum::Symmetry:
+				NodeIdx=PatchBc.Get_SymmetryPatch()[PatchIdInType[j]].Get_NodeIndex();
+				NodeIdxbyTypetmp.clear();
+				NodeIdxbyTypeSpecialWallstmp.clear();
+				NodeIdxbyTypeGlobalCornertmp.clear();
+				for (int i=0;i<NodeIdx.size();i++)
+				{
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==Symmetry)//Removing solid and special wall
+						NodeIdxbyTypetmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==SpecialWall)//Mark Special wall
+						NodeIdxbyTypeSpecialWallstmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==GlobalCorner)//Mark Global Corner
+						NodeIdxbyTypeGlobalCornertmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+				}
+				PatchBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);
+				PatchBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
+				PatchBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
+			break;
+			case SolverEnum::Wall:
+	/*			NodeIdx=PatchBc.Get_WallPatch()[PatchIdInType[j]].Get_NodeIndex();
+				for (int i=0;i<NodeIdx.size();i++)
+				{
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==Wall)//Removing solid and special wall
+						NodeIdxbyTypetmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==SpecialWall||NodeArrays.TypeOfNode[NodeIdx[i]]==ConcaveCorner)//Mark Special wall
+						NodeIdxbyTypeSpecialNodetmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+				}
+				PatchBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);*/
+			break;
+		}
+	}
+}

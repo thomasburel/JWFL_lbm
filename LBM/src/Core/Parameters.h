@@ -48,7 +48,9 @@ namespace SolverEnum
 	enum dimension {D2,D3};
 	enum schemetype {Q9,Q16};
 	enum modeltype {SinglePhase, ColourFluid};
+	enum fluidmodel {Compressible, Incompressible};
 	enum variablesSolver{Density,VelocityX,VelocityY,VelocityZ,RhoN};
+	enum PatchType {Wall, Periodic, Velocity, Symmetry, Pressure};
 }
 //model enumeration
 enum FluidType{Newtonian};
@@ -58,6 +60,7 @@ enum ExtrapolationType{NoExtrapol,TailorExtrapol,WeightDistanceExtrapol};
 enum InterpolationType{NoInterpol,LinearInterpol,LinearLeastSquareInterpol};
 
 //Boundary conditions enumeration
+
 enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular,HeZouWall,HeZouWallVel};
 enum PressureModel{HeZouP};
 enum PressureType{FixP,zeroPGrad1st};
@@ -348,6 +351,8 @@ public:
 	SolverEnum::schemetype Get_Scheme() const;
 	void Set_Model(SolverEnum::modeltype model_);
 	SolverEnum::modeltype Get_Model() const;
+	void Set_ModelOfFluid(SolverEnum::fluidmodel FluidModel_){FluidModel=FluidModel_;};
+	SolverEnum::fluidmodel Get_ModelOfFluid() const {return FluidModel;};
 	void Set_FluidType(FluidType fluidtype_){fluid=fluidtype_;};
 	FluidType Get_FluidType() const{return fluid;};
 	void Set_UserForceType(UserForceType UserForceType_){UserForce=UserForceType_;};
@@ -380,6 +385,8 @@ public:
 	ContactAngleEnum::SwitchSelect Get_SwitchSelectTeta(){return Switchteta;};
 	void Set_ViscosityType(ViscosityType viscosityType_){viscosityType=viscosityType_;};
 	ViscosityType Get_ViscosityType(){return viscosityType;};
+	void Set_ReferenceDensity(double refDens){refDensity=refDens;};
+	double Get_ReferenceDensity(){return refDensity;};
 	int Get_NbVelocities() const;
 	double Convert_TauToNu(double Tau_){return (Tau_-0.5)*cs2*deltaT;};
 	double Convert_MutoNu(double mu_,double rho){return mu_/rho;};
@@ -389,9 +396,15 @@ public:
 	double Get_cs() const {return cs;};
 	double Get_cs2() const {return cs2;};
 	double Get_deltaT() const {return deltaT;};
+	double Get_deltaX() const {return deltaX;};
+	double Get_LatticeSpeed() const {return deltaX/deltaT;};
+	void Set_deltaX(double deltaX_) { deltaX=deltaX_;};
+	void Set_deltaT(double deltaT_) { deltaT=deltaT_;};
+
 protected:
 	SolverEnum::schemetype scheme;
 	SolverEnum::modeltype model;
+	SolverEnum::fluidmodel FluidModel;
 	SolverEnum::variablesSolver variableError;
 	FluidType fluid;
 	GradientType Gradient;
@@ -399,8 +412,9 @@ protected:
 	UserForceType UserForce;
 	int NbVelocities;
 	double cs,cs2;
-	double deltaT;
+	double deltaT,deltaX;
 	double ErrorMax;
+	double refDensity;
 
 	ContactAngleEnum::TetaType tetaType;
 	ContactAngleEnum::TetaModel tetaModel;
@@ -537,6 +551,8 @@ public:
 
 	//void Save_Parameters();
 	//void Load_Parameters();
+
+	void CheckParameters();
 
 private:
 	bool verbous;

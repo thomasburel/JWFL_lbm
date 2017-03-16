@@ -108,7 +108,7 @@ void CGNS::Read_data(double * &d_, std::string variablename, std::string filenam
 		}
 		if(Btmp>0)
 		{
-			std::cout<<"Base is: "<<Btmp<<std::endl;
+			//std::cout<<"Base is: "<<Btmp<<std::endl;
 	//Get number of zones
 			if (cg_nzones(Ftmp, Btmp, &nzones))
 				cgp_error_exit();
@@ -124,7 +124,7 @@ void CGNS::Read_data(double * &d_, std::string variablename, std::string filenam
 				}
 				if(Ztmp>0)
 				{
-					std::cout<<"Zone is: "<<Ztmp<<std::endl;
+					//std::cout<<"Zone is: "<<Ztmp<<std::endl;
 		//Get number of solutions
 					if(cg_nsols(Ftmp, Btmp, Ztmp, &nsols))
 						cgp_error_exit();
@@ -142,7 +142,7 @@ void CGNS::Read_data(double * &d_, std::string variablename, std::string filenam
 			//Read the data
 						if(Stmp>0)
 						{
-							std::cout<<"Solution is: "<<Stmp<<std::endl;
+							//std::cout<<"Solution is: "<<Stmp<<std::endl;
 							cg_nfields(Ftmp, Btmp, Ztmp, Stmp, &nfields);
 							if(nfields>0)
 							{
@@ -153,10 +153,10 @@ void CGNS::Read_data(double * &d_, std::string variablename, std::string filenam
 									if(strcmp (ary2,fieldname)==0)
 										Fstmp=i;
 								}
-								std::cout<<"Field is: "<<Fstmp<<std::endl;
+								//std::cout<<"Field is: "<<Fstmp<<std::endl;
 								if(Fstmp>0)
 								{
-									std::cout<<"Start node: "<<start_nodes<<" End node: "<<end_nodes<<std::endl;
+								//	std::cout<<"Start node: "<<start_nodes<<" End node: "<<end_nodes<<std::endl;
 									if (cgp_field_read_data(Ftmp, Btmp, Ztmp, Stmp, Fstmp, &start_nodes, &end_nodes, d_))
 										cgp_error_exit();
 								}

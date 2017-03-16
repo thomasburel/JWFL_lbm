@@ -20,6 +20,7 @@ public:
 	virtual ~MultiBlock();
 	virtual void Partitioning()=0;
 	virtual void Modify_Block()=0;
+	virtual void GeneratePatchBc()=0;
 	virtual Block* Get_Block()=0;
 	virtual int Get_Nx()=0;
 	virtual int Get_Ny()=0;

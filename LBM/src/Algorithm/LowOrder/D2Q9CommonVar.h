@@ -18,7 +18,9 @@ class D2Q9CommonVar {
 public:
 	D2Q9CommonVar();
 	virtual ~D2Q9CommonVar();
+	void AdjustVelocityDistri(double VelocityInLattice);
 
+protected:
 	short int *Opposite; //< Opposite direction in the distribution function
 	double *omega; //< Weight of the distribution function. It is need for some boundary conditions
 	double **Ei; //< Velocity in the distribution space

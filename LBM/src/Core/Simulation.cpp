@@ -13,6 +13,7 @@ Simulation::Simulation()
 void Simulation::InitSimu(Parameters &Parameters_, bool create_mesh)
 {
 	PtrParameters=&Parameters_;
+	PtrParameters->CheckParameters();
 	parallel=new MpiManager;
 	ini.Set_Parameters(PtrParameters);
 	ini.IniMPI(parallel,PtrParameters->Get_Argc(), PtrParameters->Get_Argv(), PtrParameters->Get_Verbous());
@@ -26,6 +27,7 @@ void Simulation::InitSimu(Parameters &Parameters_, bool create_mesh)
 	{
 		Import_Mesh(PtrParameters->Get_MeshFile());
 	}
+	MultiBlock_->GeneratePatchBc();
 	MultiBlock_->Modify_Block();
 	MultiBlock_->ConvertToPhysicalUnit();
 	MultiBlock_->reorganizeNodeByType();

@@ -18,7 +18,6 @@ using namespace std;
 
  
 int main(int argc, char *argv[]) {
-
 	int idx=0;
 /*	if (argv[1]==0)
 	{
@@ -30,45 +29,11 @@ int main(int argc, char *argv[]) {
 		idx=atoi(argv[1]);
 	}*/
 
-	double pi=atan(1.0)*4.0 ;
-stringstream FileExportStream;
-// fluid 2 is the continuous fluid	and fluid 1 the droplet
-//Domain size
-	double L=300;
-	double H=60;
-
-	double Diameter=H;
-	double Ca=0;
-
-	double U2_ref=0.01;
-	double Re=1;
-
-	double Rho1_ref=1;
-	double Rho2_ref=Rho1_ref;
-
-	double nu_2=1.0/6.0;
-	double lambda=0.7;
-	double nu_1=lambda*nu_2;
-
-	double tau1=(6.0*nu_1+1.0)*0.5;
-	double tau2=(6.0*nu_2+1.0)*0.5;
-	double La=0;
-	double sigma=0.001;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
-
-
-	double Mach =U2_ref*std::sqrt(3);
-	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
-//Pressure drop
-	double deltaP=0.01;
-// Pressure inlet
-	double Pmax=1+deltaP;
-// Pressure outlet
-	double Pmin=1-deltaP;
-
 /// Create object for the simulation.
 	Simulation simu;
 	Parameters Param;
-
+	double pi=atan(1.0)*4.0 ;
+	stringstream FileExportStream;
 /// Set Simulation Arguments
 	Param.Set_Arguments(&argc,&argv,false);
 
@@ -78,20 +43,65 @@ stringstream FileExportStream;
 // Scheme
 	Param.Set_Scheme(SolverEnum::Q9);
 
+
+
+// fluid 2 is the continuous fluid	and fluid 1 the droplet
 // Set Domain size
+	double L=600;
+	double H=195;
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
+//Set Lattice unity
+	double deltaTLattice=1;
+	double deltaXLattice=1;
+// Set lattice size and lattice time step (default value is 1 for both)
+	 Param.Set_deltaT(deltaTLattice);Param.Set_deltaX(deltaXLattice);
+
+	 double Diameter=H;
+	double Ca=0;
+
+	double U2_ref=0.01;
+	double Re=1;
+
+	double Rho1_ref=1;
+	double Rho2_ref=Rho1_ref;
+
+
+	double lambda=1.0/43.0;
+	double nu_1=4.91*1.e-2/lambda;
+	double nu_2=lambda*nu_1;
+
+	double tau1=0.5+nu_1*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
+	double tau2=0.5+nu_2*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
+	double La=0;
+	double sigma=1.96*1.e-3;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
+
+
+	double Mach =U2_ref*std::sqrt(3);
+	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
+//Pressure drop
+	double deltaP=0.0;
+	double refPressure=1.0/3.0;
+// Pressure inlet
+	double Pmax=refPressure+deltaP;
+// Pressure outlet
+	double Pmin=refPressure-deltaP;
+
+
+
+
+
 
 // Set User Parameters
 	//U2_ref=0.01;Pmax=1;Pmin=1;
 //Contact angle parameters
-	double contactangle=(150)*pi/180.0;
+	double contactangle=30*pi/180.0;
 	Param.Set_ContactAngleType(ContactAngleEnum::FixTeta);//NoTeta, FixTeta or NonCstTeta
 	Param.Set_ContactAngleModel(ContactAngleEnum::Interpol);//Standard or Interpol
 	Param.Set_SwitchSelectTeta(ContactAngleEnum::Linear);//Binary or Linear
 	Param.Set_NormalExtrapolType(ContactAngleEnum::WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,or WeightDistanceExtrapol
 	Param.Set_NormalInterpolType(ContactAngleEnum::LinearLeastSquareInterpol);//NoInterpol,LinearInterpol,LinearLeastSquareInterpol
 	Param.Set_NumberOfInterpolNodeInSolid(3);
-	Param.Set_NumberOfInterpolNodeInFluid(8);
+	Param.Set_NumberOfInterpolNodeInFluid(3);
 	if(Param.Get_ContactAngleType()==ContactAngleEnum::NoTeta)
 		contactangle=pi/2.0;
 	Param.Set_ContactAngle(contactangle);
@@ -108,7 +118,7 @@ stringstream FileExportStream;
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity, Periodic and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
-	Param.Set_BcType(Wall,Pressure,Wall,Pressure);
+	Param.Set_BcType(Symmetry,Pressure,Symmetry,Velocity);
 
 
 /// Set Pressure Type
@@ -122,20 +132,20 @@ stringstream FileExportStream;
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(30000);
+	Param.Set_NbStep(10000);
 /// Interval for output
-	Param.Set_OutPutNSteps(500);// interval
+	Param.Set_OutPutNSteps(100);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(100);
-	Param.Set_ErrorMax(1e-18);
-	Param.Set_ErrorVariable(SolverEnum::RhoN);
+	Param.Set_ErrorMax(1e-10);
+	Param.Set_ErrorVariable(SolverEnum::VelocityX);
 
 ///Selection of variables to export
 	Param.Set_VariablesOutput(true,true);// export Rho,U
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(SolverEnum::ColourFluid);
-	Param.Set_ViscosityType(ConstViscosity);//ConstViscosity,HarmonicViscosity
+	Param.Set_Model(SolverEnum::SinglePhase);
+	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
 	if(Param.Get_ViscosityType()==ConstViscosity)
 		lambda=1;
 
@@ -159,7 +169,7 @@ stringstream FileExportStream;
 	//Surface tension
 	Param.Set_SurfaceTension(sigma);
 	//Colour fluid Parameters
-	Param.Set_ColourGradLimiter(0.05);
+	Param.Set_ColourGradLimiter(0.001);
 	Param.Set_A1(0.00001);
 	Param.Set_A2(Param.Get_A1());
 	Param.Set_Beta(0.7);// Between 0 and 1
@@ -172,16 +182,21 @@ stringstream FileExportStream;
 				<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
 				<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
 		FileExportStream.str("");
-		FileExportStream<<"Contraction_"<< fixed << setprecision(0)<<L<<"x"<<H;
+/*		FileExportStream<<"5ContractionsSymmetry_"<< fixed << setprecision(0)<<L<<"x"<<H;
 //		FileExportStream<<"LinearLeastSquareInterpol_linearswitch_teta170_beta0.7_5fluids_3Solid";
-		if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearLeastSquareInterpol)
+		if(Param.Get_ContactAngleModel()==ContactAngleEnum::Interpol)
 		{
-			FileExportStream<<"LinearLeastSquareInterpol_"
-					<<Param.Get_NumberOfInterpolNodeInFluid()<<"-Fluids_"
-					<<Param.Get_NumberOfInterpolNodeInSolid()<<"-Solids_";
+			if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearLeastSquareInterpol)
+			{
+				FileExportStream<<"LinearLeastSquareInterpol_"
+						<<Param.Get_NumberOfInterpolNodeInFluid()<<"-Fluids_"
+						<<Param.Get_NumberOfInterpolNodeInSolid()<<"-Solids_";
+			}
+			if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearInterpol)
+					FileExportStream<<"LinearInterpol_";
 		}
-		if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearInterpol)
-				FileExportStream<<"LinearInterpol_";
+		else
+			FileExportStream<<"Standard_";
 		if(Param.Get_SwitchSelectTeta()==ContactAngleEnum::Linear)
 			FileExportStream<<"LinearSwitch_";
 		if(Param.Get_SwitchSelectTeta()==ContactAngleEnum::Binary)
@@ -189,13 +204,17 @@ stringstream FileExportStream;
 		FileExportStream<<setprecision(2)<<lambda<<"-lambda_"
 				<<Param.Get_Beta()<<"-beta_"<<Param.Get_ContactAngle()*180.0/pi<<"-teta_"
 						<< scientific<<setprecision(3)<<"sigma_"<<sigma<<"_ColourGradLimiter"<<Param.Get_ColourGradLimiter();
-
+*/
+		FileExportStream.str("Contraction1162_test");
 		Param.Set_OutputFileName(FileExportStream.str());
 
 //	Param.Set_OutputFileName("Testread");
-/*	Param.Add_VariableToInit("Debug_poiseuille_serpentine_105000.cgns",SolverEnum::Density);
-	Param.Add_VariableToInit("Debug_poiseuille_serpentine_105000.cgns",SolverEnum::VelocityX);
-	Param.Add_VariableToInit("Debug_poiseuille_serpentine_105000.cgns",SolverEnum::VelocityY);*/
+
+//	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::Density);
+//	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::VelocityX);
+//	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::VelocityY);
+//	Param.Add_VariableToInit("Contraction1162_testdeltaT_50000.cgns",SolverEnum::RhoN);
+
 /// Initialise the simulation with parameters
 	simu.InitSimu(Param, true);
 /*	double *d_=0;
@@ -212,7 +231,7 @@ stringstream FileExportStream;
 	simu.barrier();
 
 		if(simu.Is_MainProcessor())
-			cout<<"Reynolds: "<<Re<<" Surface tension is: "<<sigma<< " Tau 2: "<<tau2<<" U 1: "<<U2_ref<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<std::endl;
+			cout<<" Surface tension is: "<<sigma<< " Tau 1: "<<tau1<<" Tau 2: "<<tau2<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<std::endl;
 
 //	simu.UpdateAllDomain(Param);
 /// Run the simulation
