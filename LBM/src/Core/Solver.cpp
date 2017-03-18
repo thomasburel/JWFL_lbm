@@ -85,7 +85,7 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 	PtrBlockCollide=PtrBlockStream;
 	//Node=MultiBlock_->Get_Block()->Get_PtrNode();
 	NodeArrays=MultiBlock_->Get_Block()->Get_NodeArrays2D();
-	PatchBc=MultiBlock_->Get_Block()->Get_PatchBc();
+	PatchsBc=MultiBlock_->Get_Block()->Get_PatchBc();
 	IdBoundaries=MultiBlock_->Get_Block()->Get_PtrIdBc();
 	//InvTau=1.0/PtrParameters->Get_Tau();
 	nbvelo=Solver::PtrParameters->Get_NbVelocities();
@@ -137,7 +137,7 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	IniTau(PtrParameters);
 	PtrBlockStream=MultiBlock_->Get_Block();
 	NodeArrays=MultiBlock_->Get_Block()->Get_NodeArrays2D();
-	PatchBc=MultiBlock_->Get_Block()->Get_PatchBc();
+	PatchsBc=MultiBlock_->Get_Block()->Get_PatchBc();
 	IdBoundaries=MultiBlock_->Get_Block()->Get_PtrIdBc();
 	//InvTau=1.0/PtrParameters->Get_Tau();
 	nbvelo=Solver::PtrParameters->Get_NbVelocities();

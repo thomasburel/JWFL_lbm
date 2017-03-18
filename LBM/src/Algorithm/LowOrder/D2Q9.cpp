@@ -739,24 +739,24 @@ void D2Q9::ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc){
 	}
 }
 void D2Q9::ApplyBc(){
-	std::vector<SolverEnum::PatchType> PatchType=PatchBc->Get_PatchTypeInType();
-	std::vector<int> PatchIdInType=PatchBc->Get_PatchIdInType();
+	std::vector<SolverEnum::PatchType> PatchType=PatchsBc->Get_PatchTypeInType();
+	std::vector<int> PatchIdInType=PatchsBc->Get_PatchIdInType();
 
-	for (int i=0;i<PatchBc->Get_NumberOfPatchBc();i++)
+	for (int i=0;i<PatchsBc->Get_NumberOfPatchBc();i++)
 	{
 		switch(PatchType[i])
 		{
 		case SolverEnum::Periodic:
-			ApplyPatchPeriodic(PatchBc->Get_PeriodicPatch()[PatchIdInType[i]]);
+			ApplyPatchPeriodic(PatchsBc->Get_PeriodicPatch()[PatchIdInType[i]]);
 			break;
 		case SolverEnum::Symmetry:
-			ApplyPatchSymmetry(PatchBc->Get_SymmetryPatch()[PatchIdInType[i]]);
+			ApplyPatchSymmetry(PatchsBc->Get_SymmetryPatch()[PatchIdInType[i]]);
 			break;
 		case SolverEnum::Pressure:
-			ApplyPatchPressure(PatchBc->Get_PressurePatch()[PatchIdInType[i]]);
+			ApplyPatchPressure(PatchsBc->Get_PressurePatch()[PatchIdInType[i]]);
 			break;
 		case SolverEnum::Velocity:
-			ApplyPatchVelocity(PatchBc->Get_VelocityPatch()[PatchIdInType[i]]);
+			ApplyPatchVelocity(PatchsBc->Get_VelocityPatch()[PatchIdInType[i]]);
 			break;
 		case SolverEnum::Wall:
 			break;

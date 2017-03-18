@@ -47,8 +47,8 @@ int main(int argc, char *argv[]) {
 
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 // Set Domain size
-	double L=600;
-	double H=195;
+	double L=300;
+	double H=204;
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 //Set Lattice unity
 	double deltaTLattice=1;
@@ -132,11 +132,11 @@ int main(int argc, char *argv[]) {
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(10000);
+	Param.Set_NbStep(50000);
 /// Interval for output
-	Param.Set_OutPutNSteps(100);// interval
+	Param.Set_OutPutNSteps(1000);// interval
 ///Display information during the calculation every N iteration
-	Param.Set_listing(100);
+	Param.Set_listing(500);
 	Param.Set_ErrorMax(1e-10);
 	Param.Set_ErrorVariable(SolverEnum::VelocityX);
 
@@ -144,7 +144,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_VariablesOutput(true,true);// export Rho,U
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(SolverEnum::SinglePhase);
+	Param.Set_Model(SolverEnum::ColourFluid);
 	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
 	if(Param.Get_ViscosityType()==ConstViscosity)
 		lambda=1;
@@ -205,10 +205,14 @@ int main(int argc, char *argv[]) {
 				<<Param.Get_Beta()<<"-beta_"<<Param.Get_ContactAngle()*180.0/pi<<"-teta_"
 						<< scientific<<setprecision(3)<<"sigma_"<<sigma<<"_ColourGradLimiter"<<Param.Get_ColourGradLimiter();
 */
-		FileExportStream.str("Contraction1162_test");
+		FileExportStream.str("TestBcs_twoPhases");
 		Param.Set_OutputFileName(FileExportStream.str());
 
 //	Param.Set_OutputFileName("Testread");
+
+	Param.Add_VariableToInit("TestBcs_21600.cgns",SolverEnum::Density);
+	Param.Add_VariableToInit("TestBcs_21600.cgns",SolverEnum::VelocityX);
+	Param.Add_VariableToInit("TestBcs_21600.cgns",SolverEnum::VelocityY);
 
 //	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::Density);
 //	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::VelocityX);

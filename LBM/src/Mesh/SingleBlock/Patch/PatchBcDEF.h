@@ -32,12 +32,13 @@ public:
 	std::vector<int>& Get_NodeIndexGlobalCorner(){return NodeIndexByTypeGlobalCorner;};
 	void Set_extrapolationAlpha(bool extrapol){extrapolationAlpha=extrapol;};
 	bool Get_extrapolationAlpha(){return extrapolationAlpha;};
-
+	void Set_extrapolationNormal(bool extrapol){extrapolationNormal=extrapol;};
+	bool Get_extrapolationNormal(){return extrapolationNormal;};
 protected:
 	std::vector<int> IdxNode, NodeIndexByType,NodeIndexByTypeSpecialWalls,NodeIndexByTypeGlobalCorner;
 	std::string PatchName;
 	SolverEnum::PatchType Type;
-	bool extrapolationAlpha;
+	bool extrapolationAlpha,extrapolationNormal;
 
 };
 class PressurePatchBc: public PatchBcDEF {
@@ -53,6 +54,7 @@ private:
 };
 class VelocityPatchBc: public PatchBcDEF {
 public:
+	VelocityPatchBc();
 	VelocityPatchBc(std::string PatchName_,VelocityModel VModel_, VelocityType VType_)
 		{PatchName=PatchName_;Type=SolverEnum::Velocity;VModel=VModel_;VType=VType_;};
 	virtual ~VelocityPatchBc(){};

@@ -29,7 +29,10 @@ void UserPatchBc::IntitialiseUserPatchBc(Parameters& PtrParameters,int &NumberOf
 		//AddPressurePatch("Inlet",HeZouP, FixP);
 		AddVelocityPatch("Inlet",HeZouV, FixV);
 		//Patch 1
-		AddPressurePatch("Outlet",HeZouP, FixP);
+		AddVelocityPatch("Outlet",HeZouV, zeroVGrad1st); //FixV,zeroVGrad1st
+		VelocityPatch.back().Set_extrapolationAlpha(true);
+		VelocityPatch.back().Set_extrapolationNormal(true);
+		//AddPressurePatch("Outlet",HeZouP, FixP);
 		//Patch 2
 		AddSymmetryPatch("Symmetry",OnNode);
 		//Patch 3

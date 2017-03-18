@@ -36,8 +36,9 @@ UserMesh::UserMesh() {
 
 //	std::string filename("../rooster_363_470.raw");
 //		ReadBinaryImage(filename,363, 470, 1);// double resolution
-	std::string filename("../Image_1162_filtered_filled_404_201.raw");
-		ReadBinaryImage(filename,404, 201, 1);// double resolution
+
+	//std::string filename("../Image_1162_filtered_filled_404_201.raw");
+	//	ReadBinaryImage(filename,404, 201, 1);// double resolution
 }
 void UserMesh::SetUserMeshVariables(){
 	H=PtrParametersUserMesh->Get_UserH();
@@ -143,6 +144,8 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 //	if(Node.get_y()<2 || Node.get_y()>18)
 //		solid=true;
 */
+	//contraction 1162
+	/*
 	if(Node.get_x()>100 && Node.get_x()<504)
 		if(Node.get_y()<=0 || Node.get_y()>=194)
 			solid=true;
@@ -150,6 +153,12 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 			solid=image[0][(int)Node.get_y()+1][(int)Node.get_x()-100];
 		else
 			solid=false;
+			*/
+	if(Node.get_x()>50)
+		if(Node.get_y()<=3 || Node.get_y()>=201)
+					solid=true;
+				else
+					solid=false;
 }
 void UserMesh::SetSymmetryType(SymmetryType &Type, double x, double y)
 {

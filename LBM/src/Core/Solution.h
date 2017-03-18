@@ -59,7 +59,7 @@ protected:
 	//std::vector<Node2D*> *Node;
 	NodeArrays2D* NodeArrays;
 	std::vector<int> IdBoundaries;
-	PatchBc* PatchBc;
+	PatchBc* PatchsBc;
 
 
 

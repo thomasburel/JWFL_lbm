@@ -11,17 +11,22 @@
 PatchBcDEF::PatchBcDEF(){
 	Type=SolverEnum::Symmetry;
 	extrapolationAlpha=false;
+	extrapolationNormal=false;
 }
 
 PatchBcDEF::PatchBcDEF(std::string PatchName_){
 	PatchName=PatchName_;
 	Type=SolverEnum::Symmetry;
 	extrapolationAlpha=false;
+	extrapolationNormal=false;
 }
 PatchBcDEF::~PatchBcDEF(){
 
 }
-
+VelocityPatchBc::VelocityPatchBc(){
+	VModel=HeZouV;
+	VType=FixV;
+}
 
 
 
