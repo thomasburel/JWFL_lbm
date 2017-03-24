@@ -93,7 +93,7 @@ InterpolationLinearLeastSquare::~InterpolationLinearLeastSquare(){
 }
 void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parameters *PtrParam){
 	MapWallId=new int [PtrNodes->TypeOfNode.size()];
-	nWalls=PtrNodes->NodeWall.size()+PtrNodes->CornerConcave.size()+PtrNodes->CornerConvex.size();
+	nWalls=PtrNodes->NodeWall.size()+PtrNodes->CornerConcave.size()+PtrNodes->CornerConvex.size()+PtrNodes->NodeSpecialWall.size();
 
 	nSolidNodes=PtrParam->Get_NumberOfInterpolNodeInSolid();
 	nFluidNodes=PtrParam->Get_NumberOfInterpolNodeInFluid();
@@ -241,6 +241,53 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		fluidDisttmp.clear();
 		countnWalls++;
 	}
+	if(PtrNodes->NodeSpecialWall.size()>0)
+	for (int i=0;i<PtrNodes->NodeSpecialWall.size();i++)
+	{
+		//Reset variables
+		SolidChecked.clear();FluidChecked.clear();
+		nextwall.clear(); nextinterior.clear();
+		countfluid=0;countsolid=0;countwhile=0;
+		//Save the mapping
+		MapWallId[PtrNodes->NodeSpecialWall[i].Get_index()]=countnWalls;
+		//Keep the origin node position to calculate the distance
+		x0=PtrNodes->NodeSpecialWall[i].get_x();y0=PtrNodes->NodeSpecialWall[i].get_y();
+		//Set the first wall
+		nextwall.push_back(PtrNodes->NodeSpecialWall[i].Get_index());
+		//set the first interior
+		Nodetmp.index=(PtrNodes->NodeSpecialWall[i].Get_connect()[PtrNodes->NodeSpecialWall[i].Get_BcNormal()]);
+		Nodetmp.distance=DistToWall(PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_x(),PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_y());
+		Nodetmp.rankMarkNodes=0;
+		nextinterior.push_back(Nodetmp);
+
+		while((countfluid<nFluidNodes || countsolid<nSolidNodes) && countwhile < maxwhile)
+		{
+			if(nextwall.size()>0 && countsolid<nSolidNodes)
+			{
+				Mark_SolidIds(PtrNodes,nextwall,countnWalls,countsolid);
+				nextwallprevious=nextwall;
+				nextwall.clear();
+				Next_WallId(PtrNodes,nextwallprevious,nextwall);
+			}
+			if(nextinterior.size()>0 && countfluid<nFluidNodes)
+			{
+				Mark_FluidIds(PtrNodes,nextinterior,countnWalls,countfluid);
+				nextinteriorprevious=nextinterior;
+				nextinterior.clear();
+				Next_FluidId(PtrNodes,nextinteriorprevious,nextinterior);
+			}
+			countwhile++;
+		}
+		solidId.push_back(solidIdtmp);
+		solidIdtmp.clear();
+		fluidId.push_back(fluidIdtmp);
+		fluidIdtmp.clear();
+		solidDist.push_back(solidDisttmp);
+		solidDisttmp.clear();
+		fluidDist.push_back(fluidDisttmp);
+		fluidDisttmp.clear();
+		countnWalls++;
+	}
 
 }
 void InterpolationLinearLeastSquare::Mark_FluidIds(NodeArrays2D *PtrNodes,std::vector<NextNode>& next, int &countnwalls, int &countfluid){
@@ -350,21 +397,17 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 
 			break;
 		case SpecialWall:
-
-		/*	if(countsolid<nNodes)
+			if(countsolid<nSolidNodes)
 			{
 				countsolid++;
 				solidIdtmp.push_back(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeSpecialWall[nodeIdlocal].Get_BcNormal()]]);
 				NextNodetmp.index=solidIdtmp.back();
-//				solidId[countnwalls][countsolid]=(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeSpecialWall[nodeIdlocal].Get_BcNormal()]]);
-//				NextNodetmp.index=solidId[countnwalls][countsolid];
 				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
-				//nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidId[countnwalls][countsolid]];
-				solidDist[countnwalls][countsolid]=-DistToWall(PtrNodes->NodeSolid[nodeIdlocal].get_x(),PtrNodes->NodeSolid[nodeIdlocal].get_y());
-				NextNodetmp.distance=-solidDist[countnwalls][countsolid];
+				solidDisttmp.push_back(-DistToWall(PtrNodes->NodeSolid[nodeIdlocaltmp].get_x(),PtrNodes->NodeSolid[nodeIdlocaltmp].get_y()));
+				NextNodetmp.distance=-solidDisttmp.back();
 				NextNodetmp.rankMarkNodes=countsolid;
 				SolidChecked.push_back(NextNodetmp);
-			}*/
+			}
 			break;
 		default:
 			std::cerr<<"Node type not found for interpolation. Type of Node :"<<PtrNodes->TypeOfNode[next[i]]<<std::endl;
@@ -423,25 +466,67 @@ void InterpolationLinearLeastSquare::Next_WallId(NodeArrays2D *PtrNodes,std::vec
 			}
 			break;
 			case SpecialWall:
-			/*	switch(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_BcNormal())
+				switch(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_BcNormal())
 				{
-				case 1:
-					next.push_back(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[2]);
-					next.push_back(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[4]);
+				case 5:
+
+					NextNodetmp.index=PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[1];
+					if(PtrNodes->TypeOfNode[NextNodetmp.index]==Wall||PtrNodes->TypeOfNode[NextNodetmp.index]==Corner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConcaveCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConvexCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==SpecialWall)
+					{
+						NextNodetmp.distance=DistToWall(PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_x(),PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_y());
+						VectNextNodetmp.push_back(NextNodetmp);
+					}
+					NextNodetmp.index=PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[2];
+					if(PtrNodes->TypeOfNode[NextNodetmp.index]==Wall||PtrNodes->TypeOfNode[NextNodetmp.index]==Corner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConcaveCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConvexCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==SpecialWall)
+					{
+						NextNodetmp.distance=DistToWall(PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_x(),PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_y());
+						VectNextNodetmp.push_back(NextNodetmp);
+					}
 					break;
-				case 2:
-					next.push_back(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[1]);
-					next.push_back(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[3]);
+				case 6:
+					NextNodetmp.index=PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[2];
+					if(PtrNodes->TypeOfNode[NextNodetmp.index]==Wall||PtrNodes->TypeOfNode[NextNodetmp.index]==Corner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConcaveCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConvexCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==SpecialWall)
+					{
+						NextNodetmp.distance=DistToWall(PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_x(),PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_y());
+						VectNextNodetmp.push_back(NextNodetmp);
+					}
+					NextNodetmp.index=PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[3];
+					if(PtrNodes->TypeOfNode[NextNodetmp.index]==Wall||PtrNodes->TypeOfNode[NextNodetmp.index]==Corner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConcaveCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConvexCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==SpecialWall)
+					{
+						NextNodetmp.distance=DistToWall(PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_x(),PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_y());
+						VectNextNodetmp.push_back(NextNodetmp);
+					}
 					break;
-				case 3:
-					next.push_back(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[2]);
-					next.push_back(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[4]);
+				case 7:
+					NextNodetmp.index=PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[3];
+					if(PtrNodes->TypeOfNode[NextNodetmp.index]==Wall||PtrNodes->TypeOfNode[NextNodetmp.index]==Corner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConcaveCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConvexCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==SpecialWall)
+					{
+						NextNodetmp.distance=DistToWall(PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_x(),PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_y());
+						VectNextNodetmp.push_back(NextNodetmp);
+					}
+					NextNodetmp.index=PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[4];
+					if(PtrNodes->TypeOfNode[NextNodetmp.index]==Wall||PtrNodes->TypeOfNode[NextNodetmp.index]==Corner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConcaveCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConvexCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==SpecialWall)
+					{
+						NextNodetmp.distance=DistToWall(PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_x(),PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_y());
+						VectNextNodetmp.push_back(NextNodetmp);
+					}
 					break;
-				case 4:
-					next.push_back(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[1]);
-					next.push_back(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[3]);
+				case 8:
+					NextNodetmp.index=PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[1];
+					if(PtrNodes->TypeOfNode[NextNodetmp.index]==Wall||PtrNodes->TypeOfNode[NextNodetmp.index]==Corner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConcaveCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConvexCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==SpecialWall)
+					{
+						NextNodetmp.distance=DistToWall(PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_x(),PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_y());
+						VectNextNodetmp.push_back(NextNodetmp);
+					}
+					NextNodetmp.index=PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[4];
+					if(PtrNodes->TypeOfNode[NextNodetmp.index]==Wall||PtrNodes->TypeOfNode[NextNodetmp.index]==Corner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConcaveCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==ConvexCorner||PtrNodes->TypeOfNode[NextNodetmp.index]==SpecialWall)
+					{
+						NextNodetmp.distance=DistToWall(PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_x(),PtrNodes->NodeSpecialWall[PtrNodes->NodeIndexByType[NextNodetmp.index]].get_y());
+						VectNextNodetmp.push_back(NextNodetmp);
+					}
 					break;
-				}*/
+				}
+
 				break;
 		case Corner:
 			switch(PtrNodes->NodeCorner[nodeIdlocal].Get_BcNormal())

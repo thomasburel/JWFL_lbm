@@ -26,10 +26,21 @@ public:
 //	void ApplySpecialWall(NodeWall2D& Node, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in);
 	//Specify in the solver: set values (Rho, U) and pointers on macroscopic variables
 	void ApplySpecialWall(NodeWall2D& Node, double const Rho_def, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V);
+	void ApplyPeriodicWall(NodeWall2D& Node, double const Rho_def, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V);
+	void ApplySymmetryWall(NodeWall2D& Node, double const Rho_def, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V);
+	void ApplyPressureWall(NodeWall2D& Node, double const Rho_def, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V);
+	void ApplyVelocityWall(NodeWall2D& Node, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V);
 
 private:
 	void FunctionSpecialWall(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V);
+	void FunctionPeriodicWall(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V);
+	void FunctionSymmetryWall(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V);
+	void FunctionPressureWall(NodeWall2D& Node, double const Rho_def, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V);
+	void FunctionVelocityWall(NodeWall2D& Node, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V);
+
+
 	D2Q9GenericBc* BcMethods;
+	Extrapolation Extrapol;
 	double RhoDef_tmp,UDef_tmp,VDef_tmp;
 	double U_tmp[2];
 };

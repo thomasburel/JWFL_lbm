@@ -15,6 +15,9 @@
 D2Q9SpecialWall::D2Q9SpecialWall() {
 	// TODO Auto-generated constructor stub
 	BcMethods=0;
+	RhoDef_tmp=1;UDef_tmp=0;VDef_tmp=0;
+	U_tmp[0]=0;U_tmp[1]=0;
+	Extrapol.initExtrapolation(2,9,WeightDistanceExtrapol);
 }
 
 D2Q9SpecialWall::~D2Q9SpecialWall() {
@@ -33,6 +36,26 @@ void D2Q9SpecialWall::ApplySpecialWall(NodeWall2D& Node, double const Rho_def, d
 {
 	U_tmp[0]=UDef;U_tmp[1]=VDef;
 	FunctionSpecialWall(Node,Rho_def,&U_tmp[0],TypeOfNode_,f_in,Rho,U,V);
+}
+void D2Q9SpecialWall::ApplyPeriodicWall(NodeWall2D& Node, double const Rho_def, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V)
+{
+	U_tmp[0]=UDef;U_tmp[1]=VDef;
+	FunctionPeriodicWall(Node,Rho_def,&U_tmp[0],TypeOfNode_,f_in,Rho,U,V);
+}
+void D2Q9SpecialWall::ApplySymmetryWall(NodeWall2D& Node, double const Rho_def, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V)
+{
+	U_tmp[0]=UDef;U_tmp[1]=VDef;
+	FunctionSymmetryWall(Node,Rho_def,&U_tmp[0],TypeOfNode_,f_in,Rho,U,V);
+}
+void D2Q9SpecialWall::ApplyPressureWall(NodeWall2D& Node, double const Rho_def, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V)
+{
+
+	FunctionPressureWall(Node,Rho_def,TypeOfNode_,f_in,Rho,U,V);
+}
+void D2Q9SpecialWall::ApplyVelocityWall(NodeWall2D& Node, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V)
+{
+	U_tmp[0]=UDef;U_tmp[1]=VDef;
+	FunctionVelocityWall(Node,&U_tmp[0],TypeOfNode_,f_in,Rho,U,V);
 }
 void D2Q9SpecialWall::FunctionSpecialWall(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V)
 {
@@ -351,6 +374,215 @@ void D2Q9SpecialWall::FunctionSpecialWall(NodeWall2D& Node, double const Rho_def
 	}
 
 
+}
+void D2Q9SpecialWall::FunctionPeriodicWall(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V){
+
+	NodeType NodeTypeTmp1;
+	NodeType NodeTypeTmp2;
+	int normal=0;
+	switch(Node.Get_BcNormal())
+	{
+	//Bottom left corner
+	case 5:
+		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[1]];
+		NodeTypeTmp2=TypeOfNode_[Node.Get_connect()[2]];
+		if(NodeTypeTmp1!=Periodic)
+		{
+		//Apply symmetry on the bottom side
+			normal=1;
+			BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the left side
+			normal=2;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		else
+		{
+		//Apply symmetry on the left side
+			normal=2;
+			BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the bottom side
+			normal=1;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		break;
+	case 6:
+		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[2]];
+		NodeTypeTmp2=TypeOfNode_[Node.Get_connect()[3]];
+		if(NodeTypeTmp1!=Periodic)
+		{
+		//Apply symmetry on the bottom side
+			normal=2;
+			BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the right side
+			normal=3;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		else
+		{
+		//Apply symmetry on the right side
+			normal=3;
+			BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the bottom side
+			normal=2;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		break;
+	case 7:
+		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[4]];
+		NodeTypeTmp2=TypeOfNode_[Node.Get_connect()[3]];
+		if(NodeTypeTmp1!=Periodic)
+		{
+		//Apply symmetry on the top side
+			normal=4;
+			BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the right side
+			normal=3;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		else
+		{
+		//Apply symmetry on the right side
+			normal=3;
+			BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the top side
+			normal=4;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		break;
+	case 8:
+		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[4]];
+		NodeTypeTmp2=TypeOfNode_[Node.Get_connect()[1]];
+		if(NodeTypeTmp1!=Periodic)
+		{
+		//Apply symmetry on the top side
+			normal=4;
+			BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the left side
+			normal=1;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		else
+		{
+		//Apply symmetry on the left side
+			normal=1;
+			BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the top side
+			normal=4;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		break;
+	default:
+		std::cerr<<"Direction: "<< Node.Get_BcNormal()<<" not found for Special Wall"<<std::endl;
+	}
+}
+void D2Q9SpecialWall::FunctionSymmetryWall(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V){
+
+	NodeType NodeTypeTmp1;
+	NodeType NodeTypeTmp2;
+	int normal=0;
+	switch(Node.Get_BcNormal())
+	{
+	//Bottom left corner
+	case 5:
+		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[1]];
+		NodeTypeTmp2=TypeOfNode_[Node.Get_connect()[2]];
+		if(NodeTypeTmp1!=Symmetry)
+		{
+		//Apply symmetry on the bottom side
+			normal=1;
+			BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the left side
+			normal=2;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		else
+		{
+		//Apply symmetry on the left side
+			normal=2;
+			BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the bottom side
+			normal=1;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		break;
+	case 6:
+		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[2]];
+		NodeTypeTmp2=TypeOfNode_[Node.Get_connect()[3]];
+		if(NodeTypeTmp1!=Symmetry)
+		{
+		//Apply symmetry on the bottom side
+			normal=2;
+			BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the right side
+			normal=3;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		else
+		{
+		//Apply symmetry on the right side
+			normal=3;
+			BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the bottom side
+			normal=2;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		break;
+	case 7:
+		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[4]];
+		NodeTypeTmp2=TypeOfNode_[Node.Get_connect()[3]];
+		if(NodeTypeTmp1!=Symmetry)
+		{
+		//Apply symmetry on the top side
+			normal=4;
+			BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the right side
+			normal=3;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		else
+		{
+		//Apply symmetry on the right side
+			normal=3;
+			BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the top side
+			normal=4;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		break;
+	case 8:
+		NodeTypeTmp1=TypeOfNode_[Node.Get_connect()[4]];
+		NodeTypeTmp2=TypeOfNode_[Node.Get_connect()[1]];
+		if(NodeTypeTmp1!=Symmetry)
+		{
+		//Apply symmetry on the top side
+			normal=4;
+			BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the left side
+			normal=1;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+		}
+		else
+		{
+		//Apply symmetry on the left side
+			normal=1;
+			BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
+		//Apply Other boundary on the top side
+			normal=4;
+			BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+			}
+		break;
+	default:
+		std::cerr<<"Direction: "<< Node.Get_BcNormal()<<" not found for Special Wall"<<std::endl;
+	}
+}
+void D2Q9SpecialWall::FunctionPressureWall(NodeWall2D& Node, double const Rho_def, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V){
+	Extrapol.ExtrapolationOnCornerConcave(U,Node.Get_connect(),Node.Get_BcNormal());
+	Extrapol.ExtrapolationOnCornerConcave(V,Node.Get_connect(),Node.Get_BcNormal());
+	BcMethods->ApplyPreVelSpecialWall(Node,f_in,Rho_def,BcMethods->Get_U(Node.Get_index()),BcMethods->Get_V(Node.Get_index()),Rho,U,V);
+}
+void D2Q9SpecialWall::FunctionVelocityWall(NodeWall2D& Node, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V){
+	Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
+	BcMethods->ApplyPreVelSpecialWall(Node,f_in,BcMethods->Get_Rho(Node.Get_index()),UDef[0],UDef[1],Rho,U,V);
 }
 
 

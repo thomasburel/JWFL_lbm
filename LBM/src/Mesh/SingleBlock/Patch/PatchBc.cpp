@@ -22,11 +22,16 @@ void PatchBc::initPatchBc(std::vector<Node2D*> Node, Parameters *PtrParam){
 	SelectPatchBc(PtrParam->Get_GlobalBcType(2), PtrParam, string("Top"), NumberOfPatchBc+3);
 	//Define temporary variables
 	double *pos;int IdPatchBc=-1;
-	//std::vector<int>  *IdxNode;
-	//IdxNode=new std::vector<int>[NumberOfPatchBc+4];
+//	std::vector<int>  *IdxNode;
+//	IdxNode=new std::vector<int>[NumberOfPatchBc+4];
+
 	std::vector<std::vector<int> >  IdxNode;
 	for (int i=0;i<NumberOfPatchBc+4;i++)
 		IdxNode.push_back(std::vector<int> (0));
+	//Initialise vector to empty vectors
+	for (int i=0;i<NumberOfPatchBc+4;i++)
+		IdxNode[i].clear();
+
 	int nx=PtrParam->Get_Nx();
 	int ny=PtrParam->Get_Ny();
 
@@ -190,9 +195,9 @@ void PatchBc::SetNodeIdxForPatchBc(SolverEnum::PatchType Type_, int IdIntype,int
 	case SolverEnum::Periodic:
 		PeriodicPatch[IdIntype].Set_NodeIndex(nodeIdx);
 		break;
-/*	case SolverEnum::Wall:
+	case SolverEnum::Wall:
 		WallPatch[IdIntype].Set_NodeIndex(nodeIdx);
-		break;*/
+		break;
 	}
 }
 void PatchBc::Set_NodeIndexByType(SolverEnum::PatchType Type_, int IdIntype,std::vector<int>& nodeIdx){
@@ -211,9 +216,9 @@ void PatchBc::Set_NodeIndexByType(SolverEnum::PatchType Type_, int IdIntype,std:
 	case SolverEnum::Periodic:
 		PeriodicPatch[IdIntype].Set_NodeIndexByType(nodeIdx);
 		break;
-//	case SolverEnum::Wall:
-//		WallPatch[IdIntype].Set_NodeIndexByType(nodeIdx);
-//		break;
+	case SolverEnum::Wall:
+		WallPatch[IdIntype].Set_NodeIndexByType(nodeIdx);
+		break;
 	}
 }
 
@@ -233,9 +238,9 @@ void PatchBc::Set_NodeIndexSpecialWalls(SolverEnum::PatchType Type_, int IdIntyp
 	case SolverEnum::Periodic:
 		PeriodicPatch[IdIntype].Set_NodeIndexSpecialWalls(nodeIdx);
 		break;
-//	case SolverEnum::Wall:
-//		WallPatch[IdIntype].Set_NodeIndexByType(nodeIdx);
-//		break;
+	case SolverEnum::Wall:
+		WallPatch[IdIntype].Set_NodeIndexByType(nodeIdx);
+		break;
 	}
 }
 
@@ -255,9 +260,9 @@ void PatchBc::Set_NodeIndexGlobalCorner(SolverEnum::PatchType Type_, int IdIntyp
 	case SolverEnum::Periodic:
 		PeriodicPatch[IdIntype].Set_NodeIndexGlobalCorner(nodeIdx);
 		break;
-//	case SolverEnum::Wall:
-//		WallPatch[IdIntype].Set_NodeIndexByType(nodeIdx);
-//		break;
+	case SolverEnum::Wall:
+		WallPatch[IdIntype].Set_NodeIndexByType(nodeIdx);
+		break;
 	}
 }
 void PatchBc::SelectPatchBc(SolverEnum::PatchType Type_, Parameters *PtrParam, string PatchBcNames, int PatchId){
@@ -277,9 +282,9 @@ void PatchBc::SelectPatchBc(SolverEnum::PatchType Type_, Parameters *PtrParam, s
 	case SolverEnum::Periodic:
 		AddPeriodicPatch(PatchBcNames, PtrParam->Get_PeriodicType());
 		break;
-//	case SolverEnum::Wall:
-//		AddWallPatch(PatchBcNames, PtrParam->Get_WallType());
-//		break;
+	case SolverEnum::Wall:
+		AddWallPatch(PatchBcNames, PtrParam->Get_WallType());
+		break;
 	}
 }
 void PatchBc::SelectPatchBc(NodeType Type_, Parameters *PtrParam, string PatchBcNames, int PatchId){
@@ -298,9 +303,9 @@ void PatchBc::SelectPatchBc(NodeType Type_, Parameters *PtrParam, string PatchBc
 	case Periodic:
 		AddPeriodicPatch(PatchBcNames, PtrParam->Get_PeriodicType());
 		break;
-//	case Wall:
-//		AddWallPatch(PatchBcNames, PtrParam->Get_WallType());
-//		break;
+	case Wall:
+		AddWallPatch(PatchBcNames, PtrParam->Get_WallType());
+		break;
 	}
 }
 void PatchBc::RemovePatchBc(int PatchId){
@@ -338,7 +343,7 @@ void PatchBc::RemovePatchBc(int PatchId){
 			if(!PeriodicPatch.empty())
 				PeriodicPatch.erase(PeriodicPatch.begin()+PatchIdInType[PatchId]);
 			break;
-/*		case SolverEnum::Wall:
+		case SolverEnum::Wall:
 			if (PatchIdInType[PatchId]<=WallPatch.size()-1)
 				for (int i=PatchId;i<NumberOfPatchBc+4;i++)
 					if (PatchTypeInType[i]==Wall)
@@ -346,6 +351,6 @@ void PatchBc::RemovePatchBc(int PatchId){
 			if(!WallPatch.empty())
 				WallPatch.erase(WallPatch.begin()+PatchIdInType[PatchId]);
 			break;
-			*/
+
 		}
 }

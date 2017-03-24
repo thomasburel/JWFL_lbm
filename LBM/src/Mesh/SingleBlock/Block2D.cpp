@@ -2128,9 +2128,9 @@ void Block2D::GenerateSolid(Parameters &Param)
 	}
 	//Correct_Solid_Ghost();
 	std::cout<<"Processor: "<<rank<<" Number of Solid: "<<IdSolidNode.size()<<" Number of Computation nodes: "<<NbRealNodes-IdSolidNode.size()<<std::endl;
-	if(rank==0)
-		for(int i=0;i<IdCornerConvextmp.size();i++)
-			std::cout<<"x: "<<Node[IdCornerConvextmp[i]]->get_x()<<" y: "<<Node[IdCornerConvextmp[i]]->get_y()<<std::endl;
+//	if(rank==0)
+//		for(int i=0;i<IdCornerConvextmp.size();i++)
+//			std::cout<<"x: "<<Node[IdCornerConvextmp[i]]->get_x()<<" y: "<<Node[IdCornerConvextmp[i]]->get_y()<<std::endl;
 }
 void Block2D::SetSolidBoundaries(){
 //Detect boundaries
@@ -3066,10 +3066,7 @@ void Block2D::Get_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & Node
 	for(int i=0;i<IdRNodeE.size();i++)
 		NodeTypeE.push_back((int)Node[IdRNodeE[i]]->get_NodeType());
 	for(int i=0;i<IdRNodeS.size();i++)
-		{NodeTypeS.push_back((int)Node[IdRNodeS[i]]->get_NodeType());
-		if(Node[IdRNodeS[i]]->get_x()>110&&Node[IdRNodeS[i]]->get_x()<115&&Node[IdRNodeS[i]]->get_y()>99&&Node[IdRNodeS[i]]->get_y()<105)
-		std::cout<<"x: "<<Node[IdRNodeS[i]]->get_x()<<" y: "<<Node[IdRNodeS[i]]->get_y()<<std::endl;
-		}
+		NodeTypeS.push_back((int)Node[IdRNodeS[i]]->get_NodeType());
 	for(int i=0;i<IdRNodeW.size();i++)
 		NodeTypeW.push_back((int)Node[IdRNodeW[i]]->get_NodeType());
 // Get Node type of the corners of the 2D block
@@ -4172,16 +4169,23 @@ void Block2D::Set_NodeIndexByTypeForPatchBc(){
 				PatchsBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
 			break;
 			case SolverEnum::Wall:
-	/*			NodeIdx=PatchsBc.Get_WallPatch()[PatchIdInType[j]].Get_NodeIndex();
-				for (int i=0;i<NodeIdx.size();i++)
+				NodeIdx=PatchsBc.Get_WallPatch()[PatchIdInType[j]].Get_NodeIndex();
+				NodeIdxbyTypetmp.clear();
+				NodeIdxbyTypeSpecialWallstmp.clear();
+				NodeIdxbyTypeGlobalCornertmp.clear();
+	/*			for (int i=0;i<NodeIdx.size();i++)
 				{
 					if(NodeArrays.TypeOfNode[NodeIdx[i]]==Wall)//Removing solid and special wall
 						NodeIdxbyTypetmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
 					if(NodeArrays.TypeOfNode[NodeIdx[i]]==SpecialWall||NodeArrays.TypeOfNode[NodeIdx[i]]==ConcaveCorner)//Mark Special wall
-						NodeIdxbyTypeSpecialNodetmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+						NodeIdxbyTypeSpecialWallstmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
+					if(NodeArrays.TypeOfNode[NodeIdx[i]]==GlobalCorner)//Mark Global Corner
+						NodeIdxbyTypeGlobalCornertmp.push_back(NodeArrays.NodeIndexByType[NodeIdx[i]]);
 				}
-				PatchsBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);*/
-			break;
+				*/
+				PatchsBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);
+				PatchsBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
+				PatchsBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);			break;
 		}
 	}
 }

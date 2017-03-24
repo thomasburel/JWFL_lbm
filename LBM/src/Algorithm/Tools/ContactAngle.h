@@ -92,6 +92,56 @@ inline	void Normalise(double* &Var_x,double* &Var_y,double* &Var_z, int nodenumb
 	else
 		{Var_x[nodenumber]=0.0; Var_y[nodenumber]=0.0;Var_z[nodenumber]=0.0;}
 }
+inline	void NormaliseConcaveCornerExtraPol(double* &Var_x,double* &Var_y, int *Connect,int normal){
+	switch(normal)
+	{
+	case 5:
+		Normalise(Var_x,Var_y,Connect[3]);
+		Normalise(Var_x,Var_y,Connect[4]);
+		Normalise(Var_x,Var_y,Connect[7]);
+		break;
+	case 6:
+		Normalise(Var_x,Var_y,Connect[1]);
+		Normalise(Var_x,Var_y,Connect[4]);
+		Normalise(Var_x,Var_y,Connect[8]);
+		break;
+	case 7:
+		Normalise(Var_x,Var_y,Connect[1]);
+		Normalise(Var_x,Var_y,Connect[2]);
+		Normalise(Var_x,Var_y,Connect[5]);
+		break;
+	case 8:
+		Normalise(Var_x,Var_y,Connect[3]);
+		Normalise(Var_x,Var_y,Connect[2]);
+		Normalise(Var_x,Var_y,Connect[6]);
+		break;
+	}
+}
+inline	void NormaliseConcaveCornerExtraPol(double* &Var_x,double* &Var_y, double* &Var_z, int *Connect,int normal){
+	switch(normal)
+	{
+	case 5:
+		Normalise(Var_x,Var_y,Var_z,Connect[3]);
+		Normalise(Var_x,Var_y,Var_z,Connect[4]);
+		Normalise(Var_x,Var_y,Var_z,Connect[7]);
+		break;
+	case 6:
+		Normalise(Var_x,Var_y,Var_z,Connect[1]);
+		Normalise(Var_x,Var_y,Var_z,Connect[4]);
+		Normalise(Var_x,Var_y,Var_z,Connect[8]);
+		break;
+	case 7:
+		Normalise(Var_x,Var_y,Var_z,Connect[1]);
+		Normalise(Var_x,Var_y,Var_z,Connect[2]);
+		Normalise(Var_x,Var_y,Var_z,Connect[5]);
+		break;
+	case 8:
+		Normalise(Var_x,Var_y,Var_z,Connect[3]);
+		Normalise(Var_x,Var_y,Var_z,Connect[2]);
+		Normalise(Var_x,Var_y,Var_z,Connect[6]);
+		break;
+	}
+}
 };
 
 #endif /* SRC_ALGORITHM_TOOLS_CONTACTANGLE_H_ */

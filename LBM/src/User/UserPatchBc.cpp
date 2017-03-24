@@ -23,24 +23,26 @@ UserPatchBc::~UserPatchBc() {
 
 void UserPatchBc::IntitialiseUserPatchBc(Parameters& PtrParameters,int &NumberOfPatchBc){
 	//Set Number of Patch needed (User)
-	NumberOfPatchBc=3;
+	NumberOfPatchBc=4;
 	//Define each patch
 		//Patch 0
 		//AddPressurePatch("Inlet",HeZouP, FixP);
 		AddVelocityPatch("Inlet",HeZouV, FixV);
 		//Patch 1
-		AddVelocityPatch("Outlet",HeZouV, zeroVGrad1st); //FixV,zeroVGrad1st
-		VelocityPatch.back().Set_extrapolationAlpha(true);
-		VelocityPatch.back().Set_extrapolationNormal(true);
+		AddPressurePatch("Outlet",HeZouP, FixP);
+		//AddVelocityPatch("Outlet",HeZouV, zeroVGrad1st); //FixV,zeroVGrad1st
+		PressurePatch.back().Set_extrapolationAlpha(true);
+		//PressurePatch.back().Set_extrapolationNormal(true);
 		//AddPressurePatch("Outlet",HeZouP, FixP);
 		//Patch 2
-		AddSymmetryPatch("Symmetry",OnNode);
+		AddWallPatch("Wall",BounceBack);
+		//AddSymmetryPatch("Symmetry",OnNode);
 		//Patch 3
-	//	AddWallPatch("Wall",BounceBack);
+		AddWallPatch("Wall",BounceBack);
 
 }
 void UserPatchBc::SetUserPatchBc(Parameters& PtrParameters,int elem, int nodenumber, double* pos, int &IdPatchBc){
-	if(pos[0]==0)
+		if(pos[0]==0)
 		IdPatchBc=0;
 	if(pos[0]==PtrParameters.Get_Nx())
 		IdPatchBc=1;
@@ -48,6 +50,7 @@ void UserPatchBc::SetUserPatchBc(Parameters& PtrParameters,int elem, int nodenum
 		IdPatchBc=2;
 	if(pos[1]==0)
 		IdPatchBc=2;
+
 }
 
 
