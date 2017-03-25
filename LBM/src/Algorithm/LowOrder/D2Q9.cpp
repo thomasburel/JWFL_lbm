@@ -78,20 +78,20 @@ void D2Q9::Set_Collide(){
 	if(PtrParameters->Get_FluidType()==Newtonian )
 	{
 		if(PtrParameters->Get_UserForceType()== ::LocalForce)
-			{Select_Collide_2D(Std2DLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
+			{Select_Collide_2D(Std2DLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());}
 		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			{Select_Collide_2D(Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
+			{Select_Collide_2D(Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());}
 		else
-			{Select_Collide_2D(Std2D,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
+			{Select_Collide_2D(Std2D,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());}
 	}
 	else
 	{
 		if(PtrParameters->Get_UserForceType()== ::LocalForce)
-			{Select_Collide_2D(Std2DNonCstTauLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
+			{Select_Collide_2D(Std2DNonCstTauLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());}
 		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			{Select_Collide_2D(Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
+			{Select_Collide_2D(Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());}
 		else
-			{Select_Collide_2D(Std2DNonCstTau,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity());}
+			{Select_Collide_2D(Std2DNonCstTau,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());}
 	}
 
 }

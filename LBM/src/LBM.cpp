@@ -47,8 +47,8 @@ int main(int argc, char *argv[]) {
 
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 // Set Domain size
-	double L=300;
-	double H=204;
+	double L=100;
+	double H=100;
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 //Set Lattice unity
 	double deltaTLattice=1;
@@ -66,21 +66,21 @@ int main(int argc, char *argv[]) {
 	double Rho2_ref=Rho1_ref;
 
 
-	double lambda=1.0/43.0;
-	double nu_1=4.91*1.e-2/lambda;
+	double lambda=1;//1.0/43.0;
+	double nu_1=0.1;//4.91*1.e-2/lambda;
 	double nu_2=lambda*nu_1;
 
 	double tau1=0.5+nu_1*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
 	double tau2=0.5+nu_2*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
 	double La=0;
-	double sigma=1.96*1.e-3;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
+	double sigma=1.0*1.e-3;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
 
 
 	double Mach =U2_ref*std::sqrt(3);
 	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
 //Pressure drop
-	double deltaP=0.0;
-	double refPressure=1.0/3.0;
+	double deltaP=0.1;
+	double refPressure=1.0;
 // Pressure inlet
 	double Pmax=refPressure+deltaP;
 // Pressure outlet
@@ -94,8 +94,8 @@ int main(int argc, char *argv[]) {
 // Set User Parameters
 	//U2_ref=0.01;Pmax=1;Pmin=1;
 //Contact angle parameters
-	double contactangle=30*pi/180.0;
-	Param.Set_ContactAngleType(ContactAngleEnum::FixTeta);//NoTeta, FixTeta or NonCstTeta
+	double contactangle=80*pi/180.0;
+	Param.Set_ContactAngleType(ContactAngleEnum::NoTeta);//NoTeta, FixTeta or NonCstTeta
 	Param.Set_ContactAngleModel(ContactAngleEnum::Interpol);//Standard or Interpol
 	Param.Set_SwitchSelectTeta(ContactAngleEnum::Linear);//Binary or Linear
 	Param.Set_NormalExtrapolType(ContactAngleEnum::WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,or WeightDistanceExtrapol
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity, Periodic and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
-	Param.Set_BcType(Symmetry,Pressure,Symmetry,Velocity);
+	Param.Set_BcType(Wall,Pressure,Wall,Velocity);
 
 
 /// Set Pressure Type
@@ -132,13 +132,13 @@ int main(int argc, char *argv[]) {
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(50000);
+	Param.Set_NbStep(100000);
 /// Interval for output
-	Param.Set_OutPutNSteps(1000);// interval
+	Param.Set_OutPutNSteps(10000);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(500);
-	Param.Set_ErrorMax(1e-10);
-	Param.Set_ErrorVariable(SolverEnum::VelocityX);
+	Param.Set_ErrorMax(1e-15);
+	Param.Set_ErrorVariable(SolverEnum::RhoN);
 
 ///Selection of variables to export
 	Param.Set_VariablesOutput(true,true);// export Rho,U
@@ -168,14 +168,15 @@ int main(int argc, char *argv[]) {
 	Param.Set_Tau_2(tau2);
 	//Surface tension
 	Param.Set_SurfaceTension(sigma);
+	Param.Set_ATau(Param.Convert_SigmaToATau());
 	//Colour fluid Parameters
-	Param.Set_ColourGradLimiter(0.001);
-	Param.Set_A1(0.00001);
+	Param.Set_ColourGradLimiter(0.000001);
+	Param.Set_A1(0.001);
 	Param.Set_A2(Param.Get_A1());
 	Param.Set_Beta(0.7);// Between 0 and 1
 	Param.Set_ColourGradType(ColourFluidEnum::DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
 	Param.Set_RecolouringType(ColourFluidEnum::LatvaKokkoRothman);
-	Param.Set_ColourOperatorType(ColourFluidEnum::SurfaceForce);//Grunau or Reis or SurfaceForce
+	Param.Set_ColourOperatorType(ColourFluidEnum::Reis);//Grunau or Reis or SurfaceForce
 
 	/// Define the Output filename
 	/*	FileExportStream<<"Droplet_shear_"<< fixed << setprecision(0)<<H<<"x"<<L
@@ -205,15 +206,15 @@ int main(int argc, char *argv[]) {
 				<<Param.Get_Beta()<<"-beta_"<<Param.Get_ContactAngle()*180.0/pi<<"-teta_"
 						<< scientific<<setprecision(3)<<"sigma_"<<sigma<<"_ColourGradLimiter"<<Param.Get_ColourGradLimiter();
 */
-		FileExportStream.str("TestBcs_twoPhases");
+		FileExportStream.str("TestBcs_TwoPhase_sigma0.001");
 		Param.Set_OutputFileName(FileExportStream.str());
 
 //	Param.Set_OutputFileName("Testread");
-
-	Param.Add_VariableToInit("TestBcs_21600.cgns",SolverEnum::Density);
-	Param.Add_VariableToInit("TestBcs_21600.cgns",SolverEnum::VelocityX);
-	Param.Add_VariableToInit("TestBcs_21600.cgns",SolverEnum::VelocityY);
-
+/*
+	Param.Add_VariableToInit("TestBcs_OnePhase_lowCa_V2_100000.cgns",SolverEnum::Density);
+	Param.Add_VariableToInit("TestBcs_OnePhase_lowCa_V2_100000.cgns",SolverEnum::VelocityX);
+	Param.Add_VariableToInit("TestBcs_OnePhase_lowCa_V2_100000.cgns",SolverEnum::VelocityY);
+*/
 //	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::Density);
 //	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::VelocityX);
 //	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::VelocityY);

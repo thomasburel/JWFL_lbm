@@ -107,6 +107,9 @@ public:
 	double Get_RhoLimiter(){return RhoLimiter;};
 	void Set_ColourGradLimiter(double GNormLimiter_=0.01){GNormLimiter=GNormLimiter_;};
 	double Get_ColourGradLimiter(){return GNormLimiter;};
+	void Set_ATau(double ATau_=0){Atau=ATau_;};
+	double Get_ATau() const{return Atau;};
+	double Convert_SigmaToATau(double Sigma=0, double latticeSpeed=1){return 9.0*Sigma/(4.0*latticeSpeed*latticeSpeed);};
 	void Set_A1(double A_=0){A2=A_;};
 	double Get_A1() const{return A2;};
 	void Set_A2(double A_=0){A1=A_;};
@@ -123,7 +126,7 @@ public:
 	bool Get_ColourExtrapolNoramlInterface(){return ColourExtrapolNoramlInterface;};
 protected:
 	double beta,RhoLimiter,GNormLimiter;
-	double A1,A2;
+	double A1,A2,Atau;
 	ColourFluidEnum::ColourGradType ColourGrad;
 	ColourFluidEnum::RecolouringType Recolouring;
 	ColourFluidEnum::ColourOperatorType ColourOperator;
@@ -549,6 +552,7 @@ public:
 
 	void Set_VariablesOutput(bool Rho, bool U){density=Rho;velocity=U;};
 
+	double Convert_SigmaToATau(){return ColourFluid::Convert_SigmaToATau(Get_SurfaceTension(),Get_LatticeSpeed());};
 	//void Save_Parameters();
 	//void Load_Parameters();
 

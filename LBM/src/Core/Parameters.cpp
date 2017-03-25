@@ -41,7 +41,7 @@ Parameters::Parameters()
 	Tau_2=1;
 	tension=0;
 	beta=0.7;
-	A1=0; A2=0;
+	A1=0; A2=0;Atau=0;
 	U_ini=0;V_ini=0;W_ini=0;
 	Re=1;
 	l=1;t=1;dx=1;dt=1;
@@ -69,6 +69,7 @@ Parameters::Parameters()
 	nNodesInterpolInSolid=1;
 	nNodesInterpolInFluid=1;
 	refDensity=1;
+	FluidModel=SolverEnum::Compressible;
 }
 
 Parameters::~Parameters() {
