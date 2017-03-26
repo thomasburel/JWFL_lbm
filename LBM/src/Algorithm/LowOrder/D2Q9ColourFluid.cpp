@@ -170,7 +170,7 @@ void D2Q9ColourFluid::Set_Colour_gradient(){
 			break;
 		case ColourFluidEnum::DensityNormalGrad:
 			PtrColourGrad =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
-			PtrColourGradWall =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradBc;
+			PtrColourGradWall =&D2Q9ColourFluid::Colour_gradient_DensityNormalGrad;
 			PtrColourGradBc =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradBc;
 			PtrColourGradCorner =&D2Q9ColourFluid::Colour_gradient_DensityNormalGradCorner;
 			break;

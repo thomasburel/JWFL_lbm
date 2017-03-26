@@ -217,7 +217,7 @@ void D2Q9Corner::ApplyBounceBack(int const &BcNormal,int const *Connect, bool co
 				}
 				break;
 			default:
-				std::cerr<<"Direction corner bounce back not found. "<<std::endl;
+				std::cerr<<"Direction corner bounce back not found. ID node: "<<Connect[0]<<std::endl;
 				break;
 			}
 }

@@ -60,6 +60,10 @@ public:
 			  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
 	void Set_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
 			  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
+	void Remove_SolidTypeInCommunicators(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
+			  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
+	void Remove_SolidTypeInCommunicator(std::vector<int> & RealNodeType,std::vector<int> & GhostNodeType,
+			  std::vector<int> & RealNodeId,std::vector<int> & GhostNodeId,std::vector<int> & RealIdToBeSaved,std::vector<int> & GhostIdToBeSaved);
 	void Get_CommNodes(std::vector<int> & IdRNodeN,std::vector<int> & IdRNodeE,std::vector<int> & IdRNodeS,std::vector<int> & IdRNodeW,
 			std::vector<int> & IdGNodeN,std::vector<int> & IdGNodeE,std::vector<int> & IdGNodeS,std::vector<int> & IdGNodeW,
 			std::vector<int> & IdRNodeSW,std::vector<int> & IdRNodeSE,std::vector<int> & IdRNodeNW,std::vector<int> & IdRNodeNE,
