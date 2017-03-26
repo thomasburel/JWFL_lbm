@@ -171,8 +171,6 @@ int main(int argc, char *argv[]) {
 	Param.Set_ATau(Param.Convert_SigmaToATau());
 	//Colour fluid Parameters
 	Param.Set_ColourGradLimiter(0.000001);
-	Param.Set_A1(0.001);
-	Param.Set_A2(Param.Get_A1());
 	Param.Set_Beta(0.7);// Between 0 and 1
 	Param.Set_ColourGradType(ColourFluidEnum::DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
 	Param.Set_RecolouringType(ColourFluidEnum::LatvaKokkoRothman);
