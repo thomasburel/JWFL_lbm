@@ -229,15 +229,23 @@ void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 	Normal=new double*[2];
 	CAngle.AllocateTeta(NodeArrays,PtrParameters,teta);
 	Dic->AddSync("Rho",Rho);
-	Dic->AddVar(Vector,"ColourGrad",true,true,false,G[0],G[1]);
-	Dic->AddVar(Scalar,"ColourGrad_Norm",true,true,false,G_Norm);
-	Dic->AddVar(Vector,"Normal",true,true,false,Normal[0],Normal[1]);
-	Dic->AddVar(Vector,"SurfaceForce",true,true,false,F[0],F[1]);
-	Dic->AddVar(Scalar,"RhoRed",true,true,true,Rhor);
-	Dic->AddVar(Scalar,"RhoBlue",true,true,true,Rhob);
-	Dic->AddVar(Scalar,"RhoN",true,true,true,RhoN);
-	Dic->AddVar(Scalar,"Curvature",true,false,false,Curv);
-//	Dic->AddVar(Scalar,"Check",false,false,false,testVar);
+	Dic->AddVar(Vector,"ColourGrad",PtrParameters->Get_ColourGradientOutput(),true,false,G[0],G[1]);
+	Dic->AddVar(Scalar,"ColourGrad_Norm",PtrParameters->Get_NormColourGradientOutput(),true,false,G_Norm);
+	Dic->AddVar(Vector,"Normal",PtrParameters->Get_NormalOutput(),true,false,Normal[0],Normal[1]);
+	Dic->AddVar(Scalar,"RhoRed",PtrParameters->Get_RedDensityOutput(),true,true,Rhor);
+	Dic->AddVar(Scalar,"RhoBlue",PtrParameters->Get_BlueDensityOutput(),true,true,Rhob);
+	Dic->AddVar(Scalar,"RhoN",PtrParameters->Get_NormalDensityOutput(),true,true,RhoN);
+	if (PtrParameters->Get_ColourOperatorType()==ColourFluidEnum::SurfaceForce)
+	{
+		Dic->AddVar(Vector,"SurfaceForce",PtrParameters->Get_SurfaceForceOutput(),true,false,F[0],F[1]);
+		Dic->AddVar(Scalar,"Curvature",PtrParameters->Get_CurvatureOutput(),false,false,Curv);
+		for(int i=0;i<nbnodes_total;i++)
+		{
+			F[0][i]=0;
+			F[1][i]=0;
+			Curv[i]=0;
+		}
+	}
 	for(int i=0;i<nbnodes_total;i++)
 	{
 		G[0][i]=0;
@@ -245,9 +253,6 @@ void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 		G_Norm[i]=0;
 		Normal[0][i]=0;
 		Normal[1][i]=0;
-	//	testVar[i]=0.0;
-		F[0][i]=0;
-		F[1][i]=0;
 	}
 	InitColourFluidAllDomain(ini);
 	//Initialise from file or Restart
@@ -772,11 +777,15 @@ void D2Q9ColourFluid::run(){
 	{
 		SyncToGhost();
 	//	SyncMacroVarToGhost();
-	}
-	if(parallel->getSize()>1)
 		SyncMacroVarToGhost();
+	//SyncVarFromSolidGhost(RhoN);
+	}
 	ExtrapolDensityInSolid();
-
+	if(parallel->getSize()>1)
+	{
+//		SyncVarFromSolidGhost(RhoN);
+		SyncVarToSolidGhost(RhoN);
+	}
 	ApplyBc();
 	Colour_gradient();
 	if(parallel->getSize()>1)
@@ -788,14 +797,29 @@ void D2Q9ColourFluid::run(){
 	//Impose_ContactAngleInSolid();
 
 	ColourFluid_Collision();
+	ApplyBc();
 	UpdateMacroVariables();
 	if(parallel->getSize()>1)
+	{
 		SyncMacroVarToGhost();
+//	SyncVarToSolidGhost(RhoN);
+	}
+	//if(parallel->getSize()>1)
+	//	SyncVarToGhost(RhoN);
+
 	ExtrapolDensityInSolid();
 
+	if(parallel->getSize()>1)
+	{
+//	SyncVarFromSolidGhost(RhoN);
+		SyncVarToSolidGhost(RhoN);
+//		SyncVarSolidGhost(RhoN);
+	}
 
 //	Write_Breakpoint(PtrParameters);
+
 	Writer->Write_Output(it);
+
 //	Writer->Write_breakpoint(*PtrParameters);
 	it++;
 	if(parallel->getSize()>1)
@@ -817,8 +841,11 @@ void D2Q9ColourFluid::run(){
 			ApplyBc();
 			UpdateMacroVariables();
 			SyncMacroVarToGhost();
+//			SyncVarToSolidGhost(RhoN);
 			ExtrapolDensityInSolid();
-
+			SyncVarToSolidGhost(RhoN);
+//			SyncVarFromSolidGhost(RhoN);
+			//SyncVarToGhost(RhoN);
 			if(it%OutPutNStep==0)
 			{
 				Writer->Write_Output(it);
@@ -1002,6 +1029,13 @@ void D2Q9ColourFluid::Colour_gradient(){
 	{
 	// Common variables
 		idx_tmp=NodeArrays->NodeWall[j].Get_index();
+/*		if(NodeArrays->NodeWall[j].get_x()==34&& NodeArrays->NodeWall[j].get_y()==66)
+		{
+			std::cout<<"RhoN (33,67): "<<RhoN[NodeArrays->NodeWall[j].Get_connect()[6]]<<std::endl;
+			std::cout<<"RhoN (34,67): "<<RhoN[NodeArrays->NodeWall[j].Get_connect()[2]]<<std::endl;
+			std::cout<<"RhoN (35,67): "<<RhoN[NodeArrays->NodeWall[j].Get_connect()[5]]<<std::endl;
+			std::cout<<"RhoN (35,66): "<<RhoN[NodeArrays->NodeWall[j].Get_connect()[8]]<<std::endl;
+		}*/
 	// Calculate gradients
 		(this->*PtrColourGradWall)(idx_tmp,NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal());
 		CalculNormal(idx_tmp,NodeArrays->NodeWall[j].Get_connect(),NodeArrays->NodeWall[j].Get_BcNormal());

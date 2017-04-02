@@ -98,7 +98,9 @@ protected:
 	void CornerNodesSyncFromGhost();
 	void CornerNodesSyncToGhost();
 	void SyncMacroVarToGhost();
-
+	void SyncVarSolidGhost(double *&VarIn);
+	void SyncVarFromSolidGhost(double *&VarIn);
+	void SyncVarToSolidGhost(double *&VarIn);
 	//Tools
 inline	void Normalise(double* Var_x,double* Var_y, int nodenumber){
 	// Normalise
@@ -133,8 +135,8 @@ protected:
 
 	int Nd_MacroVariables_sync;//number of variable has to be synchronise
 	std::vector<double*> SyncVar;
-	double ***buf_MacroSend, ***buf_MacroRecv; //buffers to send and receive
-	int *size_MacroBuf; // size of buffers
+	double ***buf_MacroSend, ***buf_MacroRecv,***buf_MacroSendSolid, ***buf_MacroRecvSolid; //buffers to send and receive
+	int *size_MacroBuf,*size_MacroBufSolid; // size of buffers
 
 
 

@@ -60,26 +60,54 @@ public:
 			  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
 	void Set_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
 			  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
-	void Remove_SolidTypeInCommunicators(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
-			  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
-	void Remove_SolidTypeInCommunicator(std::vector<int> & RealNodeType,std::vector<int> & GhostNodeType,
-			  std::vector<int> & RealNodeId,std::vector<int> & GhostNodeId,std::vector<int> & RealIdToBeSaved,std::vector<int> & GhostIdToBeSaved);
+	//void Remove_SolidTypeInCommunicators(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
+	//		  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
+	//void Remove_SolidTypeInCommunicator(std::vector<int> & RealNodeType,std::vector<int> & GhostNodeType,
+	//		  std::vector<int> & RealNodeId,std::vector<int> & GhostNodeId,std::vector<int> & RealIdToBeSaved,std::vector<int> & GhostIdToBeSaved);
+
+	void SetCommunicatorinSolid(std::vector<int> & RealNodeId,std::vector<int> & GhostNodeId,std::vector<int> & RealIdToBeSaved,std::vector<int> & GhostIdToBeSaved);
 	void Get_CommNodes(std::vector<int> & IdRNodeN,std::vector<int> & IdRNodeE,std::vector<int> & IdRNodeS,std::vector<int> & IdRNodeW,
 			std::vector<int> & IdGNodeN,std::vector<int> & IdGNodeE,std::vector<int> & IdGNodeS,std::vector<int> & IdGNodeW,
 			std::vector<int> & IdRNodeSW,std::vector<int> & IdRNodeSE,std::vector<int> & IdRNodeNW,std::vector<int> & IdRNodeNE,
 			std::vector<int> & IdGNodeSW,std::vector<int> & IdGNodeSE,std::vector<int> & IdGNodeNW,std::vector<int> & IdGNodeNE);
+//Communication needed when extrapolation in solid
+	void Get_SolidCommNodes(std::vector<int> & IdRNodeN,std::vector<int> & IdRNodeE,std::vector<int> & IdRNodeS,std::vector<int> & IdRNodeW,
+			std::vector<int> & IdGNodeN,std::vector<int> & IdGNodeE,std::vector<int> & IdGNodeS,std::vector<int> & IdGNodeW,
+			std::vector<int> & IdRNodeSW,std::vector<int> & IdRNodeSE,std::vector<int> & IdRNodeNW,std::vector<int> & IdRNodeNE,
+			std::vector<int> & IdGNodeSW,std::vector<int> & IdGNodeSE,std::vector<int> & IdGNodeNW,std::vector<int> & IdGNodeNE);
 
+	void Get_SolidGhost(std::vector<int> & GhostSolidIdN,std::vector<int> & GhostSolidIdE,std::vector<int> & GhostSolidIdS,std::vector<int> & GhostSolidIdW,
+			  std::vector<int> & GhostSolidIdSW,std::vector<int> & GhostSolidIdSE,std::vector<int> & GhostSolidIdNW,std::vector<int> & GhostSolidIdNE);
+	void Get_GhostFirstLayer(std::vector<int> & GhostSolidIdN,std::vector<int> & GhostSolidIdE,std::vector<int> & GhostSolidIdS,std::vector<int> & GhostSolidIdW,
+			  std::vector<int> & GhostSolidIdSW,std::vector<int> & GhostSolidIdSE,std::vector<int> & GhostSolidIdNW,std::vector<int> & GhostSolidIdNE);
+	void Remove_SolidTypeInCommunicatorsForRealNodes();
+	void Remove_SolidTypeInCommunicatorsForGhostNodes(std::vector<int> & GhostSolidIdN,std::vector<int> & GhostSolidIdE,std::vector<int> & GhostSolidIdS,std::vector<int> & GhostSolidIdW,
+			  std::vector<int> & GhostSolidIdSW,std::vector<int> & GhostSolidIdSE,std::vector<int> & GhostSolidIdNW,std::vector<int> & GhostSolidIdNE,
+			  std::vector<int> & GhostFirstLayerSolidIdN,std::vector<int> & GhostFirstLayerSolidIdE,std::vector<int> & GhostFirstLayerSolidIdS,std::vector<int> & GhostFirstLayerSolidIdW,
+			  std::vector<int> & GhostFirstLayerSolidIdSW,std::vector<int> & GhostFirstLayerSolidIdSE,std::vector<int> & GhostFirstLayerSolidIdNW,std::vector<int> & GhostFirstLayerSolidIdNE );
+	//void Keep_FirstLayerSolidInCommunicatorsForGhostNodes(std::vector<int> & GhostFirstLayerSolidIdN,std::vector<int> & GhostFirstLayerSolidIdE,std::vector<int> & GhostFirstLayerSolidIdS,std::vector<int> & GhostFirstLayerSolidIdW,
+	//		  std::vector<int> & GhostFirstLayerSolidIdSW,std::vector<int> & GhostFirstLayerSolidIdSE,std::vector<int> & GhostFirstLayerSolidIdNW,std::vector<int> & GhostFirstLayerSolidIdNE);
+
+private:
+
+	void Remove_SolidTypeInCommunicatorForRealNodes(std::vector<int> & RealNodeType,
+			  std::vector<int> & RealNodeId,std::vector<int> & RealIdToBeSaved);
+	void SetCommunicatorinSolidForRealNodes(std::vector<int> & RealNodeId,std::vector<int> & RealIdToBeSaved);
+	void Remove_SolidTypeInCommunicatorForGhostNodes(std::vector<int> & GhostSolidId,std::vector<int> & GhostSolidFirstLayerId,
+			  std::vector<int> & GhostNodeId,std::vector<int> & GhostIdToBeSaved);
+	void SetCommunicatorinSolidForGhostNodes(std::vector<int> & GhostNodeId,std::vector<int> & GhostIdToBeSaved);
+//	void Keep_FirstLayerSolidCommunicatorinSolidForGhostNodes(std::vector<int> & GhostNodeId,std::vector<int> & GhostIdToBeSaved);
 public:
 	void GenerateSolid(Parameters &Param);
 	void SetSolidBoundaries();
 	void RemoveUnphysicalSolid(int &nbTotalSolidRemoved,int &nbTotalSolidadded);
-	void RemoveSolidInCommunicator();
+	//void RemoveSolidInCommunicator();
 	void RemoveSolid();
 private:
 	void NewCell(NodeType Nodes[4], bool OldNodes[4],bool GhostNodes[4], int Node2D_SubDomain[4],int Node2D_GlobalDomain[4],int x_[4],int y_[4], int FaceConnect[4], int CellConnect[4]);
 	void NewGhostCell(NodeType Nodes[4], bool OldNodes[4], int Node2D_SubDomain[4],int x_[4],int y_[4], int FaceConnect[4], int CellConnect[4]);
 	void ChangeNodeType(int NodeNumber, NodeType NewNodeType_);
-	void ChangeCoord(int NodeNumber,unsigned int const x=0, unsigned int const y=0);
+	void ChangeCoord(int NodeNumber,signed short int const x=0, signed short int const y=0);
 	NodeType Get_NodeType(int NodeNumber) const;
 //	Node2D* Get_Node(int NodeNumber) ;
 	void Correct_OrderingGhostNode();
@@ -90,6 +118,8 @@ private:
 	void DefinedCornerType(int nodenumber);
 	int Connect_lowOrder(int &NodeNumber,unsigned int& direction);
 	void Connect_highOrder();
+
+	void Get_coordinate(int index,double & x, double & y);
 
 
 
@@ -120,6 +150,11 @@ private:
 	void Correct_GhostType(int  idNode, NodeType RealNodeType);
 	void Set_CommNodes();
 
+private:
+	//For Debug
+	void Write_CommunicationNodes();
+	void Write_CommunicationSolidNodes();
+
 /// Private Variables
 private:
 	std::vector<Cell2D*> CellArray,GhostCellArraytmp; //Store cell in the Block
@@ -141,6 +176,8 @@ private:
 //Mark real and ghost nodes for communication
 	std::vector<int> IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW;
 	std::vector<int> IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE;
+	std::vector<int> SolidIdRNodeN,SolidIdRNodeE,SolidIdRNodeS,SolidIdRNodeW,SolidIdGNodeN,SolidIdGNodeE,SolidIdGNodeS,SolidIdGNodeW;
+	std::vector<int> SolidIdRNodeSW,SolidIdRNodeSE,SolidIdRNodeNW,SolidIdRNodeNE,SolidIdGNodeSW,SolidIdGNodeSE,SolidIdGNodeNW,SolidIdGNodeNE;
 
 	std::vector<int> IdSolidNode,Id_SolidGhost,IdSolidBc;//Mark solid node to sort the array
 	std::vector<int> IdWalltmp,IdSpecialWalltmp,IdCornerConcavetmp,IdCornerConvextmp,IDRemoveSolidtmp,IDAddSolidtmp,IDRemoveSolidToBctmp;

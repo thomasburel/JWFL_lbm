@@ -70,6 +70,8 @@ Parameters::Parameters()
 	nNodesInterpolInFluid=1;
 	refDensity=1;
 	FluidModel=SolverEnum::Compressible;
+	NormalDensityOutput=true;RedDensityOutput=false;BlueDensityOutput=false;SurfaceForceOutput=false;CurvatureOutput=false;
+	ColourGradientOutput=false;NormColourGradientOutput=true;NormalOutput=false;
 }
 
 Parameters::~Parameters() {

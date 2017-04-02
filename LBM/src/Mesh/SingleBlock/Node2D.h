@@ -34,6 +34,7 @@ enum WallSpecialType{Standard,SymmetryWall, PressureWall, VelocityWall};
 // Class Abstract
 class Node2D {
 public:
+	Node2D(Node2D const& other);
 	Node2D(signed short int x_=0, signed short int y_=0);
 	virtual ~Node2D();
 	double get_x() const;
@@ -85,7 +86,7 @@ private:
 //BOOST_SERIALIZATION_ASSUME_ABSTRACT(Node2D);
 class NodeInterior2D : public Node2D {
 public:
-	NodeInterior2D(unsigned int x_=0, unsigned int y_=0);
+	NodeInterior2D(signed short int x_=0,signed short int y_=0);
 //	virtual void Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigned int Connect_W_,unsigned int Connect_E_);
 	virtual ~NodeInterior2D();
 
@@ -108,7 +109,8 @@ private:
 
 class NodeSolid2D : public Node2D {
 public:
-	NodeSolid2D(unsigned int x_=0, unsigned int y_=0);
+	NodeSolid2D(NodeSolid2D const& other);
+	NodeSolid2D(signed short int x_=0, signed short int y_=0);
 //	virtual void Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigned int Connect_W_,unsigned int Connect_E_);
 	virtual ~NodeSolid2D();
 
@@ -119,6 +121,14 @@ public:
 	virtual void Set_stream(bool* streaming=0,int NbVelocity=0);
 	virtual void Set_UDef(double UDef, double VDef);
 	virtual void Set_RhoDef(double RhoDef);
+
+	void Set_FirstLayer(bool IsFirstLayer=false){firstlayer=IsFirstLayer;};
+	bool IsFirstLayer(){return firstlayer;}
+	bool operator()(NodeSolid2D& obj){return obj.Get_index() == index;}
+	bool operator()(int& idxtest){return idxtest == index;}
+private:
+	bool firstlayer;
+
 private:
 	friend class boost::serialization::access;
     template<class Archive>
@@ -130,7 +140,7 @@ private:
 
 class NodeGhost2D : public Node2D {
 public:
-	NodeGhost2D(unsigned int x_=0, unsigned int y_=0, unsigned int Connect2Rank_=0,unsigned int Connect2Cell_=0,unsigned int Connect2Node_=0,NodeType GhostType=Ghost);
+	NodeGhost2D(signed short int x_=0, signed short int y_=0, unsigned int Connect2Rank_=0,unsigned int Connect2Cell_=0,unsigned int Connect2Node_=0,NodeType GhostType=Ghost);
 //	virtual void Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigned int Connect_W_,unsigned int Connect_E_);
 	virtual ~NodeGhost2D();
 
@@ -168,7 +178,7 @@ private:
 
 class NodeVelocity2D : public Node2D {
 public:
-	NodeVelocity2D(unsigned int x_=0, unsigned int y_=0,double* UDef_=0 );
+	NodeVelocity2D(signed short int x_=0, signed short int y_=0,double* UDef_=0 );
 //	virtual void Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigned int Connect_W_,unsigned int Connect_E_);
 	void SetU(double Ux, double Uy);
 	double* GetU();
@@ -208,7 +218,7 @@ private:
 
 class NodePressure2D : public Node2D {
 public:
-	NodePressure2D(unsigned int x_=0, unsigned int y_=0,double PDef_=1.0);
+	NodePressure2D(signed short int x_=0, signed short int y_=0,double PDef_=1.0);
 //	virtual void Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigned int Connect_W_,unsigned int Connect_E_);
 	virtual ~NodePressure2D();
 
@@ -247,7 +257,7 @@ private:
 
 class NodePeriodic2D : public Node2D {
 public:
-	NodePeriodic2D(unsigned int x_=0, unsigned int y_=0);
+	NodePeriodic2D(signed short int x_=0, signed short int y_=0);
 //	virtual void Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigned int Connect_W_,unsigned int Connect_E_);
 	virtual ~NodePeriodic2D();
 	virtual bool* stream();
@@ -277,7 +287,7 @@ private:
 
 class NodeCorner2D : public Node2D {
 public:
-	NodeCorner2D(unsigned int x_=0, unsigned int y_=0,double PDef_=1.0,double* UDef_=0);
+	NodeCorner2D(signed short int x_=0, signed short int y_=0,double PDef_=1.0,double* UDef_=0);
 //	virtual void Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigned int Connect_W_,unsigned int Connect_E_);
 	virtual ~NodeCorner2D();
 	void SetP(double PDef_);
@@ -323,7 +333,7 @@ private:
 
 class NodeWall2D : public Node2D {
 public:
-	NodeWall2D(unsigned int x_=0, unsigned int y_=0);
+	NodeWall2D(signed short int x_=0, signed short int y_=0);
 //	virtual void Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigned int Connect_W_,unsigned int Connect_E_);
 	virtual ~NodeWall2D();
 
@@ -357,7 +367,7 @@ private:
 };
 class NodeSymmetry2D : public Node2D {
 public:
-	NodeSymmetry2D(unsigned int x_=0, unsigned int y_=0);
+	NodeSymmetry2D(signed short int x_=0, signed short int y_=0);
 //	virtual void Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigned int Connect_W_,unsigned int Connect_E_);
 	virtual ~NodeSymmetry2D();
 

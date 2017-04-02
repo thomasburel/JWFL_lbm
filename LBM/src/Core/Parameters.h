@@ -124,6 +124,20 @@ public:
 	bool Get_ColourExtrapolNoramlDensity(){return ColourExtrapolNoramlDensity;};
 	void Set_ColourExtrapolNoramlInterface(bool extrapol){if(extrapol==true) ColourExtrapolNoramlInterface=true; else ColourExtrapolNoramlInterface=false;};
 	bool Get_ColourExtrapolNoramlInterface(){return ColourExtrapolNoramlInterface;};
+	void Set_RedDensityOutput(bool RedDensityOutput_=false){RedDensityOutput=RedDensityOutput_;};
+	bool Get_RedDensityOutput() const{return RedDensityOutput;};
+	void Set_BlueDensityOutput(bool BlueDensityOutput_=false){BlueDensityOutput=BlueDensityOutput_;};
+	bool Get_BlueDensityOutput() const{return BlueDensityOutput;};
+	void Set_SurfaceForceOutput(bool SurfaceForceOutput_=false){SurfaceForceOutput=SurfaceForceOutput_;};
+	bool Get_SurfaceForceOutput() const{return SurfaceForceOutput;};
+	void Set_CurvatureOutput(bool CurvatureOutput_=false){CurvatureOutput=CurvatureOutput_;};
+	bool Get_CurvatureOutput() const{return CurvatureOutput;};
+	void Set_ColourGradientOutput(bool ColourGradientOutput_=false){ColourGradientOutput=ColourGradientOutput_;};
+	bool Get_ColourGradientOutput() const{return ColourGradientOutput;};
+	void Set_NormColourGradientOutput(bool NormColourGradientOutput_=false){NormColourGradientOutput=NormColourGradientOutput_;};
+	bool Get_NormColourGradientOutput() const{return NormColourGradientOutput;};
+
+
 protected:
 	double beta,RhoLimiter,GNormLimiter;
 	double A1,A2,Atau;
@@ -131,7 +145,7 @@ protected:
 	ColourFluidEnum::RecolouringType Recolouring;
 	ColourFluidEnum::ColourOperatorType ColourOperator;
 	bool ColourExtrapolNoramlDensity,ColourExtrapolNoramlInterface;
-
+	bool RedDensityOutput,BlueDensityOutput,SurfaceForceOutput,CurvatureOutput,ColourGradientOutput,NormColourGradientOutput;
 };
 
 class MultiphaseModels: public ColourFluid{
@@ -147,10 +161,12 @@ private:
 public:
 	void Set_SurfaceTension(double tension_=0){tension=tension_;};
 	double Get_SurfaceTension() const{return tension;};
-	void Set_NormalDensityOutput(bool NormalDensityOutput_=0){NormalDensityOutput=NormalDensityOutput_;};
+	void Set_NormalDensityOutput(bool NormalDensityOutput_=false){NormalDensityOutput=NormalDensityOutput_;};
 	bool Get_NormalDensityOutput() const{return NormalDensityOutput;};
+	void Set_NormalOutput(bool NormalOutput_=false){NormalOutput=NormalOutput_;};
+	bool Get_NormalOutput() const{return NormalOutput;};
 protected:
-	bool NormalDensityOutput;
+	bool NormalDensityOutput,NormalOutput;
 	double tension;
 };
 class MeshParameters {

@@ -1146,6 +1146,8 @@ void D2Q9TwoPhases::IniComVariables(){
 	MultiBlock_->Get_Connect_Node(IdNodeN,IdNodeE,IdNodeS,IdNodeW,IdNodeSW,IdNodeSE,IdNodeNW,IdNodeNE);
 	MultiBlock_->Get_Connect_Node(IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW,
 			IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE);
+	MultiBlock_->Get_Connect_SolidNode(SolidIdRNodeN,SolidIdRNodeE,SolidIdRNodeS,SolidIdRNodeW,SolidIdGNodeN,SolidIdGNodeE,SolidIdGNodeS,SolidIdGNodeW,
+			SolidIdRNodeSW,SolidIdRNodeSE,SolidIdRNodeNW,SolidIdRNodeNE,SolidIdGNodeSW,SolidIdGNodeSE,SolidIdGNodeNW,SolidIdGNodeNE);
 	Nd_variables_sync=3*2;
 	buf_send=new double** [Nd_variables_sync];
 	buf_recv=new double** [Nd_variables_sync];
@@ -1178,13 +1180,17 @@ void D2Q9TwoPhases::IniComVariables(){
 	SyncVar=Dic->Get_SyncVar();
 	buf_MacroSend=new double** [Nd_MacroVariables_sync];
 	buf_MacroRecv=new double** [Nd_MacroVariables_sync];
+	buf_MacroSendSolid=new double** [Nd_MacroVariables_sync];
+	buf_MacroRecvSolid=new double** [Nd_MacroVariables_sync];
 	for (int i=0;i<Nd_MacroVariables_sync;i++)
 	{
 		buf_MacroSend[i]=new double* [4];
 		buf_MacroRecv[i]=new double* [4];
+		buf_MacroSendSolid[i]=new double* [4];
+		buf_MacroRecvSolid[i]=new double* [4];
 	}
 
-	size_MacroBuf=new int [8];
+	size_MacroBuf=new int [8];size_MacroBufSolid=new int [8];
 
 	for (int i=0;i<Nd_MacroVariables_sync;i++)
 	{
@@ -1196,6 +1202,15 @@ void D2Q9TwoPhases::IniComVariables(){
 		buf_MacroRecv[i][1]=new double[IdGNodeE.size()];
 		buf_MacroRecv[i][2]=new double[IdGNodeN.size()];
 		buf_MacroRecv[i][3]=new double[IdGNodeS.size()];
+
+		buf_MacroSendSolid[i][0]=new double[SolidIdGNodeE.size()];
+		buf_MacroSendSolid[i][1]=new double[SolidIdGNodeW.size()];
+		buf_MacroSendSolid[i][2]=new double[SolidIdGNodeS.size()];
+		buf_MacroSendSolid[i][3]=new double[SolidIdGNodeN.size()];
+		buf_MacroRecvSolid[i][0]=new double[SolidIdRNodeW.size()];
+		buf_MacroRecvSolid[i][1]=new double[SolidIdRNodeE.size()];
+		buf_MacroRecvSolid[i][2]=new double[SolidIdRNodeN.size()];
+		buf_MacroRecvSolid[i][3]=new double[SolidIdRNodeS.size()];
 	}
 	size_MacroBuf[0]=IdRNodeE.size();
 	size_MacroBuf[1]=IdRNodeW.size();
@@ -1205,6 +1220,15 @@ void D2Q9TwoPhases::IniComVariables(){
 	size_MacroBuf[5]=IdGNodeE.size();
 	size_MacroBuf[6]=IdGNodeN.size();
 	size_MacroBuf[7]=IdGNodeS.size();
+
+	size_MacroBufSolid[0]=SolidIdGNodeE.size();
+	size_MacroBufSolid[1]=SolidIdGNodeW.size();
+	size_MacroBufSolid[2]=SolidIdGNodeS.size();
+	size_MacroBufSolid[3]=SolidIdGNodeN.size();
+	size_MacroBufSolid[4]=SolidIdRNodeW.size();
+	size_MacroBufSolid[5]=SolidIdRNodeE.size();
+	size_MacroBufSolid[6]=SolidIdRNodeN.size();
+	size_MacroBufSolid[7]=SolidIdRNodeS.size();
 }
 void D2Q9TwoPhases::GhostNodesSyncFromGhost(){
 
@@ -1734,6 +1758,333 @@ void D2Q9TwoPhases::SyncMacroVarToGhost(){
 	}
 }
 
+void D2Q9TwoPhases::SyncVarSolidGhost(double *&VarIn){
+	//Put variables in buffer arrays
+		for (unsigned int i=0;i<SolidIdGNodeW.size();i++)
+		{
+				buf_MacroSendSolid[0][1][i]=VarIn[SolidIdGNodeW[i]];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeS.size();i++)
+		{
+				buf_MacroRecvSolid[0][3][i]=VarIn[SolidIdRNodeS[i]];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeE.size();i++)
+		{
+				buf_MacroRecvSolid[0][1][i]=VarIn[SolidIdRNodeE[i]];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeN.size();i++)
+		{
+				buf_MacroSendSolid[0][3][i]=VarIn[SolidIdGNodeN[i]];
+		}
+	//		MultiBlock_->Communication(buf_MacroSend[0],buf_MacroRecv[0],size_MacroBuf);
+		int tag_x_r=1;
+		int tag_x_l=2;
+		int tag_y_t=3;
+		int tag_y_b=4;
+		int tag_d_bl=5;
+		MPI_Status status;
+		if(SolidIdRNodeE.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][1][0],SolidIdRNodeE.size(),1,tag_x_r);
+		}
+		if(SolidIdGNodeW.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][1][0],SolidIdGNodeW.size(),3,tag_x_r,status);
+		}
+
+		if(SolidIdGNodeW.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSendSolid[0][1][0],SolidIdGNodeW.size(),3,tag_x_l);
+		}
+		if(SolidIdRNodeE.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecvSolid[0][1][0],SolidIdRNodeE.size(),1,tag_x_l,status);
+		}
+		if(SolidIdRNodeN.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][2][0],SolidIdRNodeN.size(),0,tag_y_t);
+		}
+		if(SolidIdGNodeS.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][2][0],SolidIdGNodeS.size(),2,tag_y_t,status);
+		}
+		if(SolidIdRNodeS.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][3][0],SolidIdRNodeS.size(),2,tag_y_b);
+		}
+		if(SolidIdGNodeN.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][3][0],SolidIdGNodeN.size(),0,tag_y_b,status);
+		}
+	//Set variables from buffer to real variables
+		for (unsigned int i=0;i<SolidIdGNodeE.size();i++)
+		{
+			VarIn[SolidIdGNodeE[i]]=buf_MacroSendSolid[0][0][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeN.size();i++)
+		{
+			VarIn[SolidIdGNodeN[i]]=buf_MacroSendSolid[0][3][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeW.size();i++)
+		{
+			VarIn[SolidIdGNodeW[i]]=buf_MacroSendSolid[0][1][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeS.size();i++)
+		{
+			VarIn[SolidIdGNodeS[i]]=buf_MacroSendSolid[0][2][i];
+		}
+
+		if(SolidIdRNodeSE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeSE[0]],1,5,tag_x_l);
+		}
+		if(SolidIdGNodeNW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeNW[0]],1,6,tag_x_l,status);
+		}
+		if(SolidIdRNodeSW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeSW[0]],1,7,tag_x_l);
+		}
+		if(SolidIdGNodeNE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeNE[0]],1,4,tag_x_l,status);
+		}
+		if(SolidIdRNodeNE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeNE[0]],1,4,tag_x_l);
+		}
+		if(SolidIdGNodeSW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeSW[0]],1,7,tag_x_l,status);
+		}
+		if(SolidIdRNodeNW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeNW[0]],1,6,tag_d_bl);
+		}
+		if(SolidIdGNodeSE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeSE[0]],1,5,tag_d_bl,status);
+		}
+}
+void D2Q9TwoPhases::SyncVarToSolidGhost(double *&VarIn){
+	//Put variables in buffer arrays
+		for (unsigned int i=0;i<SolidIdRNodeW.size();i++)
+		{
+				buf_MacroRecvSolid[0][0][i]=VarIn[SolidIdRNodeW[i]];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeS.size();i++)
+		{
+				buf_MacroRecvSolid[0][3][i]=VarIn[SolidIdRNodeS[i]];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeE.size();i++)
+		{
+				buf_MacroRecvSolid[0][1][i]=VarIn[SolidIdRNodeE[i]];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeN.size();i++)
+		{
+				buf_MacroRecvSolid[0][2][i]=VarIn[SolidIdRNodeN[i]];
+		}
+	//		MultiBlock_->Communication(buf_MacroSend[0],buf_MacroRecv[0],size_MacroBuf);
+		int tag_x_r=1;
+		int tag_x_l=2;
+		int tag_y_t=3;
+		int tag_y_b=4;
+		int tag_d_bl=5;
+		MPI_Status status;
+		if(SolidIdRNodeE.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][1][0],SolidIdRNodeE.size(),1,tag_x_r);
+		}
+		if(SolidIdGNodeW.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][1][0],SolidIdGNodeW.size(),3,tag_x_r,status);
+		}
+
+		if(SolidIdRNodeW.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][0][0],SolidIdRNodeW.size(),3,tag_x_l);
+		}
+		if(SolidIdGNodeE.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][0][0],SolidIdGNodeE.size(),1,tag_x_l,status);
+		}
+		if(SolidIdRNodeN.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][2][0],SolidIdRNodeN.size(),0,tag_y_t);
+		}
+		if(SolidIdGNodeS.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][2][0],SolidIdGNodeS.size(),2,tag_y_t,status);
+		}
+		if(SolidIdRNodeS.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][3][0],SolidIdRNodeS.size(),2,tag_y_b);
+		}
+		if(SolidIdGNodeN.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][3][0],SolidIdGNodeN.size(),0,tag_y_b,status);
+		}
+	//Set variables from buffer to real variables
+		for (unsigned int i=0;i<SolidIdGNodeE.size();i++)
+		{
+			VarIn[SolidIdGNodeE[i]]=buf_MacroSendSolid[0][0][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeN.size();i++)
+		{
+			VarIn[SolidIdGNodeN[i]]=buf_MacroSendSolid[0][3][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeW.size();i++)
+		{
+			VarIn[SolidIdGNodeW[i]]=buf_MacroSendSolid[0][1][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeS.size();i++)
+		{
+			VarIn[SolidIdGNodeS[i]]=buf_MacroSendSolid[0][2][i];
+		}
+
+		if(SolidIdRNodeSE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeSE[0]],1,5,tag_x_l);
+		}
+		if(SolidIdGNodeNW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeNW[0]],1,6,tag_x_l,status);
+		}
+		if(SolidIdRNodeSW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeSW[0]],1,7,tag_x_l);
+		}
+		if(SolidIdGNodeNE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeNE[0]],1,4,tag_x_l,status);
+		}
+		if(SolidIdRNodeNE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeNE[0]],1,4,tag_x_l);
+		}
+		if(SolidIdGNodeSW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeSW[0]],1,7,tag_x_l,status);
+		}
+		if(SolidIdRNodeNW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeNW[0]],1,6,tag_d_bl);
+		}
+		if(SolidIdGNodeSE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeSE[0]],1,5,tag_d_bl,status);
+		}
+}
+void D2Q9TwoPhases::SyncVarFromSolidGhost(double *&VarIn){
+	//Put variables in buffer arrays
+		for (unsigned int i=0;i<SolidIdGNodeW.size();i++)
+		{
+				buf_MacroSendSolid[0][1][i]=VarIn[SolidIdGNodeW[i]];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeS.size();i++)
+		{
+				buf_MacroSendSolid[0][2][i]=VarIn[SolidIdGNodeS[i]];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeE.size();i++)
+		{
+				buf_MacroSendSolid[0][0][i]=VarIn[SolidIdGNodeE[i]];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeN.size();i++)
+		{
+				buf_MacroSendSolid[0][3][i]=VarIn[SolidIdGNodeN[i]];
+		}
+	//		MultiBlock_->Communication(buf_MacroSend[0],buf_MacroRecv[0],size_MacroBuf);
+		int tag_x_r=1;
+		int tag_x_l=2;
+		int tag_y_t=3;
+		int tag_y_b=4;
+		int tag_d_bl=5;
+		MPI_Status status;
+		if(SolidIdGNodeE.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSendSolid[0][0][0],SolidIdGNodeE.size(),1,tag_x_r);
+		}
+		if(SolidIdRNodeW.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecvSolid[0][0][0],SolidIdRNodeW.size(),3,tag_x_r,status);
+		}
+
+		if(SolidIdGNodeW.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSendSolid[0][1][0],SolidIdGNodeW.size(),3,tag_x_l);
+		}
+		if(SolidIdRNodeE.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecvSolid[0][1][0],SolidIdRNodeE.size(),1,tag_x_l,status);
+		}
+		if(SolidIdGNodeN.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSendSolid[0][3][0],SolidIdGNodeN.size(),0,tag_y_t);
+		}
+		if(SolidIdRNodeS.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecvSolid[0][3][0],SolidIdRNodeS.size(),2,tag_y_t,status);
+		}
+		if(SolidIdGNodeS.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSendSolid[0][2][0],SolidIdGNodeS.size(),2,tag_y_b);
+		}
+		if(SolidIdRNodeN.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecvSolid[0][2][0],SolidIdRNodeN.size(),0,tag_y_b,status);
+		}
+	//Set variables from buffer to real variables
+		for (unsigned int i=0;i<SolidIdRNodeE.size();i++)
+		{
+			VarIn[SolidIdRNodeE[i]]=buf_MacroRecvSolid[0][1][i];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeN.size();i++)
+		{
+			VarIn[SolidIdRNodeN[i]]=buf_MacroRecvSolid[0][2][i];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeW.size();i++)
+		{
+			VarIn[SolidIdRNodeW[i]]=buf_MacroRecvSolid[0][0][i];
+		}
+
+		for (unsigned int i=0;i<SolidIdRNodeS.size();i++)
+		{
+			VarIn[SolidIdRNodeS[i]]=buf_MacroRecvSolid[0][3][i];
+		}
+		if(SolidIdGNodeSE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdGNodeSE[0]],1,5,tag_x_l);
+		}
+		if(SolidIdRNodeNW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdRNodeNW[0]],1,6,tag_x_l,status);
+		}
+		if(SolidIdGNodeSW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdGNodeSW[0]],1,7,tag_x_l);
+		}
+		if(SolidIdRNodeNE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdRNodeNE[0]],1,4,tag_x_l,status);
+		}
+		if(SolidIdGNodeNE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdGNodeNE[0]],1,4,tag_x_l);
+		}
+		if(SolidIdRNodeSW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdRNodeSW[0]],1,7,tag_x_l,status);
+		}
+		if(SolidIdGNodeNW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdGNodeNW[0]],1,6,tag_d_bl);
+		}
+		if(SolidIdRNodeSE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdRNodeSE[0]],1,5,tag_d_bl,status);
+		}
+}
 double D2Q9TwoPhases::Convert_Alpha_To_Rho(double alpha)
 {
 

@@ -20,6 +20,22 @@ BOOST_CLASS_EXPORT_IMPLEMENT(NodePressure2D);
 ///Constructor for General Nodes in 2D
 Node2D::Node2D(signed short int x_,signed short int y_): x(x_), y(y_),NodeType_(Ghost),Connect_N(0),Connect_S(0),Connect_W(0),Connect_E(0),NbVelocity(0),Connect(0)
 {index=0;}
+Node2D::Node2D(Node2D const& other){
+	x=other.x;
+	y=other.y;
+	NodeType_=other.NodeType_;
+	index=other.index;
+	Connect_N=other.Connect_N;Connect_S=other.Connect_S;Connect_W=other.Connect_W;Connect_E=other.Connect_E;
+	NbVelocity=other.NbVelocity;
+	if(other.Connect!=0)
+	{
+		Connect=new int[NbVelocity];
+		for(int i=0;i<NbVelocity;i++)
+			Connect[i]=other.Connect[i];
+	}
+	else
+		Connect=0;
+}
 ///Destructor for General Nodes in 2D
 Node2D::~Node2D()
 {
@@ -155,7 +171,7 @@ void Node2D::Set_Index(int idx){index=idx;};
 int& Node2D::Get_index(){return index;};
 //**************Interior Node Methods***************
 ///Constructor for Interior Nodes
-NodeInterior2D::NodeInterior2D(unsigned int x_,unsigned int y_)
+NodeInterior2D::NodeInterior2D(signed short int x_,signed short int y_)
 {
 	x=x_;
 	y=y_;
@@ -175,11 +191,15 @@ void NodeInterior2D::Set_RhoDef(double RhoDef){}//Don't need
 
 //**************Solid Node Methods***************
 ///Constructor for Solid Nodes
-NodeSolid2D::NodeSolid2D(unsigned int x_,unsigned int y_)
+NodeSolid2D::NodeSolid2D(signed short int x_,signed short int y_)
 {
 	x=x_;
 	y=y_;
 	NodeType_=Solid;
+	firstlayer=false;
+}
+NodeSolid2D::NodeSolid2D(NodeSolid2D const& other): Node2D( other ){
+	firstlayer=other.firstlayer;
 }
 ///Destructor for Solid Nodes
 NodeSolid2D::~NodeSolid2D()
@@ -194,7 +214,7 @@ void NodeSolid2D::Set_RhoDef(double RhoDef){}//Don't need
 
 //**************Ghost Node Methods***************
 ///Constructor for Ghost Nodes
-NodeGhost2D::NodeGhost2D(unsigned int x_,unsigned int y_, unsigned int Connect2Rank_,unsigned int Connect2Cell_, unsigned int Connect2Node_,NodeType GhostType)
+NodeGhost2D::NodeGhost2D(signed short int x_,signed short int y_, unsigned int Connect2Rank_,unsigned int Connect2Cell_, unsigned int Connect2Node_,NodeType GhostType)
 {
 	x=x_;
 	y=y_;
@@ -203,6 +223,8 @@ NodeGhost2D::NodeGhost2D(unsigned int x_,unsigned int y_, unsigned int Connect2R
 	Connect2Cell=Connect2Cell_;
 	Connect2Node=Connect2Node_;
 	GhostStream=0;
+	NodeType_=Ghost;
+	GhostType_=InteriorGhostType;
 }
 ///Destructor for GhostNodes
 NodeGhost2D::~NodeGhost2D()
@@ -237,7 +259,7 @@ void NodeGhost2D::Set_RhoDef(double RhoDef){}//Don't need
 
 //**************Velocity Node Methods***************
 ///Constructor for Velocity Nodes
-NodeVelocity2D::NodeVelocity2D(unsigned int x_,unsigned int y_,double* UDef_){
+NodeVelocity2D::NodeVelocity2D(signed short int x_,signed short int y_,double* UDef_){
 	x=x_;
 	y=y_;
 	NodeType_=Velocity;
@@ -280,7 +302,7 @@ void NodeVelocity2D::Set_RhoDef(double RhoDef){}
 
 //**************Pressure Node Methods***************
 ///Constructor for Pressure Nodes
-NodePressure2D::NodePressure2D(unsigned int x_,unsigned int y_,double PDef_) {
+NodePressure2D::NodePressure2D(signed short int x_,signed short int y_,double PDef_) {
 	x=x_;
 	y=y_;
 	NodeType_=Pressure;
@@ -323,7 +345,7 @@ void NodePressure2D::Set_RhoDef(double RhoDef_){RhoDef=RhoDef_;}
 
 //**************Periodic Node Methods***************
 ///Constructor for Periodic Nodes
-NodePeriodic2D::NodePeriodic2D(unsigned int x_,unsigned int y_) {
+NodePeriodic2D::NodePeriodic2D(signed short int x_,signed short int y_) {
 	x=x_;
 	y=y_;
 	NodeType_=Periodic;
@@ -355,7 +377,7 @@ void NodePeriodic2D::Set_RhoDef(double RhoDef_){RhoDef=RhoDef_;}
 
 //**************Corner Node Methods***************
 ///Constructor for Corner Nodes
-NodeCorner2D::NodeCorner2D(unsigned int x_,unsigned int y_,double PDef_,double* UDef_) {
+NodeCorner2D::NodeCorner2D(signed short int x_,signed short int y_,double PDef_,double* UDef_) {
 	x=x_;
 	y=y_;
 	NodeType_=Corner;
@@ -419,7 +441,7 @@ void NodeCorner2D::Set_RhoDef(double Rho_Def){RhoDef=Rho_Def;}
 
 //**************General Wall Node Methods no distinction between kind of wall nodes as bounce back, half way bounce back***************
 ///Constructor for General Wall Nodes
-NodeWall2D::NodeWall2D(unsigned int x_,unsigned int y_) {
+NodeWall2D::NodeWall2D(signed short int x_,signed short int y_) {
 	x=x_;
 	y=y_;
 	NodeType_=Wall;
@@ -448,7 +470,7 @@ void NodeWall2D::Set_RhoDef(double RhoDef){}
 
 //**************General Symmetry Node Methods no distinction between kind of Symmetry nodes as on node or half way ***************
 ///Constructor for General Symmetry Nodes
-NodeSymmetry2D::NodeSymmetry2D(unsigned int x_,unsigned int y_) {
+NodeSymmetry2D::NodeSymmetry2D(signed short int x_,signed short int y_) {
 	x=x_;
 	y=y_;
 	NodeType_=Symmetry;

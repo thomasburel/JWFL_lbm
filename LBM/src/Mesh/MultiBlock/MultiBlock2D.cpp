@@ -620,6 +620,16 @@ void MultiBlock2D::Get_Connect_Node(std::vector<int> & IdRNodeN_,std::vector<int
 			IdRNodeSW_,IdRNodeSE_,IdRNodeNW_,IdRNodeNE_,
 			IdGNodeSW_,IdGNodeSE_,IdGNodeNW_,IdGNodeNE_);
 }
+void MultiBlock2D::Get_Connect_SolidNode(std::vector<int> & IdRNodeN_,std::vector<int> & IdRNodeE_,std::vector<int> & IdRNodeS_,std::vector<int> & IdRNodeW_,
+		std::vector<int> & IdGNodeN_,std::vector<int> & IdGNodeE_,std::vector<int> & IdGNodeS_,std::vector<int> & IdGNodeW_,
+		std::vector<int> & IdRNodeSW_,std::vector<int> & IdRNodeSE_,std::vector<int> & IdRNodeNW_,std::vector<int> & IdRNodeNE_,
+		std::vector<int> & IdGNodeSW_,std::vector<int> & IdGNodeSE_,std::vector<int> & IdGNodeNW_,std::vector<int> & IdGNodeNE_)
+{
+	Block2D_.Get_SolidCommNodes(IdRNodeN_,IdRNodeE_,IdRNodeS_,IdRNodeW_,
+			IdGNodeN_,IdGNodeE_,IdGNodeS_,IdGNodeW_,
+			IdRNodeSW_,IdRNodeSE_,IdRNodeNW_,IdRNodeNE_,
+			IdGNodeSW_,IdGNodeSE_,IdGNodeNW_,IdGNodeNE_);
+}
  void MultiBlock2D::Communication(double **buf_send,double **buf_recv, int *size_buf)
  {
 	  /* Send to Neighbour E and receive from Neighbour W */
@@ -755,6 +765,7 @@ void MultiBlock2D::Get_Connect_Node(std::vector<int> & IdRNodeN_,std::vector<int
 	 }
 
  }
+
  void MultiBlock2D::Get_NbNodes(int & NbRealNodes_, int & NbTotalNodes_){
 	 Block2D_.Get_NbNodes(NbRealNodes_,NbTotalNodes_);
  }
@@ -816,11 +827,12 @@ void MultiBlock2D::GeneratePatchBc(){
 	Block2D_.InitPatchBc(PtrParameters);
 }
 void MultiBlock2D::reorganizeNodeByType(){
-	Remove_SolidInComunicators();
+
 	Block2D_.reorganizeNodeByType();
 	Block2D_.Set_NodeIndexByTypeForPatchBc();
 	Block2D_.Set_Connect(*PtrParameters);
 	Block2D_.Mark1stLayerSolid();
+	Remove_SolidInComunicators();
 
 }
 
@@ -986,9 +998,15 @@ void MultiBlock2D::Remove_SolidInComunicators()
 	 int tag_x_l=2;
 	 int tag_y_t=3;
 	 int tag_y_b=4;
+	 int tag_d_bl=5;
+	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;
 	 std::vector<int> IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE;
 	 std::vector<int> IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE;
-	 Block2D_.Get_GhostType(IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE);
+	 std::vector<int> SolidIdRNodeN,SolidIdRNodeE,SolidIdRNodeS,SolidIdRNodeW,SolidIdRNodeSW,SolidIdRNodeSE,SolidIdRNodeNW,SolidIdRNodeNE;
+	 std::vector<int> SolidIdGNodeN,SolidIdGNodeE,SolidIdGNodeS,SolidIdGNodeW,SolidIdGNodeSW,SolidIdGNodeSE,SolidIdGNodeNW,SolidIdGNodeNE;
+	// Block2D_.Get_GhostType(IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE);
+	 Block2D_.Get_SolidGhost(IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE);
+	 Block2D_.Get_GhostFirstLayer(SolidIdRNodeN,SolidIdRNodeE,SolidIdRNodeS,SolidIdRNodeW,SolidIdRNodeSW,SolidIdRNodeSE,SolidIdRNodeNW,SolidIdRNodeNE);
 	 IdGNodeN=IdRNodeN;
 	 IdGNodeE= IdRNodeE;
 	 IdGNodeS=IdRNodeS;
@@ -997,13 +1015,21 @@ void MultiBlock2D::Remove_SolidInComunicators()
 	 IdGNodeSE=IdRNodeSE;
 	 IdGNodeNW=IdRNodeNW;
 	 IdGNodeNE=IdRNodeNE;
+
+	 SolidIdGNodeN=SolidIdRNodeN;
+	 SolidIdGNodeE= SolidIdRNodeE;
+	 SolidIdGNodeS=SolidIdRNodeS;
+	 SolidIdGNodeW=SolidIdRNodeW;
+	 SolidIdGNodeSW=SolidIdRNodeSW;
+	 SolidIdGNodeSE=SolidIdRNodeSE;
+	 SolidIdGNodeNW=SolidIdRNodeNW;
+	 SolidIdGNodeNE=SolidIdRNodeNE;
 	 MPI_Status status;
 
 
 	 if(BlockNeighbour[W]>=0)
 	 {
 		 MPI_Send(&IdRNodeW[0],IdRNodeW.size(),MPI_INT,BlockNeighbour[W],tag_x_l,parallel->getGlobalCommunicator());
-
 	 }
 	 if(BlockNeighbour[E]>=0)
 	 {
@@ -1027,9 +1053,6 @@ void MultiBlock2D::Remove_SolidInComunicators()
 	 {
 		 MPI_Recv(&IdGNodeS[0],IdGNodeS.size(),MPI_INT,BlockNeighbour[S],tag_y_b,parallel->getGlobalCommunicator(),&status);
 	 }
-	 int tag_d_bl=5;
-	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;
-
 
 	if(BlockNeighbour[SW]>=0)
 	{
@@ -1053,13 +1076,74 @@ void MultiBlock2D::Remove_SolidInComunicators()
 	{
 		MPI_Recv(&IdGNodeNW[0],IdGNodeNW.size(),MPI_INT,BlockNeighbour[NW],tag_d_bl,parallel->getGlobalCommunicator(),&status);
 		MPI_Send(&IdRNodeNW[0],IdRNodeNW.size(),MPI_INT,BlockNeighbour[NW],tag_d_bl,parallel->getGlobalCommunicator());
-	}
+}
 	if(BlockNeighbour[SE]>=0)
 	{
 		MPI_Recv(&IdGNodeSE[0],IdGNodeSE.size(),MPI_INT,BlockNeighbour[SE],tag_d_bl,parallel->getGlobalCommunicator(),&status);
 	}
-	Block2D_.Remove_SolidTypeInCommunicators(IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE);
 
+//Transfer the first layer marking
+	 if(BlockNeighbour[W]>=0)
+	 {
+		 MPI_Send(&SolidIdRNodeW[0],SolidIdRNodeW.size(),MPI_INT,BlockNeighbour[W],tag_x_l,parallel->getGlobalCommunicator());
+	 }
+	 if(BlockNeighbour[E]>=0)
+	 {
+		 MPI_Recv(&SolidIdGNodeE[0],SolidIdGNodeE.size(),MPI_INT,BlockNeighbour[E],tag_x_l,parallel->getGlobalCommunicator(),&status);
+		 MPI_Send(&SolidIdRNodeE[0],SolidIdRNodeE.size(),MPI_INT,BlockNeighbour[E],tag_x_l,parallel->getGlobalCommunicator());
+	 }
+	 if(BlockNeighbour[W]>=0)
+	 {
+		 MPI_Recv(&SolidIdGNodeW[0],SolidIdGNodeW.size(),MPI_INT,BlockNeighbour[W],tag_x_l,parallel->getGlobalCommunicator(),&status);
+	 }
+	  if(BlockNeighbour[S]>=0)
+	 {
+		 MPI_Send(&SolidIdRNodeS[0],SolidIdRNodeS.size(),MPI_INT,BlockNeighbour[S],tag_y_b,parallel->getGlobalCommunicator());
+	 }
+	 if(BlockNeighbour[N]>=0)
+	 {
+		 MPI_Recv(&SolidIdGNodeN[0],SolidIdGNodeN.size(),MPI_INT,BlockNeighbour[N],tag_y_b,parallel->getGlobalCommunicator(),&status);
+		 MPI_Send(&SolidIdRNodeN[0],SolidIdRNodeN.size(),MPI_INT,BlockNeighbour[N],tag_y_b,parallel->getGlobalCommunicator());
+	 }
+	 if(BlockNeighbour[S]>=0)
+	 {
+		 MPI_Recv(&SolidIdGNodeS[0],SolidIdGNodeS.size(),MPI_INT,BlockNeighbour[S],tag_y_b,parallel->getGlobalCommunicator(),&status);
+	 }
+	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;
+
+
+	if(BlockNeighbour[SW]>=0)
+	{
+		MPI_Send(&SolidIdRNodeSW[0],SolidIdRNodeSW.size(),MPI_INT,BlockNeighbour[SW],tag_d_bl,parallel->getGlobalCommunicator());
+	}
+	if(BlockNeighbour[NE]>=0)
+	{
+		MPI_Recv(&SolidIdGNodeNE[0],SolidIdGNodeNE.size(),MPI_INT,BlockNeighbour[NE],tag_d_bl,parallel->getGlobalCommunicator(),&status);
+		MPI_Send(&SolidIdRNodeNE[0],SolidIdRNodeNE.size(),MPI_INT,BlockNeighbour[NE],tag_d_bl,parallel->getGlobalCommunicator());
+	}
+	if(BlockNeighbour[SW]>=0)
+	{
+		MPI_Recv(&SolidIdGNodeSW[0],SolidIdGNodeSW.size(),MPI_INT,BlockNeighbour[SW],tag_d_bl,parallel->getGlobalCommunicator(),&status);
+	}
+
+	if(BlockNeighbour[SE]>=0)
+	{
+		MPI_Send(&SolidIdRNodeSE[0],SolidIdRNodeSE.size(),MPI_INT,BlockNeighbour[SE],tag_d_bl,parallel->getGlobalCommunicator());
+	}
+	if(BlockNeighbour[NW]>=0)
+	{
+		MPI_Recv(&SolidIdGNodeNW[0],SolidIdGNodeNW.size(),MPI_INT,BlockNeighbour[NW],tag_d_bl,parallel->getGlobalCommunicator(),&status);
+		MPI_Send(&SolidIdRNodeNW[0],SolidIdRNodeNW.size(),MPI_INT,BlockNeighbour[NW],tag_d_bl,parallel->getGlobalCommunicator());
+}
+	if(BlockNeighbour[SE]>=0)
+	{
+		MPI_Recv(&SolidIdGNodeSE[0],SolidIdGNodeSE.size(),MPI_INT,BlockNeighbour[SE],tag_d_bl,parallel->getGlobalCommunicator(),&status);
+	}
+	Block2D_.Remove_SolidTypeInCommunicatorsForRealNodes();
+	//need to merge both function to remove the first layer from IdGNode array and not SolidIdGNode
+	Block2D_.Remove_SolidTypeInCommunicatorsForGhostNodes(IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE,
+			SolidIdGNodeN,SolidIdGNodeE,SolidIdGNodeS,SolidIdGNodeW,SolidIdGNodeSW,SolidIdGNodeSE,SolidIdGNodeNW,SolidIdGNodeNE);
+	//Block2D_.Keep_FirstLayerSolidInCommunicatorsForGhostNodes(SolidIdGNodeN,SolidIdGNodeE,SolidIdGNodeS,SolidIdGNodeW,SolidIdGNodeSW,SolidIdGNodeSE,SolidIdGNodeNW,SolidIdGNodeNE);
 }
 double MultiBlock2D::SumBC(double *value){
 	double sum=0;
