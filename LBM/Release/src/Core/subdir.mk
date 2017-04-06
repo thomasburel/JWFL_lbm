@@ -12,7 +12,8 @@ CPP_SRCS += \
 ../src/Core/Simulation.cpp \
 ../src/Core/Solution.cpp \
 ../src/Core/Solver.cpp \
-../src/Core/Tau.cpp 
+../src/Core/Tau.cpp \
+../src/Core/Viscosity.cpp 
 
 OBJS += \
 ./src/Core/Convergence.o \
@@ -23,7 +24,8 @@ OBJS += \
 ./src/Core/Simulation.o \
 ./src/Core/Solution.o \
 ./src/Core/Solver.o \
-./src/Core/Tau.o 
+./src/Core/Tau.o \
+./src/Core/Viscosity.o 
 
 CPP_DEPS += \
 ./src/Core/Convergence.d \
@@ -34,7 +36,8 @@ CPP_DEPS += \
 ./src/Core/Simulation.d \
 ./src/Core/Solution.d \
 ./src/Core/Solver.d \
-./src/Core/Tau.d 
+./src/Core/Tau.d \
+./src/Core/Viscosity.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

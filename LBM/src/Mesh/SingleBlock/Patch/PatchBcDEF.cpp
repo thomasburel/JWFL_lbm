@@ -12,6 +12,7 @@ PatchBcDEF::PatchBcDEF(){
 	Type=SolverEnum::Symmetry;
 	extrapolationAlpha=false;
 	extrapolationNormal=false;
+	Inlet=false;Outlet=false;
 }
 
 PatchBcDEF::PatchBcDEF(std::string PatchName_){
@@ -19,6 +20,7 @@ PatchBcDEF::PatchBcDEF(std::string PatchName_){
 	Type=SolverEnum::Symmetry;
 	extrapolationAlpha=false;
 	extrapolationNormal=false;
+	Inlet=false;Outlet=false;
 }
 PatchBcDEF::~PatchBcDEF(){
 

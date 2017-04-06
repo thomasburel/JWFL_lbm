@@ -100,6 +100,7 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 
 	int countfluid=0;int countsolid=0; int maxwhile=2*max(nSolidNodes,nFluidNodes); int countwhile=0; int countnWalls=0;
 	NextNode Nodetmp;
+	double x_tmp=0;double y_tmp=0;
 
 	if(PtrNodes->CornerConcave.size()>0)
 	for (int i=0;i<PtrNodes->CornerConcave.size();i++)
@@ -116,7 +117,8 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		nextwall.push_back(PtrNodes->NodeCorner[PtrNodes->CornerConcave[i]].Get_index());
 		//set the first interior
 		Nodetmp.index=(PtrNodes->NodeCorner[PtrNodes->CornerConcave[i]].Get_connect()[PtrNodes->NodeCorner[PtrNodes->CornerConcave[i]].Get_BcNormal()]);
-		Nodetmp.distance=DistToWall(PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_x(),PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_y());
+		PtrNodes->Get_coordinate(Nodetmp.index,x_tmp,y_tmp);
+		Nodetmp.distance=DistToWall(x_tmp,y_tmp);
 		Nodetmp.rankMarkNodes=0;
 		nextinterior.push_back(Nodetmp);
 
@@ -163,7 +165,8 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		nextwall.push_back(PtrNodes->NodeWall[i].Get_index());
 		//set the first interior
 		Nodetmp.index=(PtrNodes->NodeWall[i].Get_connect()[PtrNodes->NodeWall[i].Get_BcNormal()]);
-		Nodetmp.distance=DistToWall(PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_x(),PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_y());
+		PtrNodes->Get_coordinate(Nodetmp.index,x_tmp,y_tmp);
+		Nodetmp.distance=DistToWall(x_tmp,y_tmp);
 		Nodetmp.rankMarkNodes=0;
 		nextinterior.push_back(Nodetmp);
 
@@ -210,7 +213,8 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		nextwall.push_back(PtrNodes->NodeCorner[PtrNodes->CornerConvex[i]].Get_index());
 		//set the first interior
 		Nodetmp.index=(PtrNodes->NodeCorner[PtrNodes->CornerConvex[i]].Get_connect()[PtrNodes->NodeCorner[PtrNodes->CornerConvex[i]].Get_BcNormal()]);
-		Nodetmp.distance=DistToWall(PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_x(),PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_y());
+		PtrNodes->Get_coordinate(Nodetmp.index,x_tmp,y_tmp);
+		Nodetmp.distance=DistToWall(x_tmp,y_tmp);
 		Nodetmp.rankMarkNodes=0;
 		nextinterior.push_back(Nodetmp);
 		while((countfluid<nFluidNodes || countsolid<nSolidNodes) && countwhile < maxwhile)
@@ -256,7 +260,8 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		nextwall.push_back(PtrNodes->NodeSpecialWall[i].Get_index());
 		//set the first interior
 		Nodetmp.index=(PtrNodes->NodeSpecialWall[i].Get_connect()[PtrNodes->NodeSpecialWall[i].Get_BcNormal()]);
-		Nodetmp.distance=DistToWall(PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_x(),PtrNodes->NodeInterior[PtrNodes->NodeIndexByType[Nodetmp.index]].get_y());
+		PtrNodes->Get_coordinate(Nodetmp.index,x_tmp,y_tmp);
+		Nodetmp.distance=DistToWall(x_tmp,y_tmp);
 		Nodetmp.rankMarkNodes=0;
 		nextinterior.push_back(Nodetmp);
 

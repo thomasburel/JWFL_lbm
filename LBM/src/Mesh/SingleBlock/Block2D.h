@@ -119,7 +119,7 @@ private:
 	int Connect_lowOrder(int &NodeNumber,unsigned int& direction);
 	void Connect_highOrder();
 
-	void Get_coordinate(int index,double & x, double & y);
+//	void Get_coordinate(int index,double & x, double & y);
 
 
 

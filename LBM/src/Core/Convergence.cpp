@@ -63,12 +63,15 @@ void Convergence::Set_Convergence(){
 }
 void Convergence::Calcul_Error(){
 
-	Error=Calcul_Error_ScalarField();
-	Error=PtrMultiBlockConv->SumAllProcessors(&Error);
-	Error=Error/PtrMultiBlockConv->NumberOfProcessors();
+	Calcul_Error_ScalarField();
 
 }
-double Convergence::Calcul_Error_ScalarField(){
+void Convergence::Calcul_Error_ScalarField(){
+	Error=Calcul_Error_ScalarFieldInOneProc();
+	Error=PtrMultiBlockConv->SumAllProcessors(&Error);
+	Error=Error/PtrMultiBlockConv->NumberOfProcessors();
+}
+double Convergence::Calcul_Error_ScalarFieldInOneProc(){
 	Sum_Current=0;Error_tmp=0;
 	for(int i=0;i<NbNodes;i++)
 	{
@@ -79,4 +82,59 @@ double Convergence::Calcul_Error_ScalarField(){
 	Error_tmp=Error_tmp/(Sum_Current+1e-15);//std::abs(Scalar_CurrentTime[idx]-Scalar_last[idx])/(std::abs(Scalar_CurrentTime[idx])+1e-15);
 
 	return Error_tmp;
+}
+void Convergence::Calcul_PorousMediaConvergence(){
+	//Calcul EOR and write it in a file
+	double EOR=Calcul_EOR();
+	EOR=PtrMultiBlockConv->SumAllProcessors(&EOR);
+	EOR=EOR/PtrMultiBlockConv->NumberOfProcessors();
+	ofstream EORfile;
+	EORfile.open("EOR.txt",ios::out | ios::app);
+	EORfile<<EOR<<std::endl;
+	EORfile.close();
+}
+double Convergence::Calcul_EOR(){
+
+	double sum=0;
+	for (int i=0;i<OutletPatchId.size();i++)
+	{
+		PtrPatchBcConv->Get_NodeIndex(OutletPatchId[i],*NodeId,*NodeIdSpeWall,*NodeIdGloCorner);
+		Avg_ScalarNodeArray(*NodeId,*NodeIdSpeWall,*NodeIdGloCorner,RhoNEOR,avg);
+		sum+=avg;
+	}
+	return sum/(double)OutletPatchId.size();
+}
+
+void Convergence::Avg_ScalarNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double &sum){
+	Sum_ScalarNodeArray(NodeArray,NodeArraySpecialWall,NodeArrayGlobalCorner,Var1,sum);
+	sum/=(NodeArray.size()+NodeArraySpecialWall.size()+NodeArrayGlobalCorner.size());
+}
+void Convergence::Avg_VectorNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double *&Var2,double &sum1,double &sum2){
+	Sum_VectorNodeArray(NodeArray,NodeArraySpecialWall,NodeArrayGlobalCorner,Var1,Var2,sum1,sum2);
+	int nbNodes=NodeArray.size()+NodeArraySpecialWall.size()+NodeArrayGlobalCorner.size();
+	sum1/=nbNodes;sum2/=nbNodes;
+}
+void Convergence::Sum_ScalarNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double &sum){
+	sum=0;
+	for(int i=0;i<NodeArray.size();i++)
+		sum+=Var1[NodeArray[i]];
+	double sum_tmp=0;
+	for(int i=0;i<NodeArraySpecialWall.size();i++)
+		sum_tmp+=Var1[NodeArraySpecialWall[i]];
+	for(int i=0;i<NodeArrayGlobalCorner.size();i++)
+		sum_tmp+=Var1[NodeArrayGlobalCorner[i]];
+	sum_tmp/=2.0;
+	sum+=sum_tmp;
+}
+void Convergence::Sum_VectorNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double *&Var2,double &sum1,double &sum2){
+	sum1=0;sum2=0;
+	for(int i=0;i<NodeArray.size();i++)
+		{sum1+=Var1[NodeArray[i]];sum2+=Var2[NodeArray[i]];}
+	double sum_tmp1=0;double sum_tmp2=0;
+	for(int i=0;i<NodeArraySpecialWall.size();i++)
+		{sum_tmp1+=Var1[NodeArraySpecialWall[i]];sum_tmp2+=Var2[NodeArraySpecialWall[i]];}
+	for(int i=0;i<NodeArrayGlobalCorner.size();i++)
+		{sum_tmp1+=Var1[NodeArrayGlobalCorner[i]];sum_tmp2+=Var2[NodeArrayGlobalCorner[i]];}
+	sum_tmp1/=2.0;sum_tmp2/=2.0;
+	sum1+=sum_tmp1;sum2+=sum_tmp2;
 }

@@ -34,11 +34,16 @@ public:
 	bool Get_extrapolationAlpha(){return extrapolationAlpha;};
 	void Set_extrapolationNormal(bool extrapol){extrapolationNormal=extrapol;};
 	bool Get_extrapolationNormal(){return extrapolationNormal;};
+	void Set_Inlet(bool inlet){Inlet=inlet;if(Inlet) Outlet=false;};
+	bool Get_Inlet(){return Inlet;};
+	void Set_Outlet(bool outlet){Outlet=outlet;if(Outlet) Inlet=false;};
+	bool Get_Outlet(){return Outlet;};
+
 protected:
 	std::vector<int> IdxNode, NodeIndexByType,NodeIndexByTypeSpecialWalls,NodeIndexByTypeGlobalCorner;
 	std::string PatchName;
 	SolverEnum::PatchType Type;
-	bool extrapolationAlpha,extrapolationNormal;
+	bool extrapolationAlpha,extrapolationNormal,Inlet,Outlet;
 
 };
 class PressurePatchBc: public PatchBcDEF {

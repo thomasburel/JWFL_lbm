@@ -309,6 +309,7 @@ void D2Q9ColourFluid::InitColourFluidDomainBc(InitLBM& ini){
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
 	}
+	int count=0;
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
 // Set Index
@@ -318,10 +319,14 @@ void D2Q9ColourFluid::InitColourFluidDomainBc(InitLBM& ini){
 		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
 // Get initialise values from the user
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, idx,pos,Rho_tmp,U_,alpha);
+// Set contact angle if needed
+		if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::NonCstTeta)
+			ini.IniContactAngle(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, idx,pos,teta[count]);
 // Initialise the blue and red densities
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];
 		RhoN[idx]=(Rhor[idx]-Rhob[idx])/Rho[idx];
+		count++;
 	}
 	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
@@ -389,7 +394,7 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 	double* U_=new double[2];
 	double Rho_tmp;
 	int idx=0;
-	int count=0;
+	int count=NodeArrays->NodeSpecialWall.size();
 
 	for (int j=0;j<NodeArrays->CornerConcave.size();j++)
 	{
@@ -421,7 +426,7 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeWall[j],0, idx,pos,Rho_tmp,U_,alpha);
 // Set contact angle if needed
 		if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::NonCstTeta)
-			ini.IniContactAngle(parallel->getRank(),NodeArrays->NodeWall[j],0, idx,pos,teta[idx]);
+			ini.IniContactAngle(parallel->getRank(),NodeArrays->NodeWall[j],0, idx,pos,teta[count]);
 // Initialise the blue and red densities
 		Rhor[idx]=alpha*Rho[idx];
 		Rhob[idx]=(1- alpha) *Rho[idx];

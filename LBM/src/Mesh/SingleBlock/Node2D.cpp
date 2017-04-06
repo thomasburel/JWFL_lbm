@@ -448,6 +448,9 @@ NodeWall2D::NodeWall2D(signed short int x_,signed short int y_) {
 	WallStream=0;
 	BcNormal=0;
 	WallSpecialType_=Standard;
+	alphaDef=0;
+	RhoDef=1;
+	UDef[0]=0;UDef[1]=0;
 }
 ///Destructor for Wall Nodes
 NodeWall2D::~NodeWall2D() {
@@ -456,8 +459,8 @@ NodeWall2D::~NodeWall2D() {
 
 
 bool* NodeWall2D::stream(){return WallStream;}
-double* NodeWall2D::Get_UDef(){return 0;}
-double NodeWall2D::Get_RhoDef(){return 0;}
+double* NodeWall2D::Get_UDef(){return UDef;}
+double NodeWall2D::Get_RhoDef(){return RhoDef;}
 
 void NodeWall2D::Set_stream(bool* streaming,int NbVelocity_){
 	NbVelocity=NbVelocity_;
@@ -465,8 +468,8 @@ void NodeWall2D::Set_stream(bool* streaming,int NbVelocity_){
 	for (int i=0;i<NbVelocity;i++)
 		WallStream[i]=streaming[i];
 }
-void NodeWall2D::Set_UDef(double UDef, double VDef){}
-void NodeWall2D::Set_RhoDef(double RhoDef){}
+void NodeWall2D::Set_UDef(double UDef_, double VDef){UDef[0]=UDef_;UDef[1]=VDef;}
+void NodeWall2D::Set_RhoDef(double RhoDef_){RhoDef=RhoDef_;}
 
 //**************General Symmetry Node Methods no distinction between kind of Symmetry nodes as on node or half way ***************
 ///Constructor for General Symmetry Nodes

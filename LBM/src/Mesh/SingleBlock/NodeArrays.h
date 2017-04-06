@@ -44,5 +44,7 @@ public:
 	std::vector<NodePressure2D> NodePressure;
 	std::vector<NodeSymmetry2D> NodeSymmetry;
 
+	void Get_coordinate(int index,double & x, double & y);
+
 };
 #endif /* MESH_SINGLEBLOCK_NODEARRAYS_H_ */

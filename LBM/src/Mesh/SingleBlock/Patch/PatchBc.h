@@ -34,6 +34,8 @@ public:
 	void Set_NodeIndexByType(SolverEnum::PatchType Type_, int IdIntype, std::vector<int>& IdxNode_);
 	void Set_NodeIndexSpecialWalls(SolverEnum::PatchType Type_, int IdIntype, std::vector<int>& IdxNode_);
 	void Set_NodeIndexGlobalCorner(SolverEnum::PatchType Type_, int IdIntype, std::vector<int>& IdxNode_);
+
+	void Get_NodeIndex(int idPatch,std::vector<int>& NodeIndex,std::vector<int>& NodeIndexSpecialWalls,std::vector<int>& NodeIndexGlobalCorner);
 private:
 	void SetNodeIdxForPatchBc(SolverEnum::PatchType Type_, int IdIntype,int PatchId,std::vector<int> &nodeIdx);
 	void SelectPatchBc(SolverEnum::PatchType Type_, Parameters *PtrParam, string PatchBcNames, int PatchId);

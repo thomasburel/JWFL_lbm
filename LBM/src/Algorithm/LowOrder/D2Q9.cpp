@@ -627,6 +627,8 @@ void D2Q9::Set_WallType(NodeWall2D& NodeIn){
 	bool WallStreaming[9];
 	StreamingOrientation(NodeIn,WallStreaming);
 	NodeIn.Set_stream(WallStreaming,nbvelo);
+	NodeIn.Set_RhoDef(Rho[NodeIn.Get_index()]);
+	NodeIn.Set_UDef(U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 }
 void D2Q9::Set_SymmetryType(NodeSymmetry2D& NodeIn){
 	bool SymmetryStreaming[9];

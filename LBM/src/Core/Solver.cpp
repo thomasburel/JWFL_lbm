@@ -95,6 +95,8 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 	Dic=new Dictionary(2,nbnode);
 	PtrDicConv=Dic;
 	PtrParmConv=PtrParameters_;
+	PtrPatchBcConv=PatchsBc;
+	PtrViscosityConv=Get_viscosity();
 	Add_OneDistributionToDictionary();
 	Set_Solution(PtrParameters);
 
@@ -147,6 +149,8 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	Dic=new Dictionary(2,nbnode);
 	PtrDicConv=Dic;
 	PtrParmConv=PtrParameters_;
+	PtrPatchBcConv=PatchsBc;
+	PtrViscosityConv=Get_viscosity();
 	Add_TwoDistributionsToDictionary();
 	Set_Solution(PtrParameters);
 }

@@ -14,7 +14,7 @@
 
 UserContactAngle::UserContactAngle() {
 	// TODO Auto-generated constructor stub
-
+	pi=atan(1.0)*4.0 ;
 }
 
 UserContactAngle::~UserContactAngle() {
@@ -22,5 +22,8 @@ UserContactAngle::~UserContactAngle() {
 }
 
 void UserContactAngle::Set_ContactAngle(Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& teta){
-
+	if(pos[0]<50)
+		teta=160.0*pi/180.0;
+	else
+		teta=30.0*pi/180.0;
 }

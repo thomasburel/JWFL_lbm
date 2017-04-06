@@ -350,7 +350,13 @@ public:
 
 	void Set_WallType(WallSpecialType WallSpecialType__){WallSpecialType_=WallSpecialType__;};
 	WallSpecialType& Get_WallType(){return WallSpecialType_;};
+
+	//for special walls
+	virtual void Set_AlphaDef(double Alpha){alphaDef=Alpha;};
+	virtual double Get_AlphaDef(){return alphaDef;};
 private:
+	double RhoDef, alphaDef;
+	double UDef[2];
 	bool* WallStream;
 	int BcNormal;
 	WallSpecialType WallSpecialType_;

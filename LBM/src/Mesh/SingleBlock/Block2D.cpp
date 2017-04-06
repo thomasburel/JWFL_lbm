@@ -4189,77 +4189,6 @@ void Block2D::Set_NodeIndexByTypeForPatchBc(){
 }
 //enum NodeType {Interior, Solid, Ghost, Corner, Wall, Periodic, Velocity, Symmetry, Pressure,ConcaveCorner,ConvexCorner, SolidGhost,GlobalCorner, SpecialWall};
 
-void Block2D::Get_coordinate(int index,double & x, double & y){
-	if(index<NodeArrays.TypeOfNode.size())
-	{
-		int localidx=NodeArrays.NodeIndexByType[index];
-		switch(NodeArrays.TypeOfNode[index])
-		{
-		case Interior:
-			x=NodeArrays.NodeInterior[localidx].get_x();
-			y=NodeArrays.NodeInterior[localidx].get_y();
-			break;
-		case Solid:
-			x=NodeArrays.NodeSolid[localidx].get_x();
-			y=NodeArrays.NodeSolid[localidx].get_y();
-			break;
-		case Ghost:
-			x=NodeArrays.NodeGhost[localidx].get_x();
-			y=NodeArrays.NodeGhost[localidx].get_y();
-			break;
-		case Corner:
-			x=NodeArrays.NodeCorner[localidx].get_x();
-			y=NodeArrays.NodeCorner[localidx].get_y();
-			break;
-		case Wall:
-			x=NodeArrays.NodeWall[localidx].get_x();
-			y=NodeArrays.NodeWall[localidx].get_y();
-			break;
-		case Periodic:
-			x=NodeArrays.NodePeriodic[localidx].get_x();
-			y=NodeArrays.NodePeriodic[localidx].get_y();
-			break;
-		case Velocity:
-			x=NodeArrays.NodeVelocity[localidx].get_x();
-			y=NodeArrays.NodeVelocity[localidx].get_y();
-			break;
-		case Symmetry:
-			x=NodeArrays.NodeSymmetry[localidx].get_x();
-			y=NodeArrays.NodeSymmetry[localidx].get_y();
-			break;
-		case Pressure:
-			x=NodeArrays.NodePressure[localidx].get_x();
-			y=NodeArrays.NodePressure[localidx].get_y();
-			break;
-		case ConcaveCorner:
-			x=NodeArrays.NodeCorner[localidx].get_x();
-			y=NodeArrays.NodeCorner[localidx].get_y();
-			break;
-		case ConvexCorner:
-			x=NodeArrays.NodeCorner[localidx].get_x();
-			y=NodeArrays.NodeCorner[localidx].get_y();
-			break;
-		case SolidGhost:
-			x=NodeArrays.NodeGhost[localidx].get_x();
-			y=NodeArrays.NodeGhost[localidx].get_y();
-			break;
-		case GlobalCorner:
-			x=NodeArrays.NodeGlobalCorner[localidx].get_x();
-			y=NodeArrays.NodeGlobalCorner[localidx].get_y();
-			break;
-		case SpecialWall:
-			x=NodeArrays.NodeSpecialWall[localidx].get_x();
-			y=NodeArrays.NodeSpecialWall[localidx].get_y();
-			break;
-		}
-	}
-	else
-	{
-		std::cerr<<"Node number is higher than the number of nodes."<<std::endl;
-		x=-10;
-		y=-10;
-	}
-}
 void Block2D::Write_CommunicationNodes(){
 	int rank;
 	double x_tmp=0;double y_tmp=0;int index=0;
@@ -4274,56 +4203,56 @@ void Block2D::Write_CommunicationNodes(){
  	for(int i=0;i<IdRNodeW.size();i++)
  	{
  		index=IdRNodeW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"West Ghost nodes: "<<std::endl;
  	for(int i=0;i<IdGNodeW.size();i++)
  	{
  		index=IdGNodeW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North real nodes: "<<std::endl;
  	for(int i=0;i<IdRNodeN.size();i++)
  	{
  		index=IdRNodeN[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North Ghost nodes: "<<std::endl;
  	for(int i=0;i<IdGNodeN.size();i++)
  	{
  		index=IdGNodeN[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South real nodes: "<<std::endl;
  	for(int i=0;i<IdRNodeS.size();i++)
  	{
  		index=IdRNodeS[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South Ghost nodes: "<<std::endl;
  	for(int i=0;i<IdGNodeS.size();i++)
  	{
  		index=IdGNodeS[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"East real nodes: "<<std::endl;
  	for(int i=0;i<IdRNodeE.size();i++)
  	{
  		index=IdRNodeE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"East Ghost nodes: "<<std::endl;
  	for(int i=0;i<IdGNodeE.size();i++)
  	{
  		index=IdGNodeE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
 
@@ -4332,56 +4261,56 @@ void Block2D::Write_CommunicationNodes(){
  	for(int i=0;i<IdRNodeSW.size();i++)
  	{
  		index=IdRNodeSW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South West Ghost nodes: "<<std::endl;
  	for(int i=0;i<IdGNodeSW.size();i++)
  	{
  		index=IdGNodeSW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North West real nodes: "<<std::endl;
  	for(int i=0;i<IdRNodeNW.size();i++)
  	{
  		index=IdRNodeNW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North West Ghost nodes: "<<std::endl;
  	for(int i=0;i<IdGNodeNW.size();i++)
  	{
  		index=IdGNodeNW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South East real nodes: "<<std::endl;
  	for(int i=0;i<IdRNodeSE.size();i++)
  	{
  		index=IdRNodeSE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South East Ghost nodes: "<<std::endl;
  	for(int i=0;i<IdGNodeSE.size();i++)
  	{
  		index=IdGNodeSE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North East real nodes: "<<std::endl;
  	for(int i=0;i<IdRNodeNE.size();i++)
  	{
  		index=IdRNodeNE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North East Ghost nodes: "<<std::endl;
  	for(int i=0;i<IdGNodeNE.size();i++)
  	{
  		index=IdGNodeNE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
 
@@ -4400,56 +4329,56 @@ void Block2D::Write_CommunicationSolidNodes(){
  	for(int i=0;i<SolidIdRNodeW.size();i++)
  	{
  		index=SolidIdRNodeW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"West Ghost nodes: "<<std::endl;
  	for(int i=0;i<SolidIdGNodeW.size();i++)
  	{
  		index=SolidIdGNodeW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North real nodes: "<<std::endl;
  	for(int i=0;i<SolidIdRNodeN.size();i++)
  	{
  		index=SolidIdRNodeN[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North Ghost nodes: "<<std::endl;
  	for(int i=0;i<SolidIdGNodeN.size();i++)
  	{
  		index=SolidIdGNodeN[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South real nodes: "<<std::endl;
  	for(int i=0;i<SolidIdRNodeS.size();i++)
  	{
  		index=SolidIdRNodeS[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South Ghost nodes: "<<std::endl;
  	for(int i=0;i<SolidIdGNodeS.size();i++)
  	{
  		index=SolidIdGNodeS[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"East real nodes: "<<std::endl;
  	for(int i=0;i<SolidIdRNodeE.size();i++)
  	{
  		index=SolidIdRNodeE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"East Ghost nodes: "<<std::endl;
  	for(int i=0;i<SolidIdGNodeE.size();i++)
  	{
  		index=SolidIdGNodeE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
 
@@ -4458,56 +4387,56 @@ void Block2D::Write_CommunicationSolidNodes(){
  	for(int i=0;i<SolidIdRNodeSW.size();i++)
  	{
  		index=SolidIdRNodeSW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South West Ghost nodes: "<<std::endl;
  	for(int i=0;i<SolidIdGNodeSW.size();i++)
  	{
  		index=SolidIdGNodeSW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North West real nodes: "<<std::endl;
  	for(int i=0;i<SolidIdRNodeNW.size();i++)
  	{
  		index=SolidIdRNodeNW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North West Ghost nodes: "<<std::endl;
  	for(int i=0;i<SolidIdGNodeNW.size();i++)
  	{
  		index=SolidIdGNodeNW[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South East real nodes: "<<std::endl;
  	for(int i=0;i<SolidIdRNodeSE.size();i++)
  	{
  		index=SolidIdRNodeSE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South East Ghost nodes: "<<std::endl;
  	for(int i=0;i<SolidIdGNodeSE.size();i++)
  	{
  		index=SolidIdGNodeSE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North East real nodes: "<<std::endl;
  	for(int i=0;i<SolidIdRNodeNE.size();i++)
  	{
  		index=SolidIdRNodeNE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North East Ghost nodes: "<<std::endl;
  	for(int i=0;i<SolidIdGNodeNE.size();i++)
  	{
  		index=SolidIdGNodeNE[i];
- 		Get_coordinate(index,x_tmp, y_tmp);
+ 		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
 

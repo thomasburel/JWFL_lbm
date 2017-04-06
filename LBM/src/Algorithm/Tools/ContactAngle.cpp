@@ -34,6 +34,8 @@ ContactAngle::~ContactAngle() {
 	// TODO Auto-generated destructor stub
 }
 void ContactAngle::AllocateTeta(NodeArrays2D *PtrNode,Parameters *PtrParam,double * &tetaIn){
+	if(teta!=0)
+		delete teta;
 
 	switch(PtrParam->Get_ContactAngleType())
 		{
@@ -45,32 +47,32 @@ void ContactAngle::AllocateTeta(NodeArrays2D *PtrNode,Parameters *PtrParam,doubl
 			teta[0]=0;
 			break;
 		case ContactAngleEnum::NonCstTeta:
-			teta=new double[PtrNode->CornerConcave.size()+PtrNode->CornerConvex.size()+PtrNode->NodeWall.size()+PtrNodeCa->NodeSpecialWall.size()];
-			int nodeWallIdx=0;
-			for (int j=0;j<PtrNodeCa->CornerConcave.size();j++)
+			teta=new double[PtrNode->CornerConcave.size()+PtrNode->CornerConvex.size()+PtrNode->NodeWall.size()+PtrNode->NodeSpecialWall.size()];
+	/*		int nodeWallIdx=0;
+			for (int j=0;j<PtrNode->CornerConcave.size();j++)
 			{
-				teta[nodeWallIdx]=tetaIn[PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_index()];
+				teta[nodeWallIdx]=tetaIn[PtrNode->NodeCorner[PtrNode->CornerConcave[j]].Get_index()];
 				nodeWallIdx++;
 			}
-			for (int j=0;j<PtrNodeCa->NodeWall.size();j++)
+			for (int j=0;j<PtrNode->NodeWall.size();j++)
 			{
-				teta[nodeWallIdx]=tetaIn[PtrNodeCa->NodeWall[j].Get_index()];
+				teta[nodeWallIdx]=tetaIn[PtrNode->NodeWall[j].Get_index()];
 				nodeWallIdx++;
 			}
-			for (int j=0;j<PtrNodeCa->CornerConvex.size();j++)
+			for (int j=0;j<PtrNode->CornerConvex.size();j++)
 			{
-				teta[nodeWallIdx]=tetaIn[PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_index()];
+				teta[nodeWallIdx]=tetaIn[PtrNode->NodeCorner[PtrNode->CornerConvex[j]].Get_index()];
 				nodeWallIdx++;
 			}
-			for (int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
+			for (int j=0;j<PtrNode->NodeSpecialWall.size();j++)
 			{
-				teta[nodeWallIdx]=tetaIn[PtrNodeCa->NodeSpecialWall[j].Get_index()];
+				teta[nodeWallIdx]=tetaIn[PtrNode->NodeSpecialWall[j].Get_index()];
 				nodeWallIdx++;
-			}
-/*
-			for(int i=0;i<PtrNode->CornerConcave.size()+PtrNode->CornerConvex.size()+PtrNode->NodeWall.size()+PtrNodeCa->NodeSpecialWall.size();i++)
+			}*/
+
+			for(int i=0;i<PtrNode->CornerConcave.size()+PtrNode->CornerConvex.size()+PtrNode->NodeWall.size()+PtrNode->NodeSpecialWall.size();i++)
 				teta[i]=0;
-			*/
+
 			break;
 		default:
 			std::cerr<<" Contact angle type not found."<<std::endl;

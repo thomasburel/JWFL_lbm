@@ -44,8 +44,8 @@ void InitLBM::IniDomainTwoPhases(int rank,Node2D & Node,int elem, int nodenumber
 		break;
 	case SpecialWall:
 		UserBc(*PtrParameters,elem, nodenumber, pos,Rho, U,alpha);
-		U[0]=0;
-		U[1]=0;
+		Node.Set_UDef(U[0],U[1]);
+		Node.Set_RhoDef(Rho);
 		break;
 	case Corner:
 		UserBc(*PtrParameters,elem, nodenumber, pos,Rho, U,alpha);

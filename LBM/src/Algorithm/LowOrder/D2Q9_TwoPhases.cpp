@@ -215,6 +215,9 @@ void D2Q9TwoPhases::InitWall(InitLBM& ini){
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, idx,pos,Rho[idx],U_,alpha);
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
+		NodeArrays->NodeSpecialWall[j].Set_UDef(U_[0],U_[1]);
+		NodeArrays->NodeSpecialWall[j].Set_RhoDef(Rho[idx]);
+		NodeArrays->NodeSpecialWall[j].Set_AlphaDef(alpha);
 	}
 
 	delete [] pos;
@@ -387,6 +390,8 @@ void D2Q9TwoPhases::Set_WallType(NodeWall2D& NodeIn){
 	bool WallStreaming[9];
 	StreamingOrientation(NodeIn,WallStreaming);
 	NodeIn.Set_stream(WallStreaming,nbvelo);
+	NodeIn.Set_RhoDef(Rho[NodeIn.Get_index()]);
+	NodeIn.Set_UDef(U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 }
 void D2Q9TwoPhases::Set_SymmetryType(NodeSymmetry2D& NodeIn){
 	bool SymmetryStreaming[9];
