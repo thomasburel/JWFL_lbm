@@ -320,7 +320,7 @@ void D2Q9ColourFluid::InitColourFluidDomainBc(InitLBM& ini){
 // Get initialise values from the user
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, idx,pos,Rho_tmp,U_,alpha);
 // Set contact angle if needed
-		if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::NonCstTeta)
+		if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::UserTeta)
 			ini.IniContactAngle(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, idx,pos,teta[count]);
 // Initialise the blue and red densities
 		Rhor[idx]=alpha*Rho[idx];
@@ -406,7 +406,7 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 // Get initialise value from the user
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]],0, idx,pos,Rho_tmp,U_,alpha);
 // Set contact angle if needed
-		if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::NonCstTeta)
+		if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::UserTeta)
 			ini.IniContactAngle(parallel->getRank(),NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]],0, idx,pos,teta[count]);
 // Initialise the blue and red densities
 		Rhor[idx]=alpha*Rho[idx];
@@ -425,7 +425,7 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 // Get initialise values from the user
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeWall[j],0, idx,pos,Rho_tmp,U_,alpha);
 // Set contact angle if needed
-		if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::NonCstTeta)
+		if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::UserTeta)
 			ini.IniContactAngle(parallel->getRank(),NodeArrays->NodeWall[j],0, idx,pos,teta[count]);
 // Initialise the blue and red densities
 		Rhor[idx]=alpha*Rho[idx];
@@ -444,7 +444,7 @@ void D2Q9ColourFluid::InitColourFluidWall(InitLBM& ini){
 // Get initialise value from the user
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]],0, idx,pos,Rho_tmp,U_,alpha);
 // Set contact angle if needed
-		if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::NonCstTeta)
+		if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::UserTeta)
 			ini.IniContactAngle(parallel->getRank(),NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]],0, idx,pos,teta[count]);
 // Initialise the blue and red densities
 		Rhor[idx]=alpha*Rho[idx];

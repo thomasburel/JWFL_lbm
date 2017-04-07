@@ -42,11 +42,11 @@ void ContactAngle::AllocateTeta(NodeArrays2D *PtrNode,Parameters *PtrParam,doubl
 		case ContactAngleEnum::NoTeta:
 			teta=0;
 			break;
-		case ContactAngleEnum::FixTeta:
+		case ContactAngleEnum::UniformTeta:
 			teta=new double[1];
 			teta[0]=0;
 			break;
-		case ContactAngleEnum::NonCstTeta:
+		case ContactAngleEnum::UserTeta:
 			teta=new double[PtrNode->CornerConcave.size()+PtrNode->CornerConvex.size()+PtrNode->NodeWall.size()+PtrNode->NodeSpecialWall.size()];
 	/*		int nodeWallIdx=0;
 			for (int j=0;j<PtrNode->CornerConcave.size();j++)
@@ -130,7 +130,7 @@ void ContactAngle::InitContactAngle(NodeArrays2D *PtrNode,Parameters *PtrParam,u
 			Model=&ContactAngle::ApplyStandardMethod;
 			if(PtrParamCa->Get_Dimension()==SolverEnum::D2)
 			{
-				if(PtrParam->Get_ContactAngleType()==ContactAngleEnum::FixTeta)
+				if(PtrParam->Get_ContactAngleType()==ContactAngleEnum::UniformTeta)
 					ImposeNormalOnWall=&ContactAngle::Impose_ContactAngleOnWall2DFixTeta;
 				else
 					ImposeNormalOnWall=&ContactAngle::Impose_ContactAngleOnWall2DNonCstTeta;
@@ -156,7 +156,7 @@ void ContactAngle::InitContactAngle(NodeArrays2D *PtrNode,Parameters *PtrParam,u
 			Model=&ContactAngle::ApplyInterpolMethod;
 			if(PtrParamCa->Get_Dimension()==SolverEnum::D2)
 			{
-				if(PtrParam->Get_ContactAngleType()==ContactAngleEnum::FixTeta)
+				if(PtrParam->Get_ContactAngleType()==ContactAngleEnum::UniformTeta)
 					ImposeNormalOnWall=&ContactAngle::Impose_ContactAngleInSolidAndInterpol2DFixTeta;
 				else
 					ImposeNormalOnWall=&ContactAngle::Impose_ContactAngleInSolidAndInterpol2DNonCstTeta;
@@ -189,7 +189,7 @@ void ContactAngle::InitContactAngle(NodeArrays2D *PtrNode,Parameters *PtrParam,u
 		}
 		if(PtrParamCa->Get_Dimension()==SolverEnum::D2)
 		{
-			if(PtrParam->Get_ContactAngleType()==ContactAngleEnum::FixTeta)
+			if(PtrParam->Get_ContactAngleType()==ContactAngleEnum::UniformTeta)
 			{
 				nodeWallIdx=0;
 				n1=new double**[1];n2=new double**[1];

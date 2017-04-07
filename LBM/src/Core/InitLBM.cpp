@@ -95,19 +95,19 @@ void InitLBM::IniContactAngle(int rank,Node2D & Node,int elem, int nodenumber, d
 		switch(Node.get_NodeType())
 		{
 		case Wall:
-			if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::FixTeta)
+			if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::UniformTeta)
 				teta=PtrParameters->Get_ContactAngle();
 			else
 				Set_ContactAngle(*PtrParameters,elem, nodenumber, pos,teta);
 			break;
 		case SpecialWall:
-			if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::FixTeta)
+			if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::UniformTeta)
 				teta=PtrParameters->Get_ContactAngle();
 			else
 				Set_ContactAngle(*PtrParameters,elem, nodenumber, pos,teta);
 			break;
 		case Corner:
-			if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::FixTeta)
+			if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::UniformTeta)
 				teta=PtrParameters->Get_ContactAngle();
 			else
 				Set_ContactAngle(*PtrParameters,elem, nodenumber, pos,teta);

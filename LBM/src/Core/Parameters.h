@@ -72,7 +72,7 @@ enum PeriodicType{Simple,PressureForce};
 
 //Two phases enumeration
 namespace ContactAngleEnum{
-	enum TetaType{NoTeta, FixTeta, NonCstTeta};
+	enum TetaType{NoTeta, UniformTeta, UserTeta};
 	enum TetaModel{Standard,Interpol};
 	enum ExtrapolNormal{yes,no};
 	enum SwitchSelect{Binary,Linear};
