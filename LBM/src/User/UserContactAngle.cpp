@@ -22,8 +22,8 @@ UserContactAngle::~UserContactAngle() {
 }
 
 void UserContactAngle::Set_ContactAngle(Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& teta){
-	if(pos[0]<50)
-		teta=160.0*pi/180.0;
+	if(pos[0]<10)
+		teta=-pos[0]*(160.0-30.0)*pi/180.0/10.0+160.0;
 	else
 		teta=30.0*pi/180.0;
 }

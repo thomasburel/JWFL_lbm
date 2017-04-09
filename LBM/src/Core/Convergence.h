@@ -24,7 +24,7 @@ public:
 	Convergence();
 	virtual ~Convergence();
 	void Set_Convergence();
-	void Calcul_Error();
+	void Calcul_Error(int &Time);
 	double Get_Error(){return Error;};
 
 private:
@@ -33,21 +33,28 @@ private:
 	void NoCalcul_Error(){};
 	double Calcul_Error_ScalarFieldInOneProc();
 	void Set_ConvergencePatchBc();
-	void Calcul_PorousMediaConvergence();
-	double Calcul_EOR();
-	double Calcul_Permeability_SinglePhase();
+	void Calcul_PorousMediaConvergence(int &Time);
+	double Calcul_ProductionRate(int &Time);
+	double Calcul_Permeability_SinglePhase(int &Time);
+	double Calcul_DarcyPermeability_SinglePhase(int &Time);
 
 	void Avg_ScalarNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double &sum);
 	void Avg_VectorNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double *&Var2,double &sum,double &sum2);
 	void Sum_ScalarNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double &sum);
 	void Sum_VectorNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double *&Var2,double &sum1,double &sum2);
 
+	double Porosity();
+	void SumFluidVolume(double & sumfluidvolume);
+	void SumSolidVolume(double & sumsolidvolume);
+	bool IsBoundary(int idx);
+	bool IsGlobalCornerASpecialWall(int idx);
 
 protected:
 	MultiBlock *PtrMultiBlockConv;
 	Dictionary *PtrDicConv;
 	Parameters *PtrParmConv;
 	PatchBc *PtrPatchBcConv;
+	NodeArrays* PtrNodeArraysConv;
 	Viscosity *PtrViscosityConv;
 
 private:
@@ -57,10 +64,12 @@ private:
 	double Error_tmp;
 
 	std::vector<int> InletPatchId,OutletPatchId;
-	double *RhoNEOR;
+	double *RhoNProductionRate,**UPerm,*RhoPerm,*RhoNPerm;
 	std::vector<int> *NodeId,*NodeIdSpeWall,*NodeIdGloCorner;
-	double avg;
 
+	double avg;
+	double porosity;
+	double LengthMedium,SectionMedium;
 
 	int NbNodes;
 

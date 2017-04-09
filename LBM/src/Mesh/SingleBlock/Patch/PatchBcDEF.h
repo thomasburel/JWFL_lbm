@@ -24,12 +24,16 @@ public:
 	void addNodeIndex(int NodeIndex){IdxNode.push_back(NodeIndex);};
 	void Set_NodeIndex(std::vector<int>& IdxNode_){IdxNode=IdxNode_;};
 	std::vector<int>& Get_NodeIndex(){return IdxNode;};
+	void Set_NodeIndexSpecialWalls(std::vector<int>& IdxNode_){NodeIndexSpecialWalls=IdxNode_;};
+	std::vector<int>& Get_NodeIndexSpecialWalls(){return NodeIndexSpecialWalls;};
+	void Set_NodeIndexGlobalCorner(std::vector<int>& IdxNode_){NodeIndexGlobalCorner=IdxNode_;};
+	std::vector<int>& Get_NodeIndexGlobalCorner(){return NodeIndexGlobalCorner;};
 	void Set_NodeIndexByType(std::vector<int>& IdxNode_){NodeIndexByType=IdxNode_;};
 	std::vector<int>& Get_NodeIndexByType(){return NodeIndexByType;};
-	void Set_NodeIndexSpecialWalls(std::vector<int>& IdxNode_){NodeIndexByTypeSpecialWalls=IdxNode_;};
-	std::vector<int>& Get_NodeIndexSpecialWalls(){return NodeIndexByTypeSpecialWalls;};
-	void Set_NodeIndexGlobalCorner(std::vector<int>& IdxNode_){NodeIndexByTypeGlobalCorner=IdxNode_;};
-	std::vector<int>& Get_NodeIndexGlobalCorner(){return NodeIndexByTypeGlobalCorner;};
+	void Set_NodeIndexByTypeSpecialWalls(std::vector<int>& IdxNode_){NodeIndexByTypeSpecialWalls=IdxNode_;};
+	std::vector<int>& Get_NodeIndexByTypeSpecialWalls(){return NodeIndexByTypeSpecialWalls;};
+	void Set_NodeIndexByTypeGlobalCorner(std::vector<int>& IdxNode_){NodeIndexByTypeGlobalCorner=IdxNode_;};
+	std::vector<int>& Get_NodeIndexByTypeGlobalCorner(){return NodeIndexByTypeGlobalCorner;};
 	void Set_extrapolationAlpha(bool extrapol){extrapolationAlpha=extrapol;};
 	bool Get_extrapolationAlpha(){return extrapolationAlpha;};
 	void Set_extrapolationNormal(bool extrapol){extrapolationNormal=extrapol;};
@@ -39,11 +43,13 @@ public:
 	void Set_Outlet(bool outlet){Outlet=outlet;if(Outlet) Inlet=false;};
 	bool Get_Outlet(){return Outlet;};
 
+
 protected:
-	std::vector<int> IdxNode, NodeIndexByType,NodeIndexByTypeSpecialWalls,NodeIndexByTypeGlobalCorner;
+	std::vector<int> IdxNode,NodeIndexSpecialWalls,NodeIndexGlobalCorner, NodeIndexByType,NodeIndexByTypeSpecialWalls,NodeIndexByTypeGlobalCorner;
 	std::string PatchName;
 	SolverEnum::PatchType Type;
 	bool extrapolationAlpha,extrapolationNormal,Inlet,Outlet;
+	int orientation;
 
 };
 class PressurePatchBc: public PatchBcDEF {

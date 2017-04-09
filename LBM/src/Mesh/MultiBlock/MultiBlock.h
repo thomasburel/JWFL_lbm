@@ -56,6 +56,8 @@ public:
 	virtual double SumBC(double *value)=0;
 	virtual double SumAllProcessors(double *value)=0;
 	virtual int NumberOfProcessors()=0;
+	bool IsMainProcessor(){return parallel->isMainProcessor();};
+	int RankProcessor(){return parallel->getRank();};
 
 protected:
 	bool Check_CleaningMesh(int nbTotalSolidRemoved, int nbTotalSolidadded);

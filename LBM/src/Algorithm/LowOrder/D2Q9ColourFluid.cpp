@@ -857,7 +857,7 @@ void D2Q9ColourFluid::run(){
 			}
 			if(it%listing==0 )
 			{
-				Convergence::Calcul_Error();
+				Convergence::Calcul_Error(it);
 				if(parallel->isMainProcessor())
 				{
 					time_run=parallel->getTime()-time_inirun;
@@ -903,7 +903,7 @@ void D2Q9ColourFluid::run(){
 			}
 			if(it%listing==0)
 			{
-				Convergence::Calcul_Error();
+				Convergence::Calcul_Error(it);
 				time_run=parallel->getTime()-time_inirun;
 
 				std::cout<<"Iteration number: "<<it<< " Running time: ";
@@ -1612,8 +1612,8 @@ double D2Q9ColourFluid::CurvatureCorner(int & nodenumber, int* connect,int & nor
 void D2Q9ColourFluid::ApplyPatchVelocity(VelocityPatchBc& VelPatchBc){
 	SetVelocity(VelPatchBc.Get_VelocityModel(),VelPatchBc.Get_VelocityType());
 	std::vector<int> NodeIdx=VelPatchBc.Get_NodeIndexByType();
-	std::vector<int> NodeIdxSpecialWalls=VelPatchBc.Get_NodeIndexSpecialWalls();
-	std::vector<int> NodeIdxGlobalCorner=VelPatchBc.Get_NodeIndexGlobalCorner();
+	std::vector<int> NodeIdxSpecialWalls=VelPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=VelPatchBc.Get_NodeIndexByTypeGlobalCorner();
 	double alpha=0;
 	if(VelPatchBc.Get_extrapolationAlpha())
 	{
@@ -1673,8 +1673,8 @@ void D2Q9ColourFluid::ApplyPatchVelocity(VelocityPatchBc& VelPatchBc){
 void D2Q9ColourFluid::ApplyPatchPressure(PressurePatchBc& PresPatchBc){
 	SetPressure(PresPatchBc.Get_PressureModel(),PresPatchBc.Get_PressureType());
 	std::vector<int> NodeIdx=PresPatchBc.Get_NodeIndexByType();
-	std::vector<int> NodeIdxSpecialWalls=PresPatchBc.Get_NodeIndexSpecialWalls();
-	std::vector<int> NodeIdxGlobalCorner=PresPatchBc.Get_NodeIndexGlobalCorner();
+	std::vector<int> NodeIdxSpecialWalls=PresPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=PresPatchBc.Get_NodeIndexByTypeGlobalCorner();
 	double alpha=0;
 	if(PresPatchBc.Get_extrapolationAlpha())
 	{
@@ -1736,8 +1736,8 @@ void D2Q9ColourFluid::ApplyPatchPressure(PressurePatchBc& PresPatchBc){
 void D2Q9ColourFluid::ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc){
 	SetSymmetry(SymPatchBc.Get_SymmetryType());
 	std::vector<int> NodeIdx=SymPatchBc.Get_NodeIndexByType();
-	std::vector<int> NodeIdxSpecialWalls=SymPatchBc.Get_NodeIndexSpecialWalls();
-	std::vector<int> NodeIdxGlobalCorner=SymPatchBc.Get_NodeIndexGlobalCorner();
+	std::vector<int> NodeIdxSpecialWalls=SymPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=SymPatchBc.Get_NodeIndexByTypeGlobalCorner();
 	double alpha=0;
 	if(SymPatchBc.Get_extrapolationAlpha())
 	{
@@ -1787,8 +1787,8 @@ void D2Q9ColourFluid::ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc){
 void D2Q9ColourFluid::ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc){
 	SetPeriodic(PerPatchBc.Get_PeriodicType());
 	std::vector<int> NodeIdx=PerPatchBc.Get_NodeIndexByType();
-	std::vector<int> NodeIdxSpecialWalls=PerPatchBc.Get_NodeIndexSpecialWalls();
-	std::vector<int> NodeIdxGlobalCorner=PerPatchBc.Get_NodeIndexGlobalCorner();
+	std::vector<int> NodeIdxSpecialWalls=PerPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=PerPatchBc.Get_NodeIndexByTypeGlobalCorner();
 	double alpha=0;
 	if(PerPatchBc.Get_extrapolationAlpha())
 	{

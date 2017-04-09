@@ -31,19 +31,29 @@ public:
 	std::vector<SymmetryPatchBc>& Get_SymmetryPatch(){return SymmetryPatch;};
 	std::vector<PeriodicPatchBc>& Get_PeriodicPatch(){return  PeriodicPatch;};
 	std::vector<WallPatchBc>& Get_WallPatch(){return WallPatch;};
-	void Set_NodeIndexByType(SolverEnum::PatchType Type_, int IdIntype, std::vector<int>& IdxNode_);
+	void Set_NodeIndex(SolverEnum::PatchType Type_, int IdIntype, std::vector<int>& IdxNode_);
 	void Set_NodeIndexSpecialWalls(SolverEnum::PatchType Type_, int IdIntype, std::vector<int>& IdxNode_);
 	void Set_NodeIndexGlobalCorner(SolverEnum::PatchType Type_, int IdIntype, std::vector<int>& IdxNode_);
+	void Set_NodeIndexByType(SolverEnum::PatchType Type_, int IdIntype, std::vector<int>& IdxNode_);
+	void Set_NodeIndexByTypeSpecialWalls(SolverEnum::PatchType Type_, int IdIntype, std::vector<int>& IdxNode_);
+	void Set_NodeIndexByTypeGlobalCorner(SolverEnum::PatchType Type_, int IdIntype, std::vector<int>& IdxNode_);
 
-	void Get_NodeIndex(int idPatch,std::vector<int>& NodeIndex,std::vector<int>& NodeIndexSpecialWalls,std::vector<int>& NodeIndexGlobalCorner);
+	bool Get_NodeIndex(int idPatch,std::vector<int>* &NodeIndex,std::vector<int>* &NodeIndexSpecialWalls,std::vector<int>* &NodeIndexGlobalCorner);
+	void Set_Inlet_outletPatch();
+	bool IsInlet(int PatchId){return inlet[PatchId];};
+	bool IsOutlet(int PatchId){return outlet[PatchId];};
+	int Get_Orientation(int PatchId){return Orientation[PatchId];};
 private:
 	void SetNodeIdxForPatchBc(SolverEnum::PatchType Type_, int IdIntype,int PatchId,std::vector<int> &nodeIdx);
 	void SelectPatchBc(SolverEnum::PatchType Type_, Parameters *PtrParam, string PatchBcNames, int PatchId);
 	void SelectPatchBc(NodeType Type_, Parameters *PtrParam, string PatchBcNames, int PatchId);
 	void RemovePatchBc(int PatchId);
 	void ReorderingPatches();
+	void Set_orientation(std::vector<Node2D*> Node);
 private:
 	int NumberOfPatchBc;
+	std::vector<bool> inlet,outlet;
+	std::vector<int> Orientation;
 
 };
 #endif /* SRC_MESH_SINGLEBLOCK_PATCH_PATCHBC_H_ */

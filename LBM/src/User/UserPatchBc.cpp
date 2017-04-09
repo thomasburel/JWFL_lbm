@@ -23,22 +23,26 @@ UserPatchBc::~UserPatchBc() {
 
 void UserPatchBc::IntitialiseUserPatchBc(Parameters& PtrParameters,int &NumberOfPatchBc){
 	//Set Number of Patch needed (User)
-	NumberOfPatchBc=4;
+	NumberOfPatchBc=3;
 	//Define each patch
 		//Patch 0
-		//AddPressurePatch("Inlet",HeZouP, FixP);
-		AddVelocityPatch("Inlet",HeZouV, FixV);
+	//	AddWallPatch("Wall",BounceBack);
+
+		AddPressurePatch("Inlet",HeZouP, FixP);
+		PressurePatch.back().Set_Inlet(true);
+		//AddVelocityPatch("Inlet",HeZouV, FixV);
 		//Patch 1
 		AddPressurePatch("Outlet",HeZouP, FixP);
 		//AddVelocityPatch("Outlet",HeZouV, zeroVGrad1st); //FixV,zeroVGrad1st
 		PressurePatch.back().Set_extrapolationAlpha(true);
+		PressurePatch.back().Set_Outlet(true);
 		//PressurePatch.back().Set_extrapolationNormal(true);
 		//AddPressurePatch("Outlet",HeZouP, FixP);
 		//Patch 2
 		AddWallPatch("Wall",BounceBack);
 		//AddSymmetryPatch("Symmetry",OnNode);
 		//Patch 3
-		AddWallPatch("Wall",BounceBack);
+//		AddWallPatch("Wall",BounceBack);
 
 }
 void UserPatchBc::SetUserPatchBc(Parameters& PtrParameters,int elem, int nodenumber, double* pos, int &IdPatchBc){

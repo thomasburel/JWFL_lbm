@@ -296,7 +296,7 @@ void D2Q9::run(){
 			}
 			if(it%listing==0  )
 			{
-				Convergence::Calcul_Error();
+				Convergence::Calcul_Error(it);
 				if(parallel->isMainProcessor())
 				{
 					time_run=parallel->getTime()-time_inirun;
@@ -333,7 +333,7 @@ void D2Q9::run(){
 			}
 			if(it%listing==0  )
 			{
-				Convergence::Calcul_Error();
+				Convergence::Calcul_Error(it);
 				time_run=parallel->getTime()-time_inirun;
 				std::cout<<"Iteration number: "<<it<< " Running time: ";
 				if(time_run>60.0)
@@ -663,8 +663,8 @@ void D2Q9::Set_PressureType(NodePressure2D& NodeIn){
 void D2Q9::ApplyPatchVelocity(VelocityPatchBc& VelPatchBc){
 	SetVelocity(VelPatchBc.Get_VelocityModel(),VelPatchBc.Get_VelocityType());
 	std::vector<int> NodeIdx=VelPatchBc.Get_NodeIndexByType();
-	std::vector<int> NodeIdxSpecialWalls=VelPatchBc.Get_NodeIndexSpecialWalls();
-	std::vector<int> NodeIdxGlobalCorner=VelPatchBc.Get_NodeIndexGlobalCorner();
+	std::vector<int> NodeIdxSpecialWalls=VelPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=VelPatchBc.Get_NodeIndexByTypeGlobalCorner();
 
 	for (int j=0;j<NodeIdx.size();j++)
 	{
@@ -684,8 +684,8 @@ void D2Q9::ApplyPatchVelocity(VelocityPatchBc& VelPatchBc){
 void D2Q9::ApplyPatchPressure(PressurePatchBc& PresPatchBc){
 	SetPressure(PresPatchBc.Get_PressureModel(),PresPatchBc.Get_PressureType());
 	std::vector<int> NodeIdx=PresPatchBc.Get_NodeIndexByType();
-	std::vector<int> NodeIdxSpecialWalls=PresPatchBc.Get_NodeIndexSpecialWalls();
-	std::vector<int> NodeIdxGlobalCorner=PresPatchBc.Get_NodeIndexGlobalCorner();
+	std::vector<int> NodeIdxSpecialWalls=PresPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=PresPatchBc.Get_NodeIndexByTypeGlobalCorner();
 
 	for (int j=0;j<NodeIdx.size();j++)
 	{
@@ -705,8 +705,8 @@ void D2Q9::ApplyPatchPressure(PressurePatchBc& PresPatchBc){
 void D2Q9::ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc){
 	SetSymmetry(SymPatchBc.Get_SymmetryType());
 	std::vector<int> NodeIdx=SymPatchBc.Get_NodeIndexByType();
-	std::vector<int> NodeIdxSpecialWalls=SymPatchBc.Get_NodeIndexSpecialWalls();
-	std::vector<int> NodeIdxGlobalCorner=SymPatchBc.Get_NodeIndexGlobalCorner();
+	std::vector<int> NodeIdxSpecialWalls=SymPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=SymPatchBc.Get_NodeIndexByTypeGlobalCorner();
 
 	for (int j=0;j<NodeIdx.size();j++)
 	{
@@ -725,8 +725,8 @@ void D2Q9::ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc){
 void D2Q9::ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc){
 	SetPeriodic(PerPatchBc.Get_PeriodicType());
 	std::vector<int> NodeIdx=PerPatchBc.Get_NodeIndexByType();
-	std::vector<int> NodeIdxSpecialWalls=PerPatchBc.Get_NodeIndexSpecialWalls();
-	std::vector<int> NodeIdxGlobalCorner=PerPatchBc.Get_NodeIndexGlobalCorner();
+	std::vector<int> NodeIdxSpecialWalls=PerPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	std::vector<int> NodeIdxGlobalCorner=PerPatchBc.Get_NodeIndexByTypeGlobalCorner();
 	for (int j=0;j<NodeIdx.size();j++)
 	{
 			ApplyPeriodic(NodeArrays->NodePeriodic[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_connect(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_UDef(),f,Rho,U[0],U[1]);

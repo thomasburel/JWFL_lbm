@@ -86,7 +86,34 @@ namespace ColourFluidEnum{
 	enum RecolouringType{LatvaKokkoRothman};
 	enum ColourOperatorType {Grunau,Reis,SurfaceForce};
 }
+class PorousMediaParameters{
+private:
+	friend class boost::serialization::access;
+	template<class Archive>
+	void serialize(Archive &ar, const unsigned int version)
+	{
+		ar & BOOST_SERIALIZATION_NVP(porousmediacase);
+		ar & BOOST_SERIALIZATION_NVP(calculatePorosity);
+		ar & BOOST_SERIALIZATION_NVP(calculateProductionRate);
+		ar & BOOST_SERIALIZATION_NVP(calculatePermeability);
+	}
+public:
+	void PorousMediaCase(bool porousmediacase_) { porousmediacase=porousmediacase_;};
+	void CalculatePorosity(bool calculatePorosity_)  { calculatePorosity=calculatePorosity_;};
+	void CalculateProductionRate(bool calculateProductionRate_)  { calculateProductionRate=calculateProductionRate_;};
+	void CalculatePermeability(bool calculatePermeability_ )  { calculatePermeability=calculatePermeability_;};
+	bool IsPorousMediaCase() const {return porousmediacase;};
+	bool IsCalculatePorosity() const {return calculatePorosity;};
+	bool IsCalculateProductionRate() const {return calculateProductionRate;};
+	bool IsCalculatePermeability() const {return calculatePermeability;};
 
+protected:
+	bool porousmediacase;
+	bool calculatePorosity;
+	bool calculateProductionRate;
+	bool calculatePermeability;
+
+};
 class ColourFluid{
 private:
 	friend class boost::serialization::access;
@@ -533,7 +560,8 @@ class Parameters :
 		public BoundaryParameters,
 		public SolverParameters,
 		public CalculationParameters,
-		public RestartParameters
+		public RestartParameters,
+		public PorousMediaParameters
 {
 private:
 	friend class boost::serialization::access;
@@ -549,7 +577,7 @@ private:
 		ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(SolverParameters);
 		ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(CalculationParameters);
 		ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(RestartParameters);
-
+		ar & BOOST_SERIALIZATION_BASE_OBJECT_NVP(PorousMediaParameters);
 		ar & BOOST_SERIALIZATION_NVP(verbous);
 	}
 public:

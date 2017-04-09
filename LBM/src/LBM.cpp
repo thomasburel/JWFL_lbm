@@ -136,7 +136,7 @@ int main(int argc, char *argv[]) {
 /// Interval for output
 	Param.Set_OutPutNSteps(1000);// interval
 ///Display information during the calculation every N iteration
-	Param.Set_listing(20000);
+	Param.Set_listing(200);
 	Param.Set_ErrorMax(1e-15);
 	Param.Set_ErrorVariable(SolverEnum::RhoN);
 
@@ -182,11 +182,17 @@ int main(int argc, char *argv[]) {
 	Param.Set_SurfaceTension(sigma);
 	Param.Set_ATau(Param.Convert_SigmaToATau());
 	//Colour fluid Parameters
-	Param.Set_ColourGradLimiter(0.000001);
+	Param.Set_ColourGradLimiter(0.00001);
 	Param.Set_Beta(0.7);// Between 0 and 1
 	Param.Set_ColourGradType(ColourFluidEnum::DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
 	Param.Set_RecolouringType(ColourFluidEnum::LatvaKokkoRothman);
 	Param.Set_ColourOperatorType(ColourFluidEnum::Reis);//Grunau or Reis or SurfaceForce
+
+// Porous media
+	Param.PorousMediaCase(true) ;
+	Param.CalculatePorosity(true)  ;
+	Param.CalculateProductionRate(true) ;
+	Param.CalculatePermeability(true) ;
 
 	/// Define the Output filename
 	/*	FileExportStream<<"Droplet_shear_"<< fixed << setprecision(0)<<H<<"x"<<L
