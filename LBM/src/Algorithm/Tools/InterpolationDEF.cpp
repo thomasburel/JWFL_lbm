@@ -315,8 +315,9 @@ void InterpolationLinearLeastSquare::Mark_FluidIds(NodeArrays2D *PtrNodes,std::v
 }
 void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::vector<int>& next, int &countnwalls, int &countsolid){
 	int nodeIdlocal=0;
-	int nodeIdlocaltmp=0;
+	//int nodeIdlocaltmp=0;
 	NextNode NextNodetmp;
+	double x_tmp,y_tmp;
 	for(int i=0;i<next.size();i++)
 	{
 		nodeIdlocal=PtrNodes->NodeIndexByType[next[i]];
@@ -330,11 +331,12 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 				NextNodetmp.index=solidIdtmp.back();
 				//solidId[countnwalls][countsolid]=(PtrNodes->NodeWall[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeWall[nodeIdlocal].Get_BcNormal()]]);
 				//NextNodetmp.index=solidId[countnwalls][countsolid];
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
+//				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
 				//nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidId[countnwalls][countsolid]];
 	//			solidDist[countnwalls][countsolid]=-DistToWall(PtrNodes->NodeSolid[nodeIdlocal].get_x(),PtrNodes->NodeSolid[nodeIdlocal].get_y());
-				solidDisttmp.push_back(-DistToWall(PtrNodes->NodeSolid[nodeIdlocaltmp].get_x(),PtrNodes->NodeSolid[nodeIdlocaltmp].get_y()));
-			//	NextNodetmp.distance=-solidDist[countnwalls][countsolid];
+				PtrNodes->Get_coordinate(solidIdtmp.back(),x_tmp,y_tmp);
+				solidDisttmp.push_back(-DistToWall(x_tmp,y_tmp));
+				//	NextNodetmp.distance=-solidDist[countnwalls][countsolid];
 				NextNodetmp.distance=-solidDisttmp.back();
 				NextNodetmp.rankMarkNodes=countsolid;
 				SolidChecked.push_back(NextNodetmp);
@@ -349,10 +351,11 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 				NextNodetmp.index=solidIdtmp.back();
 				//solidId[countnwalls][countsolid]=(PtrNodes->NodeCorner[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeCorner[nodeIdlocal].Get_BcNormal()]]);
 				//NextNodetmp.index=solidId[countnwalls][countsolid];
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
+//				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
 				//nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidId[countnwalls][countsolid]];
 				//solidDist[countnwalls][countsolid]=-DistToWall(PtrNodes->NodeSolid[nodeIdlocal].get_x(),PtrNodes->NodeSolid[nodeIdlocal].get_y());
-				solidDisttmp.push_back(-DistToWall(PtrNodes->NodeSolid[nodeIdlocaltmp].get_x(),PtrNodes->NodeSolid[nodeIdlocaltmp].get_y()));
+				PtrNodes->Get_coordinate(solidIdtmp.back(),x_tmp,y_tmp);
+				solidDisttmp.push_back(-DistToWall(x_tmp,y_tmp));
 				//NextNodetmp.distance=-solidDist[countnwalls][countsolid];
 				NextNodetmp.distance=-solidDisttmp.back();
 				NextNodetmp.rankMarkNodes=countsolid;
@@ -367,10 +370,12 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 				NextNodetmp.index=solidIdtmp.back();
 	//			solidId[countnwalls][countsolid]=(PtrNodes->NodeCorner[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeCorner[nodeIdlocal].Get_BcNormal()]]);
 	//			NextNodetmp.index=solidId[countnwalls][countsolid];
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
+
+				//nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
 				//nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidId[countnwalls][countsolid]];
 				//solidDist[countnwalls][countsolid]=-DistToWall(PtrNodes->NodeSolid[nodeIdlocal].get_x(),PtrNodes->NodeSolid[nodeIdlocal].get_y());
-				solidDisttmp.push_back(-DistToWall(PtrNodes->NodeSolid[nodeIdlocaltmp].get_x(),PtrNodes->NodeSolid[nodeIdlocaltmp].get_y()));
+				PtrNodes->Get_coordinate(solidIdtmp.back(),x_tmp,y_tmp);
+				solidDisttmp.push_back(-DistToWall(x_tmp,y_tmp));
 				//NextNodetmp.distance=-solidDist[countnwalls][countsolid];
 				NextNodetmp.distance=-solidDisttmp.back();
 				NextNodetmp.rankMarkNodes=countsolid;
@@ -385,10 +390,11 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 				NextNodetmp.index=solidIdtmp.back();
 				//solidId[countnwalls][countsolid]=(PtrNodes->NodeCorner[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeCorner[nodeIdlocal].Get_BcNormal()]]);
 				//NextNodetmp.index=solidId[countnwalls][countsolid];
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
+	//			nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
 				//nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidId[countnwalls][countsolid]];
 				//solidDist[countnwalls][countsolid]=-DistToWall(PtrNodes->NodeSolid[nodeIdlocal].get_x(),PtrNodes->NodeSolid[nodeIdlocal].get_y());
-				solidDisttmp.push_back(-DistToWall(PtrNodes->NodeSolid[nodeIdlocaltmp].get_x(),PtrNodes->NodeSolid[nodeIdlocaltmp].get_y()));
+				PtrNodes->Get_coordinate(solidIdtmp.back(),x_tmp,y_tmp);
+				solidDisttmp.push_back(-DistToWall(x_tmp,y_tmp));
 				//NextNodetmp.distance=-solidDist[countnwalls][countsolid];
 				NextNodetmp.distance=-solidDisttmp.back();
 				NextNodetmp.rankMarkNodes=countsolid;
@@ -407,8 +413,9 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 				countsolid++;
 				solidIdtmp.push_back(PtrNodes->NodeSpecialWall[nodeIdlocal].Get_connect()[PtrOppositeInterpol[PtrNodes->NodeSpecialWall[nodeIdlocal].Get_BcNormal()]]);
 				NextNodetmp.index=solidIdtmp.back();
-				nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
-				solidDisttmp.push_back(-DistToWall(PtrNodes->NodeSolid[nodeIdlocaltmp].get_x(),PtrNodes->NodeSolid[nodeIdlocaltmp].get_y()));
+	//			nodeIdlocaltmp=PtrNodes->NodeIndexByType[solidIdtmp.back()];
+				PtrNodes->Get_coordinate(solidIdtmp.back(),x_tmp,y_tmp);
+				solidDisttmp.push_back(-DistToWall(x_tmp,y_tmp));
 				NextNodetmp.distance=-solidDisttmp.back();
 				NextNodetmp.rankMarkNodes=countsolid;
 				SolidChecked.push_back(NextNodetmp);
