@@ -144,3 +144,6 @@ void Cell2D::Set_NodeNumber(int NodeNumber_, int IdNode)
 {
 	NodeNumber[NodeNumber_]=IdNode;
 }
+void Cell2D::Remove_Connect(int CellNumber,int FaceNumber){
+	Connect[FaceNumber][1]=CellNumber;
+}

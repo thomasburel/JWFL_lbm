@@ -60,6 +60,9 @@ public:
 			  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
 	void Set_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
 			  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
+	void Set_GhostTypeAsGhost(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
+			  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
+
 	//void Remove_SolidTypeInCommunicators(std::vector<int> & NodeTypeN,std::vector<int> & NodeTypeE,std::vector<int> & NodeTypeS,std::vector<int> & NodeTypeW,
 	//		  std::vector<int> & NodeTypeSW,std::vector<int> & NodeTypeSE,std::vector<int> & NodeTypeNW,std::vector<int> & NodeTypeNE);
 	//void Remove_SolidTypeInCommunicator(std::vector<int> & RealNodeType,std::vector<int> & GhostNodeType,
@@ -88,6 +91,7 @@ public:
 	//void Keep_FirstLayerSolidInCommunicatorsForGhostNodes(std::vector<int> & GhostFirstLayerSolidIdN,std::vector<int> & GhostFirstLayerSolidIdE,std::vector<int> & GhostFirstLayerSolidIdS,std::vector<int> & GhostFirstLayerSolidIdW,
 	//		  std::vector<int> & GhostFirstLayerSolidIdSW,std::vector<int> & GhostFirstLayerSolidIdSE,std::vector<int> & GhostFirstLayerSolidIdNW,std::vector<int> & GhostFirstLayerSolidIdNE);
 
+	void ConvertSolidInGhostToGhostnode();
 private:
 
 	void Remove_SolidTypeInCommunicatorForRealNodes(std::vector<int> & RealNodeType,
@@ -101,6 +105,7 @@ public:
 	void GenerateSolid(Parameters &Param);
 	void SetSolidBoundaries();
 	void RemoveUnphysicalSolid(int &nbTotalSolidRemoved,int &nbTotalSolidadded);
+	void ConvertGlobalCorners();
 	//void RemoveSolidInCommunicator();
 	void RemoveSolid();
 private:
@@ -117,6 +122,7 @@ private:
 	void Clear_MarkNode();
 	void DefinedCornerType(int nodenumber);
 	int Connect_lowOrder(int &NodeNumber,unsigned int& direction);
+	bool IsSpecialWallAtGlocalCorner(int idx);
 	void Connect_highOrder();
 
 //	void Get_coordinate(int index,double & x, double & y);
@@ -147,8 +153,16 @@ private:
 	void Remove_OneCell(int cellnumber);
 	void Remove_ExtraGhostCells();
 	void Remove_SolidCells();
+	void Remove_CellConnections(int cellid);
+	void Remove_NodeConnections(int nodeid);
+	int OppositeDirection(int direction);
+	void RemoveWrongGhostCells();
+	bool IsGhostConnectToGhost(int idx);
 	void Correct_GhostType(int  idNode, NodeType RealNodeType);
+	void Correct_SolidGhostType(int  idNode, NodeType RealNodeType);
 	void Set_CommNodes();
+
+
 
 private:
 	//For Debug

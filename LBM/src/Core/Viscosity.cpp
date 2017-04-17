@@ -39,10 +39,12 @@ void Viscosity::Set_Viscosity(Parameters *Param){
 		visco->Set_mu(Param->Convert_NutoMu(Param->Convert_TauToNu(Param->Get_Tau_1()),Param->Get_Rho_1()),Param->Convert_NutoMu(Param->Convert_TauToNu(Param->Get_Tau_2()),Param->Get_Rho_2()));
 	}
 }
-double Viscosity::Get_Nu(double const &Rho, double const &RhoN){
+double Viscosity::Get_Nu(double const Rho, double const RhoN){
 	return visco->Get_Nu(Rho,RhoN);
 }
-
+double Viscosity::Get_Mu(double const Rho, double const RhoN){
+	return visco->Get_Mu(Rho,RhoN);
+}
 ViscosityDEF::ViscosityDEF() {
 
 }

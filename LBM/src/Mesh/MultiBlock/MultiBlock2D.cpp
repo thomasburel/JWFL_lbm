@@ -813,6 +813,7 @@ void MultiBlock2D::Get_Connect_SolidNode(std::vector<int> & IdRNodeN_,std::vecto
 		Block2D_.SetSolidBoundaries();
 //	 Block2D_.ModifyMeshByUser(*PtrParameters);
 	 MultiBlock2D::Correct_SolidGhost();
+
 //	 Block2D_.RemoveSolidInCommunicator();
 	 if(parallel->isMainProcessor())
 		 std::cout<<"******END GENERATING WALL AND CORNERS******"<<std::endl;
@@ -827,7 +828,9 @@ void MultiBlock2D::GeneratePatchBc(){
 	Block2D_.InitPatchBc(PtrParameters);
 }
 void MultiBlock2D::reorganizeNodeByType(){
-
+	Block2D_.ConvertSolidInGhostToGhostnode();
+	// Nedd to add a function to remove solid and unused cells and remove unused solid and ghost/solidghost nodes
+	// Can add a function two adds a second layer of ghost for higher order gradients
 	Block2D_.reorganizeNodeByType();
 	Block2D_.Set_NodeIndexByTypeForPatchBc();
 	Block2D_.Set_Connect(*PtrParameters);
@@ -989,6 +992,86 @@ void MultiBlock2D::Correct_SolidGhost()
 		MPI_Recv(&IdGNodeSE[0],IdGNodeSE.size(),MPI_INT,BlockNeighbour[SE],tag_d_bl,parallel->getGlobalCommunicator(),&status);
 	}
 	 	Block2D_.Set_GhostType(IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE);
+
+}
+void MultiBlock2D::Correct_SolidGhostAsGhost()
+{
+	 int tag_x_r=1;
+	 int tag_x_l=2;
+	 int tag_y_t=3;
+	 int tag_y_b=4;
+	 std::vector<int> IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE;
+	 std::vector<int> IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE;
+	 Block2D_.Get_GhostType(IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE);
+	 IdGNodeN=IdRNodeN;
+	 IdGNodeE= IdRNodeE;
+	 IdGNodeS=IdRNodeS;
+	 IdGNodeW=IdRNodeW;
+	 IdGNodeSW=IdRNodeSW;
+	 IdGNodeSE=IdRNodeSE;
+	 IdGNodeNW=IdRNodeNW;
+	 IdGNodeNE=IdRNodeNE;
+	 MPI_Status status;
+
+	 if(BlockNeighbour[W]>=0)
+	 {
+		 MPI_Send(&IdRNodeW[0],IdRNodeW.size(),MPI_INT,BlockNeighbour[W],tag_x_l,parallel->getGlobalCommunicator());
+
+	 }
+	 if(BlockNeighbour[E]>=0)
+	 {
+		 MPI_Recv(&IdGNodeE[0],IdGNodeE.size(),MPI_INT,BlockNeighbour[E],tag_x_l,parallel->getGlobalCommunicator(),&status);
+		 MPI_Send(&IdRNodeE[0],IdRNodeE.size(),MPI_INT,BlockNeighbour[E],tag_x_l,parallel->getGlobalCommunicator());
+	 }
+	 if(BlockNeighbour[W]>=0)
+	 {
+		 MPI_Recv(&IdGNodeW[0],IdGNodeW.size(),MPI_INT,BlockNeighbour[W],tag_x_l,parallel->getGlobalCommunicator(),&status);
+	 }
+	  if(BlockNeighbour[S]>=0)
+	 {
+		 MPI_Send(&IdRNodeS[0],IdRNodeS.size(),MPI_INT,BlockNeighbour[S],tag_y_b,parallel->getGlobalCommunicator());
+	 }
+	 if(BlockNeighbour[N]>=0)
+	 {
+		 MPI_Recv(&IdGNodeN[0],IdGNodeN.size(),MPI_INT,BlockNeighbour[N],tag_y_b,parallel->getGlobalCommunicator(),&status);
+		 MPI_Send(&IdRNodeN[0],IdRNodeN.size(),MPI_INT,BlockNeighbour[N],tag_y_b,parallel->getGlobalCommunicator());
+	 }
+	 if(BlockNeighbour[S]>=0)
+	 {
+		 MPI_Recv(&IdGNodeS[0],IdGNodeS.size(),MPI_INT,BlockNeighbour[S],tag_y_b,parallel->getGlobalCommunicator(),&status);
+	 }
+	 int tag_d_bl=5;
+	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;
+
+
+	if(BlockNeighbour[SW]>=0)
+	{
+		MPI_Send(&IdRNodeSW[0],IdRNodeSW.size(),MPI_INT,BlockNeighbour[SW],tag_d_bl,parallel->getGlobalCommunicator());
+	}
+	if(BlockNeighbour[NE]>=0)
+	{
+		MPI_Recv(&IdGNodeNE[0],IdGNodeNE.size(),MPI_INT,BlockNeighbour[NE],tag_d_bl,parallel->getGlobalCommunicator(),&status);
+		MPI_Send(&IdRNodeNE[0],IdRNodeNE.size(),MPI_INT,BlockNeighbour[NE],tag_d_bl,parallel->getGlobalCommunicator());
+	}
+	if(BlockNeighbour[SW]>=0)
+	{
+		MPI_Recv(&IdGNodeSW[0],IdGNodeSW.size(),MPI_INT,BlockNeighbour[SW],tag_d_bl,parallel->getGlobalCommunicator(),&status);
+	}
+
+	if(BlockNeighbour[SE]>=0)
+	{
+		MPI_Send(&IdRNodeSE[0],IdRNodeSE.size(),MPI_INT,BlockNeighbour[SE],tag_d_bl,parallel->getGlobalCommunicator());
+	}
+	if(BlockNeighbour[NW]>=0)
+	{
+		MPI_Recv(&IdGNodeNW[0],IdGNodeNW.size(),MPI_INT,BlockNeighbour[NW],tag_d_bl,parallel->getGlobalCommunicator(),&status);
+		MPI_Send(&IdRNodeNW[0],IdRNodeNW.size(),MPI_INT,BlockNeighbour[NW],tag_d_bl,parallel->getGlobalCommunicator());
+	}
+	if(BlockNeighbour[SE]>=0)
+	{
+		MPI_Recv(&IdGNodeSE[0],IdGNodeSE.size(),MPI_INT,BlockNeighbour[SE],tag_d_bl,parallel->getGlobalCommunicator(),&status);
+	}
+	 	Block2D_.Set_GhostTypeAsGhost(IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE);
 
 }
 

@@ -56,6 +56,7 @@ public:
 	virtual void reorganizeNodeByType();
 	virtual NodeArrays2D* Get_NodeArrays2D();
 	void Correct_SolidGhost();
+	void Correct_SolidGhostAsGhost();
 	void Remove_SolidInComunicators();
 	virtual int* get_Block_Connect(){return &BlockNeighbour[0];};
 	virtual double SumBC(double *value);

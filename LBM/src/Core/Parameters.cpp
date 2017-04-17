@@ -343,6 +343,29 @@ void Parameters::Add_VariableToInit(std::string filename,SolverEnum::variablesSo
 		std::cout<<"Variable to Init is not found"<<std::endl;
 	}
 }
+void PorousMediaParameters::Set_PositionMedia(unsigned int minX,unsigned int maxX,unsigned int minY,unsigned int maxY,unsigned int minZ,unsigned int maxZ){
+	MinX=minX;
+	MaxX=maxX;
+	MinY=minY;
+	MaxY=maxY;
+	MinZ=minZ;
+	MaxZ=maxZ;
+	if(MinX>MaxX)
+		MinX=MaxX;
+	if(MinY>MaxY)
+		MinY=MaxY;
+	if(MinZ>MaxZ)
+		MinZ=MaxZ;
+}
+void PorousMediaParameters::Get_PositionMedia(unsigned int &minX,unsigned int &maxX,unsigned int &minY,unsigned int &maxY,unsigned int &minZ,unsigned int &maxZ){
+	minX=MinX;
+	maxX=MaxX;
+	minY=MinY;
+	maxY=MaxY;
+	minZ=MinZ;
+	maxZ=MaxZ;
+}
+
 void Parameters::CheckParameters()
 {
 	switch(scheme)

@@ -548,7 +548,7 @@ void PatchBc::Set_orientation(std::vector<Node2D*> Node){
 					}
 					else
 					{
-						std::cout<<"Orientation of the Patch cannot be determined."<<std::endl;
+						//std::cout<<"Orientation of the Patch cannot be determined."<<std::endl;
 						Orientation.push_back(-1);//Set to error value
 					}
 					break;
@@ -562,7 +562,7 @@ void PatchBc::Set_orientation(std::vector<Node2D*> Node){
 					}
 					else
 					{
-						std::cout<<"Orientation of the Patch cannot be determined."<<std::endl;
+						//std::cout<<"Orientation of the Patch cannot be determined."<<std::endl;
 						Orientation.push_back(-1);//Set to error value
 					}
 					break;
@@ -576,7 +576,7 @@ void PatchBc::Set_orientation(std::vector<Node2D*> Node){
 					}
 					else
 					{
-						std::cout<<"Orientation of the Patch cannot be determined."<<std::endl;
+						//std::cout<<"Orientation of the Patch cannot be determined."<<std::endl;
 						Orientation.push_back(-1);//Set to error value
 					}
 					break;
@@ -590,7 +590,7 @@ void PatchBc::Set_orientation(std::vector<Node2D*> Node){
 					}
 					else
 					{
-						std::cout<<"Orientation of the Patch cannot be determined."<<std::endl;
+						//std::cout<<"Orientation of the Patch cannot be determined."<<std::endl;
 						Orientation.push_back(-1);//Set to error value
 					}
 					break;
@@ -604,7 +604,7 @@ void PatchBc::Set_orientation(std::vector<Node2D*> Node){
 					}
 					else
 					{
-						std::cout<<"Orientation of the Patch cannot be determined."<<std::endl;
+						//std::cout<<"Orientation of the Patch cannot be determined."<<std::endl;
 						Orientation.push_back(-1);//Set to error value
 					}
 					break;

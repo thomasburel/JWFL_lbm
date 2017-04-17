@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
 	double Rho2_ref=Rho1_ref;
 
 
-	double lambda=2.0/43.0;
+	double lambda=4.0/43.0;
 	double nu_1=2.5*1.e-2/lambda;//4.91*1.e-2/lambda;
 	double nu_2=lambda*nu_1;
 
@@ -132,7 +132,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(10000000);
+	Param.Set_NbStep(10000);
 /// Interval for output
 	Param.Set_OutPutNSteps(1000);// interval
 ///Display information during the calculation every N iteration
@@ -145,7 +145,7 @@ int main(int argc, char *argv[]) {
 
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(SolverEnum::ColourFluid);
+	Param.Set_Model(SolverEnum::SinglePhase);
 	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
 	if(Param.Get_ViscosityType()==ConstViscosity)
 		lambda=1;
@@ -193,6 +193,9 @@ int main(int argc, char *argv[]) {
 	Param.CalculatePorosity(true)  ;
 	Param.CalculateProductionRate(true) ;
 	Param.CalculatePermeability(true) ;
+	Param.Set_SectionMedia(H);
+	Param.Set_LenghtMedia(L);
+	Param.Set_PositionMedia(0,L,0,H);
 
 	/// Define the Output filename
 	/*	FileExportStream<<"Droplet_shear_"<< fixed << setprecision(0)<<H<<"x"<<L
@@ -222,7 +225,7 @@ int main(int argc, char *argv[]) {
 				<<Param.Get_Beta()<<"-beta_"<<Param.Get_ContactAngle()*180.0/pi<<"-teta_"
 						<< scientific<<setprecision(3)<<"sigma_"<<sigma<<"_ColourGradLimiter"<<Param.Get_ColourGradLimiter();
 */
-		FileExportStream.str("TestBcs_TwoPhase_sigma0.002_noncst_change50");
+		FileExportStream.str("TestBcs_TwoPhase_sigma0.002_noncst_change50x");
 		Param.Set_OutputFileName(FileExportStream.str());
 
 //	Param.Set_OutputFileName("Testread");

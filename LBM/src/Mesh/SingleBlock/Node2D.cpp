@@ -136,6 +136,27 @@ void Node2D::Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigne
 	Connect_W=Connect_W_-1;
 	Connect_E=Connect_E_-1;
 }
+void Node2D::Remove_Connect(int direction){
+	switch (direction)
+	{
+	case 0:
+		Connect_S=index;
+		break;
+	case 1:
+		Connect_E=index;
+		break;
+	case 2:
+		Connect_N=index;
+		break;
+	case 3:
+		Connect_W=index;
+		break;
+	default:
+		std::cerr<<"Wrong Connection ask. Default Connection in South node "<<std::endl;
+		Connect_S=index;
+		break;
+	}
+}
 void Node2D::Set_Connect(int* Connect_,int NbVelocity)
 {
 	if(Connect!=0)

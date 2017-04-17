@@ -824,7 +824,7 @@ void D2Q9ColourFluid::run(){
 //	Write_Breakpoint(PtrParameters);
 
 	Writer->Write_Output(it);
-
+	Convergence::Calcul_Error(it);
 //	Writer->Write_breakpoint(*PtrParameters);
 	it++;
 	if(parallel->getSize()>1)

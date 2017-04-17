@@ -24,6 +24,7 @@ public:
 	std::vector<int> CornerConvex;
 
     int Get_NodeIndex(int const IndexNodeInDomain){return NodeIndexByType[IndexNodeInDomain];};
+ //   virtual void ChangeNodeType(int NodeNumberbyType,NodeType OldNodeType_, NodeType NewNodeType_)=0;
 
     virtual int Get_SizeNodeIdInterior()=0;
 	virtual int& Get_NodeIdInterior(int idx)=0;
@@ -55,7 +56,7 @@ public:
 
 
 	virtual void Get_coordinate(int index,double & x, double & y)=0;
-
+	virtual void Get_CoordinateNextNodeAtNormal(int index,double & x, double & y)=0;
 };
 
 class NodeArrays2D: public NodeArrays{
@@ -75,7 +76,10 @@ public:
 	std::vector<NodePressure2D> NodePressure;
 	std::vector<NodeSymmetry2D> NodeSymmetry;
 
+	//virtual void ChangeNodeType(int NodeNumberbyType,NodeType OldNodeType_, NodeType NewNodeType_);
+
 	virtual void Get_coordinate(int index,double & x, double & y);
+	virtual void Get_CoordinateNextNodeAtNormal(int index,double & x, double & y);
 
 	virtual int Get_SizeNodeIdInterior(){return NodeInterior.size();};
 	virtual int& Get_NodeIdInterior(int idx){return NodeInterior[idx].Get_index();};

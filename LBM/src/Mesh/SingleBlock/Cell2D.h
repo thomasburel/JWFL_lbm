@@ -27,6 +27,7 @@ public:
 	void Set_Face(int FaceNumber, int& node1, int& node2);
 	short int* Get_Face(int FaceNumber)const;
 	void Set_Connect(int FaceNumber, int face_, int cell_);
+	void Remove_Connect(int CellNumber,int FaceNumber);
 	int* Get_Connect(int FaceNumber)const;
 	void Set_NodeNumber(int NodeNumber_[4]);
 	void Set_NodeNumber(int NodeNumber_, int IdNode);

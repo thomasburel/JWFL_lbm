@@ -48,6 +48,7 @@ public:
 	//void Set_WallType(Node2D* Node);
 	//void Set_CornerType(Node2D* Node);
 	void Set_Connect(unsigned int Connect_N_,unsigned int Connect_S_,unsigned int Connect_W_,unsigned int Connect_E_);
+	void Remove_Connect(int direction);
 	void Set_Connect(int* Connect_=0,int NbVelocity=0);
 	unsigned int& Get_connect(unsigned int direction);
 	int* Get_connect(){return Connect;};

@@ -106,12 +106,20 @@ public:
 	bool IsCalculatePorosity() const {return calculatePorosity;};
 	bool IsCalculateProductionRate() const {return calculateProductionRate;};
 	bool IsCalculatePermeability() const {return calculatePermeability;};
+	void Set_LenghtMedia(double lenghtIn){LenghtMedia=lenghtIn;};
+	double Get_LenghtMedia(){return LenghtMedia;};
+	void Set_SectionMedia(double sectionIn){SectionMedia=sectionIn;};
+	double Get_SectionMedia(){return SectionMedia;};
+	void Set_PositionMedia(unsigned int minX,unsigned int maxX,unsigned int minY,unsigned int maxY,unsigned int minZ=0,unsigned int maxZ=0);
+	void Get_PositionMedia(unsigned int &minX,unsigned int &maxX,unsigned int &minY,unsigned int &maxY,unsigned int &minZ,unsigned int &maxZ);
 
 protected:
 	bool porousmediacase;
 	bool calculatePorosity;
 	bool calculateProductionRate;
 	bool calculatePermeability;
+	double LenghtMedia,SectionMedia;
+	int MinX,MaxX,MinY,MaxY,MinZ,MaxZ;
 
 };
 class ColourFluid{
