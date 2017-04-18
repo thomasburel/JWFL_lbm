@@ -2451,6 +2451,47 @@ bool Block2D::DetectSolidBoundaries(int & nodeID){
 			if(Node[nodeID]->get_x()==0||Node[nodeID]->get_x()==nx
 			 ||Node[nodeID]->get_y()==0||Node[nodeID]->get_y()==ny)
 			{
+				if(Node[nodeID]->get_x()==0)
+				{
+					if(Node[Node[nodeID]->Get_connect(1)]->get_NodeType()!=Solid)
+						IdWalltmp.push_back(nodeID);
+					else if((Node[Node[nodeID]->Get_connect(2)]->get_NodeType()==Solid || Node[Node[nodeID]->Get_connect(2)]->get_NodeType()==Wall) &&
+							(Node[Node[nodeID]->Get_connect(0)]->get_NodeType()==Solid || Node[Node[nodeID]->Get_connect(0)]->get_NodeType()==Wall))
+						IdCornerConcavetmp.push_back(nodeID);
+					else
+						IdSpecialWalltmp.push_back(nodeID);
+				}
+				else if(Node[nodeID]->get_x()==nx)
+				{
+					if(Node[Node[nodeID]->Get_connect(3)]->get_NodeType()!=Solid)
+						IdWalltmp.push_back(nodeID);
+					else if((Node[Node[nodeID]->Get_connect(2)]->get_NodeType()==Solid || Node[Node[nodeID]->Get_connect(2)]->get_NodeType()==Wall) &&
+							(Node[Node[nodeID]->Get_connect(0)]->get_NodeType()==Solid || Node[Node[nodeID]->Get_connect(0)]->get_NodeType()==Wall))
+						IdCornerConcavetmp.push_back(nodeID);
+					else
+						IdSpecialWalltmp.push_back(nodeID);
+				}
+				else if(Node[nodeID]->get_y()==0)
+				{
+					if(Node[Node[nodeID]->Get_connect(2)]->get_NodeType()!=Solid)
+						IdWalltmp.push_back(nodeID);
+					else if((Node[Node[nodeID]->Get_connect(1)]->get_NodeType()==Solid || Node[Node[nodeID]->Get_connect(1)]->get_NodeType()==Wall) &&
+							(Node[Node[nodeID]->Get_connect(3)]->get_NodeType()==Solid || Node[Node[nodeID]->Get_connect(3)]->get_NodeType()==Wall))
+						IdCornerConcavetmp.push_back(nodeID);
+					else
+						IdSpecialWalltmp.push_back(nodeID);
+				}
+				else if(Node[nodeID]->get_y()==ny)
+				{
+					if(Node[Node[nodeID]->Get_connect(0)]->get_NodeType()!=Solid)
+						IdWalltmp.push_back(nodeID);
+					else if((Node[Node[nodeID]->Get_connect(1)]->get_NodeType()==Solid || Node[Node[nodeID]->Get_connect(1)]->get_NodeType()==Wall) &&
+							(Node[Node[nodeID]->Get_connect(3)]->get_NodeType()==Solid || Node[Node[nodeID]->Get_connect(3)]->get_NodeType()==Wall))
+						IdCornerConcavetmp.push_back(nodeID);
+					else
+						IdSpecialWalltmp.push_back(nodeID);
+				}
+/*
 				for(unsigned int j=1;j<5;j++)
 					if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Wall)
 						nbWall++;
@@ -2458,6 +2499,7 @@ bool Block2D::DetectSolidBoundaries(int & nodeID){
 					IdCornerConcavetmp.push_back(nodeID);
 				else
 					IdSpecialWalltmp.push_back(nodeID);
+					*/
 			}
 
 			else

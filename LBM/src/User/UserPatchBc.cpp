@@ -23,7 +23,7 @@ UserPatchBc::~UserPatchBc() {
 
 void UserPatchBc::IntitialiseUserPatchBc(Parameters& PtrParameters,int &NumberOfPatchBc){
 	//Set Number of Patch needed (User)
-	NumberOfPatchBc=3;
+	NumberOfPatchBc=4;
 	//Define each patch
 		//Patch 0
 	//	AddWallPatch("Wall",BounceBack);
@@ -39,21 +39,64 @@ void UserPatchBc::IntitialiseUserPatchBc(Parameters& PtrParameters,int &NumberOf
 		//PressurePatch.back().Set_extrapolationNormal(true);
 		//AddPressurePatch("Outlet",HeZouP, FixP);
 		//Patch 2
-		AddWallPatch("Wall",BounceBack);
-		//AddSymmetryPatch("Symmetry",OnNode);
+		//AddWallPatch("Wall",BounceBack);
+		AddSymmetryPatch("Symmetry",OnNode);
 		//Patch 3
-//		AddWallPatch("Wall",BounceBack);
+		AddSymmetryPatch("Symmetry",OnNode);
 
 }
-void UserPatchBc::SetUserPatchBc(Parameters& PtrParameters,int elem, int nodenumber, double* pos, int &IdPatchBc){
-		if(pos[0]==0)
-		IdPatchBc=0;
-	if(pos[0]==PtrParameters.Get_Nx())
-		IdPatchBc=1;
-	if(pos[1]==PtrParameters.Get_Ny())
-		IdPatchBc=2;
-	if(pos[1]==0)
-		IdPatchBc=2;
+void UserPatchBc::SetUserPatchBc(Parameters& PtrParameters,int elem, int nodenumber, double* pos, int &IdPatchBc1, int &IdPatchBc2){
+//left side
+	if(pos[0]==0)
+		// left bottom corner
+		if (pos[1]==0)
+		{
+			IdPatchBc1=0;
+			IdPatchBc2=2;
+		}
+	// Left top corner
+		else if(pos[1]==PtrParameters.Get_Ny())
+		{
+			IdPatchBc1=0;
+			IdPatchBc2=3;
+		}
+	//left side
+		else
+		{
+			IdPatchBc1=0;
+		}
+//right side
+	else if(pos[0]==PtrParameters.Get_Nx())
+		// right bottom corner
+		if (pos[1]==0)
+		{
+			IdPatchBc1=1;
+			IdPatchBc2=2;
+		}
+	// right top corner
+		else if(pos[1]==PtrParameters.Get_Ny())
+		{
+			IdPatchBc1=1;
+			IdPatchBc2=3;
+		}
+	//right side
+		else
+		{
+			IdPatchBc1=1;
+		}
+	else
+// Bottom
+		if (pos[1]==0)
+		{
+			IdPatchBc1=2;
+		}
+// Top
+		else if(pos[1]==PtrParameters.Get_Ny())
+		{
+			IdPatchBc1=3;
+		}
+
+
 
 }
 

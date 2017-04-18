@@ -7,7 +7,7 @@
 #include "PatchBc.h"
 
 PatchBc::PatchBc(){
-
+	NumberOfPatchBc=0;
 }
 void PatchBc::initPatchBc(std::vector<Node2D*> Node, Parameters *PtrParam){
 	int rank;
@@ -21,7 +21,7 @@ void PatchBc::initPatchBc(std::vector<Node2D*> Node, Parameters *PtrParam){
 	SelectPatchBc(PtrParam->Get_GlobalBcType(0), PtrParam, string("Bottom"), NumberOfPatchBc+2);
 	SelectPatchBc(PtrParam->Get_GlobalBcType(2), PtrParam, string("Top"), NumberOfPatchBc+3);
 	//Define temporary variables
-	double *pos;int IdPatchBc=-1;
+	double *pos;int IdPatchBc1=-1;int IdPatchBc2=-1;
 //	std::vector<int>  *IdxNode;
 //	IdxNode=new std::vector<int>[NumberOfPatchBc+4];
 
@@ -45,12 +45,17 @@ void PatchBc::initPatchBc(std::vector<Node2D*> Node, Parameters *PtrParam){
 		if(Node[i]->get_NodeType()!=Ghost && Node[i]->get_NodeType()!=SolidGhost &&
 				(pos[0]==0 || pos[0]==nx || pos[1]==0 || pos[1]==ny))
 		{
-			IdPatchBc=-1;
-			SetUserPatchBc(*PtrParam,0, i, pos, IdPatchBc);
-			if(IdPatchBc>=0 && IdPatchBc<NumberOfPatchBc)
+			IdPatchBc1=-1;IdPatchBc2=-1;
+			SetUserPatchBc(*PtrParam,0, i, pos, IdPatchBc1, IdPatchBc2);
+			if(IdPatchBc1>=0 && IdPatchBc1<NumberOfPatchBc)
 			{
-				if(IdPatchBc<NumberOfPatchBc)
-					IdxNode[IdPatchBc].push_back(i);
+				if(IdPatchBc1<NumberOfPatchBc)
+					IdxNode[IdPatchBc1].push_back(i);
+			}
+			else if(IdPatchBc2>=0 && IdPatchBc2<NumberOfPatchBc && IdPatchBc1!=IdPatchBc2)
+			{
+				if(IdPatchBc2<NumberOfPatchBc)
+					IdxNode[IdPatchBc2].push_back(i);
 			}
 			else
 			{
