@@ -300,13 +300,13 @@ double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 	double avgRhoOut=sumRhoOut/nbsumnodesOut;
 	double avgU=(sumUIn+sumUOut)/(nbsumnodesIn+nbsumnodesOut);
 	double avgMu=(sumMuIn+sumMuOut)/(nbsumnodesIn+nbsumnodesOut);
-	double deltaP=avgRhoOut-avgRhoIn;
+	double deltaP=RhoToP(avgRhoOut-avgRhoIn);
 
 	double Permeability=0;//As single Phase
 
 	if(std::abs(deltaP)>0)
 	{
-		Permeability=LengthMedium*avgMu*avgU/(SectionMedium*std::abs(deltaP));
+		Permeability=LengthMedium*avgMu*avgU/(std::abs(deltaP));
 	}
 	else
 	{

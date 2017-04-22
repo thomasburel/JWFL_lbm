@@ -2361,12 +2361,12 @@ void Block2D::DetectUnphysicalSolid(int & nodeID){
 		if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Solid)
 		{	nbSolidDirect++;	}
 	}
-	for(unsigned int j=4;j<9;j++)
+	for(unsigned int j=5;j<9;j++)
 	{
 		if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Solid)
 		{	nbSolidDiagonal++;	}
 	}
-	if(nbSolidDirect+nbSolidDiagonal<8)
+	if((nbSolidDirect+nbSolidDiagonal)<8)
 	{
 		if(nbSolidDirect==3 &&nbSolidDiagonal<2)
 		{
@@ -2444,7 +2444,7 @@ bool Block2D::DetectSolidBoundaries(int & nodeID){
 		{	nbSolidDiagonal++;	}
 	}
 
-	if(nbSolidDirect+nbSolidDiagonal<8)
+	if((nbSolidDirect+nbSolidDiagonal)<8)
 	{
 		if(nbSolidDirect==3)
 		{
@@ -3055,47 +3055,73 @@ int Block2D::Get_BcNormal(NodeCorner2D & nodeIn)
 		if(intTmpReturn<5 )
 			std::cerr<<"Wrong corner normal detection for Convex corner. "<<"x: "<< nodeIn.get_x()<<" y: "<< nodeIn.get_y()<<" Direction detected: "<<intTmpReturn<<std::endl;
 	}
+
 	return intTmpReturn;
 }
 
 int Block2D::Get_BcNormal(NodeWall2D & nodeIn)
 {
 	intTmpReturn=0;
-	for (unsigned int i=1;i<5;i++)
-		if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Interior)
-			intTmpReturn=i;
-	if(intTmpReturn==0)
+	if(nodeIn.get_x()==0)
+	{
+		intTmpReturn=1;
+	}
+	else if(nodeIn.get_x()==nx)
+	{
+		intTmpReturn=3;
+	}
+	else if(nodeIn.get_y()==0)
+	{
+		intTmpReturn=2;
+	}
+	else if(nodeIn.get_y()==ny)
+	{
+		intTmpReturn=4;
+	}
+	else
+	{
 		for (unsigned int i=1;i<5;i++)
-			if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Ghost)
-			{
-				if(i==1)
+			if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Interior)
+				intTmpReturn=i;
+		if(intTmpReturn==0)
+			for (unsigned int i=1;i<5;i++)
+				if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Ghost)
 				{
-					if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]==Wall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]]==Wall
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]==SpecialWall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]]==SpecialWall
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]==Corner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]]==Corner
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]==ConcaveCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]]==ConcaveCorner
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]==ConvexCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]]==ConvexCorner)
+					if(i==1)
+					{
+						if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]==Wall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]]==Wall
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]==SpecialWall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]]==SpecialWall
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]==Corner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]]==Corner
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]==ConcaveCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]]==ConcaveCorner
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]]==ConvexCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]]==ConvexCorner)
+							intTmpReturn=i;
+					}
+					else if(i==4)
+					{
+						if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]==Wall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]==Wall
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]==SpecialWall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]==SpecialWall
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]==Corner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]==Corner
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]==ConcaveCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]==ConcaveCorner
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]==ConvexCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]==ConvexCorner)
 						intTmpReturn=i;
+					}
+					else
+					{
+						if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i+1]]==Wall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i-1]]==Wall
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i+1]]==SpecialWall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i-1]]==SpecialWall
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i+1]]==Corner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i-1]]==Corner
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i+1]]==ConcaveCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i-1]]==ConcaveCorner
+							||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i+1]]==ConvexCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i-1]]==ConvexCorner)
+						intTmpReturn=i;
+					}
 				}
-				else if(i==4)
+		if(intTmpReturn==0)
+			for (unsigned int i=1;i<5;i++)
+				if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Pressure ||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Velocity||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Symmetry ||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i]]==Periodic )
 				{
-					if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]==Wall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]==Wall
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]==SpecialWall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]==SpecialWall
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]==Corner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]==Corner
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]==ConcaveCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]==ConcaveCorner
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]]==ConvexCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]]==ConvexCorner)
 					intTmpReturn=i;
 				}
-				else
-				{
-					if (NodeArrays.TypeOfNode[nodeIn.Get_connect()[i+1]]==Wall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i-1]]==Wall
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i+1]]==SpecialWall||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i-1]]==SpecialWall
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i+1]]==Corner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i-1]]==Corner
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i+1]]==ConcaveCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i-1]]==ConcaveCorner
-						||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i+1]]==ConvexCorner||NodeArrays.TypeOfNode[nodeIn.Get_connect()[i-1]]==ConvexCorner)
-					intTmpReturn=i;
-				}
-			}
+	}
 	if(intTmpReturn==0)
 		std::cerr<<"Wrong normal detection for a Wall node. "<<"x: "<< nodeIn.get_x()<<" y: "<< nodeIn.get_y()<<" Direction detected: "<<intTmpReturn<<std::endl;
 
@@ -4431,8 +4457,8 @@ void Block2D::Set_NodeIndexByTypeForPatchBc(){
 				PatchsBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxSpecialWallstmp);
 				PatchsBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxGlobalCornertmp);
 				PatchsBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);
-				PatchsBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
-				PatchsBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
+				PatchsBc.Set_NodeIndexByTypeSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
+				PatchsBc.Set_NodeIndexByTypeGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
 			break;
 			case SolverEnum::Periodic:
 				NodeIdx=PatchsBc.Get_PeriodicPatch()[PatchIdInType[j]].Get_NodeIndex();
@@ -4464,8 +4490,8 @@ void Block2D::Set_NodeIndexByTypeForPatchBc(){
 				PatchsBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxSpecialWallstmp);
 				PatchsBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxGlobalCornertmp);
 				PatchsBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);
-				PatchsBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
-				PatchsBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
+				PatchsBc.Set_NodeIndexByTypeSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
+				PatchsBc.Set_NodeIndexByTypeGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
 			break;
 			case SolverEnum::Symmetry:
 				NodeIdx=PatchsBc.Get_SymmetryPatch()[PatchIdInType[j]].Get_NodeIndex();
@@ -4497,8 +4523,8 @@ void Block2D::Set_NodeIndexByTypeForPatchBc(){
 				PatchsBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxSpecialWallstmp);
 				PatchsBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxGlobalCornertmp);
 				PatchsBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);
-				PatchsBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
-				PatchsBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
+				PatchsBc.Set_NodeIndexByTypeSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
+				PatchsBc.Set_NodeIndexByTypeGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);
 			break;
 			case SolverEnum::Wall:
 				NodeIdx=PatchsBc.Get_WallPatch()[PatchIdInType[j]].Get_NodeIndex();
@@ -4522,8 +4548,8 @@ void Block2D::Set_NodeIndexByTypeForPatchBc(){
 				PatchsBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxSpecialWallstmp);
 				PatchsBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxGlobalCornertmp);
 				PatchsBc.Set_NodeIndexByType(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypetmp);
-				PatchsBc.Set_NodeIndexSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
-				PatchsBc.Set_NodeIndexGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);			break;
+				PatchsBc.Set_NodeIndexByTypeSpecialWalls(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeSpecialWallstmp);
+				PatchsBc.Set_NodeIndexByTypeGlobalCorner(PatchTypeInType[j],PatchIdInType[j],NodeIdxbyTypeGlobalCornertmp);			break;
 		}
 	}
 }

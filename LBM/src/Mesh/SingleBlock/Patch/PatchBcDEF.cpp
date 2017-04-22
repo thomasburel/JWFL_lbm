@@ -13,6 +13,7 @@ PatchBcDEF::PatchBcDEF(){
 	extrapolationAlpha=false;
 	extrapolationNormal=false;
 	Inlet=false;Outlet=false;
+	orientation=-1;
 }
 
 PatchBcDEF::PatchBcDEF(std::string PatchName_){
@@ -21,6 +22,7 @@ PatchBcDEF::PatchBcDEF(std::string PatchName_){
 	extrapolationAlpha=false;
 	extrapolationNormal=false;
 	Inlet=false;Outlet=false;
+	orientation=-1;
 }
 PatchBcDEF::~PatchBcDEF(){
 

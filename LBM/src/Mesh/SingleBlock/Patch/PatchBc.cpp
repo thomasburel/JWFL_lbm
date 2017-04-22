@@ -47,15 +47,18 @@ void PatchBc::initPatchBc(std::vector<Node2D*> Node, Parameters *PtrParam){
 		{
 			IdPatchBc1=-1;IdPatchBc2=-1;
 			SetUserPatchBc(*PtrParam,0, i, pos, IdPatchBc1, IdPatchBc2);
-			if(IdPatchBc1>=0 && IdPatchBc1<NumberOfPatchBc)
+			if((IdPatchBc1>=0 && IdPatchBc1<NumberOfPatchBc)||(IdPatchBc2>=0 && IdPatchBc2<NumberOfPatchBc && IdPatchBc1!=IdPatchBc2))
 			{
-				if(IdPatchBc1<NumberOfPatchBc)
-					IdxNode[IdPatchBc1].push_back(i);
-			}
-			else if(IdPatchBc2>=0 && IdPatchBc2<NumberOfPatchBc && IdPatchBc1!=IdPatchBc2)
-			{
-				if(IdPatchBc2<NumberOfPatchBc)
-					IdxNode[IdPatchBc2].push_back(i);
+				if(IdPatchBc1>=0 && IdPatchBc1<NumberOfPatchBc)
+				{
+					if(IdPatchBc1<NumberOfPatchBc)
+						IdxNode[IdPatchBc1].push_back(i);
+				}
+				if(IdPatchBc2>=0 && IdPatchBc2<NumberOfPatchBc && IdPatchBc1!=IdPatchBc2)
+				{
+					if(IdPatchBc2<NumberOfPatchBc)
+						IdxNode[IdPatchBc2].push_back(i);
+				}
 			}
 			else
 			{
@@ -431,7 +434,7 @@ void PatchBc::RemovePatchBc(int PatchId){
 		}
 }
 bool PatchBc::Get_NodeIndex(int idPatch,std::vector<int>* &NodeIndex,std::vector<int>* &NodeIndexSpecialWalls,std::vector<int>* &NodeIndexGlobalCorner){
-	bool EmptyPatch;
+	bool NonEmptyPatch;
 	switch(PatchTypeInType[idPatch])
 			{
 			case SolverEnum::Periodic:
@@ -440,14 +443,14 @@ bool PatchBc::Get_NodeIndex(int idPatch,std::vector<int>* &NodeIndex,std::vector
 						PeriodicPatch[PatchIdInType[idPatch]].Get_NodeIndexGlobalCorner().empty())
 				{
 					NodeIndex=0;NodeIndexSpecialWalls=0;NodeIndexGlobalCorner=0;
-					EmptyPatch= false;
+					NonEmptyPatch= false;
 				}
 				else
 				{
 					NodeIndex=&PeriodicPatch[PatchIdInType[idPatch]].Get_NodeIndex();
 					NodeIndexSpecialWalls=&PeriodicPatch[PatchIdInType[idPatch]].Get_NodeIndexSpecialWalls();
 					NodeIndexGlobalCorner=&PeriodicPatch[PatchIdInType[idPatch]].Get_NodeIndexGlobalCorner();
-					EmptyPatch= true;
+					NonEmptyPatch= true;
 				}
 				break;
 			case SolverEnum::Symmetry:
@@ -456,14 +459,14 @@ bool PatchBc::Get_NodeIndex(int idPatch,std::vector<int>* &NodeIndex,std::vector
 						SymmetryPatch[PatchIdInType[idPatch]].Get_NodeIndexGlobalCorner().empty())
 				{
 					NodeIndex=0;NodeIndexSpecialWalls=0;NodeIndexGlobalCorner=0;
-					EmptyPatch= false;
+					NonEmptyPatch= false;
 				}
 				else
 				{
 					NodeIndex=&SymmetryPatch[PatchIdInType[idPatch]].Get_NodeIndex();
 					NodeIndexSpecialWalls=&SymmetryPatch[PatchIdInType[idPatch]].Get_NodeIndexSpecialWalls();
 					NodeIndexGlobalCorner=&SymmetryPatch[PatchIdInType[idPatch]].Get_NodeIndexGlobalCorner();
-					EmptyPatch= true;
+					NonEmptyPatch= true;
 				}
 				break;
 			case SolverEnum::Pressure:
@@ -472,14 +475,14 @@ bool PatchBc::Get_NodeIndex(int idPatch,std::vector<int>* &NodeIndex,std::vector
 						PressurePatch[PatchIdInType[idPatch]].Get_NodeIndexGlobalCorner().empty())
 				{
 					NodeIndex=0;NodeIndexSpecialWalls=0;NodeIndexGlobalCorner=0;
-					EmptyPatch= false;
+					NonEmptyPatch= false;
 				}
 				else
 				{
 					NodeIndex=&PressurePatch[PatchIdInType[idPatch]].Get_NodeIndex();
 					NodeIndexSpecialWalls=&PressurePatch[PatchIdInType[idPatch]].Get_NodeIndexSpecialWalls();
 					NodeIndexGlobalCorner=&PressurePatch[PatchIdInType[idPatch]].Get_NodeIndexGlobalCorner();
-					EmptyPatch= true;
+					NonEmptyPatch= true;
 				}
 				break;
 			case SolverEnum::Velocity:
@@ -488,24 +491,24 @@ bool PatchBc::Get_NodeIndex(int idPatch,std::vector<int>* &NodeIndex,std::vector
 						VelocityPatch[PatchIdInType[idPatch]].Get_NodeIndexGlobalCorner().empty())
 				{
 					NodeIndex=0;NodeIndexSpecialWalls=0;NodeIndexGlobalCorner=0;
-					EmptyPatch= false;
+					NonEmptyPatch= false;
 				}
 				else
 				{
 					NodeIndex=&VelocityPatch[PatchIdInType[idPatch]].Get_NodeIndex();
 					NodeIndexSpecialWalls=&VelocityPatch[PatchIdInType[idPatch]].Get_NodeIndexSpecialWalls();
 					NodeIndexGlobalCorner=&VelocityPatch[PatchIdInType[idPatch]].Get_NodeIndexGlobalCorner();
-					EmptyPatch= true;
+					NonEmptyPatch= true;
 				}
 				break;
 			case SolverEnum::Wall:
 				NodeIndex=&WallPatch[PatchIdInType[idPatch]].Get_NodeIndex();
 				NodeIndexSpecialWalls=&WallPatch[PatchIdInType[idPatch]].Get_NodeIndexSpecialWalls();
 				NodeIndexGlobalCorner=&WallPatch[PatchIdInType[idPatch]].Get_NodeIndexGlobalCorner();
-				EmptyPatch= false;
+				NonEmptyPatch= false;
 				break;
 			}
-	return EmptyPatch;
+	return NonEmptyPatch;
 }
 void PatchBc::Set_Inlet_outletPatch(){
 

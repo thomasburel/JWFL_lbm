@@ -68,7 +68,7 @@ private:
 	double Get_Weigth(double const &RhoN,bool const &phase1){ return Convert_RhoNToAlpha(RhoN,phase1);};
 	double Get_WeightInv(double const &Weight,bool const &phase1){ return Convert_AlphaToRhoN(Weight,phase1);};
 
-	double RhoToP(double &Rho){return 3.0*Rho;};
+	double RhoToP(double Rho){return Rho/3.0;};
 
 protected:
 	MultiBlock *PtrMultiBlockConv;

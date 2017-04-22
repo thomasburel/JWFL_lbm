@@ -47,8 +47,8 @@ int main(int argc, char *argv[]) {
 
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 // Set Domain size
-	double L=100;
-	double H=50;
+	double L=1983;
+	double H=1587;
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 //Set Lattice unity
 	double deltaTLattice=1;
@@ -94,14 +94,14 @@ int main(int argc, char *argv[]) {
 // Set User Parameters
 	//U2_ref=0.01;Pmax=1;Pmin=1;
 //Contact angle parameters
-	double contactangle=160*pi/180.0;//30
-	Param.Set_ContactAngleType(ContactAngleEnum::UserTeta);//NoTeta, UniformTeta or UserTeta
+	double contactangle=80*pi/180.0;//30
+	Param.Set_ContactAngleType(ContactAngleEnum::UniformTeta);//NoTeta, UniformTeta or UserTeta
 	Param.Set_ContactAngleModel(ContactAngleEnum::Interpol);//Standard or Interpol
 	Param.Set_SwitchSelectTeta(ContactAngleEnum::Linear);//Binary or Linear
 	Param.Set_NormalExtrapolType(ContactAngleEnum::WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,or WeightDistanceExtrapol
 	Param.Set_NormalInterpolType(ContactAngleEnum::LinearLeastSquareInterpol);//NoInterpol,LinearInterpol,LinearLeastSquareInterpol
 	Param.Set_NumberOfInterpolNodeInSolid(3);
-	Param.Set_NumberOfInterpolNodeInFluid(3);
+	Param.Set_NumberOfInterpolNodeInFluid(1);
 	if(Param.Get_ContactAngleType()==ContactAngleEnum::NoTeta)
 		contactangle=pi/2.0;
 	Param.Set_ContactAngle(contactangle);
@@ -132,9 +132,9 @@ int main(int argc, char *argv[]) {
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(10000);
+	Param.Set_NbStep(20000);
 /// Interval for output
-	Param.Set_OutPutNSteps(1000);// interval
+	Param.Set_OutPutNSteps(100);// interval
 ///Display information during the calculation every N iteration
 	Param.Set_listing(200);
 	Param.Set_ErrorMax(1e-15);
@@ -182,7 +182,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_SurfaceTension(sigma);
 	Param.Set_ATau(Param.Convert_SigmaToATau());
 	//Colour fluid Parameters
-	Param.Set_ColourGradLimiter(0.00001);
+	Param.Set_ColourGradLimiter(0.0000001);
 	Param.Set_Beta(0.7);// Between 0 and 1
 	Param.Set_ColourGradType(ColourFluidEnum::DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
 	Param.Set_RecolouringType(ColourFluidEnum::LatvaKokkoRothman);
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 				<<Param.Get_Beta()<<"-beta_"<<Param.Get_ContactAngle()*180.0/pi<<"-teta_"
 						<< scientific<<setprecision(3)<<"sigma_"<<sigma<<"_ColourGradLimiter"<<Param.Get_ColourGradLimiter();
 */
-		FileExportStream.str("TestBcs_TwoPhase_sigma0.002_noncst_change50x");
+		FileExportStream.str("TestBcs_TwoPhase_interpol");
 		Param.Set_OutputFileName(FileExportStream.str());
 
 //	Param.Set_OutputFileName("Testread");
