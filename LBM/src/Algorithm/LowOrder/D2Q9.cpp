@@ -273,6 +273,7 @@ void D2Q9::run(){
 
 	//Write_Breakpoint(PtrParameters);
 	Writer->Write_Output(it);
+	Convergence::Calcul_Error(it);
 	it++;
  /*	char buffer[50]; // make sure it's big enough
  	std::ofstream myFlux;

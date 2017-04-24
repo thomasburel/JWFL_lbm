@@ -168,9 +168,9 @@ void Convergence::Set_Convergence(){
 					ofstream Permeabilityfile;
 					Permeabilityfile.open("Permeability.txt",ios::out | ios::trunc);
 					if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
-						Permeabilityfile<<"Time,Permeability,Average Velocity,Average Viscosity,Delta P,Average Pressure Inlet,Average Pressure Outlet"<<std::endl;
+						Permeabilityfile<<"Time,Permeability,Average Velocity,Average Pore Velocity,Average Viscosity,Delta P,Average Pressure Inlet,Average Pressure Outlet"<<std::endl;
 					else
-						Permeabilityfile<<"Time,Permeability,Relative Permeability Phase 1,Relative Permeability Phase 2,Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2,Average Viscosity,Average Viscosity Phase 1,Average Viscosity Phase 2,Delta P,Average Pressure Inlet,Average Pressure Outlet,Alpha In,Alpha Out"<<std::endl;
+						Permeabilityfile<<"Time,Permeability,Permeability Phase 1,Permeability Phase 2,Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2,Average Pore Velocity,Average Pore Velocity Phase 1,Average Pore Velocity Phase 2,Average Viscosity,Average Viscosity Phase 1,Average Viscosity Phase 2,Delta P,Average Pressure Inlet,Average Pressure Outlet,Alpha In,Alpha Out"<<std::endl;
 					Permeabilityfile.close();
 				}
 			}
@@ -250,7 +250,7 @@ double Convergence::Calcul_ProductionRate(int &Time){
 
 double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 
-	double sumtmp=0,nbsumnodesIn,nbsumnodesOut=0;
+	double sumtmp=0,nbsumnodesIn=0,nbsumnodesOut=0;
 	double sumRhoIn=0,sumRhoOut=0,sumUIn=0,sumUOut=0;
 	double sumMuIn=0,sumMuOut=0;
 	for (int i=0;i<InletPatchId.size();i++)
@@ -298,15 +298,16 @@ double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 
 	double avgRhoIn=sumRhoIn/nbsumnodesIn;
 	double avgRhoOut=sumRhoOut/nbsumnodesOut;
-	double avgU=(sumUIn+sumUOut)/(nbsumnodesIn+nbsumnodesOut);
+	double avgU=(sumUIn+sumUOut)/(2.0*SectionMedium);
+	double avgUPore=(sumUIn+sumUOut)/(nbsumnodesIn+nbsumnodesOut);
 	double avgMu=(sumMuIn+sumMuOut)/(nbsumnodesIn+nbsumnodesOut);
-	double deltaP=RhoToP(avgRhoOut-avgRhoIn);
+	double deltaP=RhoToP(avgRhoIn-avgRhoOut);
 
 	double Permeability=0;//As single Phase
 
 	if(std::abs(deltaP)>0)
 	{
-		Permeability=LengthMedium*avgMu*avgU/(std::abs(deltaP));
+		Permeability=LengthMedium*avgMu*avgU/deltaP;
 	}
 	else
 	{
@@ -318,10 +319,10 @@ double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 	{
 		ofstream Permeabilityfile;
 		Permeabilityfile.open("Permeability.txt",ios::out | ios::app);
-		Permeabilityfile<<Time<<","<<Permeability<<","<<avgU<<","<<avgMu<<","<<deltaP<<","<<avgRhoIn<<","<<avgRhoOut<<std::endl;
+		Permeabilityfile<<Time<<","<<Permeability<<","<<avgU<<","<<avgUPore<<","<<avgMu<<","<<deltaP<<","<<avgRhoIn<<","<<avgRhoOut<<std::endl;
 		Permeabilityfile.close();
 		std::cout<<"Permeability: "<<Permeability<<
-				" Average Velocity: "<<avgU<<" Delta P: "<<std::abs(deltaP)
+				" Average Velocity: "<<avgU<<" Average Pore Velocity: "<<avgUPore<<" Delta P: "<<std::abs(deltaP)
 		<<" Viscosity: "<<avgMu
 		<<" Rho In: "<<avgRhoIn<<" Rho Out: "<<avgRhoOut<<std::endl;
 	}
@@ -330,7 +331,7 @@ double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 }
 double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 
-	double sumtmp=0,nbsumnodesIn,nbsumnodesOut=0;
+	double sumtmp=0,nbsumnodesIn=0,nbsumnodesOut=0;
 	//double sumUIn=0,sumUOut=0,sumRhoIn=0,sumRhoOut=0,sumRhoNIn=0,sumRhoNOut=0;
 	double sumRho1In=0,sumRho2In=0,sumRho1Out=0,sumRho2Out=0,sumU1In=0,sumU1Out=0,sumU2In=0,sumU2Out=0;
 	double sumMu1In=0,sumMu2In=0,sumMu1Out=0,sumMu2Out=0,sumAlpha1In=0,sumAlpha2In=0,sumAlpha1Out=0,sumAlpha2Out=0;
@@ -420,26 +421,31 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 	double avgAlphaIn=sumAlpha1In/nbsumnodesIn;
 	double avgAlphaOut=sumAlpha1Out/nbsumnodesOut;
 
-	double avgU1=(sumU1In+sumU1Out)/(sumAlpha1In+sumAlpha1Out);
-	double avgU2=(sumU2In+sumU2Out)/(sumAlpha2In+sumAlpha2Out);
-	double avgU=(sumU1In+sumU1Out+sumU2In+sumU2Out)/(sumAlpha1In+sumAlpha1Out+sumAlpha2In+sumAlpha2Out);
+	double scale=(nbsumnodesIn+nbsumnodesOut)/(2.0*SectionMedium);
+	double avgU1Pore=(sumU1In+sumU1Out)/(sumAlpha1In+sumAlpha1Out);
+	double avgU2Pore=(sumU2In+sumU2Out)/(sumAlpha2In+sumAlpha2Out);
+	double avgUPore=(sumU1In+sumU1Out+sumU2In+sumU2Out)/(sumAlpha1In+sumAlpha1Out+sumAlpha2In+sumAlpha2Out);
+
+	double avgU1=scale*avgU1Pore;
+	double avgU2=scale*avgU2Pore;
+	double avgU=scale*avgUPore;
 
 	double avgMu1=(sumMu1In+sumMu1Out)/(sumAlpha1In+sumAlpha1Out);
 	double avgMu2=(sumMu2In+sumMu2Out)/(sumAlpha2In+sumAlpha2Out);
 	double avgMu=(sumMu1In+sumMu1Out+sumMu2In+sumMu2Out)/(sumAlpha1In+sumAlpha1Out+sumAlpha2In+sumAlpha2Out);
 
 
-	double deltaP1=avgRho1Out-avgRho1In;
-	double deltaP2=avgRho2Out-avgRho2In;
-	double deltaP=avgRhoOut-avgRhoIn;
+	double deltaP1=RhoToP(avgRho1In-avgRho1Out);
+	double deltaP2=RhoToP(avgRho2In-avgRho2Out);
+	double deltaP=RhoToP(avgRhoIn-avgRhoOut);
 
 	double Permeability=0;//As single Phase
 	double Permeability1=0,Permeability2=0;//for each Phase
 	if(std::abs(deltaP)>0)
 	{
-		Permeability=LengthMedium*avgMu*avgU/(SectionMedium*std::abs(deltaP));
-		Permeability1=LengthMedium*avgMu1*avgU1/(SectionMedium*std::abs(deltaP));
-		Permeability2=LengthMedium*avgMu2*avgU2/(SectionMedium*std::abs(deltaP));
+		Permeability=LengthMedium*avgMu*avgU/deltaP;
+		Permeability1=LengthMedium*avgMu1*avgU1/deltaP;
+		Permeability2=LengthMedium*avgMu2*avgU2/deltaP;
 	}
 	else
 	{
@@ -448,18 +454,18 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 		Permeability2=1;
 	}
 
-	double RelativePermeability1=Permeability1/Permeability;
-	double RelativePermeability2=Permeability2/Permeability;
+//	double RelativePermeability1=Permeability1/Permeability;
+//	double RelativePermeability2=Permeability2/Permeability;
 
 	if(PtrMultiBlockConv->IsMainProcessor())
 	{
 		ofstream Permeabilityfile;
 		Permeabilityfile.open("Permeability.txt",ios::out | ios::app);
-		Permeabilityfile<<Time<<","<<Permeability<<","<<RelativePermeability1<<","<<RelativePermeability2<<","<<avgU<<","<<avgU1<<","<<avgU2<<","<<avgMu<<","<<avgMu1<<","<<avgMu2<<","<<deltaP<<","<<avgRhoIn<<","<<avgRhoOut<<","<<avgAlphaIn<<","<<avgAlphaOut<<std::endl;
+		Permeabilityfile<<Time<<","<<Permeability<<","<<Permeability1<<","<<Permeability2<<","<<avgU<<","<<avgU1<<","<<avgU2<<","<<avgUPore<<","<<avgU1Pore<<","<<avgU2Pore<<","<<avgMu<<","<<avgMu1<<","<<avgMu2<<","<<deltaP<<","<<avgRhoIn<<","<<avgRhoOut<<","<<avgAlphaIn<<","<<avgAlphaOut<<std::endl;
 		Permeabilityfile.close();
-		std::cout<<"Permeability: "<<Permeability<<" Relative Permeability 1: "<<RelativePermeability1<<" Relative Permeability 2: "<<RelativePermeability2<<
+		std::cout<<"Permeability: "<<Permeability<<" Permeability 1: "<<Permeability1<<" Permeability 2: "<<Permeability2<<
 				" Alpha In: "<<avgAlphaIn<<" Alpha Out: "<<avgAlphaOut<<
-				" Average Velocity: "<<avgU<<" Delta P: "<<std::abs(deltaP)
+				" Average Velocity: "<<avgU<<" Average Pore Velocity: "<<avgUPore<<" Delta P: "<<std::abs(deltaP)
 		<<" Viscosity: "<<avgMu
 		<<" Rho In: "<<avgRhoIn<<" Rho Out: "<<avgRhoOut<<std::endl;
 	}

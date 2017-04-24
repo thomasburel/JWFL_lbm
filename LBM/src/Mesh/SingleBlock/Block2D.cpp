@@ -2515,7 +2515,7 @@ bool Block2D::DetectSolidBoundaries(int & nodeID){
 		}
 		else
 		{
-			std::cout<<"Solid boundary not found. Number of Solid connected: "<<nbSolidDirect+nbSolidDiagonal<<std::endl;
+			std::cout<<"Solid boundary not found. Number of Solid connected: "<<nbSolidDirect+nbSolidDiagonal<<" Direct Solid connected: "<<nbSolidDirect<<" Diagonal solid connected: "<<nbSolidDiagonal<<std::endl;
 			IDRemoveSolidtmp.push_back(nodeID);
 		}
 		return true;
