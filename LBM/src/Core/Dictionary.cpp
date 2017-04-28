@@ -237,9 +237,10 @@ std::string* Dictionary::Get_PtrExportVarBreakpointName()
 		PtrStringExportVarBreakpoint[i]=StringExportVarBreakpoint[i];
 	return PtrStringExportVarBreakpoint;
 }
-int Dictionary::Get_Id_Var(std::string VarName){
+int Dictionary::Get_Id_Var(std::string VarName, bool &Var_found){
 	 std::map<std::string,int>::iterator it;
 	 it=mapVar.find(VarName);
+	 Var_found=true;
 	 if(it==mapVar.end())
 	 {
 		 std::cerr<<" Variable name ( "<< VarName<<" )in the dictionary is not found"<<std::endl;
@@ -247,6 +248,7 @@ int Dictionary::Get_Id_Var(std::string VarName){
 		 for (it = mapVar.begin() ; it != mapVar.end() ; ++it)
 			 std::cerr<<it->first<<" ; ";
 		 std::cerr<<std::endl;
+		 Var_found=false;
 	 }
 	return mapVar[VarName];
 }

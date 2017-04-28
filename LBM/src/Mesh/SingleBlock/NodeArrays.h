@@ -53,10 +53,39 @@ public:
 	virtual int& Get_NodeIdPressure(int idx)=0;
     virtual int Get_SizeNodeIdSymmetry()=0;
 	virtual int& Get_NodeIdSymmetry(int idx)=0;
-
+// get normal
+	virtual int& Get_NodeNormalInterior(int idx)=0;
+	virtual int& Get_NodeNormalSolid(int idx)=0;
+	virtual int& Get_NodeNormalGhost(int idx)=0;
+	virtual int& Get_NodeNormalCorner(int idx)=0;
+	virtual int& Get_NodeNormalCornerConcave(int idx)=0;
+	virtual int& Get_NodeNormalCornerConvex(int idx)=0;
+	virtual int& Get_NodeNormalGlobalCorner(int idx)=0;
+	virtual int& Get_NodeNormalWall(int idx)=0;
+	virtual int& Get_NodeNormalSpecialWall(int idx)=0;
+	virtual int& Get_NodeNormalPeriodic(int idx)=0;
+	virtual int& Get_NodeNormalVelocity(int idx)=0;
+	virtual int& Get_NodeNormalPressure(int idx)=0;
+	virtual int& Get_NodeNormalSymmetry(int idx)=0;
+//get connection
+	virtual int* Get_NodeConnectInterior(int idx)=0;
+	virtual int* Get_NodeConnectSolid(int idx)=0;
+	virtual int* Get_NodeConnectGhost(int idx)=0;
+	virtual int* Get_NodeConnectCorner(int idx)=0;
+	virtual int* Get_NodeConnectCornerConcave(int idx)=0;
+	virtual int* Get_NodeConnectCornerConvex(int idx)=0;
+	virtual int* Get_NodeConnectGlobalCorner(int idx)=0;
+	virtual int* Get_NodeConnectWall(int idx)=0;
+	virtual int* Get_NodeConnectSpecialWall(int idx)=0;
+	virtual int* Get_NodeConnectPeriodic(int idx)=0;
+	virtual int* Get_NodeConnectVelocity(int idx)=0;
+	virtual int* Get_NodeConnectPressure(int idx)=0;
+	virtual int* Get_NodeConnectSymmetry(int idx)=0;
 
 	virtual void Get_coordinate(int index,double & x, double & y)=0;
 	virtual void Get_CoordinateNextNodeAtNormal(int index,double & x, double & y)=0;
+protected:
+	int nullNodeArray;
 };
 
 class NodeArrays2D: public NodeArrays{
@@ -108,5 +137,33 @@ public:
     virtual int Get_SizeNodeIdSymmetry(){return NodeSymmetry.size();};
 	virtual int& Get_NodeIdSymmetry(int idx){return NodeSymmetry[idx].Get_index();};
 
+	// get normal
+		virtual int& Get_NodeNormalInterior(int idx){return nullNodeArray;};
+		virtual int& Get_NodeNormalSolid(int idx){return nullNodeArray;};
+		virtual int& Get_NodeNormalGhost(int idx){return nullNodeArray;};
+		virtual int& Get_NodeNormalCorner(int idx){return NodeCorner[idx].Get_BcNormal();};
+		virtual int& Get_NodeNormalCornerConcave(int idx){return NodeCorner[CornerConcave[idx]].Get_BcNormal();};
+		virtual int& Get_NodeNormalCornerConvex(int idx){return NodeCorner[CornerConvex[idx]].Get_BcNormal();};
+		virtual int& Get_NodeNormalGlobalCorner(int idx){return NodeGlobalCorner[idx].Get_BcNormal();};
+		virtual int& Get_NodeNormalWall(int idx){return NodeWall[idx].Get_BcNormal();};
+		virtual int& Get_NodeNormalSpecialWall(int idx){return NodeSpecialWall[idx].Get_BcNormal();};
+		virtual int& Get_NodeNormalPeriodic(int idx){return NodePeriodic[idx].Get_BcNormal();};
+		virtual int& Get_NodeNormalVelocity(int idx){return NodeVelocity[idx].Get_BcNormal();};
+		virtual int& Get_NodeNormalPressure(int idx){return NodePressure[idx].Get_BcNormal();};
+		virtual int& Get_NodeNormalSymmetry(int idx){return NodeSymmetry[idx].Get_BcNormal();};
+	//get connection
+		virtual int* Get_NodeConnectInterior(int idx){return NodeInterior[idx].Get_connect();};
+		virtual int* Get_NodeConnectSolid(int idx){return NodeSolid[idx].Get_connect();};
+		virtual int* Get_NodeConnectGhost(int idx){return NodeGhost[idx].Get_connect();};
+		virtual int* Get_NodeConnectCorner(int idx){return NodeCorner[idx].Get_connect();};
+		virtual int* Get_NodeConnectCornerConcave(int idx){return NodeCorner[CornerConcave[idx]].Get_connect();};
+		virtual int* Get_NodeConnectCornerConvex(int idx){return NodeCorner[CornerConvex[idx]].Get_connect();};
+		virtual int* Get_NodeConnectGlobalCorner(int idx){return NodeGlobalCorner[idx].Get_connect();};
+		virtual int* Get_NodeConnectWall(int idx){return NodeWall[idx].Get_connect();};
+		virtual int* Get_NodeConnectSpecialWall(int idx){return NodeSpecialWall[idx].Get_connect();};
+		virtual int* Get_NodeConnectPeriodic(int idx){return NodePeriodic[idx].Get_connect();};
+		virtual int* Get_NodeConnectVelocity(int idx){return NodeVelocity[idx].Get_connect();};
+		virtual int* Get_NodeConnectPressure(int idx){return NodePressure[idx].Get_connect();};
+		virtual int* Get_NodeConnectSymmetry(int idx){return NodeSymmetry[idx].Get_connect();};
 };
 #endif /* MESH_SINGLEBLOCK_NODEARRAYS_H_ */

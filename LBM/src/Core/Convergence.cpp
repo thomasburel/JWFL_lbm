@@ -49,31 +49,32 @@ Convergence::~Convergence() {
 }
 void Convergence::Set_Convergence(){
 	//Temporary
+	bool Var_found;
 	switch(PtrParmConv->Get_ErrorVariable())
 	{
 	case SolverEnum::Density:
-		PtrDicConv->Get_PtrVar("Density",Scalar_CurrentTime);
+		PtrDicConv->Get_PtrVar("Density",Scalar_CurrentTime,Var_found);
 		break;
 	case SolverEnum::RhoN:
 		if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
 		{
-			PtrDicConv->Get_PtrVar("Density",Scalar_CurrentTime);
+			PtrDicConv->Get_PtrVar("Density",Scalar_CurrentTime,Var_found);
 			if(PtrMultiBlockConv->IsMainProcessor())
 				std::cout<<"Single Phase case: Normal density is not used. Density will be used for the convergence."<<std::endl;
 		}
 		else
-		PtrDicConv->Get_PtrVar("RhoN",Scalar_CurrentTime);
+		PtrDicConv->Get_PtrVar("RhoN",Scalar_CurrentTime,Var_found);
 		break;
 	case SolverEnum::VelocityX:
-		PtrDicConv->Get_PtrVar("VelocityX",Scalar_CurrentTime);
+		PtrDicConv->Get_PtrVar("VelocityX",Scalar_CurrentTime,Var_found);
 		break;
 	case SolverEnum::VelocityY:
-		PtrDicConv->Get_PtrVar("VelocityY",Scalar_CurrentTime);
+		PtrDicConv->Get_PtrVar("VelocityY",Scalar_CurrentTime,Var_found);
 		break;
 	default:
 		if(PtrMultiBlockConv->IsMainProcessor())
 			std::cerr<<"Error variable type not found. Density will be used."<<std::endl;
-		PtrDicConv->Get_PtrVar("Density",Scalar_CurrentTime);
+		PtrDicConv->Get_PtrVar("Density",Scalar_CurrentTime,Var_found);
 	}
 	NbNodes=PtrDicConv->Get_NbNodes();
 	PtrDicConv->AddVar(Scalar,"ScalarError_last",false,true,false,Scalar_last);
@@ -95,9 +96,13 @@ void Convergence::Set_Convergence(){
 		if(minYMedia>maxYMedia)minYMedia=maxYMedia;
 		if(minZMedia<0) minZMedia=0;if(maxZMedia>PtrParmConv->Get_Nz()) maxZMedia=PtrParmConv->Get_Nz();
 		if(minZMedia>maxZMedia)minZMedia=maxZMedia;
-		if(PtrParmConv->IsCalculatePorosity())
+		if(PtrParmConv->IsCalculatePorosity() || PtrParmConv->IsCalculatePermeability())
 		{
+			Set_MarkFluidNodes();
+			if(PtrMultiBlockConv->IsMainProcessor())
+				std::cout<<"Number of fluid nodes:  "<<MarkFluidNode_V1.size()+0.75*MarkFluidNode_V075.size()+0.5*MarkFluidNode_V05.size()+0.25*MarkFluidNode_V025.size()<<std::endl;;
 			porosity=Porosity();
+			LuToPhy2=PtrParmConv->Get_deltax()*PtrParmConv->Get_deltax();
 		}
 		if(PtrParmConv->IsCalculateProductionRate())
 		{
@@ -117,13 +122,19 @@ void Convergence::Set_Convergence(){
 				}
 				if(OutletPatchId.size()>0)
 				{
-					PtrDicConv->Get_PtrVar("RhoN",RhoNProductionRate);
-					if(PtrMultiBlockConv->IsMainProcessor())
+					PtrDicConv->Get_PtrVar("RhoN",RhoNProductionRate,Var_found);
+					if(PtrMultiBlockConv->IsMainProcessor()&&Var_found)
 					{
 						ofstream ProductionRatefile;
 						ProductionRatefile.open("ProductionRate.txt",ios::out | ios::trunc);
 						ProductionRatefile<<"Time,Production Rate"<<std::endl;
 						ProductionRatefile.close();
+					}
+					if(!Var_found)
+					{
+						if(PtrMultiBlockConv->IsMainProcessor())
+							std::cerr<<"Normal density is not found. No calculation of Production Rate will be done."<<std::endl;
+						PtrParmConv->CalculateProductionRate(false);
 					}
 				}
 				else
@@ -136,6 +147,41 @@ void Convergence::Set_Convergence(){
 		}
 		if(PtrParmConv->IsCalculatePermeability())
 		{
+// Average of permeability in the domain
+			DensityGradient.initGradients(2, 9,FD);
+			PtrDicConv->Get_PtrVar("Pressure",PressureConv,Var_found);
+			DeltaP=new double*[2];
+			PtrDicConv->AddVar(Vector,"Delata P",false, false,false,DeltaP[0],DeltaP[1]);
+			//PtrDicConv->AddVar(Scalar,"Norm Delta P",false, false,false,NormDeltaP);
+			if(!(PtrParmConv->Get_Model()==SolverEnum::SinglePhase))
+			{
+				PtrDicConv->Get_PtrVar("RhoN",RhoNPerm,Var_found);
+				if(!Var_found)
+				{
+					if(PtrMultiBlockConv->IsMainProcessor())
+						std::cerr<<"Normal density not found. No calculation of Permeability will be done."<<std::endl;
+					PtrParmConv->CalculatePermeability(false);
+				}
+				PtrPermeability=&Convergence::Calcul_Permeability_TwoPhases;
+			}
+			else
+				PtrPermeability=&Convergence::Calcul_Permeability_SinglePhase;
+
+			if(PtrMultiBlockConv->IsMainProcessor())
+			{
+				ofstream Permeabilityfile;
+				Permeabilityfile.open("Permeability.txt",ios::out | ios::trunc);
+				if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
+					Permeabilityfile<<"Time,Average Permeability,Global Permeability,Pore-scale Permeability,Pore-scale Global Permeability,Average Velocity,Average Viscosity,Average Delta P"<<std::endl;
+				else
+					Permeabilityfile<<"Time,Permeability,Permeability Phase 1,Permeability Phase 2,Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2,Average Pore Velocity,Average Pore Velocity Phase 1,Average Pore Velocity Phase 2,Average Viscosity,Average Viscosity Phase 1,Average Viscosity Phase 2,Delta P,Average Pressure Inlet,Average Pressure Outlet,Alpha In,Alpha Out"<<std::endl;
+				Permeabilityfile.close();
+			}
+		}
+
+		if(PtrParmConv->IsCalculateDarcyPermeability())
+		{
+// Calculate the Darcy Permeability (from inlet and outlet)
 			if(OutletPatchId.empty())
 			{
 				for(int i=0;i<PtrPatchBcConv->Get_NumberOfPatchBc();i++)
@@ -150,14 +196,20 @@ void Convergence::Set_Convergence(){
 			}
 			if(OutletPatchId.size()>0 && InletPatchId.size()>0)
 			{
-				PtrDicConv->Get_PtrVar("Density",RhoPerm);
+				PtrDicConv->Get_PtrVar("Density",RhoPerm,Var_found);
 				UPerm=new double*[2];
-				PtrDicConv->Get_PtrVar("VelocityX",UPerm[0]);
-				PtrDicConv->Get_PtrVar("VelocityY",UPerm[1]);
+				PtrDicConv->Get_PtrVar("VelocityX",UPerm[0],Var_found);
+				PtrDicConv->Get_PtrVar("VelocityY",UPerm[1],Var_found);
 
 				if(!(PtrParmConv->Get_Model()==SolverEnum::SinglePhase))
 				{
-					PtrDicConv->Get_PtrVar("RhoN",RhoNPerm);
+					PtrDicConv->Get_PtrVar("RhoN",RhoNPerm,Var_found);
+					if(!Var_found)
+					{
+						if(PtrMultiBlockConv->IsMainProcessor())
+							std::cerr<<"Normal density not found. No calculation of Permeability will be done."<<std::endl;
+						PtrParmConv->CalculatePermeability(false);
+					}
 					PtrPermeabilityDarcy=&Convergence::Calcul_DarcyPermeability_TwoPhases;
 				}
 				else
@@ -166,7 +218,7 @@ void Convergence::Set_Convergence(){
 				if(PtrMultiBlockConv->IsMainProcessor())
 				{
 					ofstream Permeabilityfile;
-					Permeabilityfile.open("Permeability.txt",ios::out | ios::trunc);
+					Permeabilityfile.open("Permeability_Darcy.txt",ios::out | ios::trunc);
 					if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
 						Permeabilityfile<<"Time,Permeability,Average Velocity,Average Pore Velocity,Average Viscosity,Delta P,Average Pressure Inlet,Average Pressure Outlet"<<std::endl;
 					else
@@ -177,11 +229,11 @@ void Convergence::Set_Convergence(){
 			else
 			{
 				if(PtrMultiBlockConv->IsMainProcessor())
-					std::cerr<<"No inlet and/or outlet Patch is/are set. No calculation of Permeability will be done."<<std::endl;
+					std::cerr<<"No inlet and/or outlet Patch is/are set. No calculation of Darcy permeability will be done."<<std::endl;
 				PtrParmConv->CalculatePermeability(false);
 			}
 		}
-		if(!(PtrParmConv->IsCalculatePermeability() || PtrParmConv->IsCalculateProductionRate()))
+		if(!(PtrParmConv->IsCalculatePermeability() || PtrParmConv->IsCalculateDarcyPermeability() || PtrParmConv->IsCalculateProductionRate()))
 		{
 			std::cout<<"Porous media case detected but no Production rate or Permeability requested."<<std::endl;
 			PtrParmConv->PorousMediaCase(false);
@@ -215,8 +267,10 @@ double Convergence::Calcul_Error_ScalarFieldInOneProc(){
 void Convergence::Calcul_PorousMediaConvergence(int &Time){
 	if(PtrParmConv->IsCalculateProductionRate())
 		Calcul_ProductionRate(Time);
-	if(PtrParmConv->IsCalculatePermeability())
+	if(PtrParmConv->IsCalculateDarcyPermeability())
 		(this->*PtrPermeabilityDarcy)(Time);
+	if(PtrParmConv->IsCalculatePermeability())
+		(this->*PtrPermeability)(Time);
 		//Calcul_DarcyPermeability_TwoPhases(Time);
 }
 ///Calcul Production Rate and write it in a file
@@ -318,7 +372,7 @@ double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 	if(PtrMultiBlockConv->IsMainProcessor())
 	{
 		ofstream Permeabilityfile;
-		Permeabilityfile.open("Permeability.txt",ios::out | ios::app);
+		Permeabilityfile.open("Permeability_Darcy.txt",ios::out | ios::app);
 		Permeabilityfile<<Time<<","<<Permeability<<","<<avgU<<","<<avgUPore<<","<<avgMu<<","<<deltaP<<","<<avgRhoIn<<","<<avgRhoOut<<std::endl;
 		Permeabilityfile.close();
 		std::cout<<"Permeability: "<<Permeability<<
@@ -328,6 +382,90 @@ double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 	}
 	return Permeability;
 
+}
+double Convergence::Calcul_Permeability_SinglePhase(int &Time){
+	double Umag=0;double DeltaPmag=0;double visco;
+	double sum_Umag=0;double sum_DeltaPmag=0;double sum_visco=0;
+	double sum_Umag_tmp=0;double sum_DeltaPmag_tmp=0;double sum_visco_tmp=0;
+	double sum_permeability=0;double sum_tmp=0;
+	//Update the locate DeltaP
+	Calcul_localDeltaP();
+
+
+	for (int i=0;i<MarkFluidNode_V1.size();i++){
+		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V1[i]]*DeltaP[0][MarkFluidNode_V1[i]]+DeltaP[1][MarkFluidNode_V1[i]]*DeltaP[1][MarkFluidNode_V1[i]]);
+		sum_DeltaPmag+=DeltaPmag;
+		Umag=std::sqrt(UPerm[0][MarkFluidNode_V1[i]]*UPerm[0][MarkFluidNode_V1[i]]+UPerm[1][MarkFluidNode_V1[i]]*UPerm[1][MarkFluidNode_V1[i]]);
+		sum_Umag+=Umag;
+		visco=PtrViscosityConv->Get_Mu();
+		sum_visco+=visco;
+		if(DeltaPmag>0)
+			sum_permeability+=Permeability(DeltaPmag,Umag,visco);
+	}
+	sum_tmp=0;sum_Umag_tmp=0;sum_DeltaPmag_tmp=0;sum_visco_tmp=0;
+
+	for (int i=0;i<MarkFluidNode_V075.size();i++){
+		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V075[i]]*DeltaP[0][MarkFluidNode_V075[i]]+DeltaP[1][MarkFluidNode_V075[i]]*DeltaP[1][MarkFluidNode_V075[i]]);
+		sum_DeltaPmag_tmp+=DeltaPmag;
+		Umag=std::sqrt(UPerm[0][MarkFluidNode_V075[i]]*UPerm[0][MarkFluidNode_V075[i]]+UPerm[1][MarkFluidNode_V075[i]]*UPerm[1][MarkFluidNode_V075[i]]);
+		sum_Umag_tmp+=Umag;
+		visco=PtrViscosityConv->Get_Mu();
+		sum_visco_tmp+=visco;
+		if(DeltaPmag>0)
+			sum_tmp+=Permeability(DeltaPmag,Umag,visco);
+	}
+	sum_permeability+=0.75*sum_tmp;sum_Umag+=0.75*sum_Umag_tmp;sum_visco+=0.75*sum_visco_tmp;sum_DeltaPmag+=0.75*sum_DeltaPmag_tmp;
+	sum_tmp=0;sum_Umag_tmp=0;sum_DeltaPmag_tmp=0;sum_visco_tmp=0;
+
+	for (int i=0;i<MarkFluidNode_V05.size();i++){
+		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V05[i]]*DeltaP[0][MarkFluidNode_V05[i]]+DeltaP[1][MarkFluidNode_V05[i]]*DeltaP[1][MarkFluidNode_V05[i]]);
+		sum_DeltaPmag_tmp+=DeltaPmag;
+		Umag=std::sqrt(UPerm[0][MarkFluidNode_V05[i]]*UPerm[0][MarkFluidNode_V05[i]]+UPerm[1][MarkFluidNode_V05[i]]*UPerm[1][MarkFluidNode_V05[i]]);
+		sum_Umag_tmp+=Umag;
+		visco=PtrViscosityConv->Get_Mu();
+		sum_visco_tmp+=visco;
+		if(DeltaPmag>0)
+			sum_tmp+=Permeability(DeltaPmag,Umag,visco);
+	}
+	sum_permeability+=0.5*sum_tmp;sum_Umag+=0.5*sum_Umag_tmp;sum_visco+=0.5*sum_visco_tmp;sum_DeltaPmag+=0.5*sum_DeltaPmag_tmp;
+	sum_tmp=0;sum_Umag_tmp=0;sum_DeltaPmag_tmp=0;sum_visco_tmp=0;
+
+	for (int i=0;i<MarkFluidNode_V025.size();i++){
+		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V025[i]]*DeltaP[0][MarkFluidNode_V025[i]]+DeltaP[1][MarkFluidNode_V025[i]]*DeltaP[1][MarkFluidNode_V025[i]]);
+		sum_DeltaPmag_tmp+=DeltaPmag;
+		Umag=std::sqrt(UPerm[0][MarkFluidNode_V025[i]]*UPerm[0][MarkFluidNode_V025[i]]+UPerm[1][MarkFluidNode_V025[i]]*UPerm[1][MarkFluidNode_V025[i]]);
+		sum_Umag_tmp+=Umag;
+		visco=PtrViscosityConv->Get_Mu();
+		sum_visco_tmp+=visco;
+		if(DeltaPmag>0)
+			sum_tmp+=Permeability(DeltaPmag,Umag,visco);
+	}
+	sum_permeability+=0.25*sum_tmp;sum_Umag+=0.25*sum_Umag_tmp;sum_visco+=0.25*sum_visco_tmp;sum_DeltaPmag+=0.25*sum_DeltaPmag_tmp;
+	sum_tmp=0;sum_Umag_tmp=0;sum_DeltaPmag_tmp=0;sum_visco_tmp=0;
+
+	sum_permeability=PtrMultiBlockConv->SumAllProcessors(&sum_permeability);
+	sum_Umag=PtrMultiBlockConv->SumAllProcessors(&sum_Umag);
+	sum_visco=PtrMultiBlockConv->SumAllProcessors(&sum_visco);
+	sum_DeltaPmag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPmag);
+
+	double Avg_Umag=sum_Umag/fluidVolumesum;
+	double Avg_visco=sum_visco/fluidVolumesum;
+	double Avg_DeltaPmag=sum_DeltaPmag/fluidVolumesum;
+
+	double PorePermeability=sum_permeability/fluidVolumesum;
+	double PoreGlobalPermeability=Avg_Umag*Avg_visco/Avg_DeltaPmag;
+	double Permeability=LuToPhy2*porosity*PorePermeability;
+	double GlobalPermeability=LuToPhy2*porosity*PoreGlobalPermeability;
+
+	if(PtrMultiBlockConv->IsMainProcessor())
+	{
+		ofstream Permeabilityfile;
+		Permeabilityfile.open("Permeability.txt",ios::out | ios::app);
+		Permeabilityfile<<Time<<","<<Permeability<<","<<GlobalPermeability<<","<<PorePermeability<<","<<PoreGlobalPermeability<<","<<Avg_Umag<<","<<Avg_visco<<","<<Avg_DeltaPmag<<std::endl;
+		Permeabilityfile.close();
+		std::cout<<"Average Permeability [m2]: "<<Permeability<<" Global Permeability [m2]: "<<GlobalPermeability<<" Pore-scale Average Permeability: "<<PorePermeability<<" Pore-scale Global Permeability: "<<PoreGlobalPermeability<<" Average Velocity: "<<Avg_Umag<<" Average DeltaP: "<<Avg_DeltaPmag<<" Average viscosity: "<<Avg_visco<<std::endl;
+	}
+	return Permeability;
 }
 double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 
@@ -460,7 +598,7 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 	if(PtrMultiBlockConv->IsMainProcessor())
 	{
 		ofstream Permeabilityfile;
-		Permeabilityfile.open("Permeability.txt",ios::out | ios::app);
+		Permeabilityfile.open("Permeability_Darcy.txt",ios::out | ios::app);
 		Permeabilityfile<<Time<<","<<Permeability<<","<<Permeability1<<","<<Permeability2<<","<<avgU<<","<<avgU1<<","<<avgU2<<","<<avgUPore<<","<<avgU1Pore<<","<<avgU2Pore<<","<<avgMu<<","<<avgMu1<<","<<avgMu2<<","<<deltaP<<","<<avgRhoIn<<","<<avgRhoOut<<","<<avgAlphaIn<<","<<avgAlphaOut<<std::endl;
 		Permeabilityfile.close();
 		std::cout<<"Permeability: "<<Permeability<<" Permeability 1: "<<Permeability1<<" Permeability 2: "<<Permeability2<<
@@ -472,7 +610,68 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 	return Permeability;
 
 }
+double Convergence::Calcul_Permeability_TwoPhases(int &Time){
+	//Update the locate DeltaP
+	Calcul_localDeltaP();
+	double sum_permeability=0;double sum_tmp=0;double Umag=0;double DeltaPmag=0;
 
+
+	for (int i=0;i<MarkFluidNode_V1.size();i++){
+		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V1[i]]*DeltaP[0][MarkFluidNode_V1[i]]+DeltaP[1][MarkFluidNode_V1[i]]*DeltaP[1][MarkFluidNode_V1[i]]);
+		if(DeltaPmag>0)
+		{
+			Umag=std::sqrt(UPerm[0][MarkFluidNode_V1[i]]*UPerm[0][MarkFluidNode_V1[i]]+UPerm[1][MarkFluidNode_V1[i]]*UPerm[1][MarkFluidNode_V1[i]]);
+			sum_permeability+=Permeability(DeltaPmag,Umag,PtrViscosityConv->Get_Mu());
+		}
+	}
+	sum_tmp=0;
+	for (int i=0;i<MarkFluidNode_V075.size();i++){
+		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V075[i]]*DeltaP[0][MarkFluidNode_V075[i]]+DeltaP[1][MarkFluidNode_V075[i]]*DeltaP[1][MarkFluidNode_V075[i]]);
+		if(DeltaPmag>0)
+		{
+			Umag=std::sqrt(UPerm[0][MarkFluidNode_V075[i]]*UPerm[0][MarkFluidNode_V075[i]]+UPerm[1][MarkFluidNode_V075[i]]*UPerm[1][MarkFluidNode_V075[i]]);
+			sum_tmp+=Permeability(DeltaPmag,Umag,PtrViscosityConv->Get_Mu());
+		}
+	}
+	sum_permeability+=0.75*sum_tmp;
+	sum_tmp=0;
+	for (int i=0;i<MarkFluidNode_V05.size();i++){
+		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V05[i]]*DeltaP[0][MarkFluidNode_V05[i]]+DeltaP[1][MarkFluidNode_V05[i]]*DeltaP[1][MarkFluidNode_V05[i]]);
+		if(DeltaPmag>0)
+		{
+			Umag=std::sqrt(UPerm[0][MarkFluidNode_V05[i]]*UPerm[0][MarkFluidNode_V05[i]]+UPerm[1][MarkFluidNode_V05[i]]*UPerm[1][MarkFluidNode_V05[i]]);
+			sum_tmp+=Permeability(DeltaPmag,Umag,PtrViscosityConv->Get_Mu());
+		}
+	}
+	sum_permeability+=0.5*sum_tmp;
+	sum_tmp=0;
+	for (int i=0;i<MarkFluidNode_V025.size();i++){
+		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V025[i]]*DeltaP[0][MarkFluidNode_V025[i]]+DeltaP[1][MarkFluidNode_V025[i]]*DeltaP[1][MarkFluidNode_V025[i]]);
+		if(DeltaPmag>0)
+		{
+			Umag=std::sqrt(UPerm[0][MarkFluidNode_V025[i]]*UPerm[0][MarkFluidNode_V025[i]]+UPerm[1][MarkFluidNode_V025[i]]*UPerm[1][MarkFluidNode_V025[i]]);
+			sum_tmp+=Permeability(DeltaPmag,Umag,PtrViscosityConv->Get_Mu());
+		}
+	}
+	sum_permeability+=0.25*sum_tmp;
+	sum_tmp=0;
+
+
+	sum_permeability=PtrMultiBlockConv->SumAllProcessors(&sum_permeability);
+
+
+	double Permeability=sum_permeability/fluidVolumesum;
+
+	if(PtrMultiBlockConv->IsMainProcessor())
+	{
+		ofstream Permeabilityfile;
+		Permeabilityfile.open("Permeability.txt",ios::out | ios::app);
+		Permeabilityfile<<Time<<","<<Permeability<<std::endl;
+		Permeabilityfile.close();
+		std::cout<<"Permeability: "<<Permeability<<std::endl;
+	}
+	return Permeability;
+}
 void Convergence::Sum_ScalarNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double &sum){
 	sum=0;
 	double sum_tmp=0;
@@ -559,8 +758,9 @@ void Convergence::Sum_ViscosityNodeArray(std::vector<int>& NodeArray,std::vector
 	sum+=sum_tmp;
 }
 double Convergence::Porosity(){
-	double fluidVolumesum=0;double solidVolumesum=0;
-	SumFluidVolume(fluidVolumesum);
+	fluidVolumesum=0;solidVolumesum=0;
+	fluidVolumesum=MarkFluidNode_V1.size()+0.75*MarkFluidNode_V075.size()+0.5*MarkFluidNode_V05.size()+0.25*MarkFluidNode_V025.size();
+	//SumFluidVolume(fluidVolumesum);
 	SumSolidVolume(solidVolumesum);
 	fluidVolumesum=PtrMultiBlockConv->SumAllProcessors(&fluidVolumesum);
 	solidVolumesum=PtrMultiBlockConv->SumAllProcessors(&solidVolumesum);
@@ -569,6 +769,118 @@ double Convergence::Porosity(){
 		<<" Fluid volumes: "<<fluidVolumesum<<" Solid Volumes: "<<solidVolumesum<<std::endl;
 	return fluidVolumesum/(fluidVolumesum+solidVolumesum);
 }
+void Convergence::Set_MarkFluidNodes(){
+	MarkFluidNode_V1.clear();MarkFluidNode_V075.clear();MarkFluidNode_V05.clear();MarkFluidNode_V025.clear();
+//treatment Interior of the domain
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdInterior();i++)
+		if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdInterior(i)))
+			MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdInterior(i));
+		else if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdInterior(i)))
+			MarkFluidNode_V1.push_back(PtrNodeArraysConv->Get_NodeIdInterior(i));
+		else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdInterior(i)))
+			MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdInterior(i));
+
+
+//Treatment boundary conditions of the domain
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdPressure();i++)
+			if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdPressure(i)))
+				MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdPressure(i));
+			else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdPressure(i)))
+				MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdPressure(i));
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdVelocity();i++)
+			if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdVelocity(i)))
+				MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdVelocity(i));
+			else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdVelocity(i)))
+				MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdVelocity(i));
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdPeriodic();i++)
+			if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdPeriodic(i)))
+				MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdPeriodic(i));
+			else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdPeriodic(i)))
+				MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdPeriodic(i));
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdSymmetry();i++)
+			if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdSymmetry(i)))
+				MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdSymmetry(i));
+			else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdSymmetry(i)))
+				MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdSymmetry(i));
+
+// treatment of walls
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdWall();i++)
+		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
+			if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
+				MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdWall(i));
+	//treatment border of the domain
+			else if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdWall(i)))
+			{
+				//need the normal toward the domain
+				if(IsNormalLimitDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
+					MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdWall(i));
+			}
+			else
+			{
+
+				if(IsWrongSideDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
+				{
+					//treat as a "special wall" of the porous media domain
+					if(IsNormalLimitDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
+						MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdWall(i));
+				}
+				else
+					//wall on the boundary of the porous media domain but toward the domain
+					MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdWall(i));
+			}
+
+// treatment global corner of the computational domain
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdGlobalCorner();i++)
+			if(IsInDomain(PtrNodeArraysConv->Get_NodeIdGlobalCorner(i)))
+				MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdGlobalCorner(i));
+
+//treatment concave corner
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConcave();i++)
+		//Concave corner in the domain
+		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
+			if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
+				MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConcave(i));
+			//treatment border of the domain
+			//check the orientation toward or not the domain
+			else if(IsWrongSideDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
+			{
+				//keep corner in the domain
+				if(IsNormalLimitDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
+					MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConcave(i));
+			}
+			else
+				MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConcave(i));
+
+
+//treatment of the special wall of the computational domain
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdSpecialWall();i++)
+		if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdSpecialWall(i)))
+		{
+			//keep only the special node oriented toward the domain at the border of the porous media domain
+			if(IsNormalLimitDomain(PtrNodeArraysConv->Get_NodeIdSpecialWall(i)))
+				MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdSpecialWall(i));
+		}
+		else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdSpecialWall(i)))
+			MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdSpecialWall(i));
+
+
+//	sumfluidvolume+=0.75*PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();i++)
+			if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+				if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+					MarkFluidNode_V075.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
+	//exclude convex corner in the corner of the porous media and with normal toward the outside diagonal
+				else if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+						{
+							if(!IsConvexCornerNormalOutside(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+								MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
+						}
+				else if(IsWrongSideDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+					MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
+				else
+					MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
+}
+/*
 void Convergence::SumFluidVolume(double & sumfluidvolume){
 	sumfluidvolume=0;
 	//sumfluidvolume+=PtrNodeArraysConv->Get_SizeNodeIdInterior();
@@ -678,6 +990,7 @@ void Convergence::SumFluidVolume(double & sumfluidvolume){
 				else
 					sumfluidvolume+=0.5;
 }
+*/
 void Convergence::SumSolidVolume(double & sumsolidvolume){
 	sumsolidvolume=0;
 //Solid
@@ -808,4 +1121,75 @@ bool Convergence::IsConvexCornerNormalOutside(int idx){
 		return true;
 	else
 		return false;
+}
+void Convergence::Calcul_localDeltaP(){
+	double tmp[2];
+	for (int j=0;j<PtrNodeArraysConv->Get_SizeNodeIdInterior();j++)
+	{
+	// Calculate gradients
+		DensityGradient.Grad(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectInterior(j),PtrNodeArraysConv->Get_NodeNormalInterior(j));
+		DeltaP[0][PtrNodeArraysConv->Get_NodeIdInterior(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdInterior(j)]=tmp[1];
+	//	NormDeltaP[PtrNodeArraysConv->Get_NodeIdInterior(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
+	}
+
+	for (int j=0;j<PtrNodeArraysConv->Get_SizeNodeIdCorner();j++)
+	{
+		// Calculate gradients
+			DensityGradient.GradCorner(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectCorner(j),PtrNodeArraysConv->Get_NodeNormalCorner(j));
+			DeltaP[0][PtrNodeArraysConv->Get_NodeIdCorner(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdCorner(j)]=tmp[1];
+//			NormDeltaP[PtrNodeArraysConv->Get_NodeIdCorner(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
+	}
+
+	for (int j=0;j<PtrNodeArraysConv->Get_SizeNodeIdGlobalCorner();j++)
+	{
+		// Calculate gradients
+			DensityGradient.GradBc(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectGlobalCorner(j),PtrNodeArraysConv->Get_NodeNormalGlobalCorner(j));
+			DeltaP[0][PtrNodeArraysConv->Get_NodeIdGlobalCorner(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdGlobalCorner(j)]=tmp[1];
+	//		NormDeltaP[PtrNodeArraysConv->Get_NodeIdGlobalCorner(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
+	}
+
+	for (int j=0;j<PtrNodeArraysConv->Get_SizeNodeIdVelocity();j++)
+	{
+		// Calculate gradients
+			DensityGradient.GradBc(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectVelocity(j),PtrNodeArraysConv->Get_NodeNormalVelocity(j));
+			DeltaP[0][PtrNodeArraysConv->Get_NodeIdVelocity(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdVelocity(j)]=tmp[1];
+//			NormDeltaP[PtrNodeArraysConv->Get_NodeIdVelocity(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
+	}
+
+	for (int j=0;j<PtrNodeArraysConv->Get_SizeNodeIdPressure();j++)
+	{
+		// Calculate gradients
+			DensityGradient.GradBc(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectPressure(j),PtrNodeArraysConv->Get_NodeNormalPressure(j));
+			DeltaP[0][PtrNodeArraysConv->Get_NodeIdPressure(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdPressure(j)]=tmp[1];
+	//		NormDeltaP[PtrNodeArraysConv->Get_NodeIdPressure(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
+	}
+
+	for (int j=0;j<PtrNodeArraysConv->Get_SizeNodeIdWall();j++)
+	{
+		// Calculate gradients
+			DensityGradient.GradBc(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectWall(j),PtrNodeArraysConv->Get_NodeNormalWall(j));
+			DeltaP[0][PtrNodeArraysConv->Get_NodeIdWall(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdWall(j)]=tmp[1];
+//			NormDeltaP[PtrNodeArraysConv->Get_NodeIdWall(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
+	}
+	for (int j=0;j<PtrNodeArraysConv->Get_SizeNodeIdSpecialWall();j++)
+	{
+		// Calculate gradients
+			DensityGradient.GradBc(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectSpecialWall(j),PtrNodeArraysConv->Get_NodeNormalSpecialWall(j));
+			DeltaP[0][PtrNodeArraysConv->Get_NodeIdSpecialWall(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdSpecialWall(j)]=tmp[1];
+//			NormDeltaP[PtrNodeArraysConv->Get_NodeIdSpecialWall(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
+	}
+	for (int j=0;j<PtrNodeArraysConv->Get_SizeNodeIdSymmetry();j++)
+	{
+		// Calculate gradients
+			DensityGradient.GradBc(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectSymmetry(j),PtrNodeArraysConv->Get_NodeNormalSymmetry(j));
+			DeltaP[0][PtrNodeArraysConv->Get_NodeIdSymmetry(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdSymmetry(j)]=tmp[1];
+//			NormDeltaP[PtrNodeArraysConv->Get_NodeIdSymmetry(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
+	}
+	for (int j=0;j<PtrNodeArraysConv->Get_SizeNodeIdPeriodic();j++)
+	{
+		// Calculate gradients
+			DensityGradient.GradBc(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectPeriodic(j),PtrNodeArraysConv->Get_NodeNormalPeriodic(j));
+			DeltaP[0][PtrNodeArraysConv->Get_NodeIdPeriodic(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdPeriodic(j)]=tmp[1];
+//			NormDeltaP[PtrNodeArraysConv->Get_NodeIdPeriodic(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
+	}
 }

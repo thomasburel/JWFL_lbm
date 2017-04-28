@@ -51,23 +51,38 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 		alpha=1.0;
 		Rho=Pmin;//+sigma*3.0/R;
 	}*/
-	if(pos[0]<=10)
+	double shift=2;
+	if(pos[0]<=30 && (pos[1]>=shift && pos[1]<=H-shift))
 	{
-		U[0]=0.0;//1.e-4;//*(1.0-pow(2.0*(pos[1]-H/2.0)/H,2.0));
+		U[0]=1.e-5*(1.0-pow(2.0*(pos[1]-H/2.0)/(H-8),2.0));
 		U[1]=0.0;
-		Rho=Pmax;
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
 		alpha=0.0;
 	}
 	else
 	{
-		U[0]=0.0;
+		U[0]=1.e-5*(1.0-pow(2.0*(pos[1]-H/2.0)/(H-8),2.0));//1.e-2*(1.0-pow(2.0*(pos[1]-H/2.0)/H,2.0));
 		U[1]=0.0;
-		Rho=Pmax;//-pos[0]*(Pmax-Pmin)/L;
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
 		alpha=1.0;
 	}
+
+	Rho=1;
 	U[0]=0.0;
-	if(pos[0]<=100)
+	U[1]=0.0;
+	alpha=0.0;
+	R=10;
+	if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]-H/2,2.0)<=R*R+1e-8)
+	{
+		alpha=1.0;
+	}
+//	U[0]=0.0;
+//	if(pos[0]<=100)
+/*
 	U[0]=1.e-2;
+	U[1]=0.0;
+	Rho=1;
+*/
 /*	if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1],2.0)<=R*R+1e-8)
 	{
 		alpha=1.0;
@@ -95,6 +110,20 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 		Rho=Pmin;
 		alpha=0.0;
 	}*/
+	U[0]=0.0;//0.000001;
+	U[1]=0.00;
+	Rho=1;
+	//alpha=pos[0]/100;
+	if(pos[0]<10)
+		alpha=0;
+	else
+		alpha=1;
+	if(pos[0]<10)
+		Rho=1.01;
+	else
+		Rho=0.99;
+//	Rho=1.01-pos[0]*(1.01-0.99)/L;
+
 }
 
 void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U, double& alpha){
@@ -124,24 +153,37 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 			Rho=Pmin+sigma*3.0/R;
 		}
 */
-	if(pos[0]<=10)
+	double shift=2;
+	if(pos[0]<=30 && (pos[1]>=shift && pos[1]<=H-shift))
 	{
-		U[0]=0.0;
+		U[0]=1.e-5*(1.0-pow(2.0*(pos[1]-H/2.0)/(H-8),2.0));
 		U[1]=0.0;
-		Rho=Pmax;
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
 		alpha=0.0;
 	}
 	else
 	{
-		U[0]=0.0;
+		U[0]=1.e-5*(1.0-pow(2.0*(pos[1]-H/2.0)/(H-8),2.0));//1.e-2*(1.0-pow(2.0*(pos[1]-H/2.0)/H,2.0));
 		U[1]=0.0;
-		Rho=Pmax;//-pos[0]*(Pmax-Pmin)/L;
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;//-pos[0]*(Pmax-Pmin)/L;
 		alpha=1.0;
 	}
-
-	U[0]=0.0;//1.e-4;
-	if(pos[0]<=100)
+	Rho=1;
+	U[0]=0.0;
+	U[1]=0.0;
+	alpha=0.0;
+	double R=10;
+	if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]-H/2,2.0)<=R*R+1e-8)
+	{
+		alpha=1.0;
+	}
+//	U[0]=0.0;//1.e-4;
+//	if(pos[0]<=100)
+	/*
 	U[0]=1.e-2;
+	U[1]=0.0;
+	Rho=1;
+	*/
 /*	double R=10;//Diameter/2.0;
 	double xc,yc;
 	double delatx,deltay;
@@ -174,5 +216,21 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 		Rho=Pmin;
 		alpha=0.0;
 	}*/
+	U[0]=0.00;//0.00005;
+	U[1]=0.00;
+	Rho=1;
+	//alpha=pos[0]/100;
+//	if(pos[0]<4 &&(pos[1]>15 && pos[1]<195))
+	if(pos[0]<10 )
+
+		alpha=0;
+	else
+		alpha=1;
+	if(pos[0]<10)
+		Rho=1.01;
+	else
+		Rho=0.99;
+	//Rho=0.999;
+//	Rho=1.01-pos[0]*(1.01-0.99)/L;
 }
 

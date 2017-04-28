@@ -9,7 +9,7 @@
 
 NodeArrays::NodeArrays() {
 	// TODO Auto-generated constructor stub
-
+	nullNodeArray=0;
 }
 
 NodeArrays::~NodeArrays() {

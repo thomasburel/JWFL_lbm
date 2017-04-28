@@ -41,11 +41,11 @@ public:
 	int Get_NbSyncVar(){return SyncVar.size();};
 
 	/// Get the ID of the variable from its name. It is a slow access.
-	int Get_Id_Var(std::string VarName);
+	int Get_Id_Var(std::string VarName, bool &Var_found);
 	/// Get the pointer of the variable from its Id. It is a quick access.
 	double* &Get_PtrVar(int Id_Var){return Var[Id_Var];};
 	/// Get the pointer of the variable from its name. It is a slow access.
-	void Get_PtrVar(std::string VarName, double* & Var_out){Var_out=Var[Get_Id_Var(VarName)];};
+	void Get_PtrVar(std::string VarName, double* & Var_out, bool &Var_found){Var_out=Var[Get_Id_Var(VarName,Var_found)];};
 
 	/// Get number of nodes per variable
 	int Get_NbNodes(){return numberNodes;};

@@ -96,16 +96,19 @@ private:
 		ar & BOOST_SERIALIZATION_NVP(calculatePorosity);
 		ar & BOOST_SERIALIZATION_NVP(calculateProductionRate);
 		ar & BOOST_SERIALIZATION_NVP(calculatePermeability);
+		ar & BOOST_SERIALIZATION_NVP(calculateDarcyPermeability);
 	}
 public:
 	void PorousMediaCase(bool porousmediacase_) { porousmediacase=porousmediacase_;};
 	void CalculatePorosity(bool calculatePorosity_)  { calculatePorosity=calculatePorosity_;};
 	void CalculateProductionRate(bool calculateProductionRate_)  { calculateProductionRate=calculateProductionRate_;};
 	void CalculatePermeability(bool calculatePermeability_ )  { calculatePermeability=calculatePermeability_;};
+	void CalculateDarcyPermeability(bool calculateDarcyPermeability_ )  { calculateDarcyPermeability=calculateDarcyPermeability_;};
 	bool IsPorousMediaCase() const {return porousmediacase;};
 	bool IsCalculatePorosity() const {return calculatePorosity;};
 	bool IsCalculateProductionRate() const {return calculateProductionRate;};
 	bool IsCalculatePermeability() const {return calculatePermeability;};
+	bool IsCalculateDarcyPermeability() const {return calculateDarcyPermeability;};
 	void Set_LenghtMedia(double lenghtIn){LenghtMedia=lenghtIn;};
 	double Get_LenghtMedia(){return LenghtMedia;};
 	void Set_SectionMedia(double sectionIn){SectionMedia=sectionIn;};
@@ -117,7 +120,7 @@ protected:
 	bool porousmediacase;
 	bool calculatePorosity;
 	bool calculateProductionRate;
-	bool calculatePermeability;
+	bool calculatePermeability,calculateDarcyPermeability;
 	double LenghtMedia,SectionMedia;
 	int MinX,MaxX,MinY,MaxY,MinZ,MaxZ;
 
@@ -496,6 +499,7 @@ private:
 		   & BOOST_SERIALIZATION_NVP(NbVariablesOutput)
 		   & BOOST_SERIALIZATION_NVP(OutputFileName)
 		   & BOOST_SERIALIZATION_NVP(density)
+		   & BOOST_SERIALIZATION_NVP(pressure)
 		   & BOOST_SERIALIZATION_NVP(velocity);
 		/*  ar & BOOST_SERIALIZATION_NVP(argc)
 		   & BOOST_SERIALIZATION_NVP(argv);*/
@@ -516,6 +520,7 @@ public:
 	void Set_listing(int IntervalListning);
 	int Get_listing() const;
 	bool Get_output_density() const {return density;};
+	bool Get_output_pressure() const {return pressure;};
 	bool Get_output_velocity() const {return velocity;};
 protected:
 	void Set_VariablesOutput(int nbvar, std::string * strinput);
@@ -528,7 +533,7 @@ protected:
 	std::string *VariablesOutput;
 	int NbVariablesOutput;
 	std::string OutputFileName;
-	bool density,velocity;
+	bool density,velocity,pressure;
 };
 class RestartParameters {
 private:
@@ -602,7 +607,7 @@ public:
 	char*** Get_Argv() const;
 	bool Get_Verbous() const;
 
-	void Set_VariablesOutput(bool Rho, bool U){density=Rho;velocity=U;};
+	void Set_VariablesOutput(bool Rho, bool U, bool P){density=Rho;velocity=U;pressure=P;};
 
 	double Convert_SigmaToATau(){return ColourFluid::Convert_SigmaToATau(Get_SurfaceTension(),Get_LatticeSpeed());};
 	//void Save_Parameters();

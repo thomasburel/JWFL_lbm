@@ -822,7 +822,8 @@ void D2Q9ColourFluid::run(){
 	}
 
 //	Write_Breakpoint(PtrParameters);
-
+	if(CalPressure)
+		UpdatePressure();
 	Writer->Write_Output(it);
 	Convergence::Calcul_Error(it);
 //	Writer->Write_breakpoint(*PtrParameters);
@@ -853,10 +854,14 @@ void D2Q9ColourFluid::run(){
 			//SyncVarToGhost(RhoN);
 			if(it%OutPutNStep==0)
 			{
+				if(CalPressure)
+					UpdatePressure();
 				Writer->Write_Output(it);
 			}
 			if(it%listing==0 )
 			{
+				if(CalPressure)
+					UpdatePressure();
 				Convergence::Calcul_Error(it);
 				if(parallel->isMainProcessor())
 				{
@@ -872,6 +877,8 @@ void D2Q9ColourFluid::run(){
 				}
 				if(Get_Error()<max_error)
 				{
+					if(CalPressure)
+						UpdatePressure();
 					Writer->Write_Output(it);
 					it=NbStep;
 				}
@@ -899,10 +906,14 @@ void D2Q9ColourFluid::run(){
 			ExtrapolDensityInSolid();
 			if(it%OutPutNStep==0)
 			{
+				if(CalPressure)
+					UpdatePressure();
 				Writer->Write_Output(it);
 			}
 			if(it%listing==0)
 			{
+				if(CalPressure)
+					UpdatePressure();
 				Convergence::Calcul_Error(it);
 				time_run=parallel->getTime()-time_inirun;
 
@@ -915,6 +926,8 @@ void D2Q9ColourFluid::run(){
 				std::cout<<"Error is: "<<Get_Error()<<std::endl;
 				if(Get_Error()<max_error)
 				{
+					if(CalPressure)
+						UpdatePressure();
 					Writer->Write_Output(it);
 					it=NbStep;
 				}
@@ -2111,6 +2124,52 @@ void D2Q9ColourFluid::MacroVariablesWithNormalDensityAndForce(int& idx){
 //	U[0][idx]=(U[0][idx]+0.5*F[0][idx])/Rho[idx];
 //	U[1][idx]=(U[1][idx]+0.5*F[1][idx])/Rho[idx];
 }
+void D2Q9ColourFluid::UpdatePressure(){
+	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeInterior[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeCorner[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeGlobalCorner[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeVelocity[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodePressure[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeWall[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeSpecialWall[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeSymmetry[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodePeriodic[j].Get_index());
+	}
+
+}
+void D2Q9ColourFluid::CalculatePressure(int const &idx){
+	P[idx]=IdealGazIsothermalPressure(Rho[idx]);
+}
+double D2Q9ColourFluid::IdealGazIsothermalPressure(double const &Rho){
+	return Rho/3.0;
+}
+
 void D2Q9ColourFluid::NormalDensityExtrapolationSpacial2ndOrder(int const & idxNodeArray, int & nodenumber, int* connect,int & normal){
 	switch(normal)
 	{
@@ -2461,6 +2520,7 @@ void D2Q9ColourFluid::Synchronise_Colour_gradient(){
 				MultiBlock_->Recv(&Normal[1][IdGNodeSE[0]],1,5,tag_d_bl,status);
 		}
 }
+
 /*
 /// Corner treat by Chih-Fung Ho, Cheng Chang, Kuen-Hau Lin and Chao-An Lin
 /// Consistent Boundary Conditions for 2D and 3D Lattice Boltzmann Simulations

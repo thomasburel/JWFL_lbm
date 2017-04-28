@@ -42,6 +42,7 @@ void UserPatchBc::IntitialiseUserPatchBc(Parameters& PtrParameters,int &NumberOf
 		//AddWallPatch("Wall",BounceBack);
 		AddSymmetryPatch("Symmetry",OnNode);
 		//Patch 3
+		//AddWallPatch("Wall",BounceBack);
 		AddSymmetryPatch("Symmetry",OnNode);
 
 }

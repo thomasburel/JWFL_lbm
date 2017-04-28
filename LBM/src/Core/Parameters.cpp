@@ -24,7 +24,7 @@ Parameters::Parameters()
 	parrallel=Serial;
 	VariablesOutput=0;
 	SolverParameters::set_SolverParameters();
-	Set_VariablesOutput(true,true);//export Rho and U by default
+	Set_VariablesOutput(true,true,false);//export Rho and U by default
 	NbGlobalBcType=4;
 	GlobalBcType=new NodeType [NbGlobalBcType];// Bottom: Wall, Outlet: Pressure, Top: Wall, Inlet: Velocity
 	GlobalBcType[0]=Wall;

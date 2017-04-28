@@ -23,7 +23,7 @@ public:
 	UserPatchBc();
 	virtual ~UserPatchBc();
 	void IntitialiseUserPatchBc(Parameters& PtrParameters,int &NumberOfPatchBc);
-	void SetUserPatchBc(Parameters& PtrParameters,int elem, int nodenumber, double* pos, int &IdPatchBc);
+	void SetUserPatchBc(Parameters& PtrParameters,int elem, int nodenumber, double* pos, int &IdPatchBc1, int &IdPatchBc2);
 
 protected:
 	void AddPressurePatch(string PatchBcNames,PressureModel PModel_, PressureType PType_);

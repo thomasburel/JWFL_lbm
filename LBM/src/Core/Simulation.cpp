@@ -219,7 +219,7 @@ void Simulation::Load_Parameters(Parameters & object){
 	assert(ifs.good());
 	boost::archive::xml_iarchive ia(ifs);
 	ia >> BOOST_SERIALIZATION_NVP(object);
-	object.Set_VariablesOutput(object.Get_output_density(),object.Get_output_velocity());
+	object.Set_VariablesOutput(object.Get_output_density(),object.Get_output_velocity(),object.Get_output_pressure());
 }
 
 

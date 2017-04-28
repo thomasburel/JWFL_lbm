@@ -16,6 +16,7 @@
 #include "Dictionary.h"
 #include "../Mesh/SingleBlock/Patch/PatchBc.h"
 #include "Viscosity.h"
+#include "../Algorithm/Tools/Gradients.h"
 enum TypeConverge{none,GlobalConvergence,FieldConvergence};
 enum TypeConvergeScalar{SacalarGlobal, ScalarField};
 enum TypeConvergeVector{VectorGlobal,VectorField};
@@ -39,6 +40,7 @@ private:
 	double Calcul_DarcyPermeability_SinglePhase(int &Time);
 	double Calcul_Permeability_TwoPhases(int &Time);
 	double Calcul_DarcyPermeability_TwoPhases(int &Time);
+	void Calcul_localDeltaP();
 
 
 	void Sum_ScalarNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double &sum);
@@ -51,7 +53,8 @@ private:
 
 
 	double Porosity();
-	void SumFluidVolume(double & sumfluidvolume);
+	void Set_MarkFluidNodes();
+	//void SumFluidVolume(double & sumfluidvolume);
 	void SumSolidVolume(double & sumsolidvolume);
 	bool IsBoundary(int idx);
 	bool IsWrongSideDomain(int idx);
@@ -68,7 +71,8 @@ private:
 	double Get_Weigth(double const &RhoN,bool const &phase1){ return Convert_RhoNToAlpha(RhoN,phase1);};
 	double Get_WeightInv(double const &Weight,bool const &phase1){ return Convert_AlphaToRhoN(Weight,phase1);};
 
-	double RhoToP(double Rho){return Rho/3.0;};
+	double RhoToP(double const Rho){return Rho/3.0;};
+	double Permeability(double const &deltaP,double const &u,double const mu){return u*mu/deltaP;};
 
 protected:
 	MultiBlock *PtrMultiBlockConv;
@@ -87,9 +91,15 @@ private:
 	std::vector<int> InletPatchId,OutletPatchId;
 	double *RhoNProductionRate,**UPerm,*RhoPerm,*RhoNPerm;
 	std::vector<int> *NodeId,*NodeIdSpeWall,*NodeIdGloCorner;
+	std::vector<int> MarkFluidNode_V1,MarkFluidNode_V075,MarkFluidNode_V05,MarkFluidNode_V025;///< Mark fluid node for sum over the porous domain
 
 	double avg;
-	double porosity;
+	double porosity,LuToPhy2;
+	double *PressureConv;
+	double **DeltaP;///< Local Pressure difference
+	//double *UMag;///< Calculate Velocity magnitude
+	Gradients DensityGradient;
+	double fluidVolumesum;double solidVolumesum;
 	double LengthMedium,SectionMedium;
 	unsigned int minXMedia,maxXMedia,minYMedia,maxYMedia,minZMedia,maxZMedia;
 
@@ -103,9 +113,10 @@ private:
 
 	// Pointers on function
 	///Simplify notation for pointer on a member function of D2Q9ColourFluid class for Colour Gradient methods
-		typedef double(Convergence::*PermeabilityDarcy)(int & time);
+		typedef double(Convergence::*PtrFctPermeability)(int & time);
 	//Define name for pointers on functions
-		PermeabilityDarcy PtrPermeabilityDarcy;///< Permeability Darcy
+		PtrFctPermeability PtrPermeabilityDarcy;///< Permeability Darcy
+		PtrFctPermeability PtrPermeability;///< Permeability of the medium
 };
 
 #endif /* SRC_CORE_CONVERGENCE_H_ */

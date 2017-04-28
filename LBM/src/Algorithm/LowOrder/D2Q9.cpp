@@ -238,7 +238,8 @@ void D2Q9::init(InitLBM& ini){
 	Set_BcType();
 	delete [] pos;
 	delete [] U_;
-
+	if(CalPressure)
+		UpdatePressure();
 
 }
 void D2Q9::UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini){
@@ -272,6 +273,8 @@ void D2Q9::run(){
 
 
 	//Write_Breakpoint(PtrParameters);
+	if(CalPressure)
+			UpdatePressure();
 	Writer->Write_Output(it);
 	Convergence::Calcul_Error(it);
 	it++;
@@ -293,10 +296,14 @@ void D2Q9::run(){
 			SyncMacroVarToGhost();
 			if(it%OutPutNStep==0)
 			{
+				if(CalPressure)
+						UpdatePressure();
 				Writer->Write_Output(it);
 			}
 			if(it%listing==0  )
 			{
+				if(CalPressure)
+						UpdatePressure();
 				Convergence::Calcul_Error(it);
 				if(parallel->isMainProcessor())
 				{
@@ -312,6 +319,8 @@ void D2Q9::run(){
 				}
 				if(Get_Error()<max_error)
 				{
+					if(CalPressure)
+							UpdatePressure();
 					Writer->Write_Output(it);
 					it=NbStep;
 				}
@@ -330,10 +339,14 @@ void D2Q9::run(){
 
 			if(it%OutPutNStep==0)
 			{
+				if(CalPressure)
+						UpdatePressure();
 				Writer->Write_Output(it);
 			}
 			if(it%listing==0  )
 			{
+				if(CalPressure)
+						UpdatePressure();
 				Convergence::Calcul_Error(it);
 				time_run=parallel->getTime()-time_inirun;
 				std::cout<<"Iteration number: "<<it<< " Running time: ";
@@ -346,6 +359,8 @@ void D2Q9::run(){
 
 				if(Get_Error()<max_error)
 				{
+					if(CalPressure)
+							UpdatePressure();
 					Writer->Write_Output(it);
 					it=NbStep;
 				}
@@ -497,8 +512,8 @@ void D2Q9::CollideD2Q9(){
 	}
 }
 void D2Q9::UpdateMacroVariables(){
-	for (int i=0;i<nbvelo;i++)
-	{
+//	for (int i=0;i<nbvelo;i++)
+//	{
 		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
 		{
 			MacroVariables(NodeArrays->NodeInterior[j].Get_index());
@@ -536,7 +551,7 @@ void D2Q9::UpdateMacroVariables(){
 			MacroVariables(NodeArrays->NodePeriodic[j].Get_index());
 		}
 
-	}
+//	}
 }
 void D2Q9::MacroVariables(int& idx){
 
@@ -1509,4 +1524,49 @@ void D2Q9::SyncMacroVarToGhost(){
 		Rho[IdGNodeS[i]]=buf_MacroRecv[0][3][i];
 	}
 
+}
+void D2Q9::UpdatePressure(){
+	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeInterior[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeCorner[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeGlobalCorner[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeVelocity[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodePressure[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeWall[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeSpecialWall[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodeSymmetry[j].Get_index());
+	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+		CalculatePressure(NodeArrays->NodePeriodic[j].Get_index());
+	}
+
+}
+void D2Q9::CalculatePressure(int const &idx){
+	P[idx]=IdealGazIsothermalPressure(Rho[idx]);
+}
+double D2Q9::IdealGazIsothermalPressure(double const &Rho){
+	return Rho/3.0;
 }

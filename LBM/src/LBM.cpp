@@ -47,8 +47,8 @@ int main(int argc, char *argv[]) {
 
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 // Set Domain size
-	double L=1983;
-	double H=1587;
+	double L=1322;//1983;//661;
+	double H=1058;//1587;//529;
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 //Set Lattice unity
 	double deltaTLattice=1;
@@ -66,14 +66,14 @@ int main(int argc, char *argv[]) {
 	double Rho2_ref=Rho1_ref;
 
 
-	double lambda=4.0/43.0;
-	double nu_1=2.5*1.e-2/lambda;//4.91*1.e-2/lambda;
+	double lambda=1.0/2.0;
+	double nu_1=2.5*1.e-2*10.0;//4.91*1.e-2/lambda;
 	double nu_2=lambda*nu_1;
 
 	double tau1=0.5+nu_1*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
 	double tau2=0.5+nu_2*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
 	double La=0;
-	double sigma=2.05*1.e-3;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
+	double sigma=1.e-3;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
 
 
 	double Mach =U2_ref*std::sqrt(3);
@@ -95,7 +95,7 @@ int main(int argc, char *argv[]) {
 	//U2_ref=0.01;Pmax=1;Pmin=1;
 //Contact angle parameters
 	double contactangle=80*pi/180.0;//30
-	Param.Set_ContactAngleType(ContactAngleEnum::UniformTeta);//NoTeta, UniformTeta or UserTeta
+	Param.Set_ContactAngleType(ContactAngleEnum::NoTeta);//NoTeta, UniformTeta or UserTeta
 	Param.Set_ContactAngleModel(ContactAngleEnum::Interpol);//Standard or Interpol
 	Param.Set_SwitchSelectTeta(ContactAngleEnum::Linear);//Binary or Linear
 	Param.Set_NormalExtrapolType(ContactAngleEnum::WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,or WeightDistanceExtrapol
@@ -111,8 +111,8 @@ int main(int argc, char *argv[]) {
 
 // Set User Force type
 	Param.Set_UserForceType(None);
-// Set delta x for output
-	Param.Set_deltax(1);
+// Set delta x for conversion from lattice unit to physical unit
+	Param.Set_deltax(1774*1e-6/L);
 
 
 /// Set Boundary condition type for the boundaries of the domain
@@ -132,17 +132,16 @@ int main(int argc, char *argv[]) {
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(20000);
+	Param.Set_NbStep(20);
 /// Interval for output
-	Param.Set_OutPutNSteps(100);// interval
+	Param.Set_OutPutNSteps(1);// interval
 ///Display information during the calculation every N iteration
-	Param.Set_listing(200);
+	Param.Set_listing(1);
 	Param.Set_ErrorMax(1e-15);
 	Param.Set_ErrorVariable(SolverEnum::RhoN);
 
 ///Selection of variables to export
-	Param.Set_VariablesOutput(true,true);// export Rho,U
-
+	Param.Set_VariablesOutput(true,true,true);// export Rho,U
 
 	// Multiphase model (SinglePhase or ColourFluid)
 	Param.Set_Model(SolverEnum::SinglePhase);
@@ -189,10 +188,11 @@ int main(int argc, char *argv[]) {
 	Param.Set_ColourOperatorType(ColourFluidEnum::Reis);//Grunau or Reis or SurfaceForce
 
 // Porous media
-	Param.PorousMediaCase(true) ;
-	Param.CalculatePorosity(true)  ;
-	Param.CalculateProductionRate(true) ;
-	Param.CalculatePermeability(true) ;
+	Param.PorousMediaCase(true);
+	Param.CalculatePorosity(true);
+	Param.CalculateProductionRate(true);
+	Param.CalculatePermeability(true);
+	Param.CalculateDarcyPermeability(true);
 	Param.Set_SectionMedia(H);
 	Param.Set_LenghtMedia(L);
 	Param.Set_PositionMedia(0,L,0,H);
@@ -225,7 +225,7 @@ int main(int argc, char *argv[]) {
 				<<Param.Get_Beta()<<"-beta_"<<Param.Get_ContactAngle()*180.0/pi<<"-teta_"
 						<< scientific<<setprecision(3)<<"sigma_"<<sigma<<"_ColourGradLimiter"<<Param.Get_ColourGradLimiter();
 */
-		FileExportStream.str("TestBcs_TwoPhase_interpol");
+		FileExportStream.str("Berea_test");
 		Param.Set_OutputFileName(FileExportStream.str());
 
 //	Param.Set_OutputFileName("Testread");

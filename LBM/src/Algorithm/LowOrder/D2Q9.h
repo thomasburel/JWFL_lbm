@@ -46,6 +46,11 @@ private:
 	/// Calculate \f$\rho\f$ and \f$\vec{U}\f$ in the local domain with including the external force
 	void MacroVariablesWithForce(int& idx);
 
+	//Calculate Pressure
+	void UpdatePressure();
+	void CalculatePressure(int const &idx);
+	double IdealGazIsothermalPressure(double const &Rho);
+
 private:
 	//Streaming by type of node
 	void SelectStream(int & nodenumber, unsigned int& direction);

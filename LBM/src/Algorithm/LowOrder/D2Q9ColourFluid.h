@@ -60,6 +60,11 @@ private:
 	void MacroVariablesWithForce(int& idx);
 	void MacroVariablesWithNormalDensity(int& idx);
 	void MacroVariablesWithNormalDensityAndForce(int& idx);
+
+	//Calculate Pressure
+	void UpdatePressure();
+	void CalculatePressure(int const &idx);
+	double IdealGazIsothermalPressure(double const &Rho);
 // Calculate Force for macro
 
 // Multiphase member functions
