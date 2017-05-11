@@ -769,6 +769,7 @@ void D2Q9::CollideD2Q9_WithBodyForce(){
 				f->f[i][NodeArrays->NodePeriodic[j].Get_index()]=fi_tmp[i];
 			}
 		}
+		delete [] fi_tmp;delete [] localforce;
 }
 void D2Q9::UpdateMacroVariables(){
 	(this->*PtrMacro)();

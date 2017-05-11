@@ -15,6 +15,10 @@
 UserContactAngle::UserContactAngle() {
 	// TODO Auto-generated constructor stub
 	pi=atan(1.0)*4.0 ;
+	desireCangle=90;
+	beginCangle=10;
+	lengthsmooth=20;
+	convDegreeToRadian=pi/180.0;
 }
 
 UserContactAngle::~UserContactAngle() {
@@ -22,8 +26,8 @@ UserContactAngle::~UserContactAngle() {
 }
 
 void UserContactAngle::Set_ContactAngle(Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& teta){
-	if(pos[0]<10)
-		teta=-pos[0]*(160.0-30.0)*pi/180.0/10.0+160.0;
+	if(pos[0]<lengthsmooth)
+		teta=(-pos[0]*(beginCangle-desireCangle)/lengthsmooth+beginCangle)*convDegreeToRadian;
 	else
-		teta=30.0*pi/180.0;
+		teta=desireCangle*convDegreeToRadian;
 }

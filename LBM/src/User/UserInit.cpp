@@ -51,6 +51,8 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 		alpha=1.0;
 		Rho=Pmin;//+sigma*3.0/R;
 	}*/
+
+	/*
 	double shift=2;
 	if(pos[0]<=30 && (pos[1]>=shift && pos[1]<=H-shift))
 	{
@@ -76,6 +78,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 	{
 		alpha=1.0;
 	}
+	*/
 //	U[0]=0.0;
 //	if(pos[0]<=100)
 /*
@@ -112,17 +115,26 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 	}*/
 	U[0]=0.0;//0.000001;
 	U[1]=0.00;
-	Rho=1;
+//	Rho=1;
 	//alpha=pos[0]/100;
-	if(pos[0]<10)
+	if(pos[0]<11 )
+		if(pos[0]<10)
 		alpha=0;
+		else
+			alpha=0.5;
 	else
 		alpha=1;
+
 	if(pos[0]<10)
-		Rho=1.01;
+		Rho=Pmax;
 	else
-		Rho=0.99;
-//	Rho=1.01-pos[0]*(1.01-0.99)/L;
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+
+	//Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+
+	//test velocity interface
+	U[0]=Umax;
+	Rho=Pmax;
 
 }
 
@@ -153,7 +165,7 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 			Rho=Pmin+sigma*3.0/R;
 		}
 */
-	double shift=2;
+/*	double shift=2;
 	if(pos[0]<=30 && (pos[1]>=shift && pos[1]<=H-shift))
 	{
 		U[0]=1.e-5*(1.0-pow(2.0*(pos[1]-H/2.0)/(H-8),2.0));
@@ -177,6 +189,7 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 	{
 		alpha=1.0;
 	}
+	*/
 //	U[0]=0.0;//1.e-4;
 //	if(pos[0]<=100)
 	/*
@@ -218,19 +231,25 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 	}*/
 	U[0]=0.00;//0.00005;
 	U[1]=0.00;
-	Rho=1;
+	//Rho=1;
 	//alpha=pos[0]/100;
 //	if(pos[0]<4 &&(pos[1]>15 && pos[1]<195))
-	if(pos[0]<10 )
-
+	if(pos[0]<11 )
+		if(pos[0]<10)
 		alpha=0;
+		else
+			alpha=0.5;
 	else
 		alpha=1;
+
 	if(pos[0]<10)
-		Rho=1.01;
+		Rho=Pmax;
 	else
-		Rho=0.99;
-	//Rho=0.999;
-//	Rho=1.01-pos[0]*(1.01-0.99)/L;
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+
+	//Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+	//test velocity interface
+	U[0]=Umax;
+	Rho=Pmax;
 }
 

@@ -27,13 +27,16 @@ UserMesh::UserMesh() {
 //	std::string filename("../Proceded_LBM__DVM_berea_662_530.raw");
 	//std::string filename("../Proceded_LBM_berea_662_530.raw");
 //	ReadBinaryImage(filename,662, 530, 1);// double resolution
-	std::string filename("../Proceded_LBM_DVM_berea_1323_1059.raw");
+/*	std::string filename("../Proceded_LBM_DVM_berea_1323_1059.raw");
 //	std::string filename("../Proceded_LBM_berea_1323_1059.raw");
 	ReadBinaryImage(filename,1323, 1059, 1);// double resolution
-
+	*/
+//	std::string filename("../Proceded_LBM_DVM_cone2_filtered_1949_1323.raw");
+//	ReadBinaryImage(filename,1949, 1323, 1);// double resolution
 //	std::string filename("../Proceded_LBM_berea_1984_1588.raw");
 //	ReadBinaryImage(filename,1984, 1588, 1);// triple resolution
-	std::cout<<"**** check read file***"<<std::endl;
+
+//	std::cout<<"**** check read file***"<<std::endl;
 
 //	std::string filename("../Pipe_1290_455.raw");
 
@@ -66,12 +69,15 @@ UserMesh::~UserMesh() {
 
 void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 {
+//	if(Node.get_x()>199 && Node.get_x()<2149 && Node.get_y()>-1 && Node.get_y()<1323 )
 	//if(Node.get_x()>-1 && Node.get_x()<662 && Node.get_y()>-1 && Node.get_y()<530 )
-	if(Node.get_x()>-1 && Node.get_x()<1323 && Node.get_y()>-1 && Node.get_y()<1059 )
+//	if(Node.get_x()>-1 && Node.get_x()<1323 && Node.get_y()>-1 && Node.get_y()<1059 )
 	//if(Node.get_x()>-1 && Node.get_x()<1984 && Node.get_y()>-1 && Node.get_y()<1588 )
-		solid=image[0][(int)Node.get_y()][(int)Node.get_x()];
-	else
-		solid=false;
+//		solid=image[0][(int)Node.get_y()][(int)Node.get_x()-200];
+//	else
+//		solid=false;
+
+
 
 /*
 	if(Node.get_x()>=(L/2.0-R) &&Node.get_x()<=(L/2.0+R) && Node.get_y()>=(-R) &&Node.get_y()<=(+R) )
@@ -188,9 +194,12 @@ void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 	else
 		solid=false;
 */
-//	if((Node.get_y()<50||Node.get_y()>150)&&(Node.get_x()>=75 && Node.get_x()<=125))
-//		solid=true;
-
+	/*
+	if(Node.get_y()<5||Node.get_y()>95)
+		solid=true;
+	else if((Node.get_y()<45||Node.get_y()>55)&&(Node.get_x()>=30 && Node.get_x()<=1005))
+		solid=true;
+*/
 }
 void UserMesh::SetSymmetryType(SymmetryType &Type, double x, double y)
 {

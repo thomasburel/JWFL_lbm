@@ -47,8 +47,8 @@ int main(int argc, char *argv[]) {
 
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 // Set Domain size
-	double L=1322;//1983;//661;
-	double H=1058;//1587;//529;
+	double L=2000;//1322;//1983;//661;
+	double H=100;//1058;//1587;//529;/home/thomas/Geometry/Gmsh/Proceded_LBM_DVM_canvas_793_789.raw
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 //Set Lattice unity
 	double deltaTLattice=1;
@@ -66,8 +66,8 @@ int main(int argc, char *argv[]) {
 	double Rho2_ref=Rho1_ref;
 
 
-	double lambda=1.0/2.0;
-	double nu_1=2.5*1.e-2*10.0;//4.91*1.e-2/lambda;
+	double lambda=1.0/5.0;
+	double nu_1=2.5*1.e-2*5.0;//4.91*1.e-2/lambda;
 	double nu_2=lambda*nu_1;
 
 	double tau1=0.5+nu_1*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
@@ -79,7 +79,7 @@ int main(int argc, char *argv[]) {
 	double Mach =U2_ref*std::sqrt(3);
 	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
 //Pressure drop
-	double deltaP=0.1;
+	double deltaP=0;//0.1*L/1322;
 	double refPressure=1.0;
 // Pressure inlet
 	double Pmax=refPressure+deltaP;
@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
 // Set User Parameters
 	//U2_ref=0.01;Pmax=1;Pmin=1;
 //Contact angle parameters
-	double contactangle=80*pi/180.0;//30
+	double contactangle=170*pi/180.0;//30
 	Param.Set_ContactAngleType(ContactAngleEnum::NoTeta);//NoTeta, UniformTeta or UserTeta
 	Param.Set_ContactAngleModel(ContactAngleEnum::Interpol);//Standard or Interpol
 	Param.Set_SwitchSelectTeta(ContactAngleEnum::Linear);//Binary or Linear
@@ -110,9 +110,9 @@ int main(int argc, char *argv[]) {
 	Param.Set_UserParameters(U2_ref,H,L,Pmax,Pmin);
 
 // Set User Force type
-	Param.Set_UserForceType(None);
+	Param.Set_UserForceType(ModelEnum::None);
 // Set delta x for conversion from lattice unit to physical unit
-	Param.Set_deltax(1774*1e-6/L);
+	Param.Set_deltax(1);//1774*1e-6/L
 
 
 /// Set Boundary condition type for the boundaries of the domain
@@ -120,7 +120,7 @@ int main(int argc, char *argv[]) {
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
 	Param.Set_BcType(Wall,Pressure,Wall,Velocity);
 
-
+	Param.Set_ModelOfFluid(SolverEnum::Compressible);
 /// Set Pressure Type
 	Param.Set_PressureType(FixP);//FixP,zeroPGrad1st
 /// Set Global Corner type
@@ -132,30 +132,31 @@ int main(int argc, char *argv[]) {
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
 	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(20);
+	Param.Set_NbStep(150000);
 /// Interval for output
-	Param.Set_OutPutNSteps(1);// interval
+	Param.Set_OutPutNSteps(1000);// interval
 ///Display information during the calculation every N iteration
-	Param.Set_listing(1);
-	Param.Set_ErrorMax(1e-15);
+	Param.Set_listing(1000);
+	Param.Set_ErrorMax(1e-20);
 	Param.Set_ErrorVariable(SolverEnum::RhoN);
 
 ///Selection of variables to export
-	Param.Set_VariablesOutput(true,true,true);// export Rho,U
+	Param.Set_VariablesOutput(true,true,false);// export Rho,U,P
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(SolverEnum::SinglePhase);
+	Param.Set_Model(SolverEnum::ColourFluid);
 	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
 	if(Param.Get_ViscosityType()==ConstViscosity)
 		lambda=1;
 
 	//Gradient definition
-	Param.Set_GradientType(LBMStencil); //FD or LBMStencil
-	Param.Set_ExtrapolationType(WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,WeightDistanceExtrapol
+	Param.Set_GradientType(ModelEnum::LBMStencil); //FD or LBMStencil
+	Param.Set_ExtrapolationType(ModelEnum::WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,WeightDistanceExtrapol
 
 /// Singlephase Parameters
 	Param.Set_Tau(tau1);
 	Param.Set_Rho(Rho1_ref);
+
 
 /// Multiphase Parameters
 	// outputs
@@ -181,14 +182,14 @@ int main(int argc, char *argv[]) {
 	Param.Set_SurfaceTension(sigma);
 	Param.Set_ATau(Param.Convert_SigmaToATau());
 	//Colour fluid Parameters
-	Param.Set_ColourGradLimiter(0.0000001);
+	Param.Set_ColourGradLimiter(0.01);
 	Param.Set_Beta(0.7);// Between 0 and 1
 	Param.Set_ColourGradType(ColourFluidEnum::DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
-	Param.Set_RecolouringType(ColourFluidEnum::LatvaKokkoRothman);
-	Param.Set_ColourOperatorType(ColourFluidEnum::Reis);//Grunau or Reis or SurfaceForce
+	Param.Set_RecolouringType(ColourFluidEnum::LatvaKokkoRothmanEstimator);//LatvaKokkoRothman or LatvaKokkoRothmanEstimator
+	Param.Set_ColourOperatorType(ColourFluidEnum::SurfaceForce);//Grunau or Reis or SurfaceForce
 
 // Porous media
-	Param.PorousMediaCase(true);
+	Param.PorousMediaCase(false);
 	Param.CalculatePorosity(true);
 	Param.CalculateProductionRate(true);
 	Param.CalculatePermeability(true);
@@ -196,36 +197,50 @@ int main(int argc, char *argv[]) {
 	Param.Set_SectionMedia(H);
 	Param.Set_LenghtMedia(L);
 	Param.Set_PositionMedia(0,L,0,H);
+	Param.Set_HeleShawBodyForce(PorousMediaEnum::no);
+	Param.Set_Depth(24.54*1e-06/Param.Get_deltax());
 
 	/// Define the Output filename
 	/*	FileExportStream<<"Droplet_shear_"<< fixed << setprecision(0)<<H<<"x"<<L
 				<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
 				<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
 		FileExportStream.str("");
-/*		FileExportStream<<"5ContractionsSymmetry_"<< fixed << setprecision(0)<<L<<"x"<<H;
+		FileExportStream<<"Test_Vel_interface__With_estimator_CSFV2"<< fixed << setprecision(0)<<L<<"x"<<H;
 //		FileExportStream<<"LinearLeastSquareInterpol_linearswitch_teta170_beta0.7_5fluids_3Solid";
-		if(Param.Get_ContactAngleModel()==ContactAngleEnum::Interpol)
+		if(Param.Get_Model()==SolverEnum::SinglePhase)
 		{
-			if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearLeastSquareInterpol)
-			{
-				FileExportStream<<"LinearLeastSquareInterpol_"
-						<<Param.Get_NumberOfInterpolNodeInFluid()<<"-Fluids_"
-						<<Param.Get_NumberOfInterpolNodeInSolid()<<"-Solids_";
-			}
-			if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearInterpol)
-					FileExportStream<<"LinearInterpol_";
+
 		}
 		else
-			FileExportStream<<"Standard_";
-		if(Param.Get_SwitchSelectTeta()==ContactAngleEnum::Linear)
-			FileExportStream<<"LinearSwitch_";
-		if(Param.Get_SwitchSelectTeta()==ContactAngleEnum::Binary)
-			FileExportStream<<"BinarySwitch_";
-		FileExportStream<<setprecision(2)<<lambda<<"-lambda_"
-				<<Param.Get_Beta()<<"-beta_"<<Param.Get_ContactAngle()*180.0/pi<<"-teta_"
-						<< scientific<<setprecision(3)<<"sigma_"<<sigma<<"_ColourGradLimiter"<<Param.Get_ColourGradLimiter();
-*/
-		FileExportStream.str("Berea_test");
+		{
+			if(Param.Get_ContactAngleType()==ContactAngleEnum::NoTeta)
+			{
+				FileExportStream<<"NoTeta_";
+			}
+			else
+			{
+				if(Param.Get_ContactAngleModel()==ContactAngleEnum::Interpol)
+				{
+					if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearLeastSquareInterpol)
+					{
+						FileExportStream<<"_LinearLeastSquareInterpol_"
+								<<Param.Get_NumberOfInterpolNodeInFluid()<<"-Fluids_"
+								<<Param.Get_NumberOfInterpolNodeInSolid()<<"-Solids_";
+					}
+					if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearInterpol)
+							FileExportStream<<"LinearInterpol_";
+				}
+				else
+					FileExportStream<<"Standard_";
+				if(Param.Get_SwitchSelectTeta()==ContactAngleEnum::Linear)
+					FileExportStream<<"LinearSwitch_";
+				if(Param.Get_SwitchSelectTeta()==ContactAngleEnum::Binary)
+					FileExportStream<<"BinarySwitch_";
+			}
+			FileExportStream<<setprecision(2)<<lambda<<"-lambda_"
+					<<Param.Get_Beta()<<"-beta_"<<Param.Get_ContactAngle()*180.0/pi<<"-teta_"
+							<< scientific<<setprecision(3)<<"sigma_"<<sigma<<"_ColourGradLimiter"<<Param.Get_ColourGradLimiter();
+		}
 		Param.Set_OutputFileName(FileExportStream.str());
 
 //	Param.Set_OutputFileName("Testread");
@@ -241,26 +256,20 @@ int main(int argc, char *argv[]) {
 
 /// Initialise the simulation with parameters
 	simu.InitSimu(Param, true);
-/*	double *d_=0;
-	std::string variablename("Density");
-	std::string filename("Debug_poiseuille_serpentine_105000.cgns");
-	simu.Test_ReadData(d_,variablename,filename);
-	if(d_==0)
-		std::cout<<"Error reading data"<<std::endl;
-	else
-		if(simu.Is_MainProcessor())
-		for (int i=0;i<20;i++)
-			std::cout<<i<<" "<<d_[i]<<std::endl;
-*/
+
 	simu.barrier();
 
 		if(simu.Is_MainProcessor())
 			cout<<" Surface tension is: "<<sigma<< " Tau 1: "<<tau1<<" Tau 2: "<<tau2<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<std::endl;
 
 //	simu.UpdateAllDomain(Param);
+
 /// Run the simulation
 	simu.RunSimu(Param);
 
-//	}
+
+	simu.FinalizeSimu();
+	if(simu.Is_MainProcessor())
+		cout<<" END Simulation"<<endl;
 }
 

@@ -12,8 +12,8 @@ class UserForce {
 public:
 	UserForce();
 	virtual ~UserForce();
-protected:
-	double LocalForce(int const direction, double const Rho, double const U, double const V, double const W=0);
+//protected:
+	double LocalForce(int const direction_i, double const Rho, double const U, double const V, double const W=0);
 	double BodyForce(int const direction_xyz, double const Rho, double const U, double const  V, double const W=0);
 };
 

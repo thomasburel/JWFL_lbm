@@ -163,6 +163,7 @@ private:
 	double *RhoN;// Normal density
 	double *Rhor;// Density red fluid
 	double *Rhob;// DensityBlue fluid
+	double *Fi;///< Local Force
 	double **F, **G;///< Surface Force and Colour gradient/density gradient
 	double **Normal;///< normal of the interface
 	double *G_Norm;///< Norm of the colour gradient

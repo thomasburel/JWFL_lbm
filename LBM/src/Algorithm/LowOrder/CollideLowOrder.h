@@ -68,6 +68,8 @@ public:
 	void NoHeleShawDrag(double const &u, double const &v,double const &mu,double &Fx,double &Fy,double const InterfaceFx=0,double const InterfaceFy=0){};
 	double NoUserLocalForce(int const direction, double const Rho, double const U, double const V, double const W=0){return 0;};
 	double NoUserBodyForce(int const direction_xyz, double const Rho, double const U, double const  V, double const W=0){return 0;};
+	void NoVelocityCorrection(double &u, double &v, double const &Rho,double const &Fx,double const &Fy){};
+	void VelocityCorrection(double &u, double &v, double const &Rho,double const &Fx,double const &Fy){u+=0.5*Fx/Rho;v+=0.5*Fy/Rho;};
 protected:
 	double InvTau;
 	Block* PtrBlockCollide;
@@ -91,12 +93,13 @@ protected:
 	typedef void(CollideLowOrder::*AddHeleShaw)(double const &u, double const &v,double const &mu,double &Fx,double &Fy,double const InterfaceFx,double const InterfaceFy);
 	typedef double(CollideLowOrder::*AddUserLocalForce)(int const direction, double const Rho, double const U, double const V, double const W);
 	typedef double(CollideLowOrder::*AddUserBodyForce)(int const direction_xyz, double const Rho, double const U, double const  V, double const W);
-
+	typedef void(CollideLowOrder::*CorrectVelocity)(double &u, double &v, double const &Rho,double const &Fx,double const &Fy);
 	Collide_2D_TypeDef PtrCollide_2D;
 	Collide_2D_V2_TypeDef PtrCollide_2D_V2;
 	AddHeleShaw PtrAddHeleShaw;
 	AddUserLocalForce PtrAddUserLocalForce;
 	AddUserBodyForce PtrAddUserBodyForce;
+	CorrectVelocity PtrCorrectVelocity;
 	typedef double(CollideLowOrder::*EquiDistri)(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);
 	EquiDistri PtrEquiDistri;
 

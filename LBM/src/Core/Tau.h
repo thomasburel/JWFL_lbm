@@ -82,7 +82,7 @@ public:
 	void UpdateRhoN(double const &RhoN){RhoNTau=RhoN;};
 	void UpdateT(double const &T){TTau=T;};
 	Viscosity* Get_viscosity(){return tau->Get_viscosity();};
-	double Get_Mu(){return tau->Get_Mu(RhoTau,RhoNTau);};
+	double Get_Mu(double const Rho=1, double const RhoN=0){return tau->Get_Mu(Rho,RhoN);};
 private:
 	TauDEF* tau;
 	double RhoTau,RhoNTau,TTau;

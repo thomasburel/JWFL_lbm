@@ -28,9 +28,9 @@ void UserPatchBc::IntitialiseUserPatchBc(Parameters& PtrParameters,int &NumberOf
 		//Patch 0
 	//	AddWallPatch("Wall",BounceBack);
 
-		AddPressurePatch("Inlet",HeZouP, FixP);
-		PressurePatch.back().Set_Inlet(true);
-		//AddVelocityPatch("Inlet",HeZouV, FixV);
+		//AddPressurePatch("Inlet",HeZouP, FixP);
+		//PressurePatch.back().Set_Inlet(true);
+		AddVelocityPatch("Inlet",HeZouV, FixV);
 		//Patch 1
 		AddPressurePatch("Outlet",HeZouP, FixP);
 		//AddVelocityPatch("Outlet",HeZouV, zeroVGrad1st); //FixV,zeroVGrad1st
