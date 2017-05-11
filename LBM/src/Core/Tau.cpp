@@ -10,6 +10,8 @@
 Tau::Tau() {
 	// TODO Auto-generated constructor stub
 	tau=0;
+	RhoTau=1;RhoNTau=0;
+	TTau=20;
 }
 void Tau::IniTau(Parameters *Param) {
 	// TODO Auto-generated constructor stub
@@ -43,6 +45,9 @@ Tau::~Tau() {
 double& Tau::Get_InvTau(double const Rho, double const RhoN){
 return tau->Get_InvTau(Rho,RhoN);
 }
+/*double*& Tau::Get_InvTau(){
+	return tau->Get_InvTau(RhoTau,RhoNTau);
+}*/
 TauDEF::TauDEF() {
 	InvTau=1;
 	cs2=1;

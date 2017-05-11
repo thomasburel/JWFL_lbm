@@ -92,6 +92,17 @@ void Simulation::Import_Mesh(string MeshFile_) {
 
 }
 void Simulation::FinalizeSimu() {
+	if (parallel->isMainProcessor())
+		cout<<"Deleting Solvers"<<endl;
+	Solver_->~Solver();
+	if (parallel->isMainProcessor())
+		cout<<"Deleting Writers"<<endl;
+	Writer->~WriterManager();
+	if (parallel->isMainProcessor())
+		cout<<"Deleting Multiblocks"<<endl;
+	MultiBlock_->~MultiBlock();
+	if (parallel->isMainProcessor())
+		cout<<"Deleting Parallel manager"<<endl;
 	parallel->~ParallelManager();
 
 }
@@ -105,7 +116,7 @@ void Simulation::RunSimu()
 	cout<< "Time to run the simulation:    "<<get_time()-time << endl;
 	time=get_time();
 	Save_Simulation();
-
+	cout<< " End Simulation " << endl;
 }
 void Simulation::RunSimu(Parameters &UpdatedParam)
 {

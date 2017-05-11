@@ -13,6 +13,9 @@ NodeArrays::NodeArrays() {
 }
 
 NodeArrays::~NodeArrays() {
+//	TypeOfNode.clear();
+//	if(!NodeIndexByType.empty())
+//		NodeIndexByType.clear();
 	// TODO Auto-generated destructor stub
 }
 NodeArrays2D::NodeArrays2D() {

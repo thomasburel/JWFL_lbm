@@ -18,43 +18,56 @@
 #include "../../Core/Dictionary.h"
 #include "../../Mesh/SingleBlock.h"
 #include "../../User/UserForce.h"
+#include "../../SpecialTreatment/PorousMedia.h"
 #include <boost/archive/text_oarchive.hpp>
 #include <boost/archive/text_iarchive.hpp>
 
-enum CollideType{Std2D,Std2DLocal,Std2DBody,Std2DNonCstTau,Std2DNonCstTauLocal,Std2DNonCstTauBody};
+enum CollideType{Std2D,Std2DLocal,Std2DBody,Std2DLocalBody,Std2DNonCstTau,Std2DNonCstTauLocal,Std2DNonCstTauBody,Std2DNonCstTauLocalBody};
 
-class CollideLowOrder: public UserForce
+class CollideLowOrder: public UserForce, public PorousMedia
  {
 public:
 	CollideLowOrder();
 	virtual ~CollideLowOrder();
 
 	void Collide_2D(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double InvTau_tmp);
+	void Collide_2D_V2(double * &fi,double &rho, double &u, double &v, double *&Fi,double & Fx, double & Fy, double InvTau_tmp, double KineViscosity);
 	void Select_Collide_2D(CollideType Type,double Cs2,double referenceDensity=1,SolverEnum::fluidmodel model=SolverEnum::Compressible);
+	void Select_Collide_2D_V2(Parameters const &Param,CollideType Type,double Cs2,double referenceDensity=1,SolverEnum::fluidmodel model=SolverEnum::Compressible);
+
 	double CollideEquillibrium(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);
 
 	double CompressibleEquiDistriFunct2D(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);
 	double IncompressibleEquiDistriFunct2D(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);
 	void Collide_2D_SinglePhase(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+	void Collide_2D_SinglePhase_V2(int & i, double &fi,double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_With_LocalForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+	void Collide_2D_SinglePhase_With_LocalForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_With_BodyForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+	void Collide_2D_SinglePhase_With_BodyForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_With_LocalForceAndUserLocalForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_With_BodyForceAndUserLocalForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_With_LocalForceAndUserBodyForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+	void Collide_2D_SinglePhase_With_LocalForceAndBodyForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_With_BodyForceAndUserBodyForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
-
 	double Collide_2D_BodyForce(int & i, double &u, double &v, double Fx, double Fy);
 
 	void Collide_2D_SinglePhase_Non_Constant_Tau(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+	void Collide_2D_SinglePhase_Non_Constant_Tau_V2(int & i, double &fi,double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+	void Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+	void Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForceAndUserLocalForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForceAndUserLocalForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForceAndUserBodyForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
+	void Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForceAndBodyForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp);
 	void Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForceAndUserBodyForce(int & i, double &fi, double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
 
 	double Collide_2D_BodyForce_Non_Constant_Tau(int & i, double &u, double &v, double Fx, double Fy, double & InvTau_tmp);
-
+	void NoHeleShawDrag(double const &u, double const &v,double const &mu,double &Fx,double &Fy,double const InterfaceFx=0,double const InterfaceFy=0){};
+	double NoUserLocalForce(int const direction, double const Rho, double const U, double const V, double const W=0){return 0;};
+	double NoUserBodyForce(int const direction_xyz, double const Rho, double const U, double const  V, double const W=0){return 0;};
 protected:
 	double InvTau;
 	Block* PtrBlockCollide;
@@ -64,6 +77,7 @@ protected:
 	double InvCs2Collide,InvCs2_2Collide,InvCs4_2Collide;
 	double RefDensity;
 	double dot_E_U;
+	int Nb_VelocityCollide;
 //	double Ei[9][2];
 //	double omega[9];
 	double D_tmp;// Temporary double
@@ -73,8 +87,16 @@ protected:
 // Pointers on function
 	//Simplify notation for pointer on member functions
 	typedef void(CollideLowOrder::*Collide_2D_TypeDef)(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp);
-	Collide_2D_TypeDef PtrCollide_2D;
+	typedef void(CollideLowOrder::*Collide_2D_V2_TypeDef)(int & i, double &fi,double &rho, double &u, double &v, double & Fi,double & Fx, double & Fy, double & InvTau_tmp);
+	typedef void(CollideLowOrder::*AddHeleShaw)(double const &u, double const &v,double const &mu,double &Fx,double &Fy,double const InterfaceFx,double const InterfaceFy);
+	typedef double(CollideLowOrder::*AddUserLocalForce)(int const direction, double const Rho, double const U, double const V, double const W);
+	typedef double(CollideLowOrder::*AddUserBodyForce)(int const direction_xyz, double const Rho, double const U, double const  V, double const W);
 
+	Collide_2D_TypeDef PtrCollide_2D;
+	Collide_2D_V2_TypeDef PtrCollide_2D_V2;
+	AddHeleShaw PtrAddHeleShaw;
+	AddUserLocalForce PtrAddUserLocalForce;
+	AddUserBodyForce PtrAddUserBodyForce;
 	typedef double(CollideLowOrder::*EquiDistri)(double &rho_macro, double &u_macro, double &v_macro, double *u_i, double &omega);
 	EquiDistri PtrEquiDistri;
 

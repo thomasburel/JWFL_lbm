@@ -13,6 +13,7 @@ Solution::Solution(){
 	Writer=0;
 	U=0;
 	Rho=0;
+	P=0;CalPressure=false;CalGradP=false;
 	Dic=0;
 	nbnodes_total=0;
 	nbnodes_real=0;
@@ -24,12 +25,13 @@ Solution::~Solution(){
 Solution2D::Solution2D() {
 
 	NodeArrays=0;
+	PatchsBc=0;
 
 }
 
 Solution2D::~Solution2D() {
 
-	delete NodeArrays;
+//	delete NodeArrays;
 
 }
 
@@ -47,9 +49,15 @@ void Solution2D::Set_Solution(Parameters *Param) {
 	Dic->AddVar(Scalar,"Density",Param->Get_output_density(), true,false,Rho);//No synchronisation between processor by default
 	if(Param->Get_output_pressure()||Param->IsCalculatePermeability())
 	{
-		Dic->AddVar(Scalar,"Pressure",Param->Get_output_pressure(), true,false,P);//No synchronisation between processor by default
+		Dic->AddVar(Scalar,"Pressure",Param->Get_output_pressure(), false,false,P);//No synchronisation between processor by default
 		CalPressure=true;
+		if(Param->IsCalculatePermeability())
+		{
+			Dic->AddSync("Pressure",P);
+			CalGradP=true;
+		}
 	}
+
 	/*	for (int i=0;i<2;i++)
 	{
 		U[i]=new double [nbnodes_total];

@@ -20,9 +20,9 @@
 class Interpolation {
 public:
 	Interpolation();
-	void initInterpolation(int dimension, int nb_vel,InterpolationType Type_,unsigned int *PtrOppositeCa_, NodeArrays2D *PtrNodes, Parameters *PtrParam);
+	void initInterpolation(int dimension, int nb_vel,ModelEnum::InterpolationType Type_,unsigned int *PtrOppositeCa_, NodeArrays2D *PtrNodes, Parameters *PtrParam);
 	virtual ~Interpolation();
-	void SelectInterpolationType(InterpolationType Type_, NodeArrays2D *PtrNodes, Parameters *PtrParam);
+	void SelectInterpolationType(ModelEnum::InterpolationType Type_, NodeArrays2D *PtrNodes, Parameters *PtrParam);
 
 
 //Scalar Interpolations
@@ -36,7 +36,7 @@ public:
 private:
  // Interpolation object to be able to select different kind of Interpolation automatically
  InterpolationDEF* Interpol;
- InterpolationType Type;
+ ModelEnum::InterpolationType Type;
  int dimension, nb_Vel;
  unsigned int *PtrOppositeCa; //opposite direction in the distribution function
 };

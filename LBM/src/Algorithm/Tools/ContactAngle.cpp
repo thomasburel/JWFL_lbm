@@ -112,9 +112,9 @@ void ContactAngle::InitContactAngle(NodeArrays2D *PtrNode,Parameters *PtrParam,u
 			{
 				ExtrapolNormalInSolid=&ContactAngle::Extrapolate_NormalInSolid2D;
 				if(PtrParamCa->Get_NormalExtrapolType()==ContactAngleEnum::TailorExtrapol)
-					ExtraPolNormalCa.initExtrapolation(2,9,TailorExtrapol);
+					ExtraPolNormalCa.initExtrapolation(2,9,ModelEnum::TailorExtrapol);
 				else
-					ExtraPolNormalCa.initExtrapolation(2,9,WeightDistanceExtrapol);
+					ExtraPolNormalCa.initExtrapolation(2,9,ModelEnum::WeightDistanceExtrapol);
 			}
 			else
 				std::cerr<<" 3D Extrapolation not yet implemented."<<std::endl;
@@ -141,9 +141,9 @@ void ContactAngle::InitContactAngle(NodeArrays2D *PtrNode,Parameters *PtrParam,u
 				if(PtrParamCa->Get_Dimension()==SolverEnum::D2)
 				{
 					if(PtrParamCa->Get_NormalExtrapolType()==ContactAngleEnum::TailorExtrapol)
-						ExtraPolNormalCa.initExtrapolation(2,9,TailorExtrapol);
+						ExtraPolNormalCa.initExtrapolation(2,9,ModelEnum::TailorExtrapol);
 					else
-						ExtraPolNormalCa.initExtrapolation(2,9,WeightDistanceExtrapol);
+						ExtraPolNormalCa.initExtrapolation(2,9,ModelEnum::WeightDistanceExtrapol);
 				}
 				else
 					std::cerr<<" 3D Extrapolation not yet implemented."<<std::endl;
@@ -167,9 +167,9 @@ void ContactAngle::InitContactAngle(NodeArrays2D *PtrNode,Parameters *PtrParam,u
 			if(PtrParamCa->Get_Dimension()==SolverEnum::D2)
 			{
 				if(PtrParamCa->Get_NormalExtrapolType()==ContactAngleEnum::TailorExtrapol)
-					ExtraPolNormalCa.initExtrapolation(2,9,TailorExtrapol);
+					ExtraPolNormalCa.initExtrapolation(2,9,ModelEnum::TailorExtrapol);
 				else
-					ExtraPolNormalCa.initExtrapolation(2,9,WeightDistanceExtrapol);
+					ExtraPolNormalCa.initExtrapolation(2,9,ModelEnum::WeightDistanceExtrapol);
 			}
 			else
 				std::cerr<<" 3D Extrapolation is not yet implemented."<<std::endl;
@@ -177,9 +177,9 @@ void ContactAngle::InitContactAngle(NodeArrays2D *PtrNode,Parameters *PtrParam,u
 			if(PtrParamCa->Get_Dimension()==SolverEnum::D2)
 			{
 				if(PtrParamCa->Get_NormalInterpolType()==ContactAngleEnum::LinearLeastSquareInterpol)
-					InterPolNormalCa.initInterpolation(2,9,LinearLeastSquareInterpol,PtrOppositeCa,PtrNodeCa,PtrParamCa);
+					InterPolNormalCa.initInterpolation(2,9,ModelEnum::LinearLeastSquareInterpol,PtrOppositeCa,PtrNodeCa,PtrParamCa);
 				else
-					InterPolNormalCa.initInterpolation(2,9,LinearInterpol,PtrOppositeCa,PtrNodeCa,PtrParamCa);
+					InterPolNormalCa.initInterpolation(2,9,ModelEnum::LinearInterpol,PtrOppositeCa,PtrNodeCa,PtrParamCa);
 			}
 			else
 				std::cerr<<" 3D Interpolation is not yet implemented."<<std::endl;

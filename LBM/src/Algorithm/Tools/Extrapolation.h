@@ -20,9 +20,9 @@
 class Extrapolation {
 public:
 	Extrapolation();
-	void initExtrapolation(int dimension, int nb_vel,ExtrapolationType Type_);
+	void initExtrapolation(int dimension, int nb_vel,ModelEnum::ExtrapolationType Type_);
 	virtual ~Extrapolation();
-	void SelectExtrapolationType(ExtrapolationType Type_);
+	void SelectExtrapolationType(ModelEnum::ExtrapolationType Type_);
 
 //Scalar Extrapolations
 	void ExtrapolationOnWall (double * & Var, int * Connect, int & normal);
@@ -36,7 +36,7 @@ public:
 private:
  // Extrapolation object to be able to select different kind of Extrapolation automatically
  ExtrapolationDEF* Extrapol;
- ExtrapolationType Type;
+ ModelEnum::ExtrapolationType Type;
  int dimension, nb_Vel;
 };
 #endif /* ALGORITHM_LOWORDER_ExtrapolationS_H_ */

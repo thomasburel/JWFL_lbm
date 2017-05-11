@@ -38,6 +38,7 @@ public:
 	int Get_NbExportVarBreakpoint();
 
 	std::vector<double*> Get_SyncVar(){return SyncVar;};
+	std::vector<std::string> Get_SyncVarName(){return StringSyncVar;};
 	int Get_NbSyncVar(){return SyncVar.size();};
 
 	/// Get the ID of the variable from its name. It is a slow access.

@@ -41,8 +41,8 @@ SolverTwoPhases::SolverTwoPhases() {
 SolverTwoPhases::~SolverTwoPhases() {
 	if(f!=0)
 	{
-	delete [] f[0];
-	delete [] f[1];
+	delete f[0];
+	delete f[1];
 	delete f;
 	}
 	delete [] ftmp;

@@ -47,8 +47,8 @@ CGNS::CGNS(SolverEnum::dimension dimension_,std::string outputfilename_, int tot
 	classtype="CGNS";
 }
 CGNS::~CGNS() {
-	for (int i=0;i<NbVariableOutput;i++)
-		delete d[i];
+	//for (int i=0;i<NbVariableOutput;i++)
+		delete [] d;
 }
 void CGNS::Set_solution(double **d_, std::string *str, int nbvar){
 	NbVariableOutput=nbvar;

@@ -47,11 +47,11 @@ void D2Q9Corner::Set_Corner(Parameters *Param, double ** &Ei){
 	switch(Param->Get_CornerPressureType())
 	{
 	case FixCP:
-		Extrapol.SelectExtrapolationType(NoExtrapol);
+		Extrapol.SelectExtrapolationType(ModelEnum::NoExtrapol);
 		PtrCalculRhoCornerWall=&D2Q9Corner::FixRho;
 		break;
 	case ExtrapolCP:
-		Extrapol.SelectExtrapolationType(WeightDistanceExtrapol);
+		Extrapol.SelectExtrapolationType(ModelEnum::WeightDistanceExtrapol);
 		PtrCalculRhoCornerWall=&D2Q9Corner::ExtrapolationAvgRho;
 		break;
 	default:

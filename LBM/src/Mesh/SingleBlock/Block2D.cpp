@@ -23,6 +23,7 @@ Block2D::Block2D(int dx_, int dy_) : dx(dx_),dy(dy_)
 }
 
 Block2D::~Block2D() {
+	//NodeArrays.~NodeArrays2D();
 	delete [] Coord_physical;
 	for(int i=0;i<CellArray.size();i++) delete CellArray[i];
 	for(int i=0;i<GhostCellArraytmp.size();i++) delete GhostCellArraytmp[i];
@@ -2188,7 +2189,6 @@ void Block2D::GenerateSolid(Parameters &Param)
 	nx=Param.Get_Nx();ny=Param.Get_Ny();
 	PtrParametersUserMesh=&Param;
 	UserMesh::SetUserMeshVariables();
-
 	//for (int i=0;i<NbRealNodes;i++)
 	for (int i=0;i<Node.size();i++)
 	{

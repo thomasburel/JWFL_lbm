@@ -8,13 +8,13 @@
 
 Interpolation::Interpolation(){
 	Interpol=0;
-	Type=LinearInterpol;
+	Type=ModelEnum::LinearInterpol;
 	dimension=0;
 	nb_Vel=0;
 	PtrOppositeCa=0;
 }
-void Interpolation::initInterpolation(int dimension_, int nb_vel,InterpolationType Type_,unsigned int *PtrOppositeCa_, NodeArrays2D *PtrNodes, Parameters *PtrParam){
-	Type=LinearInterpol;
+void Interpolation::initInterpolation(int dimension_, int nb_vel,ModelEnum::InterpolationType Type_,unsigned int *PtrOppositeCa_, NodeArrays2D *PtrNodes, Parameters *PtrParam){
+	Type=ModelEnum::LinearInterpol;
 	dimension=dimension_;
 	nb_Vel=nb_vel;
 	PtrOppositeCa=PtrOppositeCa_;
@@ -24,7 +24,7 @@ void Interpolation::initInterpolation(int dimension_, int nb_vel,InterpolationTy
 Interpolation::~Interpolation(){
 	delete Interpol;
 }
-void Interpolation::SelectInterpolationType(InterpolationType Type_, NodeArrays2D *PtrNodes, Parameters *PtrParam){
+void Interpolation::SelectInterpolationType(ModelEnum::InterpolationType Type_, NodeArrays2D *PtrNodes, Parameters *PtrParam){
 //	if(Type_!=Type)
 //	{
 		delete Interpol;
@@ -32,13 +32,13 @@ void Interpolation::SelectInterpolationType(InterpolationType Type_, NodeArrays2
 	// Add new Interpolation type here
 		switch(Type)
 		{
-		case NoInterpol:
+		case ModelEnum::NoInterpol:
 			Interpol=new NoInterpolation();
 			break;
-		case LinearInterpol:
+		case ModelEnum::LinearInterpol:
 			Interpol=new InterpolationLinear(dimension, nb_Vel,PtrOppositeCa);
 			break;
-		case LinearLeastSquareInterpol:
+		case ModelEnum::LinearLeastSquareInterpol:
 			Interpol=new InterpolationLinearLeastSquare(dimension, nb_Vel,PtrOppositeCa);
 			Interpol->InitInterpol(PtrNodes,PtrParam);
 			break;

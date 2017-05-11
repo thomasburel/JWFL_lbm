@@ -53,12 +53,14 @@ namespace SolverEnum
 	enum PatchType {Wall, Periodic, Velocity, Symmetry, Pressure};
 }
 //model enumeration
-enum FluidType{Newtonian};
-enum UserForceType{None,LocalForce,BodyForce};
-enum GradientType{FD,LBMStencil};
-enum ExtrapolationType{NoExtrapol,TailorExtrapol,WeightDistanceExtrapol};
-enum InterpolationType{NoInterpol,LinearInterpol,LinearLeastSquareInterpol};
-
+namespace ModelEnum
+{
+	enum FluidType{Newtonian};
+	enum UserForceType{None,LocalForce,BodyForce};
+	enum GradientType{FD,LBMStencil};
+	enum ExtrapolationType{NoExtrapol,TailorExtrapol,WeightDistanceExtrapol};
+	enum InterpolationType{NoInterpol,LinearInterpol,LinearLeastSquareInterpol};
+}
 //Boundary conditions enumeration
 
 enum WallType {BounceBack, HalfWayBounceBack, Diffuse, Specular,HeZouWall,HeZouWallVel};
@@ -83,8 +85,11 @@ enum ViscosityType{ConstViscosity,LinearViscosity,HarmonicViscosity};
 //Colour fluid enumeration
 namespace ColourFluidEnum{
 	enum ColourGradType{Gunstensen,DensityGrad,DensityNormalGrad};
-	enum RecolouringType{LatvaKokkoRothman};
+	enum RecolouringType{LatvaKokkoRothman,LatvaKokkoRothmanEstimator};
 	enum ColourOperatorType {Grunau,Reis,SurfaceForce};
+}
+namespace PorousMediaEnum{
+	enum HeleShawBodyForce{no,SinglePhase,TwoPhases};
 }
 class PorousMediaParameters{
 private:
@@ -97,6 +102,8 @@ private:
 		ar & BOOST_SERIALIZATION_NVP(calculateProductionRate);
 		ar & BOOST_SERIALIZATION_NVP(calculatePermeability);
 		ar & BOOST_SERIALIZATION_NVP(calculateDarcyPermeability);
+		ar & BOOST_SERIALIZATION_NVP(HeleShaw);
+		ar & BOOST_SERIALIZATION_NVP(depth);
 	}
 public:
 	void PorousMediaCase(bool porousmediacase_) { porousmediacase=porousmediacase_;};
@@ -110,12 +117,15 @@ public:
 	bool IsCalculatePermeability() const {return calculatePermeability;};
 	bool IsCalculateDarcyPermeability() const {return calculateDarcyPermeability;};
 	void Set_LenghtMedia(double lenghtIn){LenghtMedia=lenghtIn;};
-	double Get_LenghtMedia(){return LenghtMedia;};
+	double Get_LenghtMedia()const {return LenghtMedia;};
 	void Set_SectionMedia(double sectionIn){SectionMedia=sectionIn;};
-	double Get_SectionMedia(){return SectionMedia;};
+	double Get_SectionMedia()const {return SectionMedia;};
 	void Set_PositionMedia(unsigned int minX,unsigned int maxX,unsigned int minY,unsigned int maxY,unsigned int minZ=0,unsigned int maxZ=0);
 	void Get_PositionMedia(unsigned int &minX,unsigned int &maxX,unsigned int &minY,unsigned int &maxY,unsigned int &minZ,unsigned int &maxZ);
-
+	void Set_HeleShawBodyForce(PorousMediaEnum::HeleShawBodyForce HeleShawIn){HeleShaw=HeleShawIn; if(HeleShaw!=PorousMediaEnum::no) porousmediacase=true;};
+	PorousMediaEnum::HeleShawBodyForce Get_HeleShawBodyForce()const {return HeleShaw;};
+	void Set_Depth(double depthIn){depth=depthIn;};
+	double Get_Depth()const {return depth;};
 protected:
 	bool porousmediacase;
 	bool calculatePorosity;
@@ -123,7 +133,8 @@ protected:
 	bool calculatePermeability,calculateDarcyPermeability;
 	double LenghtMedia,SectionMedia;
 	int MinX,MaxX,MinY,MaxY,MinZ,MaxZ;
-
+	PorousMediaEnum::HeleShawBodyForce HeleShaw;
+	double depth;
 };
 class ColourFluid{
 private:
@@ -410,18 +421,18 @@ public:
 	SolverEnum::modeltype Get_Model() const;
 	void Set_ModelOfFluid(SolverEnum::fluidmodel FluidModel_){FluidModel=FluidModel_;};
 	SolverEnum::fluidmodel Get_ModelOfFluid() const {return FluidModel;};
-	void Set_FluidType(FluidType fluidtype_){fluid=fluidtype_;};
-	FluidType Get_FluidType() const{return fluid;};
-	void Set_UserForceType(UserForceType UserForceType_){UserForce=UserForceType_;};
-	UserForceType Get_UserForceType() const{return UserForce;};
+	void Set_FluidType(ModelEnum::FluidType fluidtype_){fluid=fluidtype_;};
+	ModelEnum::FluidType Get_FluidType() const{return fluid;};
+	void Set_UserForceType(ModelEnum::UserForceType UserForceType_){UserForce=UserForceType_;};
+	ModelEnum::UserForceType Get_UserForceType() const{return UserForce;};
 	void Set_ErrorMax(double ErrorMax_){ErrorMax=ErrorMax_;};
 	double Get_ErrorMax(){return ErrorMax;};
 	void Set_ErrorVariable(SolverEnum::variablesSolver variableError_){variableError=variableError_;};
 	SolverEnum::variablesSolver Get_ErrorVariable(){return variableError;};
-	void Set_GradientType(GradientType GradientType_){Gradient=GradientType_;};
-	GradientType Get_GradientType() const{return Gradient;};
-	void Set_ExtrapolationType(ExtrapolationType ExtrapolationType_){Extrapol=ExtrapolationType_;};
-	ExtrapolationType Get_ExtrapolationType() const{return Extrapol;};
+	void Set_GradientType(ModelEnum::GradientType GradientType_){Gradient=GradientType_;};
+	ModelEnum::GradientType Get_GradientType() const{return Gradient;};
+	void Set_ExtrapolationType(ModelEnum::ExtrapolationType ExtrapolationType_){Extrapol=ExtrapolationType_;};
+	ModelEnum::ExtrapolationType Get_ExtrapolationType() const{return Extrapol;};
 	void Set_ContactAngle(double teta_){teta=teta_;};
 	double Get_ContactAngle(){return teta;};
 	void Set_ContactAngleType(ContactAngleEnum::TetaType tetaType_){tetaType=tetaType_;};
@@ -463,10 +474,10 @@ protected:
 	SolverEnum::modeltype model;
 	SolverEnum::fluidmodel FluidModel;
 	SolverEnum::variablesSolver variableError;
-	FluidType fluid;
-	GradientType Gradient;
-	ExtrapolationType Extrapol;
-	UserForceType UserForce;
+	ModelEnum::FluidType fluid;
+	ModelEnum::GradientType Gradient;
+	ModelEnum::ExtrapolationType Extrapol;
+	ModelEnum::UserForceType UserForce;
 	int NbVelocities;
 	double cs,cs2;
 	double deltaT,deltaX;

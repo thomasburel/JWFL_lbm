@@ -16,6 +16,7 @@ void InitLBM::IniMPI(ParallelManager* parrallel_,int *argc, char ***argv, bool v
 
 	/// Initialise MPI
 	parrallel_->init(argc,argv,verbous_);
+	desireCangle=PtrParameters->Get_ContactAngle();
 
 }
 

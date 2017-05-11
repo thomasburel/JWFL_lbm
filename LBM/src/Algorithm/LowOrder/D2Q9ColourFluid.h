@@ -108,6 +108,7 @@ private:
 	void Set_Recolouring();
 	double CosPhi(int nodenumber, int & direction,double & F_Norm);
 	void Recolouring_Latva(int & nodenumber, double * fi_tmp);
+	void Recolouring_LatvaWithEstimator(int & nodenumber, double * fi_tmp);
 //	void Recolouring_Wall(int & nodenumber, double * fi_tmp);
 //Collide definition
 //	void CollideD2Q9ColourFluid(int & direction, double & fi,double &rho,double*  F,double & F_Norm, double & InvTau_, double &u, double &v);

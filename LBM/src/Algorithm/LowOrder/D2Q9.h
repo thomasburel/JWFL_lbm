@@ -33,6 +33,8 @@ private:
 
 	void Set_Collide();
 	void CollideD2Q9();
+	void CollideD2Q9_NoBodyForce();
+	void CollideD2Q9_WithBodyForce();
 	void StreamD2Q9();
 
 	void Set_PointersOnFunctions();
@@ -41,6 +43,10 @@ private:
 	void Set_Macro();
 	//void UpdateMacroVariables();
 	void UpdateMacroVariables();
+	//void UpdateMacroVariables without body force();
+	void UpdateMacroVariables_NoBodyForce();
+	//void UpdateMacroVariables with body force();
+	void UpdateMacroVariables_WithBodyForce();
 	/// Calculate \f$\rho\f$ and \f$\vec{U}\f$ in the local domain
 	void MacroVariables(int& idx);
 	/// Calculate \f$\rho\f$ and \f$\vec{U}\f$ in the local domain with including the external force
@@ -125,6 +131,7 @@ private:
 	double doubleTmpReturn;
 
 	int Nd_variables_sync;//number of variable has to be synchronise
+	std::vector<double*> SyncVar;
 	double ***buf_send, ***buf_recv; //buffers to send and receive
 	int *size_buf; // size of buffers
 
@@ -133,9 +140,11 @@ private:
 	int *size_MacroBuf; // size of buffers
 
 ///Simplify notation for pointer on a member function of D2Q9ColourFluid class for macroscopic variables calculation methods
-	typedef void(D2Q9::*Macro)(int & nodenumber);
-	Macro PtrMacro;///< Macroscopic pointer
 
+	typedef void(D2Q9::*Macro)();
+	typedef void(D2Q9::*Collision)();
+	Macro PtrMacro;///< Macroscopic pointer
+	Collision PtrCollision;///< Collision pointer
 private:
 	friend class boost::serialization::access;
     template<class Archive>

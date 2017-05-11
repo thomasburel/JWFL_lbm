@@ -39,7 +39,7 @@ protected:
 //Solution variables
 	Dictionary* Dic;
 	double **U, *Rho,*P;
-	bool CalPressure;
+	bool CalPressure,CalGradP;
 	int nbnodes_real, nbnodes_total; //total include ghost nodes, real without ghost nodes
 };
 class Solution2D:public Solution {

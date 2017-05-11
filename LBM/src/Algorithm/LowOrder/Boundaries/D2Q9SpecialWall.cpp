@@ -17,7 +17,7 @@ D2Q9SpecialWall::D2Q9SpecialWall() {
 	BcMethods=0;
 	RhoDef_tmp=1;UDef_tmp=0;VDef_tmp=0;
 	U_tmp[0]=0;U_tmp[1]=0;
-	Extrapol.initExtrapolation(2,9,WeightDistanceExtrapol);
+	Extrapol.initExtrapolation(2,9,ModelEnum::WeightDistanceExtrapol);
 }
 
 D2Q9SpecialWall::~D2Q9SpecialWall() {

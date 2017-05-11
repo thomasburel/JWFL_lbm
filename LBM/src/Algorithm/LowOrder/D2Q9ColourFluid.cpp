@@ -53,14 +53,15 @@ D2Q9ColourFluid::D2Q9ColourFluid(MultiBlock* MultiBlock__,ParallelManager* paral
 	InitColourFluid(ini);
 //Initialise boundary conditions.
 	InitD2Q9Bc(Dic, Parameters__,Ei);
+//Set_Convergence
+	Set_Convergence();
 //Initialise communication between processors
 	IniComVariables();
 //Set the variables names and the variable pointers for output in solution
 	Solution2D::Set_output();
 //Set the variables names and the variable pointers for breakpoints in solution
 	Solution2D::Set_breakpoint();
-//Set_Convergence
-	Set_Convergence();
+
 }
 void D2Q9ColourFluid::Set_PointersOnFunctions(){
 // Select the model for two-phase operator in the collision step
@@ -103,17 +104,17 @@ void D2Q9ColourFluid::Select_Colour_Operator(ColourFluidEnum::ColourOperatorType
 void D2Q9ColourFluid::Set_Extrapolations(){
 	if(PtrParameters->Get_ColourExtrapolNoramlDensity())
 	{
-		ExtrapolDensity.initExtrapolation(2,9,WeightDistanceExtrapol);
+		ExtrapolDensity.initExtrapolation(2,9,ModelEnum::WeightDistanceExtrapol);
 	}
 	else
-		ExtrapolDensity.initExtrapolation(2,9,NoExtrapol);
+		ExtrapolDensity.initExtrapolation(2,9,ModelEnum::NoExtrapol);
 
 }
 void D2Q9ColourFluid::Set_Collide(){
 	PtrDicCollide=Dic;
 
 
-if(PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::SurfaceForce && PtrParameters->Get_UserForceType()== ::LocalForce)
+if(PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::SurfaceForce && PtrParameters->Get_UserForceType()== ModelEnum::LocalForce)
 {
 	std::cout<<" Warming: The local user force will be ignored. The colour model with the surface force is incompatible with a local user force"<<std::endl;
 }
@@ -121,24 +122,48 @@ if(PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::SurfaceForce && Pt
 	{
 
 		if(PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::SurfaceForce)
-			{Select_Collide_2D(Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
-		else if(PtrParameters->Get_UserForceType()== ::LocalForce ||PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::Reis||PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::Grunau)
-			{Select_Collide_2D(Std2DLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
-		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			{Select_Collide_2D(Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{
+			Select_Collide_2D(Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			Select_Collide_2D_V2(*PtrParameters,Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			}
+		else if(PtrParameters->Get_UserForceType()== ModelEnum::LocalForce ||PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::Reis||PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::Grunau)
+			{
+			Select_Collide_2D(Std2DLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			Select_Collide_2D_V2(*PtrParameters,Std2DLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			}
+		else if(PtrParameters->Get_UserForceType()== ModelEnum::BodyForce)
+			{
+			Select_Collide_2D(Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			Select_Collide_2D_V2(*PtrParameters,Std2DBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			}
 		else
-			{Select_Collide_2D(Std2D,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{
+			Select_Collide_2D(Std2D,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			Select_Collide_2D_V2(*PtrParameters,Std2D,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			}
 	}
 	else
 	{
 		if(PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::SurfaceForce)
-			{Select_Collide_2D(Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
-		else if(PtrParameters->Get_UserForceType()== ::LocalForce||PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::Reis||PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::Grunau)
-			{Select_Collide_2D(Std2DNonCstTauLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
-		else if(PtrParameters->Get_UserForceType()== ::BodyForce)
-			{Select_Collide_2D(Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{
+			Select_Collide_2D(Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			Select_Collide_2D_V2(*PtrParameters,Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			}
+		else if(PtrParameters->Get_UserForceType()== ModelEnum::LocalForce||PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::Reis||PtrParameters->Get_ColourOperatorType()== ColourFluidEnum::Grunau)
+			{
+			Select_Collide_2D(Std2DNonCstTauLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			Select_Collide_2D_V2(*PtrParameters,Std2DNonCstTauLocal,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			}
+		else if(PtrParameters->Get_UserForceType()== ModelEnum::BodyForce)
+			{
+			Select_Collide_2D(Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			Select_Collide_2D_V2(*PtrParameters,Std2DNonCstTauBody,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			}
 		else
-			{Select_Collide_2D(Std2DNonCstTau,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());}
+			{
+			Select_Collide_2D(Std2DNonCstTau,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			Select_Collide_2D_V2(*PtrParameters,Std2DNonCstTau,PtrParameters->Get_cs2(),PtrParameters->Get_ReferenceDensity(),PtrParameters->Get_ModelOfFluid());Select_Colour_Operator(PtrParameters->Get_ColourOperatorType());
+			}
 	}
 
 }
@@ -208,7 +233,22 @@ void D2Q9ColourFluid::Set_Macro(){
 
 }
 void D2Q9ColourFluid::Set_Recolouring(){
-	PtrRecolour=&D2Q9ColourFluid::Recolouring_Latva;
+	switch(PtrParameters->Get_RecolouringType())
+	{
+	case ColourFluidEnum::LatvaKokkoRothman:
+		PtrRecolour=&D2Q9ColourFluid::Recolouring_Latva;
+		break;
+	case ColourFluidEnum::LatvaKokkoRothmanEstimator:
+		PtrRecolour=&D2Q9ColourFluid::Recolouring_LatvaWithEstimator;
+		break;
+	default:
+		std::cerr<<"Recolouring operator not found. Set default: Latva-Kokko-Rothman operator"<<std::endl;
+		PtrRecolour=&D2Q9ColourFluid::Recolouring_Latva;
+		break;
+	}
+
+
+
 }
 void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 //Initialise parameters
@@ -228,7 +268,7 @@ void D2Q9ColourFluid::InitColourFluid(InitLBM& ini){
 	F=new double*[2];
 	Normal=new double*[2];
 	CAngle.AllocateTeta(NodeArrays,PtrParameters,teta);
-	Dic->AddSync("Rho",Rho);
+	Dic->AddSync("Density",Rho);
 	Dic->AddVar(Vector,"ColourGrad",PtrParameters->Get_ColourGradientOutput(),true,false,G[0],G[1]);
 	Dic->AddVar(Scalar,"ColourGrad_Norm",PtrParameters->Get_NormColourGradientOutput(),true,false,G_Norm);
 	Dic->AddVar(Vector,"Normal",PtrParameters->Get_NormalOutput(),true,false,Normal[0],Normal[1]);
@@ -804,6 +844,8 @@ void D2Q9ColourFluid::run(){
 	ColourFluid_Collision();
 	ApplyBc();
 	UpdateMacroVariables();
+	if(CalPressure)
+		UpdatePressure();
 	if(parallel->getSize()>1)
 	{
 		SyncMacroVarToGhost();
@@ -822,10 +864,10 @@ void D2Q9ColourFluid::run(){
 	}
 
 //	Write_Breakpoint(PtrParameters);
-	if(CalPressure)
-		UpdatePressure();
-	Writer->Write_Output(it);
+
 	Convergence::Calcul_Error(it);
+	Writer->Write_Output(it);
+
 //	Writer->Write_breakpoint(*PtrParameters);
 	it++;
 	if(parallel->getSize()>1)
@@ -846,21 +888,18 @@ void D2Q9ColourFluid::run(){
 			StreamD2Q9();;
 			ApplyBc();
 			UpdateMacroVariables();
+			if(CalGradP)
+				UpdatePressure();
 			SyncMacroVarToGhost();
 //			SyncVarToSolidGhost(RhoN);
 			ExtrapolDensityInSolid();
 			SyncVarToSolidGhost(RhoN);
 //			SyncVarFromSolidGhost(RhoN);
 			//SyncVarToGhost(RhoN);
-			if(it%OutPutNStep==0)
-			{
-				if(CalPressure)
-					UpdatePressure();
-				Writer->Write_Output(it);
-			}
+
 			if(it%listing==0 )
 			{
-				if(CalPressure)
+				if(CalPressure &&!CalGradP)
 					UpdatePressure();
 				Convergence::Calcul_Error(it);
 				if(parallel->isMainProcessor())
@@ -877,12 +916,22 @@ void D2Q9ColourFluid::run(){
 				}
 				if(Get_Error()<max_error)
 				{
-					if(CalPressure)
+					if(CalPressure&&!CalGradP)
 						UpdatePressure();
 					Writer->Write_Output(it);
 					it=NbStep;
 				}
 			}
+			if(it%OutPutNStep==0)
+			{
+				if(it<NbStep)
+				{
+					if(CalPressure&&!CalGradP)
+						UpdatePressure();
+					Writer->Write_Output(it);
+				}
+			}
+
 
 	/*		if(it==2)
 			Write_Breakpoint(PtrParameters);
@@ -903,16 +952,13 @@ void D2Q9ColourFluid::run(){
 			StreamD2Q9();
 			ApplyBc();
 			UpdateMacroVariables();
+			if(CalGradP)
+				UpdatePressure();
 			ExtrapolDensityInSolid();
-			if(it%OutPutNStep==0)
-			{
-				if(CalPressure)
-					UpdatePressure();
-				Writer->Write_Output(it);
-			}
+
 			if(it%listing==0)
 			{
-				if(CalPressure)
+				if(CalPressure&&!CalGradP)
 					UpdatePressure();
 				Convergence::Calcul_Error(it);
 				time_run=parallel->getTime()-time_inirun;
@@ -926,10 +972,19 @@ void D2Q9ColourFluid::run(){
 				std::cout<<"Error is: "<<Get_Error()<<std::endl;
 				if(Get_Error()<max_error)
 				{
-					if(CalPressure)
+					if(CalPressure&&!CalGradP)
 						UpdatePressure();
 					Writer->Write_Output(it);
 					it=NbStep;
+				}
+			}
+			if(it%OutPutNStep==0)
+			{
+				if(it<NbStep)
+				{
+					if(CalPressure&&!CalGradP)
+						UpdatePressure();
+					Writer->Write_Output(it);
 				}
 			}
 		/*	if(it==2)
@@ -1447,9 +1502,40 @@ void D2Q9ColourFluid::Recolouring_Latva(int & nodenumber, double * fi_tmp){
 	}
 	else
 	{
+
 		double Rhor_Rho=Rhor[nodenumber]/Rho[nodenumber];
 		double Rhob_Rho=Rhob[nodenumber]/Rho[nodenumber];
 		double factor=beta*Rhor[nodenumber]*Rhob[nodenumber]/Rho[nodenumber];
+
+		f[0]->f[0][nodenumber]=Rhor_Rho*fi_tmp[0];
+		f[1]->f[0][nodenumber]=Rhob_Rho*fi_tmp[0];
+		for(int i=1;i<nbvelo;i++)
+		{
+				f[0]->f[i][nodenumber]=Rhor_Rho*fi_tmp[i]
+							+factor*omega[i]*CosPhi(nodenumber,i,G_Norm[nodenumber]);
+				f[1]->f[i][nodenumber]=fi_tmp[i]-f[0]->f[i][nodenumber];//Rhob_Rho*fi_tmp[i]
+		}
+	}
+}
+void D2Q9ColourFluid::Recolouring_LatvaWithEstimator(int & nodenumber, double * fi_tmp){
+	if(G_Norm[nodenumber]<LimitGNorm)
+	{
+		if(Rhor[nodenumber]<Rhob[nodenumber])
+			for(int i=0;i<nbvelo;i++)
+				{f[0]->f[i][nodenumber]=0.0;f[1]->f[i][nodenumber]=fi_tmp[i];}
+		else
+			for(int i=0;i<nbvelo;i++)
+				{f[0]->f[i][nodenumber]=fi_tmp[i];f[1]->f[i][nodenumber]=0.0;}
+	}
+	else
+	{
+
+		double RhoNStar=RhoN[nodenumber]*(1.0+G[0][nodenumber]*U[0][nodenumber]+G[1][nodenumber]*U[1][nodenumber]);
+		double RhorStar=Rho[nodenumber]*(RhoNStar+1.0)*0.5;
+		double RhobStar=Rho[nodenumber]*(1.0-RhoNStar)*0.5;
+		double Rhor_Rho=RhorStar/Rho[nodenumber];
+		double Rhob_Rho=RhobStar/Rho[nodenumber];
+		double factor=beta*RhorStar*RhobStar/Rho[nodenumber];
 		f[0]->f[0][nodenumber]=Rhor_Rho*fi_tmp[0];
 		f[1]->f[0][nodenumber]=Rhob_Rho*fi_tmp[0];
 		for(int i=1;i<nbvelo;i++)

@@ -33,13 +33,13 @@ Dictionary::~Dictionary() {
 	SyncVar.clear();
 	Var.clear();
 	if(PtrStringExportVar!=0)
-		delete PtrStringExportVar;
+		delete [] PtrStringExportVar;
 	if(PtrExportVar!=0)
-			delete PtrExportVar;
+			delete [] PtrExportVar;
 	if(PtrStringExportVarBreakpoint!=0)
-		delete PtrStringExportVarBreakpoint;
+		delete [] PtrStringExportVarBreakpoint;
 	if(PtrExportVarBreakpoint!=0)
-			delete PtrExportVarBreakpoint;
+			delete [] PtrExportVarBreakpoint;
 }
 
 void Dictionary::AddDistributionBreakpoint(std::string VarName,double* & Var_x)

@@ -148,10 +148,14 @@ void Convergence::Set_Convergence(){
 		if(PtrParmConv->IsCalculatePermeability())
 		{
 // Average of permeability in the domain
-			DensityGradient.initGradients(2, 9,FD);
+			DensityGradient.initGradients(2, 9,ModelEnum::FD);
 			PtrDicConv->Get_PtrVar("Pressure",PressureConv,Var_found);
 			DeltaP=new double*[2];
 			PtrDicConv->AddVar(Vector,"Delata P",false, false,false,DeltaP[0],DeltaP[1]);
+			for(int i=0;i<PtrNodeArraysConv->TypeOfNode.size();i++)
+			{
+				DeltaP[0][i]=0;DeltaP[1][i]=0;
+			}
 			//PtrDicConv->AddVar(Scalar,"Norm Delta P",false, false,false,NormDeltaP);
 			if(!(PtrParmConv->Get_Model()==SolverEnum::SinglePhase))
 			{
@@ -174,7 +178,9 @@ void Convergence::Set_Convergence(){
 				if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
 					Permeabilityfile<<"Time,Average Permeability,Global Permeability,Pore-scale Permeability,Pore-scale Global Permeability,Average Velocity,Average Viscosity,Average Delta P"<<std::endl;
 				else
-					Permeabilityfile<<"Time,Permeability,Permeability Phase 1,Permeability Phase 2,Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2,Average Pore Velocity,Average Pore Velocity Phase 1,Average Pore Velocity Phase 2,Average Viscosity,Average Viscosity Phase 1,Average Viscosity Phase 2,Delta P,Average Pressure Inlet,Average Pressure Outlet,Alpha In,Alpha Out"<<std::endl;
+					Permeabilityfile<<"Time,Average Permeability,Average Permeability Phase 1,Average Permeability Phase 2,Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
+							",Pore-scale Permeability,Pore-scale Permeability Phase 1,Pore-scale Permeability Phase 2,Pore-scale Global Permeability,Pore-scale Global Permeability Phase 1,Pore-scale Global Permeability Phase 2"
+							",Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2,Average Pore Velocity,Average Pore Velocity Phase 1,Average Pore Velocity Phase 2,Average Viscosity,Average Viscosity Phase 1,Average Viscosity Phase 2,Average Delta P,Average Delta P Phase 1,Average Delta P Phase 2,Alpha,1-Alpha"<<std::endl;
 				Permeabilityfile.close();
 			}
 		}
@@ -560,18 +566,38 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 	double avgAlphaOut=sumAlpha1Out/nbsumnodesOut;
 
 	double scale=(nbsumnodesIn+nbsumnodesOut)/(2.0*SectionMedium);
-	double avgU1Pore=(sumU1In+sumU1Out)/(sumAlpha1In+sumAlpha1Out);
-	double avgU2Pore=(sumU2In+sumU2Out)/(sumAlpha2In+sumAlpha2Out);
-	double avgUPore=(sumU1In+sumU1Out+sumU2In+sumU2Out)/(sumAlpha1In+sumAlpha1Out+sumAlpha2In+sumAlpha2Out);
+	double sumAlpha1=sumAlpha1In+sumAlpha1Out;
+	double sumAlpha2=sumAlpha2In+sumAlpha2Out;
+	double avgU1Pore=(sumU1In+sumU1Out)/(sumAlpha1);
+	double avgU2Pore=(sumU2In+sumU2Out)/(sumAlpha2);
+	double avgUPore=(sumU1In+sumU1Out+sumU2In+sumU2Out)/(sumAlpha1+sumAlpha2);
+
+	double avgMu1=(sumMu1In+sumMu1Out)/(sumAlpha1);
+	double avgMu2=(sumMu2In+sumMu2Out)/(sumAlpha2);
+	double avgMu=(sumMu1In+sumMu1Out+sumMu2In+sumMu2Out)/(sumAlpha1+sumAlpha2);
+
+	if(sumAlpha1In==0)
+		avgRho1In=0;
+	if(sumAlpha1Out==0)
+		avgRho1Out=0;
+	if(sumAlpha2In==0)
+		avgRho2In=0;
+	if(sumAlpha2Out==0)
+		avgRho2Out=0;
+	if(sumAlpha1==0)
+	{
+		avgU1Pore=0;
+		avgMu1=0;
+	}
+	if(sumAlpha2==0)
+	{
+		avgU2Pore=0;
+		avgMu2=0;
+	}
 
 	double avgU1=scale*avgU1Pore;
 	double avgU2=scale*avgU2Pore;
 	double avgU=scale*avgUPore;
-
-	double avgMu1=(sumMu1In+sumMu1Out)/(sumAlpha1In+sumAlpha1Out);
-	double avgMu2=(sumMu2In+sumMu2Out)/(sumAlpha2In+sumAlpha2Out);
-	double avgMu=(sumMu1In+sumMu1Out+sumMu2In+sumMu2Out)/(sumAlpha1In+sumAlpha1Out+sumAlpha2In+sumAlpha2Out);
-
 
 	double deltaP1=RhoToP(avgRho1In-avgRho1Out);
 	double deltaP2=RhoToP(avgRho2In-avgRho2Out);
@@ -587,9 +613,9 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 	}
 	else
 	{
-		Permeability=1;
-		Permeability1=1;
-		Permeability2=1;
+		Permeability=0;
+		Permeability1=0;
+		Permeability2=0;
 	}
 
 //	double RelativePermeability1=Permeability1/Permeability;
@@ -611,64 +637,194 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 
 }
 double Convergence::Calcul_Permeability_TwoPhases(int &Time){
+	double Umag=0;double DeltaPmag=0;double visco;
+	//double sum_Umag=0;double sum_DeltaPmag=0;double sum_visco=0;
+//	double sum_Umag_tmp=0;double sum_DeltaPmag_tmp=0;double sum_visco_tmp=0;
+	double sum_permeability=0,sum_permeability1=0,sum_permeability2=0;
+	double sum_permeability_tmp=0,sum_permeability1_tmp=0,sum_permeability2_tmp=0;
+	double alpha=0.0;double alphaM1=0.0;
+
+	double sum_DeltaPmag=0,sum_DeltaP1mag=0,sum_DeltaP2mag=0;
+	double sum_DeltaPmag_tmp=0,sum_DeltaP1mag_tmp=0,sum_DeltaP2mag_tmp=0;
+	double sum_Umag=0,sum_U1mag=0,sum_U2mag=0;
+	double sum_Umag_tmp=0,sum_U1mag_tmp=0,sum_U2mag_tmp=0;
+	double sum_Mu=0,sum_Mu1=0,sum_Mu2=0;
+	double sum_Mu_tmp=0,sum_Mu1_tmp=0,sum_Mu2_tmp=0;
+	double sum_Alpha1=0,sum_Alpha2=0;
+	double sum_Alpha1_tmp=0,sum_Alpha2_tmp=0;
+
 	//Update the locate DeltaP
 	Calcul_localDeltaP();
-	double sum_permeability=0;double sum_tmp=0;double Umag=0;double DeltaPmag=0;
 
 
 	for (int i=0;i<MarkFluidNode_V1.size();i++){
+		alpha=Convert_RhoNToAlpha(RhoNPerm[MarkFluidNode_V1[i]],true);
+		alphaM1=1.0-alpha;
+		sum_Alpha1_tmp+=alpha;
+		sum_Alpha2_tmp+=alphaM1;
 		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V1[i]]*DeltaP[0][MarkFluidNode_V1[i]]+DeltaP[1][MarkFluidNode_V1[i]]*DeltaP[1][MarkFluidNode_V1[i]]);
+		sum_DeltaPmag_tmp+=DeltaPmag;
+		sum_DeltaP1mag_tmp+=alpha*DeltaPmag;
+		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag;
+		Umag=std::sqrt(UPerm[0][MarkFluidNode_V1[i]]*UPerm[0][MarkFluidNode_V1[i]]+UPerm[1][MarkFluidNode_V1[i]]*UPerm[1][MarkFluidNode_V1[i]]);
+		sum_Umag_tmp+=Umag;
+		sum_U1mag_tmp+=alpha*Umag;
+		sum_U2mag_tmp+=alphaM1*Umag;
+		visco=PtrViscosityConv->Get_Mu(1,RhoNPerm[MarkFluidNode_V1[i]]);
+		sum_Mu_tmp+=visco;
+		sum_Mu1_tmp+=alpha*visco;
+		sum_Mu2_tmp+=alphaM1*visco;
 		if(DeltaPmag>0)
 		{
-			Umag=std::sqrt(UPerm[0][MarkFluidNode_V1[i]]*UPerm[0][MarkFluidNode_V1[i]]+UPerm[1][MarkFluidNode_V1[i]]*UPerm[1][MarkFluidNode_V1[i]]);
-			sum_permeability+=Permeability(DeltaPmag,Umag,PtrViscosityConv->Get_Mu());
+			sum_permeability_tmp+=Permeability(DeltaPmag,Umag,visco);
+			sum_permeability1_tmp+=Permeability(DeltaPmag,alpha*Umag,alpha*visco);
+			sum_permeability2_tmp+=Permeability(DeltaPmag,alphaM1*Umag,alphaM1*visco);
 		}
 	}
-	sum_tmp=0;
+	sum_permeability+=sum_permeability_tmp;sum_permeability1+=sum_permeability1_tmp;sum_permeability2+=sum_permeability2_tmp;
+	sum_Umag+=sum_Umag_tmp;sum_U1mag+=sum_U1mag_tmp;sum_U2mag+=sum_U2mag_tmp;
+	sum_Mu+=sum_Mu_tmp;sum_Mu1+=sum_Mu1_tmp;sum_Mu2+=sum_Mu2_tmp;
+	sum_DeltaPmag+=sum_DeltaPmag_tmp;sum_DeltaP1mag+=sum_DeltaP1mag_tmp;sum_DeltaP2mag+=sum_DeltaP2mag_tmp;
+	sum_Alpha1+=sum_Alpha1_tmp;sum_Alpha2+=sum_Alpha2_tmp;
+
+	sum_permeability_tmp=0;sum_permeability1_tmp=0;sum_permeability2_tmp=0;
+	sum_Umag_tmp=0;sum_U1mag_tmp=0;sum_U2mag_tmp=0;
+	sum_Mu_tmp=0;sum_Mu1_tmp=0;sum_Mu2_tmp=0;
+	sum_DeltaPmag_tmp=0;sum_DeltaP1mag_tmp=0;sum_DeltaP2mag_tmp=0;
+	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
+
+
 	for (int i=0;i<MarkFluidNode_V075.size();i++){
+		alpha=Convert_RhoNToAlpha(RhoNPerm[MarkFluidNode_V075[i]],true);
+		alphaM1=1.0-alpha;
+		sum_Alpha1_tmp+=alpha;
+		sum_Alpha2_tmp+=alphaM1;
 		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V075[i]]*DeltaP[0][MarkFluidNode_V075[i]]+DeltaP[1][MarkFluidNode_V075[i]]*DeltaP[1][MarkFluidNode_V075[i]]);
+		sum_DeltaPmag_tmp+=DeltaPmag;
+		sum_DeltaP1mag_tmp+=alpha*DeltaPmag;
+		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag;
+		Umag=std::sqrt(UPerm[0][MarkFluidNode_V075[i]]*UPerm[0][MarkFluidNode_V075[i]]+UPerm[1][MarkFluidNode_V075[i]]*UPerm[1][MarkFluidNode_V075[i]]);
+		sum_Umag_tmp+=Umag;
+		visco=PtrViscosityConv->Get_Mu(1,RhoNPerm[MarkFluidNode_V075[i]]);
+		sum_Mu_tmp+=visco;
+		sum_Mu1_tmp+=alpha*visco;
+		sum_Mu2_tmp+=alphaM1*visco;
 		if(DeltaPmag>0)
 		{
-			Umag=std::sqrt(UPerm[0][MarkFluidNode_V075[i]]*UPerm[0][MarkFluidNode_V075[i]]+UPerm[1][MarkFluidNode_V075[i]]*UPerm[1][MarkFluidNode_V075[i]]);
-			sum_tmp+=Permeability(DeltaPmag,Umag,PtrViscosityConv->Get_Mu());
+			sum_permeability_tmp+=Permeability(DeltaPmag,Umag,visco);
+			sum_permeability1_tmp+=Permeability(DeltaPmag,alpha*Umag,alpha*visco);
+			sum_permeability2_tmp+=Permeability(DeltaPmag,alphaM1*Umag,alphaM1*visco);
 		}
 	}
-	sum_permeability+=0.75*sum_tmp;
-	sum_tmp=0;
+	sum_permeability+=0.75*sum_permeability_tmp;sum_permeability1+=0.75*sum_permeability1_tmp;sum_permeability2+=0.75*sum_permeability2_tmp;
+	sum_Umag+=0.75*sum_Umag_tmp;sum_U1mag+=0.75*sum_U1mag_tmp;sum_U2mag+=0.75*sum_U2mag_tmp;
+	sum_Mu+=0.75*sum_Mu_tmp;sum_Mu1+=0.75*sum_Mu1_tmp;sum_Mu2+=0.75*sum_Mu2_tmp;
+	sum_DeltaPmag+=0.75*sum_DeltaPmag_tmp;sum_DeltaP1mag+=0.75*sum_DeltaP1mag_tmp;sum_DeltaP2mag+=0.75*sum_DeltaP2mag_tmp;
+	sum_Alpha1+=0.75*sum_Alpha1_tmp;sum_Alpha2+=0.75*sum_Alpha2_tmp;
+
+	sum_permeability_tmp=0;sum_permeability1_tmp=0;sum_permeability2_tmp=0;
+	sum_Umag_tmp=0;sum_U1mag_tmp=0;sum_U2mag_tmp=0;
+	sum_Mu_tmp=0;sum_Mu1_tmp=0;sum_Mu2_tmp=0;
+	sum_DeltaPmag_tmp=0;sum_DeltaP1mag_tmp=0;sum_DeltaP2mag_tmp=0;
+	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
+
 	for (int i=0;i<MarkFluidNode_V05.size();i++){
+		alpha=Convert_RhoNToAlpha(RhoNPerm[MarkFluidNode_V05[i]],true);
+		alphaM1=1.0-alpha;
+		sum_Alpha1_tmp+=alpha;
+		sum_Alpha2_tmp+=alphaM1;
 		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V05[i]]*DeltaP[0][MarkFluidNode_V05[i]]+DeltaP[1][MarkFluidNode_V05[i]]*DeltaP[1][MarkFluidNode_V05[i]]);
+		sum_DeltaPmag_tmp+=DeltaPmag;
+		sum_DeltaP1mag_tmp+=alpha*DeltaPmag;
+		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag;
+		Umag=std::sqrt(UPerm[0][MarkFluidNode_V05[i]]*UPerm[0][MarkFluidNode_V05[i]]+UPerm[1][MarkFluidNode_V05[i]]*UPerm[1][MarkFluidNode_V05[i]]);
+		sum_Umag_tmp+=Umag;
+		visco=PtrViscosityConv->Get_Mu(1,RhoNPerm[MarkFluidNode_V05[i]]);
+		sum_Mu_tmp+=visco;
+		sum_Mu1_tmp+=alpha*visco;
+		sum_Mu2_tmp+=alphaM1*visco;
 		if(DeltaPmag>0)
 		{
-			Umag=std::sqrt(UPerm[0][MarkFluidNode_V05[i]]*UPerm[0][MarkFluidNode_V05[i]]+UPerm[1][MarkFluidNode_V05[i]]*UPerm[1][MarkFluidNode_V05[i]]);
-			sum_tmp+=Permeability(DeltaPmag,Umag,PtrViscosityConv->Get_Mu());
+			sum_permeability_tmp+=Permeability(DeltaPmag,Umag,visco);
+			sum_permeability1_tmp+=Permeability(DeltaPmag,alpha*Umag,alpha*visco);
+			sum_permeability2_tmp+=Permeability(DeltaPmag,alphaM1*Umag,alphaM1*visco);
 		}
 	}
-	sum_permeability+=0.5*sum_tmp;
-	sum_tmp=0;
+	sum_permeability+=0.5*sum_permeability_tmp;sum_permeability1+=0.5*sum_permeability1_tmp;sum_permeability2+=0.5*sum_permeability2_tmp;
+	sum_Umag+=0.5*sum_Umag_tmp;sum_U1mag+=0.5*sum_U1mag_tmp;sum_U2mag+=0.5*sum_U2mag_tmp;
+	sum_Mu+=0.5*sum_Mu_tmp;sum_Mu1+=0.5*sum_Mu1_tmp;sum_Mu2+=0.5*sum_Mu2_tmp;
+	sum_DeltaPmag+=0.5*sum_DeltaPmag_tmp;sum_DeltaP1mag+=0.5*sum_DeltaP1mag_tmp;sum_DeltaP2mag+=0.5*sum_DeltaP2mag_tmp;
+	sum_Alpha1+=0.5*sum_Alpha1_tmp;sum_Alpha2+=0.5*sum_Alpha2_tmp;
+
+	sum_permeability_tmp=0;sum_permeability1_tmp=0;sum_permeability2_tmp=0;
+	sum_Umag_tmp=0;sum_U1mag_tmp=0;sum_U2mag_tmp=0;
+	sum_Mu_tmp=0;sum_Mu1_tmp=0;sum_Mu2_tmp=0;
+	sum_DeltaPmag_tmp=0;sum_DeltaP1mag_tmp=0;sum_DeltaP2mag_tmp=0;
+	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
+
 	for (int i=0;i<MarkFluidNode_V025.size();i++){
+		alpha=Convert_RhoNToAlpha(RhoNPerm[MarkFluidNode_V025[i]],true);
+		alphaM1=1.0-alpha;
+		sum_Alpha1_tmp+=alpha;
+		sum_Alpha2_tmp+=alphaM1;
 		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V025[i]]*DeltaP[0][MarkFluidNode_V025[i]]+DeltaP[1][MarkFluidNode_V025[i]]*DeltaP[1][MarkFluidNode_V025[i]]);
+		sum_DeltaPmag_tmp+=DeltaPmag;
+		sum_DeltaP1mag_tmp+=alpha*DeltaPmag;
+		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag;
+		Umag=std::sqrt(UPerm[0][MarkFluidNode_V025[i]]*UPerm[0][MarkFluidNode_V025[i]]+UPerm[1][MarkFluidNode_V025[i]]*UPerm[1][MarkFluidNode_V025[i]]);
+		sum_Umag_tmp+=Umag;
+		visco=PtrViscosityConv->Get_Mu(1,RhoNPerm[MarkFluidNode_V025[i]]);
+		sum_Mu_tmp+=visco;
+		sum_Mu1_tmp+=alpha*visco;
+		sum_Mu2_tmp+=alphaM1*visco;
 		if(DeltaPmag>0)
 		{
-			Umag=std::sqrt(UPerm[0][MarkFluidNode_V025[i]]*UPerm[0][MarkFluidNode_V025[i]]+UPerm[1][MarkFluidNode_V025[i]]*UPerm[1][MarkFluidNode_V025[i]]);
-			sum_tmp+=Permeability(DeltaPmag,Umag,PtrViscosityConv->Get_Mu());
+			sum_permeability_tmp+=Permeability(DeltaPmag,Umag,visco);
+			sum_permeability1_tmp+=Permeability(DeltaPmag,alpha*Umag,alpha*visco);
+			sum_permeability2_tmp+=Permeability(DeltaPmag,alphaM1*Umag,alphaM1*visco);
 		}
 	}
-	sum_permeability+=0.25*sum_tmp;
-	sum_tmp=0;
+	sum_permeability+=0.25*sum_permeability_tmp;sum_permeability1+=0.25*sum_permeability1_tmp;sum_permeability2+=0.25*sum_permeability2_tmp;
+	sum_Umag+=0.25*sum_Umag_tmp;sum_U1mag+=0.25*sum_U1mag_tmp;sum_U2mag+=0.25*sum_U2mag_tmp;
+	sum_Mu+=0.25*sum_Mu_tmp;sum_Mu1+=0.25*sum_Mu1_tmp;sum_Mu2+=0.25*sum_Mu2_tmp;
+	sum_DeltaPmag+=0.25*sum_DeltaPmag_tmp;sum_DeltaP1mag+=0.25*sum_DeltaP1mag_tmp;sum_DeltaP2mag+=0.25*sum_DeltaP2mag_tmp;
+	sum_Alpha1+=0.25*sum_Alpha1_tmp;sum_Alpha2+=0.25*sum_Alpha2_tmp;
+
+	sum_permeability_tmp=0;sum_permeability1_tmp=0;sum_permeability2_tmp=0;
+	sum_Umag_tmp=0;sum_U1mag_tmp=0;sum_U2mag_tmp=0;
+	sum_Mu_tmp=0;sum_Mu1_tmp=0;sum_Mu2_tmp=0;
+	sum_DeltaPmag_tmp=0;sum_DeltaP1mag_tmp=0;sum_DeltaP2mag_tmp=0;
+	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
+
+	sum_permeability=PtrMultiBlockConv->SumAllProcessors(&sum_permeability);sum_permeability1=PtrMultiBlockConv->SumAllProcessors(&sum_permeability1);sum_permeability2=PtrMultiBlockConv->SumAllProcessors(&sum_permeability2);
+	sum_Umag=PtrMultiBlockConv->SumAllProcessors(&sum_Umag);sum_U1mag=PtrMultiBlockConv->SumAllProcessors(&sum_U1mag);sum_U2mag=PtrMultiBlockConv->SumAllProcessors(&sum_U2mag);
+	sum_Mu=PtrMultiBlockConv->SumAllProcessors(&sum_Mu);sum_Mu1=PtrMultiBlockConv->SumAllProcessors(&sum_Mu1);sum_Mu2=PtrMultiBlockConv->SumAllProcessors(&sum_Mu2);
+	sum_DeltaPmag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPmag);sum_DeltaP1mag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP1mag);sum_DeltaP2mag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP2mag);
+	sum_Alpha1=PtrMultiBlockConv->SumAllProcessors(&sum_Alpha1);sum_Alpha2=PtrMultiBlockConv->SumAllProcessors(&sum_Alpha2);
 
 
-	sum_permeability=PtrMultiBlockConv->SumAllProcessors(&sum_permeability);
+	double Avg_Umag=sum_Umag/fluidVolumesum;double Avg_U1mag=sum_U1mag/fluidVolumesum;double Avg_U2mag=sum_U2mag/fluidVolumesum;
+	double Avg_Mu=sum_Mu/fluidVolumesum;double Avg_Mu1=sum_Mu1/fluidVolumesum;double Avg_Mu2=sum_Mu2/fluidVolumesum;
+	double Avg_DeltaPmag=sum_DeltaPmag/fluidVolumesum;double Avg_DeltaP1mag=sum_DeltaP1mag/fluidVolumesum;double Avg_DeltaP2mag=sum_DeltaP2mag/fluidVolumesum;
+	double Avg_Alpha1=sum_Alpha1/fluidVolumesum;double Avg_Alpha2=sum_Alpha2/fluidVolumesum;
 
-
-	double Permeability=sum_permeability/fluidVolumesum;
-
+	//double PorePermeability=sum_permeability/fluidVolumesum;
+	double PorePermeability=sum_permeability/fluidVolumesum;double PorePermeability1=sum_permeability1/fluidVolumesum;double PorePermeability2=sum_permeability2/fluidVolumesum;
+	double PoreGlobalPermeability=Avg_Umag*Avg_Mu/Avg_DeltaPmag;double PoreGlobalPermeability1=Avg_U1mag*Avg_Mu1/Avg_DeltaP1mag;double PoreGlobalPermeability2=Avg_U2mag*Avg_Mu2/Avg_DeltaP2mag;
+	double Permeability=LuToPhy2*porosity*PorePermeability;double Permeability1=LuToPhy2*porosity*PorePermeability1;double Permeability2=LuToPhy2*porosity*PorePermeability2;
+	double GlobalPermeability=LuToPhy2*porosity*PoreGlobalPermeability;double GlobalPermeability1=LuToPhy2*porosity*PoreGlobalPermeability1;double GlobalPermeability2=LuToPhy2*porosity*PoreGlobalPermeability2;
+	double ScaleAvg_Umag=LuToPhy2*porosity*Avg_Umag;double ScaleAvg_U1mag=LuToPhy2*porosity*Avg_U1mag;double ScaleAvg_U2mag=LuToPhy2*porosity*Avg_U2mag;
 	if(PtrMultiBlockConv->IsMainProcessor())
 	{
 		ofstream Permeabilityfile;
 		Permeabilityfile.open("Permeability.txt",ios::out | ios::app);
-		Permeabilityfile<<Time<<","<<Permeability<<std::endl;
+		Permeabilityfile<<Time<<","<<Permeability<<","<<Permeability1<<","<<Permeability2<<","<<GlobalPermeability<<","<<GlobalPermeability1<<","<<GlobalPermeability2
+				<<","<<PorePermeability<<","<<PorePermeability1<<","<<PorePermeability2<<","<<PoreGlobalPermeability<<","<<PoreGlobalPermeability1<<","<<PoreGlobalPermeability2
+				<<","<<ScaleAvg_Umag<<","<<ScaleAvg_U1mag<<","<<ScaleAvg_U2mag<<","<<Avg_Umag<<","<<Avg_U1mag<<","<<Avg_U2mag<<","
+				<<Avg_Mu<<","<<Avg_Mu1<<","<<Avg_Mu2
+				<<","<<Avg_DeltaPmag<<","<<Avg_DeltaP1mag<<","<<Avg_DeltaP2mag<<","<<Avg_Alpha1<<","<<Avg_Alpha2<<std::endl;
 		Permeabilityfile.close();
-		std::cout<<"Permeability: "<<Permeability<<std::endl;
+		std::cout<<"Average Permeability [m2]: "<<Permeability<<" Global Permeability [m2]: "<<GlobalPermeability<<" Pore-scale Average Permeability: "<<PorePermeability<<" Pore-scale Global Permeability: "<<PoreGlobalPermeability<<" Average Velocity: "<<Avg_Umag<<" Average DeltaP: "<<Avg_DeltaPmag<<" Average viscosity: "<<Avg_Mu<<" Average Alpha: "<<Avg_Alpha1<<std::endl;
 	}
 	return Permeability;
 }
@@ -1135,7 +1291,7 @@ void Convergence::Calcul_localDeltaP(){
 	for (int j=0;j<PtrNodeArraysConv->Get_SizeNodeIdCorner();j++)
 	{
 		// Calculate gradients
-			DensityGradient.GradCorner(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectCorner(j),PtrNodeArraysConv->Get_NodeNormalCorner(j));
+			DensityGradient.GradBc(&tmp[0],&PressureConv[0],PtrNodeArraysConv->Get_NodeConnectCorner(j),PtrNodeArraysConv->Get_NodeNormalCorner(j));
 			DeltaP[0][PtrNodeArraysConv->Get_NodeIdCorner(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdCorner(j)]=tmp[1];
 //			NormDeltaP[PtrNodeArraysConv->Get_NodeIdCorner(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
 	}

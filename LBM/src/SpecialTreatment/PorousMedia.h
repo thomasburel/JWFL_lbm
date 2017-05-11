@@ -18,6 +18,8 @@ class PorousMedia {
 public:
 	PorousMedia();
 	virtual ~PorousMedia();
+	void AddHeleShawDragSinglePhase(double const  &u,double const  &v,double const  &mu,double &Fx,double &Fy,double const InterfaceFx=0,double const InterfaceFy=0);
+	void AddHeleShawDragTwoPhases(double const  &u,double const  &v,double const  &mu,double &Fx,double &Fy,double const InterfaceFx=0,double const InterfaceFy=0);
 protected:
 	void ReadBinaryImage(std::string filename,int nx, int ny, int nz);
 	void AdaptSolid();
@@ -34,6 +36,7 @@ protected:
 //	std::vector<std::vector<std::vector<bool>>> imagevect;
 	int image_nx,image_ny,image_nz;
 	int xstartmedia,ystartmedia,zstartmedia;
+	double depth,depth2;
 };
 
 #endif /* SPECIALTREATMENT_POROUSMEDIA_H_ */

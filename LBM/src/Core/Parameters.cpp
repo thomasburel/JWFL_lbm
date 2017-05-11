@@ -16,8 +16,8 @@ Parameters::Parameters()
 	scheme=SolverEnum::Q9;
 	deltaT=1;deltaX=1;
 	model=SolverEnum::SinglePhase;
-	fluid=Newtonian;
-	UserForce=None;
+	fluid=ModelEnum::Newtonian;
+	UserForce=ModelEnum::None;
 	argc=0;
 	argv=0;
 	verbous=false;

@@ -15,6 +15,8 @@ image_nz=0;
 xstartmedia=0;
 ystartmedia=0;
 zstartmedia=0;
+depth=1;
+depth2=depth*depth;
 }
 
 PorousMedia::~PorousMedia() {
@@ -314,3 +316,11 @@ for (int j=1;j<image_ny-1;j++)
 for (int j=1;j<image_ny-1;j++)
 	DomainBoundaryTreatment();
 	*/
+void PorousMedia::AddHeleShawDragSinglePhase(double const  &u,double const  &v,double const  &mu,double &Fx,double &Fy,double const InterfaceFx,double const InterfaceFy){
+	Fx+=-12.0*mu*u/depth2;
+	Fy+=-12.0*mu*v/depth2;
+}
+void PorousMedia::AddHeleShawDragTwoPhases(double const  &u,double const  &v,double const  &mu,double &Fx,double &Fy,double const InterfaceFx,double const InterfaceFy){
+	Fx+=-12.0*mu*u/depth2+InterfaceFx;
+	Fy+=-12.0*mu*u/depth2+InterfaceFy;
+}

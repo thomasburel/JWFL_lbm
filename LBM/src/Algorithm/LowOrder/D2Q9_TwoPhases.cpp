@@ -14,6 +14,7 @@ D2Q9TwoPhases::D2Q9TwoPhases() {
 	PtrParameters=0;
 	f=0;
 	nbvelo=9;
+	Nb_VelocityCollide=nbvelo;
 	nbnode=0;
 	ftmp=0;
 	tmpDistribution=0;
@@ -68,7 +69,7 @@ void D2Q9TwoPhases::InitD2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* 
 
 	EiCollide=Ei;
 	omegaCollide=omega;
-
+	Nb_VelocityCollide=nbvelo;
 	init(ini);
 }
 D2Q9TwoPhases::~D2Q9TwoPhases() {
@@ -1181,7 +1182,15 @@ void D2Q9TwoPhases::IniComVariables(){
 	size_buf[3]=IdGNodeN.size();
 // Macro sync
 	Nd_MacroVariables_sync=Dic->Get_NbSyncVar();//6;
-	std::cout<<"Synchromisation ; number of variable: "<<Nd_MacroVariables_sync<<std::endl;
+	if(parallel->isMainProcessor())
+	{
+		std::cout<<"Synchromisation ; number of variable: "<<Nd_MacroVariables_sync<<std::endl<<"Synchronise Variables are: ";
+		std::vector<std::string> syncname=Dic->Get_SyncVarName();
+		for(int i=0;i<Nd_MacroVariables_sync;i++)
+			std::cout<<syncname[i]<<" ";
+		std::cout<<std::endl;
+	}
+
 	SyncVar=Dic->Get_SyncVar();
 	buf_MacroSend=new double** [Nd_MacroVariables_sync];
 	buf_MacroRecv=new double** [Nd_MacroVariables_sync];
@@ -1721,6 +1730,7 @@ void D2Q9TwoPhases::SyncMacroVarToGhost(){
 		for(int j=0;j<Nd_MacroVariables_sync;j++)
 			SyncVar[j][IdGNodeS[i]]=buf_MacroRecv[j][3][i];
 	}
+//Corner
 	if(IdRNodeSE.size()>=1)
 	{
 		for(int j=0;j<Nd_MacroVariables_sync;j++)

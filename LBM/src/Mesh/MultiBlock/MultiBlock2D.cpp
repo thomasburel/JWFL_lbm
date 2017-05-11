@@ -86,7 +86,7 @@ MultiBlock2D::MultiBlock2D(ParallelManager* parallel_, Parameters * PtrParameter
 }
 
 MultiBlock2D::~MultiBlock2D() {
-	delete parallel;
+//	delete parallel;
 	delete [] Nx,Ny;
 }
 

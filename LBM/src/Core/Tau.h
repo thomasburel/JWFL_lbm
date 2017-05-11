@@ -20,6 +20,7 @@ public:
 	void Init_Tau(double Tau_,double cs2_,double deltaT_){InvTau=1.0/Tau_;cs2=cs2_;deltaT=deltaT_;};
 	void Init_Viscosity(Parameters *Param);
 	Viscosity* Get_viscosity(){return &visco;};
+	double Get_Mu(double const Rho, double const RhoN){return visco.Get_Mu(Rho,RhoN);};
 
 //	virtual void Set_Tau(double Tau1_,double Tau2_=1)=0;
 inline	double Convert_TauToNu(double Tau_){return (Tau_-0.5)*cs2*deltaT;};
@@ -76,9 +77,15 @@ public:
 	void IniTau(Parameters *Param);
 	virtual ~Tau();
 	double& Get_InvTau(double const Rho=1, double const RhoN=0);
+	//double*& Get_InvTau();
+	void UpdateRho(double const &Rho){RhoTau=Rho;};
+	void UpdateRhoN(double const &RhoN){RhoNTau=RhoN;};
+	void UpdateT(double const &T){TTau=T;};
 	Viscosity* Get_viscosity(){return tau->Get_viscosity();};
+	double Get_Mu(){return tau->Get_Mu(RhoTau,RhoNTau);};
 private:
 	TauDEF* tau;
+	double RhoTau,RhoNTau,TTau;
 };
 
 
