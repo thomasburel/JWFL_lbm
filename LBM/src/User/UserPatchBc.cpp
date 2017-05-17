@@ -30,20 +30,22 @@ void UserPatchBc::IntitialiseUserPatchBc(Parameters& PtrParameters,int &NumberOf
 
 		//AddPressurePatch("Inlet",HeZouP, FixP);
 		//PressurePatch.back().Set_Inlet(true);
-		AddVelocityPatch("Inlet",HeZouV, FixV);
+		//AddVelocityPatch("Inlet",HeZouV, FixV);
+		AddPeriodicPatch("Inlet",Simple);
 		//Patch 1
-		AddPressurePatch("Outlet",HeZouP, FixP);
 		//AddVelocityPatch("Outlet",HeZouV, zeroVGrad1st); //FixV,zeroVGrad1st
-		PressurePatch.back().Set_extrapolationAlpha(true);
-		PressurePatch.back().Set_Outlet(true);
+		//AddPressurePatch("Outlet",HeZouP, FixP);
+		//PressurePatch.back().Set_extrapolationAlpha(true);
+		//PressurePatch.back().Set_Outlet(true);
+		AddPeriodicPatch("Outlet",Simple);
 		//PressurePatch.back().Set_extrapolationNormal(true);
 		//AddPressurePatch("Outlet",HeZouP, FixP);
 		//Patch 2
-		//AddWallPatch("Wall",BounceBack);
-		AddSymmetryPatch("Symmetry",OnNode);
+		AddWallPatch("Wall",BounceBack);
+		//AddSymmetryPatch("Symmetry",OnNode);
 		//Patch 3
-		//AddWallPatch("Wall",BounceBack);
-		AddSymmetryPatch("Symmetry",OnNode);
+		AddWallPatch("Wall",BounceBack);
+		//AddSymmetryPatch("Symmetry",OnNode);
 
 }
 void UserPatchBc::SetUserPatchBc(Parameters& PtrParameters,int elem, int nodenumber, double* pos, int &IdPatchBc1, int &IdPatchBc2){

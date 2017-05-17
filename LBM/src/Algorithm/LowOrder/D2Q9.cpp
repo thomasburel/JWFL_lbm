@@ -134,10 +134,10 @@ void D2Q9::Set_Collide(){
 
 }
 void D2Q9::Set_Macro(){
-
+/*
 		if(PtrParameters->Get_UserForceType()== ModelEnum::BodyForce||PtrParameters->Get_HeleShawBodyForce()!= PorousMediaEnum::no)
 			PtrMacro=&D2Q9::UpdateMacroVariables_WithBodyForce;
-		else
+		else*/
 			PtrMacro=&D2Q9::UpdateMacroVariables_NoBodyForce;
 
 }

@@ -47,8 +47,8 @@ int main(int argc, char *argv[]) {
 
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
 // Set Domain size
-	double L=2000;//1322;//1983;//661;
-	double H=100;//1058;//1587;//529;/home/thomas/Geometry/Gmsh/Proceded_LBM_DVM_canvas_793_789.raw
+	double L=500;//1322;//1983;//661;
+	double H=50;//1058;//1587;//529;/home/thomas/Geometry/Gmsh/Proceded_LBM_DVM_canvas_793_789.raw
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 //Set Lattice unity
 	double deltaTLattice=1;
@@ -59,7 +59,7 @@ int main(int argc, char *argv[]) {
 	 double Diameter=H;
 	double Ca=0;
 
-	double U2_ref=0.01;
+	double U2_ref=0.0;
 	double Re=1;
 
 	double Rho1_ref=1;
@@ -110,7 +110,7 @@ int main(int argc, char *argv[]) {
 	Param.Set_UserParameters(U2_ref,H,L,Pmax,Pmin);
 
 // Set User Force type
-	Param.Set_UserForceType(ModelEnum::None);
+	Param.Set_UserForceType(ModelEnum::BodyForce);//None,LocalForce or BodyForce
 // Set delta x for conversion from lattice unit to physical unit
 	Param.Set_deltax(1);//1774*1e-6/L
 
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity, Periodic and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
-	Param.Set_BcType(Wall,Pressure,Wall,Velocity);
+	Param.Set_BcType(Wall,Periodic,Wall,Periodic);
 
 	Param.Set_ModelOfFluid(SolverEnum::Compressible);
 /// Set Pressure Type
@@ -138,13 +138,13 @@ int main(int argc, char *argv[]) {
 ///Display information during the calculation every N iteration
 	Param.Set_listing(1000);
 	Param.Set_ErrorMax(1e-20);
-	Param.Set_ErrorVariable(SolverEnum::RhoN);
+	Param.Set_ErrorVariable(SolverEnum::VelocityX);
 
 ///Selection of variables to export
 	Param.Set_VariablesOutput(true,true,false);// export Rho,U,P
 
 	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(SolverEnum::ColourFluid);
+	Param.Set_Model(SolverEnum::SinglePhase);
 	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
 	if(Param.Get_ViscosityType()==ConstViscosity)
 		lambda=1;
@@ -205,7 +205,9 @@ int main(int argc, char *argv[]) {
 				<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
 				<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
 		FileExportStream.str("");
-		FileExportStream<<"Test_Vel_interface__With_estimator_CSFV2"<< fixed << setprecision(0)<<L<<"x"<<H;
+		FileExportStream<<"Test_Poiseuille_BodyForce"<< fixed << setprecision(0)<<L<<"x"<<H;
+
+//		FileExportStream<<"Test_Vel_interface__With_estimator_CSFV2"<< fixed << setprecision(0)<<L<<"x"<<H;
 //		FileExportStream<<"LinearLeastSquareInterpol_linearswitch_teta170_beta0.7_5fluids_3Solid";
 		if(Param.Get_Model()==SolverEnum::SinglePhase)
 		{
