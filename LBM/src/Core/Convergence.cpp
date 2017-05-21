@@ -202,11 +202,6 @@ void Convergence::Set_Convergence(){
 			}
 			if(OutletPatchId.size()>0 && InletPatchId.size()>0)
 			{
-				PtrDicConv->Get_PtrVar("Density",RhoPerm,Var_found);
-				UPerm=new double*[2];
-				PtrDicConv->Get_PtrVar("VelocityX",UPerm[0],Var_found);
-				PtrDicConv->Get_PtrVar("VelocityY",UPerm[1],Var_found);
-
 				if(!(PtrParmConv->Get_Model()==SolverEnum::SinglePhase))
 				{
 					PtrDicConv->Get_PtrVar("RhoN",RhoNPerm,Var_found);
@@ -243,6 +238,13 @@ void Convergence::Set_Convergence(){
 		{
 			std::cout<<"Porous media case detected but no Production rate or Permeability requested."<<std::endl;
 			PtrParmConv->PorousMediaCase(false);
+		}
+		if(PtrParmConv->IsCalculatePermeability() || PtrParmConv->IsCalculateDarcyPermeability())
+		{
+			PtrDicConv->Get_PtrVar("Density",RhoPerm,Var_found);
+			UPerm=new double*[2];
+			PtrDicConv->Get_PtrVar("VelocityX",UPerm[0],Var_found);
+			PtrDicConv->Get_PtrVar("VelocityY",UPerm[1],Var_found);
 		}
 	}
 }
