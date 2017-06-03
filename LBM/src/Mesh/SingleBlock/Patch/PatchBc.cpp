@@ -15,6 +15,18 @@ void PatchBc::initPatchBc(std::vector<Node2D*> Node, Parameters *PtrParam){
 	//Initialise user patches
 	NumberOfPatchBc=0;
 	IntitialiseUserPatchBc(*PtrParam,NumberOfPatchBc);
+	//check if the number of patch is less or equal to the number of patch and less than 5
+	if(NumberOfPatchBc>NumberOfPatches()||NumberOfPatchBc>4)
+	{
+		if(rank==0)
+			std::cout<<"Number of Patches set: "<<NumberOfPatchBc<<std::endl;
+		if(NumberOfPatchBc>NumberOfPatches())
+			NumberOfPatchBc=NumberOfPatches();
+		else
+			NumberOfPatchBc=4;
+		if(rank==0)
+			std::cout<<"Number of Patches corrected: "<<NumberOfPatchBc<<std::endl;
+	}
 	//Add Default Patches for the boundary of the Cartesian domain
 	SelectPatchBc(PtrParam->Get_GlobalBcType(3), PtrParam, string("Left"), NumberOfPatchBc+0);
 	SelectPatchBc(PtrParam->Get_GlobalBcType(1), PtrParam, string("Right"), NumberOfPatchBc+1);

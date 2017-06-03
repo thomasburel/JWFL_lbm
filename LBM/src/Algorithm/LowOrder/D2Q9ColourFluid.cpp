@@ -777,21 +777,35 @@ void D2Q9ColourFluid::InitDistColourFluidInterior(){
 
 }
 void D2Q9ColourFluid::UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini){
+	//init field
 	UpdateDomainBc(UpdatedParam,ini);
 	UpdateWall(UpdatedParam,ini);
 	UpdateInterior(UpdatedParam,ini);
+	//init distri
+	InitDistColourFluidDomainBc();
+	InitDistColourFluidWall();
+	InitDistColourFluidInterior();
 }
 void D2Q9ColourFluid::UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini){
+	//init field
 	InitDomainBc(ini);
 	InitColourFluidDomainBc(ini);
+	//init distri
+	InitDistColourFluidDomainBc();
 }
 void D2Q9ColourFluid::UpdateWall(Parameters* UpdatedParam,InitLBM& ini){
+	//init field
 	InitWall(ini);
 	InitColourFluidWall(ini);
+	//init distri
+	InitDistColourFluidWall();
 }
 void D2Q9ColourFluid::UpdateInterior(Parameters* UpdatedParam,InitLBM& ini){
+	//init field
 	InitInterior(ini);
 	InitColourFluidInterior(ini);
+	//init distri
+	InitDistColourFluidInterior();
 }
 void D2Q9ColourFluid::run(Parameters* UpdatedParam){
 

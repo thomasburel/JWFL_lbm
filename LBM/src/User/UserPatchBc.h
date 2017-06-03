@@ -33,6 +33,7 @@ protected:
 	void AddWallPatch(std::string PatchName_,WallType WType_);
 
 protected:
+	int NumberOfPatches(){return PressurePatch.size()+VelocityPatch.size()+SymmetryPatch.size()+PeriodicPatch.size();};
 	std::vector<PressurePatchBc> PressurePatch;
 	std::vector<VelocityPatchBc> VelocityPatch;
 	std::vector<SymmetryPatchBc> SymmetryPatch;
