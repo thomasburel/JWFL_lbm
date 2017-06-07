@@ -83,11 +83,12 @@ private:
        ar & time & ini & Solver_ &  MultiBlock_ & parrallel & Writer & PtrParameters;
        ar & time & ini & PtrParameters;
     }*/
-private:
+public:
 	void Save_Parameters(Parameters & object);
-	void Save_Parameters(Parameters & object,std::string &filename);
+	void Save_Parameters(Parameters & object,std::string filename);
 	void Load_Parameters(Parameters & object);
 	void Load_Parameters(Parameters & object,std::string &filename);
+private:
 	void Save_InitLBM(InitLBM & object);
 	void Save_InitLBM(InitLBM & object,std::string &filename);
 	void Load_InitLBM(InitLBM & object);

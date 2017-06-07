@@ -97,13 +97,21 @@ private:
 	template<class Archive>
 	void serialize(Archive &ar, const unsigned int version)
 	{
-		ar & BOOST_SERIALIZATION_NVP(porousmediacase);
-		ar & BOOST_SERIALIZATION_NVP(calculatePorosity);
-		ar & BOOST_SERIALIZATION_NVP(calculateProductionRate);
-		ar & BOOST_SERIALIZATION_NVP(calculatePermeability);
-		ar & BOOST_SERIALIZATION_NVP(calculateDarcyPermeability);
-		ar & BOOST_SERIALIZATION_NVP(HeleShaw);
-		ar & BOOST_SERIALIZATION_NVP(depth);
+		ar & BOOST_SERIALIZATION_NVP(porousmediacase)
+		& BOOST_SERIALIZATION_NVP(calculatePorosity)
+		& BOOST_SERIALIZATION_NVP(calculateProductionRate)
+		& BOOST_SERIALIZATION_NVP(calculatePermeability)
+		& BOOST_SERIALIZATION_NVP(calculateDarcyPermeability)
+		& BOOST_SERIALIZATION_NVP(LenghtMedia)
+		& BOOST_SERIALIZATION_NVP(SectionMedia)
+		& BOOST_SERIALIZATION_NVP(MinX)
+		& BOOST_SERIALIZATION_NVP(MaxX)
+		& BOOST_SERIALIZATION_NVP(MinY)
+		& BOOST_SERIALIZATION_NVP(MaxY)
+		& BOOST_SERIALIZATION_NVP(MinZ)
+		& BOOST_SERIALIZATION_NVP(MaxZ)
+		& BOOST_SERIALIZATION_NVP(HeleShaw)
+		& BOOST_SERIALIZATION_NVP(depth);
 	}
 public:
 	void PorousMediaCase(bool porousmediacase_) { porousmediacase=porousmediacase_;};
@@ -143,11 +151,22 @@ private:
 	void serialize(Archive &ar, const unsigned int version)
 	{
 		ar & BOOST_SERIALIZATION_NVP(beta)
+		& BOOST_SERIALIZATION_NVP(RhoLimiter)
+		& BOOST_SERIALIZATION_NVP(GNormLimiter)
 		 & BOOST_SERIALIZATION_NVP(A1)
 		 & BOOST_SERIALIZATION_NVP(A2)
+		 & BOOST_SERIALIZATION_NVP(Atau)
 		 & BOOST_SERIALIZATION_NVP(ColourGrad)
 		 & BOOST_SERIALIZATION_NVP(Recolouring)
-		 & BOOST_SERIALIZATION_NVP(ColourOperator);
+		 & BOOST_SERIALIZATION_NVP(ColourOperator)
+		 & BOOST_SERIALIZATION_NVP(ColourExtrapolNoramlDensity)
+		 & BOOST_SERIALIZATION_NVP(ColourExtrapolNoramlInterface)
+		 & BOOST_SERIALIZATION_NVP(RedDensityOutput)
+		 & BOOST_SERIALIZATION_NVP(BlueDensityOutput)
+		 & BOOST_SERIALIZATION_NVP(SurfaceForceOutput)
+		 & BOOST_SERIALIZATION_NVP(CurvatureOutput)
+		 & BOOST_SERIALIZATION_NVP(ColourGradientOutput)
+		 & BOOST_SERIALIZATION_NVP(NormColourGradientOutput);
 	}
 public:
 	void Set_Beta(double beta_=0.7){beta=beta_;};
@@ -357,7 +376,9 @@ private:
 		   & BOOST_SERIALIZATION_NVP(VelocityModelParam)
 		   & BOOST_SERIALIZATION_NVP(VelocityTypeParam)
 		   & BOOST_SERIALIZATION_NVP(CornerModelParam)
-		   & BOOST_SERIALIZATION_NVP(CornerPressureTypeParam);
+		   & BOOST_SERIALIZATION_NVP(CornerPressureTypeParam)
+		   & BOOST_SERIALIZATION_NVP(PeriodicTypeParam)
+		   & BOOST_SERIALIZATION_NVP(PressureDropParam);
 	}
 public:
 	NodeType Get_GlobalBcType(int side) const;
@@ -404,13 +425,28 @@ private:
 	{
 		ar & BOOST_SERIALIZATION_NVP(scheme)
 		   & BOOST_SERIALIZATION_NVP(model)
+		   & BOOST_SERIALIZATION_NVP(FluidModel)
+		   & BOOST_SERIALIZATION_NVP(variableError)
 		   & BOOST_SERIALIZATION_NVP(fluid)
 		   & BOOST_SERIALIZATION_NVP(Gradient)
+		   & BOOST_SERIALIZATION_NVP(Extrapol)
 		   & BOOST_SERIALIZATION_NVP(UserForce)
 		   & BOOST_SERIALIZATION_NVP(NbVelocities)
-		   & BOOST_SERIALIZATION_NVP(ErrorMax);
-
-
+		   & BOOST_SERIALIZATION_NVP(cs)
+		   & BOOST_SERIALIZATION_NVP(cs2)
+		   & BOOST_SERIALIZATION_NVP(deltaT)
+		   & BOOST_SERIALIZATION_NVP(deltaX)
+		   & BOOST_SERIALIZATION_NVP(ErrorMax)
+		   & BOOST_SERIALIZATION_NVP(refDensity)
+		   & BOOST_SERIALIZATION_NVP(tetaType)
+		   & BOOST_SERIALIZATION_NVP(tetaModel)
+		   & BOOST_SERIALIZATION_NVP(NormalExtrapol)
+		   & BOOST_SERIALIZATION_NVP(NormalInterpol)
+		   & BOOST_SERIALIZATION_NVP(Switchteta)
+		   & BOOST_SERIALIZATION_NVP(teta)
+		   & BOOST_SERIALIZATION_NVP(nNodesInterpolInSolid)
+		   & BOOST_SERIALIZATION_NVP(nNodesInterpolInFluid)
+		   & BOOST_SERIALIZATION_NVP(viscosityType);
 	}
 
 public:
@@ -504,6 +540,7 @@ private:
 	void serialize(Archive &ar, const unsigned int version)
 	{
 		ar & BOOST_SERIALIZATION_NVP(parrallel)
+		& BOOST_SERIALIZATION_NVP(Format)
 		   & BOOST_SERIALIZATION_NVP(NbSteps)
 		   & BOOST_SERIALIZATION_NVP(IntervalOutput)
 		   & BOOST_SERIALIZATION_NVP(IntervalListing)

@@ -213,7 +213,7 @@ void Simulation::Save_Parameters(Parameters & object){
 	boost::archive::xml_oarchive oa(ofs);
 	oa << BOOST_SERIALIZATION_NVP(object);
 }
-void Simulation::Save_Parameters(Parameters & object,std::string &filename){
+void Simulation::Save_Parameters(Parameters & object,std::string filename){
 	std::cout<< "Parameters are saving in the xml file: "<<filename<<std::endl;
 	// make an archive
 	std::ofstream ofs(filename.c_str());
