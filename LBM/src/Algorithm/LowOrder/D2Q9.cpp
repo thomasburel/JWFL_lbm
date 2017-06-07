@@ -336,6 +336,12 @@ void D2Q9::run(){
 				UpdatePressure();
 			SyncMacroVarToGhost();
 
+			if(it%OutPutNStep==0)
+			{
+				if(CalPressure&&!CalGradP)
+						UpdatePressure();
+				Writer->Write_Output(it);
+			}
 			if(it%listing==0  )
 			{
 				if(CalPressure&&!CalGradP)
@@ -364,12 +370,7 @@ void D2Q9::run(){
 					it=NbStep;
 				}
 			}
-			if(it%OutPutNStep==0)
-			{
-				if(CalPressure&&!CalGradP)
-						UpdatePressure();
-				Writer->Write_Output(it);
-			}
+
 			it++;
 		}
 	}
@@ -383,7 +384,12 @@ void D2Q9::run(){
 			UpdateMacroVariables();
 			if(CalGradP)
 					UpdatePressure();
-
+			if(it%OutPutNStep==0)
+			{
+				if(CalPressure&&!CalGradP)
+					UpdatePressure();
+				Writer->Write_Output(it);
+			}
 			if(it%listing==0  )
 			{
 				if(CalPressure&&!CalGradP)
@@ -406,18 +412,15 @@ void D2Q9::run(){
 					it=NbStep;
 				}
 			}
-			if(it%OutPutNStep==0)
-			{
-				if(it<NbStep)
-				{
-					if(CalPressure&&!CalGradP)
-						UpdatePressure();
-					Writer->Write_Output(it);
-				}
-			}
-
 			it++;
 		}
+	}
+	if((Get_Error()>=max_error)&&(it%OutPutNStep!=0))
+	{
+		if(CalPressure&&!CalGradP)
+			UpdatePressure();
+		it--;
+		Writer->Write_Output(it);
 	}
 	Write_Breakpoint(PtrParameters);
 	//Writer->Write_breakpoint(*PtrParameters);

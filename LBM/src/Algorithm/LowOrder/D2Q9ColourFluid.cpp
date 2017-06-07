@@ -914,6 +914,12 @@ void D2Q9ColourFluid::run(){
 //			SyncVarFromSolidGhost(RhoN);
 			//SyncVarToGhost(RhoN);
 
+			if(it%OutPutNStep==0)
+			{
+				if(CalPressure&&!CalGradP)
+					UpdatePressure();
+				Writer->Write_Output(it);
+			}
 			if(it%listing==0 )
 			{
 				if(CalPressure &&!CalGradP)
@@ -939,15 +945,7 @@ void D2Q9ColourFluid::run(){
 					it=NbStep;
 				}
 			}
-			if(it%OutPutNStep==0)
-			{
-				if(it<NbStep)
-				{
-					if(CalPressure&&!CalGradP)
-						UpdatePressure();
-					Writer->Write_Output(it);
-				}
-			}
+
 
 
 	/*		if(it==2)
@@ -972,7 +970,12 @@ void D2Q9ColourFluid::run(){
 			if(CalGradP)
 				UpdatePressure();
 			ExtrapolDensityInSolid();
-
+			if(it%OutPutNStep==0)
+			{
+				if(CalPressure&&!CalGradP)
+					UpdatePressure();
+				Writer->Write_Output(it);
+			}
 			if(it%listing==0)
 			{
 				if(CalPressure&&!CalGradP)
@@ -995,19 +998,18 @@ void D2Q9ColourFluid::run(){
 					it=NbStep;
 				}
 			}
-			if(it%OutPutNStep==0)
-			{
-				if(it<NbStep)
-				{
-					if(CalPressure&&!CalGradP)
-						UpdatePressure();
-					Writer->Write_Output(it);
-				}
-			}
+
 		/*	if(it==2)
 				Write_Breakpoint(PtrParameters);*/
 			it++;
 		}
+	}
+	if((Get_Error()>=max_error)&&(it%OutPutNStep!=0))
+	{
+		if(CalPressure&&!CalGradP)
+			UpdatePressure();
+		it--;
+		Writer->Write_Output(it);
 	}
 	Write_Breakpoint(PtrParameters);
 //	Writer->Write_breakpoint(*PtrParameters);
