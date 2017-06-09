@@ -76,10 +76,12 @@ void Simulation::Create_Mesh(){ //(dimension dim, int Nx, int Ny, int Nz) {
 		WriterCGNS=new CGNS(PtrParameters->Get_Dimension(),PtrParameters->Get_OutputFileName(),tot_nodes_,tot_elems_,MultiBlock_->Get_Start_Nodes(),MultiBlock_->Get_End_Nodes(),MultiBlock_->Get_Start_Elems(),MultiBlock_->Get_End_Elems(),MultiBlock_->Get_X0(),MultiBlock_->Get_Y0(),0,MultiBlock_->Get_Elems0());
 		Writer=WriterCGNS;
 		int it=0;
-		Writer->Write_Output(it);
 		if(PtrParameters->Get_Verbous())
+		{
+			Writer->Write_Output(it);
 			if(parallel->isMainProcessor())
 				std::cout<<"End of Writing of the mesh"<<std::endl;
+		}
 	}
 	else
 	{
