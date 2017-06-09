@@ -282,17 +282,328 @@ void D2Q9::init(InitLBM& ini){
 		UpdatePressure();
 
 }
-void D2Q9::UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini){
+void D2Q9::InitAllDomain(InitLBM& ini){
 
+	InitDomainBc(ini);
+	InitWall(ini);
+	InitInterior(ini);
+
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
+	{
+		idx=NodeArrays->NodeSolid[j].Get_index();
+		pos[0]=NodeArrays->NodeSolid[j].get_x();
+		pos[1]=NodeArrays->NodeSolid[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeSolid[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+	}
+	delete [] pos;
+	delete [] U_;
+}
+void
+void D2Q9::InitDomainBc(InitLBM& ini){
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+		idx=NodeArrays->NodeGlobalCorner[j].Get_index();
+		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
+		pos[1]=NodeArrays->NodeGlobalCorner[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+		NodeArrays->NodeGlobalCorner[j].Set_UDef(U_[0],U_[1]);
+		NodeArrays->NodeGlobalCorner[j].Set_RhoDef(Rho[idx]);
+	}
+	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	{
+		idx=NodeArrays->NodeVelocity[j].Get_index();
+		pos[0]=NodeArrays->NodeVelocity[j].get_x();
+		pos[1]=NodeArrays->NodeVelocity[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeVelocity[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+		NodeArrays->NodeVelocity[j].Set_UDef(U_[0],U_[1]);
+	}
+
+	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	{
+		idx=NodeArrays->NodePressure[j].Get_index();
+		pos[0]=NodeArrays->NodePressure[j].get_x();
+		pos[1]=NodeArrays->NodePressure[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodePressure[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+		NodeArrays->NodePressure[j].Set_RhoDef(Rho[idx]);
+	}
+	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	{
+		idx=NodeArrays->NodeSymmetry[j].Get_index();
+		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
+		pos[1]=NodeArrays->NodeSymmetry[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+		idx=NodeArrays->NodePeriodic[j].Get_index();
+		pos[0]=NodeArrays->NodePeriodic[j].get_x();
+		pos[1]=NodeArrays->NodePeriodic[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodePeriodic[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+	}
+	delete [] pos;
+	delete [] U_;
+}
+void D2Q9::InitWall(InitLBM& ini){
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	{
+		idx=NodeArrays->NodeCorner[j].Get_index();
+		pos[0]=NodeArrays->NodeCorner[j].get_x();
+		pos[1]=NodeArrays->NodeCorner[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeCorner[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+		NodeArrays->NodeCorner[j].Set_UDef(U_[0],U_[1]);
+		NodeArrays->NodeCorner[j].Set_RhoDef(Rho[idx]);
+	}
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+		idx=NodeArrays->NodeWall[j].Get_index();
+		pos[0]=NodeArrays->NodeWall[j].get_x();
+		pos[1]=NodeArrays->NodeWall[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeWall[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+	}
+	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	{
+		idx=NodeArrays->NodeSpecialWall[j].Get_index();
+		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
+		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+		NodeArrays->NodeSpecialWall[j].Set_UDef(U_[0],U_[1]);
+		NodeArrays->NodeSpecialWall[j].Set_RhoDef(Rho[idx]);
+	}
+
+	delete [] pos;
+	delete [] U_;
+}
+void D2Q9::InitInterior(InitLBM& ini){
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+
+	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	{
+		idx=NodeArrays->NodeInterior[j].Get_index();
+		pos[0]=NodeArrays->NodeInterior[j].get_x();
+		pos[1]=NodeArrays->NodeInterior[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeInterior[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+	}
+	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	{
+		idx=NodeArrays->NodeGhost[j].Get_index();
+		pos[0]=NodeArrays->NodeGhost[j].get_x();
+		pos[1]=NodeArrays->NodeGhost[j].get_y();
+		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeGhost[j],0, idx,pos,Rho[idx],U_);
+		U[0][idx]=U_[0];
+		U[1][idx]=U_[1];
+	}
+	delete [] pos;
+	delete [] U_;
+}
+//! Initialise the distributions.
+void D2Q9::InitDistAllDomain(){
+	InitDistDomainBc();
+	InitDistWall();
+	InitDistInterior();
+
+// Init Solid
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+
+	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeSolid[j].Get_index();
+// Get initialise values from the user
+
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=0;
+		}
+	}
+	delete [] pos;
+	delete [] U_;
+}
+void D2Q9::InitDistDomainBc(){
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeGlobalCorner[j].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeSpecialWall[j].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeVelocity[j].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodePressure[j].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeSymmetry[j].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodePeriodic[j].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	delete [] pos;
+	delete [] U_;
+}
+void D2Q9::InitDistWall(){
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+
+	for (int j=0;j<NodeArrays->CornerConcave.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeWall[j].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+	for (int j=0;j<NodeArrays->CornerConvex.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	delete [] pos;
+	delete [] U_;
+}
+void D2Q9::InitDistInterior(){
+	double* pos =new double[2];
+	double* U_=new double[2];
+	int idx=0;
+
+	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeInterior[j].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+
+	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	{
+// Set Index
+		idx=NodeArrays->NodeGhost[j].Get_index();
+		for (int i=0;i<nbvelo;i++)
+		{
+			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
+		}
+	}
+	delete [] pos;
+	delete [] U_;
+}
+void D2Q9::UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini){
+	//init field
+	UpdateDomainBc(UpdatedParam,ini);
+	UpdateWall(UpdatedParam,ini);
+	UpdateInterior(UpdatedParam,ini);
+	//init distri
+	InitDistDomainBc();
+	InitDistWall();
+	InitDistInterior();
 }
 void D2Q9::UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini){
-
+	//init field
+	InitDomainBc(ini);
+	//init distri
+	InitDistDomainBc();
 }
 void D2Q9::UpdateWall(Parameters* UpdatedParam,InitLBM& ini){
-
+	//init field
+	InitWall(ini);
+	//init distri
+	InitDistWall();
 }
 void D2Q9::UpdateInterior(Parameters* UpdatedParam,InitLBM& ini){
-
+	//init field
+	InitInterior(ini);
+	//init distri
+	InitDistInterior();
 }
 void D2Q9::run(){
 
@@ -429,7 +740,7 @@ void D2Q9::run(Parameters* UpdatedParam){
 
 	PtrParameters=UpdatedParam;
 	IniTau(PtrParameters);
-
+	InvTau=Get_InvTau();
 	D2Q9::run();
 }
 

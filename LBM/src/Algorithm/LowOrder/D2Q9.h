@@ -30,6 +30,19 @@ public:
 
 
 private:
+	//! Initialise D2Q9.
+    /*!
+      \param ini : initialisation class (generic initialised methods).
+    */
+	void InitAllDomain(InitLBM& ini);
+	void InitDomainBc(InitLBM& ini);
+	void InitWall(InitLBM& ini);
+	void InitInterior(InitLBM& ini);
+	//! Initialise the distributions.
+	void InitDistAllDomain();
+	void InitDistDomainBc();
+	void InitDistWall();
+	void InitDistInterior();
 
 	void Set_Collide();
 	void CollideD2Q9();

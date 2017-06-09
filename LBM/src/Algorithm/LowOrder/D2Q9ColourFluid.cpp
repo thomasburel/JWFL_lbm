@@ -567,6 +567,8 @@ void D2Q9ColourFluid::InitDistColourFluidAllDomain(){
 			f[1]->f[i][idx]=0;
 		}
 	}
+	delete [] pos;
+	delete [] U_;
 }
 void D2Q9ColourFluid::InitDistColourFluidDomainBc(){
 	double alpha=0;
@@ -671,7 +673,8 @@ void D2Q9ColourFluid::InitDistColourFluidDomainBc(){
 			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
 		}
 	}
-
+	delete [] pos;
+	delete [] U_;
 }
 void D2Q9ColourFluid::InitDistColourFluidWall(){
 	double alpha=0;
@@ -733,6 +736,8 @@ void D2Q9ColourFluid::InitDistColourFluidWall(){
 		}
 		count++;
 	}
+	delete [] pos;
+	delete [] U_;
 }
 void D2Q9ColourFluid::InitDistColourFluidInterior(){
 	double alpha=0;
@@ -774,7 +779,8 @@ void D2Q9ColourFluid::InitDistColourFluidInterior(){
 			f[1]->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rhob[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
 		}
 	}
-
+	delete [] pos;
+	delete [] U_;
 }
 void D2Q9ColourFluid::UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini){
 	//init field
