@@ -303,7 +303,7 @@ void D2Q9::InitAllDomain(InitLBM& ini){
 	delete [] pos;
 	delete [] U_;
 }
-void
+
 void D2Q9::InitDomainBc(InitLBM& ini){
 	double* pos =new double[2];
 	double* U_=new double[2];
