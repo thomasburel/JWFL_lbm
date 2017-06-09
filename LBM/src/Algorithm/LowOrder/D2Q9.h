@@ -34,6 +34,8 @@ private:
     /*!
       \param ini : initialisation class (generic initialised methods).
     */
+	void InitD2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini);
+	void InitialiseFromFile();
 	void InitAllDomain(InitLBM& ini);
 	void InitDomainBc(InitLBM& ini);
 	void InitWall(InitLBM& ini);

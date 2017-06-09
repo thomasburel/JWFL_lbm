@@ -33,7 +33,7 @@ D2Q9::D2Q9() {
 }
 D2Q9::D2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini) {
 
-
+/*
 	f=new DistriFunct(MultiBlock__->Get_nnodes(),Parameters_->Get_NbVelocities());
 	Set_Solver(MultiBlock__,parallel__,Writer__,Parameters_);
 	ftmp=new double[nbnode];
@@ -54,8 +54,9 @@ D2Q9::D2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* W
 		Dic->AddVar(Vector,"BodyForce",true,false,false,F[0],F[1]);
 		for(int i=0;i<nbnodes_total;i++)
 			{F[0][i]=0;	F[1][i]=0;}
-	}
-
+	}*/
+	// Init D2Q9
+		InitD2Q9(MultiBlock__,parallel__,Writer__,Parameters_,ini);
 	//Set Pointers On Functions for selecting the right model dynamically
 		Set_PointersOnFunctions();
 	// Initialise domain
@@ -163,8 +164,31 @@ D2Q9::~D2Q9() {
 	if(PtrParameters->Get_UserForceType()== ModelEnum::BodyForce ||PtrParameters->Get_HeleShawBodyForce()!= PorousMediaEnum::no)
 		delete [] F;
 }
+void D2Q9::InitD2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini){
+	f=new DistriFunct(MultiBlock__->Get_nnodes(),Parameters_->Get_NbVelocities());
+	Set_Solver(MultiBlock__,parallel__,Writer__,Parameters_);
+	ftmp=new double[nbnode];
+	PtrFiStream=f;
+	PtrFiCollide=PtrFiStream;
+	InvTau=1.0/PtrParameters->Get_Tau();
+	intTmpReturn=0;
+	doubleTmpReturn=0;
+
+	EiCollide=Ei;
+	Nb_VelocityCollide=nbvelo;
+	omegaCollide=omega;
+	//if(PtrParameters->Get_WallType()==BounceBack)
+		Dic->AddSync("Density",Rho);
+	if(PtrParameters->Get_UserForceType()== ModelEnum::BodyForce ||PtrParameters->Get_HeleShawBodyForce()!= PorousMediaEnum::no)
+	{
+		F=new double*[2];
+		Dic->AddVar(Vector,"BodyForce",true,false,false,F[0],F[1]);
+		for(int i=0;i<nbnodes_total;i++)
+			{F[0][i]=0;	F[1][i]=0;}
+	}
+}
 void D2Q9::init(InitLBM& ini){
-	double* pos =new double[2];
+	/*	double* pos =new double[2];
 	double* U_=new double[2];
 	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
 	{
@@ -258,15 +282,22 @@ void D2Q9::init(InitLBM& ini){
 		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_);
 		U[0][NodeArrays->NodeSolid[j].Get_index()]=U_[0];
 		U[1][NodeArrays->NodeSolid[j].Get_index()]=U_[1];
-	}
-
-	if(PtrParameters->IsInitFromFile())
+	}*/
+//Initialise Domain
+	InitAllDomain(ini);
+//Initialise from file or Restart
+	InitialiseFromFile();
+/*	if(PtrParameters->IsInitFromFile())
 	{
 		for(int i=0;i<PtrParameters->Get_NumberVariableToInit();i++)
 		{
 			Read_Variable(PtrParameters->Get_VariableNameToInit(i),PtrParameters->Get_FileNameToInit(i));
 		}
 	}
+	*/
+//Initialise distribution
+		InitDistAllDomain();
+		/*
 	for (int i=0;i<nbvelo;i++)
 	{
 		for (int j=0;j<nbnode;j++)
@@ -274,13 +305,22 @@ void D2Q9::init(InitLBM& ini){
 			f->f[i][j]=CollideLowOrder::CollideEquillibrium(Rho[j], U[0][j], U[1][j], &Ei[i][0], omega[i]);
 		}
 	}
-
+*/
 	Set_BcType();
-	delete [] pos;
-	delete [] U_;
+//	delete [] pos;
+//	delete [] U_;
 	if(CalPressure)
 		UpdatePressure();
 
+}
+void D2Q9::InitialiseFromFile(){
+	if(PtrParameters->IsInitFromFile())
+	{
+		for(int i=0;i<PtrParameters->Get_NumberVariableToInit();i++)
+		{
+			Read_Variable(PtrParameters->Get_VariableNameToInit(i),PtrParameters->Get_FileNameToInit(i));
+		}
+	}
 }
 void D2Q9::InitAllDomain(InitLBM& ini){
 
