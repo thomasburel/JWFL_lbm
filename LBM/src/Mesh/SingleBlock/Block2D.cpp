@@ -2678,6 +2678,44 @@ bool Block2D::IsSpecialWallAtGlocalCorner(int idx){
 	else
 		return false;
 }
+//Detect Corner at Global corner and force solid in the ghost in case of corner
+bool Block2D::IsACornerAtGlocalCorner(int idx,signed short int x,signed short int y){
+	NodeType Connect_S_Type_tmp=Node[Node[idx]->Get_connect(0)]->get_NodeType();
+	NodeType Connect_E_Type_tmp=Node[Node[idx]->Get_connect(1)]->get_NodeType();
+	NodeType Connect_N_Type_tmp=Node[Node[idx]->Get_connect(2)]->get_NodeType();
+	NodeType Connect_W_Type_tmp=Node[Node[idx]->Get_connect(3)]->get_NodeType();
+	if(x==0 && y==0 && Connect_E_Type_tmp==Connect_N_Type_tmp && Connect_N_Type_tmp==Wall)
+	{
+		Node[Node[idx]->Get_connect(3)]->Set_NodeType(Solid);
+		Node[Node[idx]->Get_connect(0)]->Set_NodeType(Solid);
+		Node[Node[Node[idx]->Get_connect(3)]->Get_connect(0)]->Set_NodeType(Solid);
+		return true;
+	}
+	else if(x==nx && y==0 && Connect_W_Type_tmp==Connect_N_Type_tmp && Connect_N_Type_tmp==Wall)
+	{
+		Node[Node[idx]->Get_connect(1)]->Set_NodeType(Solid);
+		Node[Node[idx]->Get_connect(0)]->Set_NodeType(Solid);
+		Node[Node[Node[idx]->Get_connect(1)]->Get_connect(0)]->Set_NodeType(Solid);
+		return true;
+	}
+	else if(x==0 && y==ny && Connect_E_Type_tmp==Connect_S_Type_tmp && Connect_S_Type_tmp==Wall)
+	{
+		Node[Node[idx]->Get_connect(3)]->Set_NodeType(Solid);
+		Node[Node[idx]->Get_connect(2)]->Set_NodeType(Solid);
+		Node[Node[Node[idx]->Get_connect(3)]->Get_connect(2)]->Set_NodeType(Solid);
+		return true;
+	}
+	else if(x==nx && y==ny && Connect_W_Type_tmp==Connect_S_Type_tmp && Connect_S_Type_tmp==Wall)
+	{
+		Node[Node[idx]->Get_connect(1)]->Set_NodeType(Solid);
+		Node[Node[idx]->Get_connect(2)]->Set_NodeType(Solid);
+		Node[Node[Node[idx]->Get_connect(1)]->Get_connect(2)]->Set_NodeType(Solid);
+		return true;
+	}
+	else
+		return false;
+
+}
 void Block2D::reorganizeNodeByType(){
 
 	unsigned int Connect_N_tmp=0;
@@ -2697,6 +2735,7 @@ void Block2D::reorganizeNodeByType(){
 		Connect_W_tmp=Node[i]->Get_connect(3)+1;
 		Connect_E_tmp=Node[i]->Get_connect(1)+1;
 		NbVelocity_tmp=Node[i]->Get_NbVelocity();
+
 
 		switch(NodeArrays.TypeOfNode[i])
 		{
@@ -2723,7 +2762,17 @@ void Block2D::reorganizeNodeByType(){
 			NodeArrays.NodeGhost[NodeArrays.NodeGhost.size()-1].Set_Index(i);
 			break;
 		case GlobalCorner:
-			if(IsSpecialWallAtGlocalCorner(i))
+			 if(IsACornerAtGlocalCorner(i,x_tmp,y_tmp))
+			{
+				NodeArrays.TypeOfNode[i]=ConcaveCorner;
+				NodeArrays.NodeIndexByType[i]=NodeArrays.NodeCorner.size();
+				NodeArrays.NodeCorner.push_back(NodeCorner2D(x_tmp,y_tmp,Node[i]->Get_RhoDef(),Node[i]->Get_UDef()));
+				NodeArrays.NodeCorner[NodeArrays.NodeCorner.size()-1].Set_Connect(Connect_N_tmp,Connect_S_tmp,Connect_W_tmp,Connect_E_tmp);
+				NodeArrays.NodeCorner[NodeArrays.NodeCorner.size()-1].Set_NbVelocity(NbVelocity_tmp);
+				NodeArrays.NodeCorner[NodeArrays.NodeCorner.size()-1].Set_CornerType(Concave);
+				NodeArrays.NodeCorner[NodeArrays.NodeCorner.size()-1].Set_Index(i);
+			}
+			 else if(IsSpecialWallAtGlocalCorner(i))
 			{
 				NodeArrays.TypeOfNode[i]=SpecialWall;
 				NodeArrays.NodeIndexByType[i]=NodeArrays.NodeSpecialWall.size();

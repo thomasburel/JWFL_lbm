@@ -123,6 +123,7 @@ private:
 	void DefinedCornerType(int nodenumber);
 	int Connect_lowOrder(int &NodeNumber,unsigned int& direction);
 	bool IsSpecialWallAtGlocalCorner(int idx);
+	bool IsACornerAtGlocalCorner(int idx,signed short int x,signed short int y);
 	void Connect_highOrder();
 
 //	void Get_coordinate(int index,double & x, double & y);
