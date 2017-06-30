@@ -1017,7 +1017,8 @@ void D2Q9ColourFluid::run(){
 		it--;
 		Writer->Write_Output(it);
 	}
-	Write_Breakpoint(PtrParameters);
+
+//	Write_Breakpoint(PtrParameters);
 //	Writer->Write_breakpoint(*PtrParameters);
 }
 

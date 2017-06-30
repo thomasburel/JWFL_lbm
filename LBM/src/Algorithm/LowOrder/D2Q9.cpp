@@ -30,6 +30,9 @@ D2Q9::D2Q9() {
 	buf_MacroRecv=0;
 	size_MacroBuf=0;
 	Nd_MacroVariables_sync=0;
+	F=0;
+	PtrMacro=0;
+	PtrCollision=0;
 }
 D2Q9::D2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini) {
 
@@ -773,8 +776,7 @@ void D2Q9::run(){
 		it--;
 		Writer->Write_Output(it);
 	}
-	Write_Breakpoint(PtrParameters);
-	//Writer->Write_breakpoint(*PtrParameters);
+	//Write_Breakpoint(PtrParameters);
 }
 void D2Q9::run(Parameters* UpdatedParam){
 
@@ -885,6 +887,7 @@ void D2Q9::CollideD2Q9_NoBodyForce(){
 				f->f[i][NodeArrays->NodeInterior[j].Get_index()]=fi_tmp[i];
 			}
 		}
+
 		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
 			Fx=0;Fy=0;
@@ -898,6 +901,7 @@ void D2Q9::CollideD2Q9_NoBodyForce(){
 				f->f[i][NodeArrays->NodeCorner[j].Get_index()]=fi_tmp[i];
 			}
 		}
+
 		for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
 			Fx=0;Fy=0;
@@ -937,6 +941,7 @@ void D2Q9::CollideD2Q9_NoBodyForce(){
 				f->f[i][NodeArrays->NodePressure[j].Get_index()]=fi_tmp[i];
 			}
 		}
+
 		for (int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
 			Fx=0;Fy=0;
@@ -963,6 +968,7 @@ void D2Q9::CollideD2Q9_NoBodyForce(){
 				f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()]=fi_tmp[i];
 			}
 		}
+
 		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
 			Fx=0;Fy=0;
