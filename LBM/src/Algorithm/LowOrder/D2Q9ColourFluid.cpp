@@ -782,6 +782,14 @@ void D2Q9ColourFluid::InitDistColourFluidInterior(){
 	delete [] pos;
 	delete [] U_;
 }
+void D2Q9ColourFluid::UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini){
+// Update domain from files
+	InitialiseFromFile();
+//Initialise distribution
+	InitDistColourFluidDomainBc();
+	InitDistColourFluidWall();
+	InitDistColourFluidInterior();
+}
 void D2Q9ColourFluid::UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini){
 	//init field
 	UpdateDomainBc(UpdatedParam,ini);

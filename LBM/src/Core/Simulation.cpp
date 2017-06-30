@@ -130,6 +130,10 @@ void Simulation::RunSimu(Parameters &UpdatedParam)
 	time=get_time();
 
 }
+void Simulation::UpdateAllDomainFromFile(Parameters &UpdatedParam){
+	ini.Set_Parameters(&UpdatedParam);
+	Solver_->UpdateAllDomainFromFile(&UpdatedParam,ini);
+}
 void Simulation::UpdateAllDomain(Parameters &UpdatedParam){
 	ini.Set_Parameters(&UpdatedParam);
 	Solver_->UpdateAllDomain(&UpdatedParam,ini);

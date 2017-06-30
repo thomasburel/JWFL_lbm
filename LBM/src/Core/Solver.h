@@ -31,6 +31,7 @@ public:
 	virtual void get_time()=0;
 	virtual void run()=0;
 	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
@@ -60,6 +61,7 @@ public:
 	virtual void get_time()=0;
 	virtual void run()=0;
 	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
@@ -88,6 +90,7 @@ public:
 	virtual void get_time()=0;
 	virtual void run()=0;
 	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
@@ -114,6 +117,7 @@ public:
 	virtual void get_time()=0;
 	virtual void run()=0;
 	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
@@ -135,6 +139,7 @@ public:
 	virtual void get_time()=0;
 	virtual void run()=0;
 	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
@@ -160,6 +165,7 @@ public:
 	void Set_Solver(MultiBlock* PtrMultiBlock_,ParallelManager* PtrParallel_,WriterManager* PtrWriter_, Parameters* PtrParameters_);
 	virtual void run()=0;
 	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
@@ -196,6 +202,7 @@ public:
 	void Set_Solver(MultiBlock* PtrMultiBlock_,ParallelManager* PtrParallel_,WriterManager* PtrWriter_, Parameters* PtrParameters_);
 	virtual void run()=0;
 	virtual void run(Parameters *UpdatedParam)=0;
+	virtual void UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;

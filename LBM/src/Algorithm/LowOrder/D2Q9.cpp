@@ -620,6 +620,12 @@ void D2Q9::InitDistInterior(){
 	delete [] pos;
 	delete [] U_;
 }
+void D2Q9::UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini){
+// Update domain from files
+	InitialiseFromFile();
+//Initialise distribution
+		InitDistAllDomain();
+}
 void D2Q9::UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini){
 	//init field
 	UpdateDomainBc(UpdatedParam,ini);

@@ -23,6 +23,7 @@ public:
 	virtual void init(InitLBM& ini);
 	virtual void run();
 	virtual void run(Parameters* UpdatedParam);
+	virtual void UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini);
 	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini);
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini);
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini);

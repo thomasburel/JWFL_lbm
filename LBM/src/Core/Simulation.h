@@ -40,7 +40,7 @@ public:
 	void Import_Mesh(string MeshFile);
 	void RunSimu();
 	void RunSimu(Parameters &UpdatedParam);
-
+	void UpdateAllDomainFromFile(Parameters &UpdatedParam);
 	void UpdateAllDomain(Parameters &UpdatedParam);
 	void UpdateDomainBc(Parameters &UpdatedParam);
 	void UpdateWall(Parameters &UpdatedParam);
