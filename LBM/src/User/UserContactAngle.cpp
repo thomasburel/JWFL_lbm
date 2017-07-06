@@ -13,12 +13,13 @@
 #include "UserContactAngle.h"
 
 UserContactAngle::UserContactAngle() {
-	// TODO Auto-generated constructor stub
+//Do not changed
 	pi=atan(1.0)*4.0 ;
 	desireCangle=90;
-	beginCangle=10;
-	lengthsmooth=20;
 	convDegreeToRadian=pi/180.0;
+//Can be changed
+	lengthsmooth=10;
+	beginCangle=90.0*convDegreeToRadian;
 }
 
 UserContactAngle::~UserContactAngle() {
@@ -27,7 +28,9 @@ UserContactAngle::~UserContactAngle() {
 
 void UserContactAngle::Set_ContactAngle(Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& teta){
 	if(pos[0]<lengthsmooth)
-		teta=(-pos[0]*(beginCangle-desireCangle)/lengthsmooth+beginCangle)*convDegreeToRadian;
+		teta=(-pos[0]*(beginCangle-desireCangle)/lengthsmooth+beginCangle);
 	else
-		teta=desireCangle*convDegreeToRadian;
+		teta=desireCangle;
+
+
 }
