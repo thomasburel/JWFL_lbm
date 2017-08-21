@@ -45,6 +45,12 @@ double Viscosity::Get_Nu(double const Rho, double const RhoN){
 double Viscosity::Get_Mu(double const Rho, double const RhoN){
 	return visco->Get_Mu(Rho,RhoN);
 }
+double Viscosity::Get_Mu_1(){
+	return visco->Get_Mu_1();
+}
+double Viscosity::Get_Mu_2(){
+	return visco->Get_Mu_2();
+}
 ViscosityDEF::ViscosityDEF() {
 
 }

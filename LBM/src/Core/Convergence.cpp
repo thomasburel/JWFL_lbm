@@ -176,11 +176,24 @@ void Convergence::Set_Convergence(){
 				ofstream Permeabilityfile;
 				Permeabilityfile.open("Permeability.txt",ios::out | ios::trunc);
 				if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
-					Permeabilityfile<<"Time,Average Permeability,Global Permeability,Pore-scale Permeability,Pore-scale Global Permeability,Average Velocity,Average Viscosity,Average Delta P"<<std::endl;
+					Permeabilityfile<<"Time,Max Global Permeability [m2],Global Permeability in X-direction [lu],Global Permeability in Y-direction [lu],Max Global Permeability [lu]"
+					",Average x_Velocity [lu],Average y_Velocity [lu],Average Velocity Magnitude [lu],Average Viscosity [lu]"
+					",Average y_Grad(P) [lu],Average x_Grad(P) [lu],Average Grad(P) magnitude [lu]"<<std::endl;
 				else
-					Permeabilityfile<<"Time,Average Permeability,Average Permeability Phase 1,Average Permeability Phase 2,Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
-							",Pore-scale Permeability,Pore-scale Permeability Phase 1,Pore-scale Permeability Phase 2,Pore-scale Global Permeability,Pore-scale Global Permeability Phase 1,Pore-scale Global Permeability Phase 2"
-							",Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2,Average Pore Velocity,Average Pore Velocity Phase 1,Average Pore Velocity Phase 2,Average Viscosity,Average Viscosity Phase 1,Average Viscosity Phase 2,Average Delta P,Average Delta P Phase 1,Average Delta P Phase 2,Alpha,1-Alpha"<<std::endl;
+					Permeabilityfile<<"Time,Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
+					",Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
+					",Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
+					",Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
+					",Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
+					",Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
+					",Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2"
+					",Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2"
+					",Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2"
+					",Average Viscosity,Average Viscosity Phase 1,Average Viscosity Phase 2"
+					",Average Delta P,Average Delta P Phase 1,Average Delta P Phase 2"
+					",Average Delta P,Average Delta P Phase 1,Average Delta P Phase 2"
+					",Average Delta P,Average Delta P Phase 1,Average Delta P Phase 2"
+					",Alpha,1-Alpha"<<std::endl;
 				Permeabilityfile.close();
 			}
 		}
@@ -392,88 +405,223 @@ double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 
 }
 double Convergence::Calcul_Permeability_SinglePhase(int &Time){
-	double Umag=0;double DeltaPmag=0;double visco;
-	double sum_Umag=0;double sum_DeltaPmag=0;double sum_visco=0;
-	double sum_Umag_tmp=0;double sum_DeltaPmag_tmp=0;double sum_visco_tmp=0;
-	double sum_permeability=0;double sum_tmp=0;
+	double Umag=0;double Ux=0;double Uy=0;
+	double DeltaPmag=0;double DeltaPx=0;double DeltaPy=0;
+	double visco=0;
+	double sum_Umag=0;double sum_Ux=0;double sum_Uy=0;
+	double sum_DeltaPmag=0;double sum_DeltaPx=0;double sum_DeltaPy=0;
+	double sum_Mu=0;
+	double sum_Umag_tmp=0;double sum_Ux_tmp=0;double sum_Uy_tmp=0;
+	double sum_DeltaPmag_tmp=0;double sum_DeltaPx_tmp=0;double sum_DeltaPy_tmp=0;
+	double sum_Mu_tmp=0;
+
+	double coef=0;
+	//double sum_permeability=0;
+	//double sum_tmp=0;
 	//Update the locate DeltaP
 	Calcul_localDeltaP();
 
 
 	for (int i=0;i<MarkFluidNode_V1.size();i++){
-		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V1[i]]*DeltaP[0][MarkFluidNode_V1[i]]+DeltaP[1][MarkFluidNode_V1[i]]*DeltaP[1][MarkFluidNode_V1[i]]);
-		sum_DeltaPmag+=DeltaPmag;
-		Umag=std::sqrt(UPerm[0][MarkFluidNode_V1[i]]*UPerm[0][MarkFluidNode_V1[i]]+UPerm[1][MarkFluidNode_V1[i]]*UPerm[1][MarkFluidNode_V1[i]]);
-		sum_Umag+=Umag;
-		visco=PtrViscosityConv->Get_Mu();
-		sum_visco+=visco;
-		if(DeltaPmag>0)
-			sum_permeability+=Permeability(DeltaPmag,Umag,visco);
+		//cache variables
+		int idx_1D=MarkFluidNode_V1[i];
+		double DeltaPx_cache=DeltaP[0][idx_1D];
+		double DeltaPy_cache=DeltaP[1][idx_1D];
+		double DeltaPmag_cache=std::sqrt(DeltaPx_cache*DeltaPx_cache+DeltaPy_cache*DeltaPy_cache);
+		double Ux_cache=UPerm[0][idx_1D];
+		double Uy_cache=UPerm[1][idx_1D];
+		double Umag_cache=std::sqrt(Ux_cache*Ux_cache+Uy_cache*Uy_cache);
+		//sum partial pressures
+		sum_DeltaPx_tmp+=DeltaPx_cache;
+		sum_DeltaPy_tmp+=DeltaPy_cache;
+		sum_DeltaPmag_tmp+=DeltaPmag_cache;
+		//sum velocities
+		sum_Ux_tmp+=Ux_cache;
+		sum_Uy_tmp+=Uy_cache;
+		sum_Umag_tmp+=Umag_cache;
+		//sum viscosity
+		sum_Mu_tmp+=PtrViscosityConv->Get_Mu();
 	}
-	sum_tmp=0;sum_Umag_tmp=0;sum_DeltaPmag_tmp=0;sum_visco_tmp=0;
+
+//Add to the sum with the weight according to the volume of the cell
+		sum_Ux+=sum_Ux_tmp;
+		sum_Uy+=sum_Uy_tmp;
+		sum_Umag+=sum_Umag_tmp;
+		sum_Mu+=sum_Mu_tmp;
+		sum_DeltaPx+=sum_DeltaPx_tmp;
+		sum_DeltaPy+=sum_DeltaPy_tmp;
+		sum_DeltaPmag+=sum_DeltaPmag_tmp;
+//Re initialisation of internal sum
+		sum_Ux_tmp=0;
+		sum_Uy_tmp=0;
+		sum_Umag_tmp=0;
+		sum_Mu_tmp=0;
+		sum_DeltaPx_tmp=0;
+		sum_DeltaPy_tmp=0;
+		sum_DeltaPmag_tmp=0;
 
 	for (int i=0;i<MarkFluidNode_V075.size();i++){
-		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V075[i]]*DeltaP[0][MarkFluidNode_V075[i]]+DeltaP[1][MarkFluidNode_V075[i]]*DeltaP[1][MarkFluidNode_V075[i]]);
-		sum_DeltaPmag_tmp+=DeltaPmag;
-		Umag=std::sqrt(UPerm[0][MarkFluidNode_V075[i]]*UPerm[0][MarkFluidNode_V075[i]]+UPerm[1][MarkFluidNode_V075[i]]*UPerm[1][MarkFluidNode_V075[i]]);
-		sum_Umag_tmp+=Umag;
-		visco=PtrViscosityConv->Get_Mu();
-		sum_visco_tmp+=visco;
-		if(DeltaPmag>0)
-			sum_tmp+=Permeability(DeltaPmag,Umag,visco);
+		//cache variables
+		int idx_1D=MarkFluidNode_V075[i];
+		double DeltaPx_cache=DeltaP[0][idx_1D];
+		double DeltaPy_cache=DeltaP[1][idx_1D];
+		double DeltaPmag_cache=std::sqrt(DeltaPx_cache*DeltaPx_cache+DeltaPy_cache*DeltaPy_cache);
+		double Ux_cache=UPerm[0][idx_1D];
+		double Uy_cache=UPerm[1][idx_1D];
+		double Umag_cache=std::sqrt(Ux_cache*Ux_cache+Uy_cache*Uy_cache);
+		//sum partial pressures
+		sum_DeltaPx_tmp+=DeltaPx_cache;
+		sum_DeltaPy_tmp+=DeltaPy_cache;
+		sum_DeltaPmag_tmp+=DeltaPmag_cache;
+		//sum velocities
+		sum_Ux_tmp+=Ux_cache;
+		sum_Uy_tmp+=Uy_cache;
+		sum_Umag_tmp+=Umag_cache;
+		//sum viscosity
+		sum_Mu_tmp+=PtrViscosityConv->Get_Mu();
 	}
-	sum_permeability+=0.75*sum_tmp;sum_Umag+=0.75*sum_Umag_tmp;sum_visco+=0.75*sum_visco_tmp;sum_DeltaPmag+=0.75*sum_DeltaPmag_tmp;
-	sum_tmp=0;sum_Umag_tmp=0;sum_DeltaPmag_tmp=0;sum_visco_tmp=0;
+//Set the weight for the volume of the cell related to the node location
+	coef=0.75;
+//Add to the sum with the weight according to the volume of the cell
+	sum_Ux+=coef*sum_Ux_tmp;
+	sum_Uy+=coef*sum_Uy_tmp;
+	sum_Umag+=coef*sum_Umag_tmp;
+	sum_Mu+=coef*sum_Mu_tmp;
+	sum_DeltaPx+=coef*sum_DeltaPx_tmp;
+	sum_DeltaPy+=coef*sum_DeltaPy_tmp;
+	sum_DeltaPmag+=coef*sum_DeltaPmag_tmp;
+
+//Re initialisation of internal sum
+	sum_Ux_tmp=0;
+	sum_Uy_tmp=0;
+	sum_Umag_tmp=0;
+	sum_Mu_tmp=0;
+	sum_DeltaPx_tmp=0;
+	sum_DeltaPy_tmp=0;
+	sum_DeltaPmag_tmp=0;
+
 
 	for (int i=0;i<MarkFluidNode_V05.size();i++){
-		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V05[i]]*DeltaP[0][MarkFluidNode_V05[i]]+DeltaP[1][MarkFluidNode_V05[i]]*DeltaP[1][MarkFluidNode_V05[i]]);
-		sum_DeltaPmag_tmp+=DeltaPmag;
-		Umag=std::sqrt(UPerm[0][MarkFluidNode_V05[i]]*UPerm[0][MarkFluidNode_V05[i]]+UPerm[1][MarkFluidNode_V05[i]]*UPerm[1][MarkFluidNode_V05[i]]);
-		sum_Umag_tmp+=Umag;
-		visco=PtrViscosityConv->Get_Mu();
-		sum_visco_tmp+=visco;
-		if(DeltaPmag>0)
-			sum_tmp+=Permeability(DeltaPmag,Umag,visco);
+		//cache variables
+		int idx_1D=MarkFluidNode_V05[i];
+		double DeltaPx_cache=DeltaP[0][idx_1D];
+		double DeltaPy_cache=DeltaP[1][idx_1D];
+		double DeltaPmag_cache=std::sqrt(DeltaPx_cache*DeltaPx_cache+DeltaPy_cache*DeltaPy_cache);
+		double Ux_cache=UPerm[0][idx_1D];
+		double Uy_cache=UPerm[1][idx_1D];
+		double Umag_cache=std::sqrt(Ux_cache*Ux_cache+Uy_cache*Uy_cache);
+		//sum partial pressures
+		sum_DeltaPx_tmp+=DeltaPx_cache;
+		sum_DeltaPy_tmp+=DeltaPy_cache;
+		sum_DeltaPmag_tmp+=DeltaPmag_cache;
+		//sum velocities
+		sum_Ux_tmp+=Ux_cache;
+		sum_Uy_tmp+=Uy_cache;
+		sum_Umag_tmp+=Umag_cache;
+		//sum viscosity
+		sum_Mu_tmp+=PtrViscosityConv->Get_Mu();
 	}
-	sum_permeability+=0.5*sum_tmp;sum_Umag+=0.5*sum_Umag_tmp;sum_visco+=0.5*sum_visco_tmp;sum_DeltaPmag+=0.5*sum_DeltaPmag_tmp;
-	sum_tmp=0;sum_Umag_tmp=0;sum_DeltaPmag_tmp=0;sum_visco_tmp=0;
+//Set the weight for the volume of the cell related to the node location
+	coef=0.5;
+//Add to the sum with the weight according to the volume of the cell
+	sum_Ux+=coef*sum_Ux_tmp;
+	sum_Uy+=coef*sum_Uy_tmp;
+	sum_Umag+=coef*sum_Umag_tmp;
+	sum_Mu+=coef*sum_Mu_tmp;
+	sum_DeltaPx+=coef*sum_DeltaPx_tmp;
+	sum_DeltaPy+=coef*sum_DeltaPy_tmp;
+	sum_DeltaPmag+=coef*sum_DeltaPmag_tmp;
+
+//Re initialisation of internal sum
+	sum_Ux_tmp=0;
+	sum_Uy_tmp=0;
+	sum_Umag_tmp=0;
+	sum_Mu_tmp=0;
+	sum_DeltaPx_tmp=0;
+	sum_DeltaPy_tmp=0;
+	sum_DeltaPmag_tmp=0;
 
 	for (int i=0;i<MarkFluidNode_V025.size();i++){
-		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V025[i]]*DeltaP[0][MarkFluidNode_V025[i]]+DeltaP[1][MarkFluidNode_V025[i]]*DeltaP[1][MarkFluidNode_V025[i]]);
-		sum_DeltaPmag_tmp+=DeltaPmag;
-		Umag=std::sqrt(UPerm[0][MarkFluidNode_V025[i]]*UPerm[0][MarkFluidNode_V025[i]]+UPerm[1][MarkFluidNode_V025[i]]*UPerm[1][MarkFluidNode_V025[i]]);
-		sum_Umag_tmp+=Umag;
-		visco=PtrViscosityConv->Get_Mu();
-		sum_visco_tmp+=visco;
-		if(DeltaPmag>0)
-			sum_tmp+=Permeability(DeltaPmag,Umag,visco);
+		//cache variables
+		int idx_1D=MarkFluidNode_V025[i];
+		double DeltaPx_cache=DeltaP[0][idx_1D];
+		double DeltaPy_cache=DeltaP[1][idx_1D];
+		double DeltaPmag_cache=std::sqrt(DeltaPx_cache*DeltaPx_cache+DeltaPy_cache*DeltaPy_cache);
+		double Ux_cache=UPerm[0][idx_1D];
+		double Uy_cache=UPerm[1][idx_1D];
+		double Umag_cache=std::sqrt(Ux_cache*Ux_cache+Uy_cache*Uy_cache);
+		//sum partial pressures
+		sum_DeltaPx_tmp+=DeltaPx_cache;
+		sum_DeltaPy_tmp+=DeltaPy_cache;
+		sum_DeltaPmag_tmp+=DeltaPmag_cache;
+		//sum velocities
+		sum_Ux_tmp+=Ux_cache;
+		sum_Uy_tmp+=Uy_cache;
+		sum_Umag_tmp+=Umag_cache;
+		//sum viscosity
+		sum_Mu_tmp+=PtrViscosityConv->Get_Mu();
 	}
-	sum_permeability+=0.25*sum_tmp;sum_Umag+=0.25*sum_Umag_tmp;sum_visco+=0.25*sum_visco_tmp;sum_DeltaPmag+=0.25*sum_DeltaPmag_tmp;
-	sum_tmp=0;sum_Umag_tmp=0;sum_DeltaPmag_tmp=0;sum_visco_tmp=0;
+//Set the weight for the volume of the cell related to the node location
+	coef=0.25;
+//Add to the sum with the weight according to the volume of the cell
+	sum_Ux+=coef*sum_Ux_tmp;
+	sum_Uy+=coef*sum_Uy_tmp;
+	sum_Umag+=coef*sum_Umag_tmp;
+	sum_Mu+=coef*sum_Mu_tmp;
+	sum_DeltaPx+=coef*sum_DeltaPx_tmp;
+	sum_DeltaPy+=coef*sum_DeltaPy_tmp;
+	sum_DeltaPmag+=coef*sum_DeltaPmag_tmp;
 
-	sum_permeability=PtrMultiBlockConv->SumAllProcessors(&sum_permeability);
+// sum over processors
+	sum_Ux=PtrMultiBlockConv->SumAllProcessors(&sum_Ux);
+	sum_Uy=PtrMultiBlockConv->SumAllProcessors(&sum_Uy);
 	sum_Umag=PtrMultiBlockConv->SumAllProcessors(&sum_Umag);
-	sum_visco=PtrMultiBlockConv->SumAllProcessors(&sum_visco);
+	sum_Mu=PtrMultiBlockConv->SumAllProcessors(&sum_Mu);
+	sum_DeltaPx=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPx);
+	sum_DeltaPy=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPy);
 	sum_DeltaPmag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPmag);
 
+//Calculate average value from integration
+	//Velocity average
+	double Avg_Ux=sum_Ux/fluidVolumesum;
+	double Avg_Uy=sum_Uy/fluidVolumesum;
 	double Avg_Umag=sum_Umag/fluidVolumesum;
-	double Avg_visco=sum_visco/fluidVolumesum;
+	//viscosity average
+	double Avg_Mu=sum_Mu/fluidVolumesum;
+	//Grad P average
+	double Avg_DeltaPx=sum_DeltaPx/fluidVolumesum;
+	double Avg_DeltaPy=sum_DeltaPy/fluidVolumesum;
 	double Avg_DeltaPmag=sum_DeltaPmag/fluidVolumesum;
 
-	double PorePermeability=sum_permeability/fluidVolumesum;
-	double PoreGlobalPermeability=Avg_Umag*Avg_visco/Avg_DeltaPmag;
-	double Permeability=LuToPhy2*porosity*PorePermeability;
-	double GlobalPermeability=LuToPhy2*porosity*PoreGlobalPermeability;
+//Calculate permeability
+	double PoreGlobalPermeabilityX=porosity*Avg_Ux*Avg_Mu/Avg_DeltaPx;
+	double PoreGlobalPermeabilityY=porosity*Avg_Uy*Avg_Mu/Avg_DeltaPy;
+	double PoreGlobalPermeability=porosity*Avg_Umag*Avg_Mu/Avg_DeltaPmag;
+	//Convert to SI unit
+	double GlobalPermeabilityX=LuToPhy2*PoreGlobalPermeabilityX;
+	double GlobalPermeabilityY=LuToPhy2*PoreGlobalPermeabilityY;
+	double GlobalPermeability=LuToPhy2*PoreGlobalPermeability;
 
 	if(PtrMultiBlockConv->IsMainProcessor())
 	{
 		ofstream Permeabilityfile;
 		Permeabilityfile.open("Permeability.txt",ios::out | ios::app);
-		Permeabilityfile<<Time<<","<<Permeability<<","<<GlobalPermeability<<","<<PorePermeability<<","<<PoreGlobalPermeability<<","<<Avg_Umag<<","<<Avg_visco<<","<<Avg_DeltaPmag<<std::endl;
+		Permeabilityfile<<Time<<","<<
+				","<<GlobalPermeabilityX<<","<<GlobalPermeabilityY<<","<<GlobalPermeability<<
+				","<<PoreGlobalPermeabilityX<<","<<PoreGlobalPermeabilityY<<","<<PoreGlobalPermeability<<
+				","<<Avg_Ux<<","<<Avg_Uy<<","<<Avg_Umag<<
+				","<<Avg_Mu<<
+				","<<Avg_DeltaPx<<","<<Avg_DeltaPy<<","<<Avg_DeltaPmag<<
+				std::endl;
 		Permeabilityfile.close();
-		std::cout<<"Average Permeability [m2]: "<<Permeability<<" Global Permeability [m2]: "<<GlobalPermeability<<" Pore-scale Average Permeability: "<<PorePermeability<<" Pore-scale Global Permeability: "<<PoreGlobalPermeability<<" Average Velocity: "<<Avg_Umag<<" Average DeltaP: "<<Avg_DeltaPmag<<" Average viscosity: "<<Avg_visco<<std::endl;
+		std::cout<<"Two-phase Permeability analysis: "<<std::endl<<
+				"Max Global Permeability [m2]: "<<GlobalPermeability<<" Max Global Permeability [lu]: "<<PoreGlobalPermeability<<std::endl<<
+				"Average Ux [lu]: "<<Avg_Ux<<" Average Uy [lu]: "<<Avg_Uy<<" Average Umag [lu]: "<<Avg_Umag<<std::endl<<
+				"Average x_Grad(P) [lu]: "<<Avg_DeltaPmag<<" Average y_Grad(P) [lu]: "<<Avg_DeltaPmag<<" Average Grad(P)mag [lu]: "<<Avg_DeltaPmag<<std::endl<<
+				"Average viscosity [lu]: "<<Avg_Mu<<std::endl;
 	}
-	return Permeability;
+
+	return GlobalPermeability;
 }
 double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 
@@ -639,19 +787,22 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 
 }
 double Convergence::Calcul_Permeability_TwoPhases(int &Time){
-	double Umag=0;double DeltaPmag=0;double visco;
-	//double sum_Umag=0;double sum_DeltaPmag=0;double sum_visco=0;
-//	double sum_Umag_tmp=0;double sum_DeltaPmag_tmp=0;double sum_visco_tmp=0;
-	double sum_permeability=0,sum_permeability1=0,sum_permeability2=0;
-	double sum_permeability_tmp=0,sum_permeability1_tmp=0,sum_permeability2_tmp=0;
-	double alpha=0.0;double alphaM1=0.0;
+	double coef=0;
 
+	double sum_DeltaPx=0,sum_DeltaP1x=0,sum_DeltaP2x=0;
+	double sum_DeltaPy=0,sum_DeltaP1y=0,sum_DeltaP2y=0;
 	double sum_DeltaPmag=0,sum_DeltaP1mag=0,sum_DeltaP2mag=0;
+	double sum_DeltaPx_tmp=0,sum_DeltaP1x_tmp=0,sum_DeltaP2x_tmp=0;
+	double sum_DeltaPy_tmp=0,sum_DeltaP1y_tmp=0,sum_DeltaP2y_tmp=0;
 	double sum_DeltaPmag_tmp=0,sum_DeltaP1mag_tmp=0,sum_DeltaP2mag_tmp=0;
+	double sum_Ux=0,sum_U1x=0,sum_U2x=0;
+	double sum_Uy=0,sum_U1y=0,sum_U2y=0;
 	double sum_Umag=0,sum_U1mag=0,sum_U2mag=0;
+	double sum_Ux_tmp=0,sum_U1x_tmp=0,sum_U2x_tmp=0;
+	double sum_Uy_tmp=0,sum_U1y_tmp=0,sum_U2y_tmp=0;
 	double sum_Umag_tmp=0,sum_U1mag_tmp=0,sum_U2mag_tmp=0;
-	double sum_Mu=0,sum_Mu1=0,sum_Mu2=0;
-	double sum_Mu_tmp=0,sum_Mu1_tmp=0,sum_Mu2_tmp=0;
+	double sum_Mu=0;
+	double sum_Mu_tmp=0;
 	double sum_Alpha1=0,sum_Alpha2=0;
 	double sum_Alpha1_tmp=0,sum_Alpha2_tmp=0;
 
@@ -660,175 +811,293 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 
 
 	for (int i=0;i<MarkFluidNode_V1.size();i++){
-		alpha=Convert_RhoNToAlpha(RhoNPerm[MarkFluidNode_V1[i]],true);
-		alphaM1=1.0-alpha;
+		//cache variables
+		int idx_1D=MarkFluidNode_V1[i];
+		double Rhon_cache=RhoNPerm[idx_1D];
+		double DeltaPx_cache=DeltaP[0][idx_1D];
+		double DeltaPy_cache=DeltaP[1][idx_1D];
+		double DeltaPmag_cache=std::sqrt(DeltaPx_cache*DeltaPx_cache+DeltaPy_cache*DeltaPy_cache);
+		double Ux_cache=UPerm[0][idx_1D];
+		double Uy_cache=UPerm[1][idx_1D];
+		double Umag_cache=std::sqrt(Ux_cache*Ux_cache+Uy_cache*Uy_cache);
+		double alpha=Convert_RhoNToAlpha(Rhon_cache,true);
+		double alphaM1=1.0-alpha;
+		//Sum mass fractions
 		sum_Alpha1_tmp+=alpha;
 		sum_Alpha2_tmp+=alphaM1;
-		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V1[i]]*DeltaP[0][MarkFluidNode_V1[i]]+DeltaP[1][MarkFluidNode_V1[i]]*DeltaP[1][MarkFluidNode_V1[i]]);
-		sum_DeltaPmag_tmp+=DeltaPmag;
-		sum_DeltaP1mag_tmp+=alpha*DeltaPmag;
-		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag;
-		Umag=std::sqrt(UPerm[0][MarkFluidNode_V1[i]]*UPerm[0][MarkFluidNode_V1[i]]+UPerm[1][MarkFluidNode_V1[i]]*UPerm[1][MarkFluidNode_V1[i]]);
-		sum_Umag_tmp+=Umag;
-		sum_U1mag_tmp+=alpha*Umag;
-		sum_U2mag_tmp+=alphaM1*Umag;
-		visco=PtrViscosityConv->Get_Mu(1,RhoNPerm[MarkFluidNode_V1[i]]);
-		sum_Mu_tmp+=visco;
-		sum_Mu1_tmp+=alpha*visco;
-		sum_Mu2_tmp+=alphaM1*visco;
-		if(DeltaPmag>0)
-		{
-			sum_permeability_tmp+=Permeability(DeltaPmag,Umag,visco);
-			sum_permeability1_tmp+=Permeability(DeltaPmag,alpha*Umag,alpha*visco);
-			sum_permeability2_tmp+=Permeability(DeltaPmag,alphaM1*Umag,alphaM1*visco);
-		}
+		//sum partial pressures
+		sum_DeltaPx_tmp+=DeltaPx_cache;
+		sum_DeltaP1x_tmp+=alpha*DeltaPx_cache;
+		sum_DeltaP2x_tmp+=alphaM1*DeltaPx_cache;
+		sum_DeltaPy_tmp+=DeltaPy_cache;
+		sum_DeltaP1y_tmp+=alpha*DeltaPy_cache;
+		sum_DeltaP2y_tmp+=alphaM1*DeltaPy_cache;
+		sum_DeltaPmag_tmp+=DeltaPmag_cache;
+		sum_DeltaP1mag_tmp+=alpha*DeltaPmag_cache;
+		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag_cache;
+		//sum velocities
+		sum_Ux_tmp+=Ux_cache;
+		sum_U1x_tmp+=alpha*Ux_cache;
+		sum_U2x_tmp+=alphaM1*Ux_cache;
+		sum_Uy_tmp+=Uy_cache;
+		sum_U1y_tmp+=alpha*Uy_cache;
+		sum_U2y_tmp+=alphaM1*Uy_cache;
+		sum_Umag_tmp+=Umag_cache;
+		sum_U1mag_tmp+=alpha*Umag_cache;
+		sum_U2mag_tmp+=alphaM1*Umag_cache;
+		//sum viscosity
+		sum_Mu_tmp+=PtrViscosityConv->Get_Mu(1,Rhon_cache);
 	}
-	sum_permeability+=sum_permeability_tmp;sum_permeability1+=sum_permeability1_tmp;sum_permeability2+=sum_permeability2_tmp;
+//Add to the sum with the weight according to the volume of the cell
+	sum_Ux+=sum_Ux_tmp;sum_U1x+=sum_U1x_tmp;sum_U2x+=sum_U2x_tmp;
+	sum_Uy+=sum_Uy_tmp;sum_U1y+=sum_U1y_tmp;sum_U2y+=sum_U2y_tmp;
 	sum_Umag+=sum_Umag_tmp;sum_U1mag+=sum_U1mag_tmp;sum_U2mag+=sum_U2mag_tmp;
-	sum_Mu+=sum_Mu_tmp;sum_Mu1+=sum_Mu1_tmp;sum_Mu2+=sum_Mu2_tmp;
+	sum_Mu+=sum_Mu_tmp;
+	sum_DeltaPx+=sum_DeltaPx_tmp;sum_DeltaP1x+=sum_DeltaP1x_tmp;sum_DeltaP2x+=sum_DeltaP2x_tmp;
+	sum_DeltaPy+=sum_DeltaPy_tmp;sum_DeltaP1y+=sum_DeltaP1y_tmp;sum_DeltaP2y+=sum_DeltaP2y_tmp;
 	sum_DeltaPmag+=sum_DeltaPmag_tmp;sum_DeltaP1mag+=sum_DeltaP1mag_tmp;sum_DeltaP2mag+=sum_DeltaP2mag_tmp;
 	sum_Alpha1+=sum_Alpha1_tmp;sum_Alpha2+=sum_Alpha2_tmp;
-
-	sum_permeability_tmp=0;sum_permeability1_tmp=0;sum_permeability2_tmp=0;
+//Re initialisation of internal sum
+	sum_Ux_tmp=0;sum_U1x_tmp=0;sum_U2x_tmp=0;
+	sum_Uy_tmp=0;sum_U1y_tmp=0;sum_U2y_tmp=0;
 	sum_Umag_tmp=0;sum_U1mag_tmp=0;sum_U2mag_tmp=0;
-	sum_Mu_tmp=0;sum_Mu1_tmp=0;sum_Mu2_tmp=0;
+	sum_Mu_tmp=0;
+	sum_DeltaPx_tmp=0;sum_DeltaP1x_tmp=0;sum_DeltaP2x_tmp=0;
+	sum_DeltaPy_tmp=0;sum_DeltaP1y_tmp=0;sum_DeltaP2y_tmp=0;
 	sum_DeltaPmag_tmp=0;sum_DeltaP1mag_tmp=0;sum_DeltaP2mag_tmp=0;
 	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
 
 
 	for (int i=0;i<MarkFluidNode_V075.size();i++){
-		alpha=Convert_RhoNToAlpha(RhoNPerm[MarkFluidNode_V075[i]],true);
-		alphaM1=1.0-alpha;
+		//cache variables
+		int idx_1D=MarkFluidNode_V075[i];
+		double Rhon_cache=RhoNPerm[idx_1D];
+		double DeltaPx_cache=DeltaP[0][idx_1D];
+		double DeltaPy_cache=DeltaP[1][idx_1D];
+		double DeltaPmag_cache=std::sqrt(DeltaPx_cache*DeltaPx_cache+DeltaPy_cache*DeltaPy_cache);
+		double Ux_cache=UPerm[0][idx_1D];
+		double Uy_cache=UPerm[1][idx_1D];
+		double Umag_cache=std::sqrt(Ux_cache*Ux_cache+Uy_cache*Uy_cache);
+		double alpha=Convert_RhoNToAlpha(Rhon_cache,true);
+		double alphaM1=1.0-alpha;
+		//Sum mass fractions
 		sum_Alpha1_tmp+=alpha;
 		sum_Alpha2_tmp+=alphaM1;
-		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V075[i]]*DeltaP[0][MarkFluidNode_V075[i]]+DeltaP[1][MarkFluidNode_V075[i]]*DeltaP[1][MarkFluidNode_V075[i]]);
-		sum_DeltaPmag_tmp+=DeltaPmag;
-		sum_DeltaP1mag_tmp+=alpha*DeltaPmag;
-		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag;
-		Umag=std::sqrt(UPerm[0][MarkFluidNode_V075[i]]*UPerm[0][MarkFluidNode_V075[i]]+UPerm[1][MarkFluidNode_V075[i]]*UPerm[1][MarkFluidNode_V075[i]]);
-		sum_Umag_tmp+=Umag;
-		visco=PtrViscosityConv->Get_Mu(1,RhoNPerm[MarkFluidNode_V075[i]]);
-		sum_Mu_tmp+=visco;
-		sum_Mu1_tmp+=alpha*visco;
-		sum_Mu2_tmp+=alphaM1*visco;
-		if(DeltaPmag>0)
-		{
-			sum_permeability_tmp+=Permeability(DeltaPmag,Umag,visco);
-			sum_permeability1_tmp+=Permeability(DeltaPmag,alpha*Umag,alpha*visco);
-			sum_permeability2_tmp+=Permeability(DeltaPmag,alphaM1*Umag,alphaM1*visco);
-		}
+		//sum partial pressures
+		sum_DeltaPx_tmp+=DeltaPx_cache;
+		sum_DeltaP1x_tmp+=alpha*DeltaPx_cache;
+		sum_DeltaP2x_tmp+=alphaM1*DeltaPx_cache;
+		sum_DeltaPy_tmp+=DeltaPy_cache;
+		sum_DeltaP1y_tmp+=alpha*DeltaPy_cache;
+		sum_DeltaP2y_tmp+=alphaM1*DeltaPy_cache;
+		sum_DeltaPmag_tmp+=DeltaPmag_cache;
+		sum_DeltaP1mag_tmp+=alpha*DeltaPmag_cache;
+		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag_cache;
+		//sum velocities
+		sum_Ux_tmp+=Ux_cache;
+		sum_U1x_tmp+=alpha*Ux_cache;
+		sum_U2x_tmp+=alphaM1*Ux_cache;
+		sum_Uy_tmp+=Uy_cache;
+		sum_U1y_tmp+=alpha*Uy_cache;
+		sum_U2y_tmp+=alphaM1*Uy_cache;
+		sum_Umag_tmp+=Umag_cache;
+		sum_U1mag_tmp+=alpha*Umag_cache;
+		sum_U2mag_tmp+=alphaM1*Umag_cache;
+		//sum viscosity
+		sum_Mu_tmp+=PtrViscosityConv->Get_Mu(1,Rhon_cache);
 	}
-	sum_permeability+=0.75*sum_permeability_tmp;sum_permeability1+=0.75*sum_permeability1_tmp;sum_permeability2+=0.75*sum_permeability2_tmp;
-	sum_Umag+=0.75*sum_Umag_tmp;sum_U1mag+=0.75*sum_U1mag_tmp;sum_U2mag+=0.75*sum_U2mag_tmp;
-	sum_Mu+=0.75*sum_Mu_tmp;sum_Mu1+=0.75*sum_Mu1_tmp;sum_Mu2+=0.75*sum_Mu2_tmp;
-	sum_DeltaPmag+=0.75*sum_DeltaPmag_tmp;sum_DeltaP1mag+=0.75*sum_DeltaP1mag_tmp;sum_DeltaP2mag+=0.75*sum_DeltaP2mag_tmp;
-	sum_Alpha1+=0.75*sum_Alpha1_tmp;sum_Alpha2+=0.75*sum_Alpha2_tmp;
-
-	sum_permeability_tmp=0;sum_permeability1_tmp=0;sum_permeability2_tmp=0;
+//Set the weight for the volume of the cell related to the node location
+	coef=0.75;
+//Add to the sum with the weight according to the volume of the cell
+	sum_Ux+=coef*sum_Ux_tmp;sum_U1x+=coef*sum_U1x_tmp;sum_U2x+=coef*sum_U2x_tmp;
+	sum_Uy+=coef*sum_Uy_tmp;sum_U1y+=coef*sum_U1y_tmp;sum_U2y+=coef*sum_U2y_tmp;
+	sum_Umag+=coef*sum_Umag_tmp;sum_U1mag+=coef*sum_U1mag_tmp;sum_U2mag+=coef*sum_U2mag_tmp;
+	sum_Mu+=coef*sum_Mu_tmp;
+	sum_DeltaPx+=coef*sum_DeltaPx_tmp;sum_DeltaP1x+=coef*sum_DeltaP1x_tmp;sum_DeltaP2x+=coef*sum_DeltaP2x_tmp;
+	sum_DeltaPy+=coef*sum_DeltaPy_tmp;sum_DeltaP1y+=coef*sum_DeltaP1y_tmp;sum_DeltaP2y+=coef*sum_DeltaP2y_tmp;
+	sum_DeltaPmag+=coef*sum_DeltaPmag_tmp;sum_DeltaP1mag+=coef*sum_DeltaP1mag_tmp;sum_DeltaP2mag+=coef*sum_DeltaP2mag_tmp;
+	sum_Alpha1+=coef*sum_Alpha1_tmp;sum_Alpha2+=coef*sum_Alpha2_tmp;
+//Re initialisation of internal sum
+	sum_Ux_tmp=0;sum_U1x_tmp=0;sum_U2x_tmp=0;
+	sum_Uy_tmp=0;sum_U1y_tmp=0;sum_U2y_tmp=0;
 	sum_Umag_tmp=0;sum_U1mag_tmp=0;sum_U2mag_tmp=0;
-	sum_Mu_tmp=0;sum_Mu1_tmp=0;sum_Mu2_tmp=0;
+	sum_Mu_tmp=0;
+	sum_DeltaPx_tmp=0;sum_DeltaP1x_tmp=0;sum_DeltaP2x_tmp=0;
+	sum_DeltaPy_tmp=0;sum_DeltaP1y_tmp=0;sum_DeltaP2y_tmp=0;
 	sum_DeltaPmag_tmp=0;sum_DeltaP1mag_tmp=0;sum_DeltaP2mag_tmp=0;
 	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
 
 	for (int i=0;i<MarkFluidNode_V05.size();i++){
-		alpha=Convert_RhoNToAlpha(RhoNPerm[MarkFluidNode_V05[i]],true);
-		alphaM1=1.0-alpha;
+		//cache variables
+		int idx_1D=MarkFluidNode_V05[i];
+		double Rhon_cache=RhoNPerm[idx_1D];
+		double DeltaPx_cache=DeltaP[0][idx_1D];
+		double DeltaPy_cache=DeltaP[1][idx_1D];
+		double DeltaPmag_cache=std::sqrt(DeltaPx_cache*DeltaPx_cache+DeltaPy_cache*DeltaPy_cache);
+		double Ux_cache=UPerm[0][idx_1D];
+		double Uy_cache=UPerm[1][idx_1D];
+		double Umag_cache=std::sqrt(Ux_cache*Ux_cache+Uy_cache*Uy_cache);
+		double alpha=Convert_RhoNToAlpha(Rhon_cache,true);
+		double alphaM1=1.0-alpha;
+		//Sum mass fractions
 		sum_Alpha1_tmp+=alpha;
 		sum_Alpha2_tmp+=alphaM1;
-		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V05[i]]*DeltaP[0][MarkFluidNode_V05[i]]+DeltaP[1][MarkFluidNode_V05[i]]*DeltaP[1][MarkFluidNode_V05[i]]);
-		sum_DeltaPmag_tmp+=DeltaPmag;
-		sum_DeltaP1mag_tmp+=alpha*DeltaPmag;
-		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag;
-		Umag=std::sqrt(UPerm[0][MarkFluidNode_V05[i]]*UPerm[0][MarkFluidNode_V05[i]]+UPerm[1][MarkFluidNode_V05[i]]*UPerm[1][MarkFluidNode_V05[i]]);
-		sum_Umag_tmp+=Umag;
-		visco=PtrViscosityConv->Get_Mu(1,RhoNPerm[MarkFluidNode_V05[i]]);
-		sum_Mu_tmp+=visco;
-		sum_Mu1_tmp+=alpha*visco;
-		sum_Mu2_tmp+=alphaM1*visco;
-		if(DeltaPmag>0)
-		{
-			sum_permeability_tmp+=Permeability(DeltaPmag,Umag,visco);
-			sum_permeability1_tmp+=Permeability(DeltaPmag,alpha*Umag,alpha*visco);
-			sum_permeability2_tmp+=Permeability(DeltaPmag,alphaM1*Umag,alphaM1*visco);
-		}
+		//sum partial pressures
+		sum_DeltaPx_tmp+=DeltaPx_cache;
+		sum_DeltaP1x_tmp+=alpha*DeltaPx_cache;
+		sum_DeltaP2x_tmp+=alphaM1*DeltaPx_cache;
+		sum_DeltaPy_tmp+=DeltaPy_cache;
+		sum_DeltaP1y_tmp+=alpha*DeltaPy_cache;
+		sum_DeltaP2y_tmp+=alphaM1*DeltaPy_cache;
+		sum_DeltaPmag_tmp+=DeltaPmag_cache;
+		sum_DeltaP1mag_tmp+=alpha*DeltaPmag_cache;
+		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag_cache;
+		//sum velocities
+		sum_Ux_tmp+=Ux_cache;
+		sum_U1x_tmp+=alpha*Ux_cache;
+		sum_U2x_tmp+=alphaM1*Ux_cache;
+		sum_Uy_tmp+=Uy_cache;
+		sum_U1y_tmp+=alpha*Uy_cache;
+		sum_U2y_tmp+=alphaM1*Uy_cache;
+		sum_Umag_tmp+=Umag_cache;
+		sum_U1mag_tmp+=alpha*Umag_cache;
+		sum_U2mag_tmp+=alphaM1*Umag_cache;
+		//sum viscosity
+		sum_Mu_tmp+=PtrViscosityConv->Get_Mu(1,Rhon_cache);
 	}
-	sum_permeability+=0.5*sum_permeability_tmp;sum_permeability1+=0.5*sum_permeability1_tmp;sum_permeability2+=0.5*sum_permeability2_tmp;
-	sum_Umag+=0.5*sum_Umag_tmp;sum_U1mag+=0.5*sum_U1mag_tmp;sum_U2mag+=0.5*sum_U2mag_tmp;
-	sum_Mu+=0.5*sum_Mu_tmp;sum_Mu1+=0.5*sum_Mu1_tmp;sum_Mu2+=0.5*sum_Mu2_tmp;
-	sum_DeltaPmag+=0.5*sum_DeltaPmag_tmp;sum_DeltaP1mag+=0.5*sum_DeltaP1mag_tmp;sum_DeltaP2mag+=0.5*sum_DeltaP2mag_tmp;
-	sum_Alpha1+=0.5*sum_Alpha1_tmp;sum_Alpha2+=0.5*sum_Alpha2_tmp;
-
-	sum_permeability_tmp=0;sum_permeability1_tmp=0;sum_permeability2_tmp=0;
+//Set the weight for the volume of the cell related to the node location
+	coef=0.5;
+//Add to the sum with the weight according to the volume of the cell
+	sum_Ux+=coef*sum_Ux_tmp;sum_U1x+=coef*sum_U1x_tmp;sum_U2x+=coef*sum_U2x_tmp;
+	sum_Uy+=coef*sum_Uy_tmp;sum_U1y+=coef*sum_U1y_tmp;sum_U2y+=coef*sum_U2y_tmp;
+	sum_Umag+=coef*sum_Umag_tmp;sum_U1mag+=coef*sum_U1mag_tmp;sum_U2mag+=coef*sum_U2mag_tmp;
+	sum_Mu+=coef*sum_Mu_tmp;
+	sum_DeltaPx+=coef*sum_DeltaPx_tmp;sum_DeltaP1x+=coef*sum_DeltaP1x_tmp;sum_DeltaP2x+=coef*sum_DeltaP2x_tmp;
+	sum_DeltaPy+=coef*sum_DeltaPy_tmp;sum_DeltaP1y+=coef*sum_DeltaP1y_tmp;sum_DeltaP2y+=coef*sum_DeltaP2y_tmp;
+	sum_DeltaPmag+=coef*sum_DeltaPmag_tmp;sum_DeltaP1mag+=coef*sum_DeltaP1mag_tmp;sum_DeltaP2mag+=coef*sum_DeltaP2mag_tmp;
+	sum_Alpha1+=coef*sum_Alpha1_tmp;sum_Alpha2+=coef*sum_Alpha2_tmp;
+//Re initialisation of internal sum
+	sum_Ux_tmp=0;sum_U1x_tmp=0;sum_U2x_tmp=0;
+	sum_Uy_tmp=0;sum_U1y_tmp=0;sum_U2y_tmp=0;
 	sum_Umag_tmp=0;sum_U1mag_tmp=0;sum_U2mag_tmp=0;
-	sum_Mu_tmp=0;sum_Mu1_tmp=0;sum_Mu2_tmp=0;
+	sum_Mu_tmp=0;
+	sum_DeltaPx_tmp=0;sum_DeltaP1x_tmp=0;sum_DeltaP2x_tmp=0;
+	sum_DeltaPy_tmp=0;sum_DeltaP1y_tmp=0;sum_DeltaP2y_tmp=0;
 	sum_DeltaPmag_tmp=0;sum_DeltaP1mag_tmp=0;sum_DeltaP2mag_tmp=0;
 	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
 
 	for (int i=0;i<MarkFluidNode_V025.size();i++){
-		alpha=Convert_RhoNToAlpha(RhoNPerm[MarkFluidNode_V025[i]],true);
-		alphaM1=1.0-alpha;
+		//cache variables
+		int idx_1D=MarkFluidNode_V025[i];
+		double Rhon_cache=RhoNPerm[idx_1D];
+		double DeltaPx_cache=DeltaP[0][idx_1D];
+		double DeltaPy_cache=DeltaP[1][idx_1D];
+		double DeltaPmag_cache=std::sqrt(DeltaPx_cache*DeltaPx_cache+DeltaPy_cache*DeltaPy_cache);
+		double Ux_cache=UPerm[0][idx_1D];
+		double Uy_cache=UPerm[1][idx_1D];
+		double Umag_cache=std::sqrt(Ux_cache*Ux_cache+Uy_cache*Uy_cache);
+		double alpha=Convert_RhoNToAlpha(Rhon_cache,true);
+		double alphaM1=1.0-alpha;
+		//Sum mass fractions
 		sum_Alpha1_tmp+=alpha;
 		sum_Alpha2_tmp+=alphaM1;
-		DeltaPmag=std::sqrt(DeltaP[0][MarkFluidNode_V025[i]]*DeltaP[0][MarkFluidNode_V025[i]]+DeltaP[1][MarkFluidNode_V025[i]]*DeltaP[1][MarkFluidNode_V025[i]]);
-		sum_DeltaPmag_tmp+=DeltaPmag;
-		sum_DeltaP1mag_tmp+=alpha*DeltaPmag;
-		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag;
-		Umag=std::sqrt(UPerm[0][MarkFluidNode_V025[i]]*UPerm[0][MarkFluidNode_V025[i]]+UPerm[1][MarkFluidNode_V025[i]]*UPerm[1][MarkFluidNode_V025[i]]);
-		sum_Umag_tmp+=Umag;
-		visco=PtrViscosityConv->Get_Mu(1,RhoNPerm[MarkFluidNode_V025[i]]);
-		sum_Mu_tmp+=visco;
-		sum_Mu1_tmp+=alpha*visco;
-		sum_Mu2_tmp+=alphaM1*visco;
-		if(DeltaPmag>0)
-		{
-			sum_permeability_tmp+=Permeability(DeltaPmag,Umag,visco);
-			sum_permeability1_tmp+=Permeability(DeltaPmag,alpha*Umag,alpha*visco);
-			sum_permeability2_tmp+=Permeability(DeltaPmag,alphaM1*Umag,alphaM1*visco);
-		}
+		//sum partial pressures
+		sum_DeltaPx_tmp+=DeltaPx_cache;
+		sum_DeltaP1x_tmp+=alpha*DeltaPx_cache;
+		sum_DeltaP2x_tmp+=alphaM1*DeltaPx_cache;
+		sum_DeltaPy_tmp+=DeltaPy_cache;
+		sum_DeltaP1y_tmp+=alpha*DeltaPy_cache;
+		sum_DeltaP2y_tmp+=alphaM1*DeltaPy_cache;
+		sum_DeltaPmag_tmp+=DeltaPmag_cache;
+		sum_DeltaP1mag_tmp+=alpha*DeltaPmag_cache;
+		sum_DeltaP2mag_tmp+=alphaM1*DeltaPmag_cache;
+		//sum velocities
+		sum_Ux_tmp+=Ux_cache;
+		sum_U1x_tmp+=alpha*Ux_cache;
+		sum_U2x_tmp+=alphaM1*Ux_cache;
+		sum_Uy_tmp+=Uy_cache;
+		sum_U1y_tmp+=alpha*Uy_cache;
+		sum_U2y_tmp+=alphaM1*Uy_cache;
+		sum_Umag_tmp+=Umag_cache;
+		sum_U1mag_tmp+=alpha*Umag_cache;
+		sum_U2mag_tmp+=alphaM1*Umag_cache;
+		//sum viscosity
+		sum_Mu_tmp+=PtrViscosityConv->Get_Mu(1,Rhon_cache);
 	}
-	sum_permeability+=0.25*sum_permeability_tmp;sum_permeability1+=0.25*sum_permeability1_tmp;sum_permeability2+=0.25*sum_permeability2_tmp;
-	sum_Umag+=0.25*sum_Umag_tmp;sum_U1mag+=0.25*sum_U1mag_tmp;sum_U2mag+=0.25*sum_U2mag_tmp;
-	sum_Mu+=0.25*sum_Mu_tmp;sum_Mu1+=0.25*sum_Mu1_tmp;sum_Mu2+=0.25*sum_Mu2_tmp;
-	sum_DeltaPmag+=0.25*sum_DeltaPmag_tmp;sum_DeltaP1mag+=0.25*sum_DeltaP1mag_tmp;sum_DeltaP2mag+=0.25*sum_DeltaP2mag_tmp;
-	sum_Alpha1+=0.25*sum_Alpha1_tmp;sum_Alpha2+=0.25*sum_Alpha2_tmp;
+//Set the weight for the volume of the cell related to the node location
+	coef=0.25;
+//Add to the sum with the weight according to the volume of the cell
+	sum_Ux+=coef*sum_Ux_tmp;sum_U1x+=coef*sum_U1x_tmp;sum_U2x+=coef*sum_U2x_tmp;
+	sum_Uy+=coef*sum_Uy_tmp;sum_U1y+=coef*sum_U1y_tmp;sum_U2y+=coef*sum_U2y_tmp;
+	sum_Umag+=coef*sum_Umag_tmp;sum_U1mag+=coef*sum_U1mag_tmp;sum_U2mag+=coef*sum_U2mag_tmp;
+	sum_Mu+=coef*sum_Mu_tmp;
+	sum_DeltaPx+=coef*sum_DeltaPx_tmp;sum_DeltaP1x+=coef*sum_DeltaP1x_tmp;sum_DeltaP2x+=coef*sum_DeltaP2x_tmp;
+	sum_DeltaPy+=coef*sum_DeltaPy_tmp;sum_DeltaP1y+=coef*sum_DeltaP1y_tmp;sum_DeltaP2y+=coef*sum_DeltaP2y_tmp;
+	sum_DeltaPmag+=coef*sum_DeltaPmag_tmp;sum_DeltaP1mag+=coef*sum_DeltaP1mag_tmp;sum_DeltaP2mag+=coef*sum_DeltaP2mag_tmp;
+	sum_Alpha1+=coef*sum_Alpha1_tmp;sum_Alpha2+=coef*sum_Alpha2_tmp;
 
-	sum_permeability_tmp=0;sum_permeability1_tmp=0;sum_permeability2_tmp=0;
-	sum_Umag_tmp=0;sum_U1mag_tmp=0;sum_U2mag_tmp=0;
-	sum_Mu_tmp=0;sum_Mu1_tmp=0;sum_Mu2_tmp=0;
-	sum_DeltaPmag_tmp=0;sum_DeltaP1mag_tmp=0;sum_DeltaP2mag_tmp=0;
-	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
 
-	sum_permeability=PtrMultiBlockConv->SumAllProcessors(&sum_permeability);sum_permeability1=PtrMultiBlockConv->SumAllProcessors(&sum_permeability1);sum_permeability2=PtrMultiBlockConv->SumAllProcessors(&sum_permeability2);
+// sum over processors
+	sum_Ux=PtrMultiBlockConv->SumAllProcessors(&sum_Ux);sum_U1x=PtrMultiBlockConv->SumAllProcessors(&sum_U1x);sum_U2x=PtrMultiBlockConv->SumAllProcessors(&sum_U2x);
+	sum_Uy=PtrMultiBlockConv->SumAllProcessors(&sum_Uy);sum_U1y=PtrMultiBlockConv->SumAllProcessors(&sum_U1y);sum_U2y=PtrMultiBlockConv->SumAllProcessors(&sum_U2y);
 	sum_Umag=PtrMultiBlockConv->SumAllProcessors(&sum_Umag);sum_U1mag=PtrMultiBlockConv->SumAllProcessors(&sum_U1mag);sum_U2mag=PtrMultiBlockConv->SumAllProcessors(&sum_U2mag);
-	sum_Mu=PtrMultiBlockConv->SumAllProcessors(&sum_Mu);sum_Mu1=PtrMultiBlockConv->SumAllProcessors(&sum_Mu1);sum_Mu2=PtrMultiBlockConv->SumAllProcessors(&sum_Mu2);
+	sum_Mu=PtrMultiBlockConv->SumAllProcessors(&sum_Mu);
+	sum_DeltaPx=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPx);sum_DeltaP1mag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP1x);sum_DeltaP2x=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP2x);
+	sum_DeltaPy=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPy);sum_DeltaP1y=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP1y);sum_DeltaP2y=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP2y);
 	sum_DeltaPmag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPmag);sum_DeltaP1mag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP1mag);sum_DeltaP2mag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP2mag);
 	sum_Alpha1=PtrMultiBlockConv->SumAllProcessors(&sum_Alpha1);sum_Alpha2=PtrMultiBlockConv->SumAllProcessors(&sum_Alpha2);
 
+//Average viscosity
+	double Avg_Mu=sum_Mu/fluidVolumesum;
+	double Avg_Mu1=PtrViscosityConv->Get_Mu(1,1);
+	double Avg_Mu2=PtrViscosityConv->Get_Mu(1,-1);
 
+//Average velocity
+	double Avg_Ux=sum_Ux/fluidVolumesum;double Avg_U1x=sum_U1x/fluidVolumesum;double Avg_U2x=sum_U2x/fluidVolumesum;
+	double Avg_Uy=sum_Uy/fluidVolumesum;double Avg_U1y=sum_U1y/fluidVolumesum;double Avg_U2y=sum_U2y/fluidVolumesum;
 	double Avg_Umag=sum_Umag/fluidVolumesum;double Avg_U1mag=sum_U1mag/fluidVolumesum;double Avg_U2mag=sum_U2mag/fluidVolumesum;
-	double Avg_Mu=sum_Mu/fluidVolumesum;double Avg_Mu1=sum_Mu1/fluidVolumesum;double Avg_Mu2=sum_Mu2/fluidVolumesum;
+//Average pressure
+	double Avg_DeltaPx=sum_DeltaPx/fluidVolumesum;double Avg_DeltaP1x=sum_DeltaP1x/fluidVolumesum;double Avg_DeltaP2x=sum_DeltaP2x/fluidVolumesum;
+	double Avg_DeltaPy=sum_DeltaPy/fluidVolumesum;double Avg_DeltaP1y=sum_DeltaP1y/fluidVolumesum;double Avg_DeltaP2y=sum_DeltaP2y/fluidVolumesum;
 	double Avg_DeltaPmag=sum_DeltaPmag/fluidVolumesum;double Avg_DeltaP1mag=sum_DeltaP1mag/fluidVolumesum;double Avg_DeltaP2mag=sum_DeltaP2mag/fluidVolumesum;
+//Average mass fraction
 	double Avg_Alpha1=sum_Alpha1/fluidVolumesum;double Avg_Alpha2=sum_Alpha2/fluidVolumesum;
 
-	//double PorePermeability=sum_permeability/fluidVolumesum;
-	double PorePermeability=sum_permeability/fluidVolumesum;double PorePermeability1=sum_permeability1/fluidVolumesum;double PorePermeability2=sum_permeability2/fluidVolumesum;
-	double PoreGlobalPermeability=Avg_Umag*Avg_Mu/Avg_DeltaPmag;double PoreGlobalPermeability1=Avg_U1mag*Avg_Mu1/Avg_DeltaP1mag;double PoreGlobalPermeability2=Avg_U2mag*Avg_Mu2/Avg_DeltaP2mag;
-	double Permeability=LuToPhy2*porosity*PorePermeability;double Permeability1=LuToPhy2*porosity*PorePermeability1;double Permeability2=LuToPhy2*porosity*PorePermeability2;
-	double GlobalPermeability=LuToPhy2*porosity*PoreGlobalPermeability;double GlobalPermeability1=LuToPhy2*porosity*PoreGlobalPermeability1;double GlobalPermeability2=LuToPhy2*porosity*PoreGlobalPermeability2;
-	double ScaleAvg_Umag=LuToPhy2*porosity*Avg_Umag;double ScaleAvg_U1mag=LuToPhy2*porosity*Avg_U1mag;double ScaleAvg_U2mag=LuToPhy2*porosity*Avg_U2mag;
+//Calcul permeability
+	double PoreGlobalPermeabilityX=porosity*Avg_Ux*Avg_Mu/Avg_DeltaPx;double PoreGlobalPermeability1X=porosity*Avg_U1x*Avg_Mu1/Avg_DeltaP1x;double PoreGlobalPermeability2X=porosity*Avg_U2x*Avg_Mu2/Avg_DeltaP2x;
+	double PoreGlobalPermeabilityY=porosity*Avg_Uy*Avg_Mu/Avg_DeltaPy;double PoreGlobalPermeability1Y=porosity*Avg_U1y*Avg_Mu1/Avg_DeltaP1y;double PoreGlobalPermeability2Y=porosity*Avg_U2y*Avg_Mu2/Avg_DeltaP2y;
+	double PoreGlobalPermeability=porosity*Avg_Umag*Avg_Mu/Avg_DeltaPmag;double PoreGlobalPermeability1=porosity*Avg_U1mag*Avg_Mu1/Avg_DeltaP1mag;double PoreGlobalPermeability2=porosity*Avg_U2mag*Avg_Mu2/Avg_DeltaP2mag;
+//Convert to SI
+	double GlobalPermeabilityX=LuToPhy2*PoreGlobalPermeabilityX;double GlobalPermeability1X=LuToPhy2*PoreGlobalPermeability1X;double GlobalPermeability2X=LuToPhy2*PoreGlobalPermeability2X;
+	double GlobalPermeabilityY=LuToPhy2*PoreGlobalPermeabilityY;double GlobalPermeability1Y=LuToPhy2*PoreGlobalPermeability1Y;double GlobalPermeability2Y=LuToPhy2*PoreGlobalPermeability2Y;
+	double GlobalPermeability=LuToPhy2*PoreGlobalPermeability;double GlobalPermeability1=LuToPhy2*PoreGlobalPermeability1;double GlobalPermeability2=LuToPhy2*PoreGlobalPermeability2;
 	if(PtrMultiBlockConv->IsMainProcessor())
 	{
 		ofstream Permeabilityfile;
 		Permeabilityfile.open("Permeability.txt",ios::out | ios::app);
-		Permeabilityfile<<Time<<","<<Permeability<<","<<Permeability1<<","<<Permeability2<<","<<GlobalPermeability<<","<<GlobalPermeability1<<","<<GlobalPermeability2
-				<<","<<PorePermeability<<","<<PorePermeability1<<","<<PorePermeability2<<","<<PoreGlobalPermeability<<","<<PoreGlobalPermeability1<<","<<PoreGlobalPermeability2
-				<<","<<ScaleAvg_Umag<<","<<ScaleAvg_U1mag<<","<<ScaleAvg_U2mag<<","<<Avg_Umag<<","<<Avg_U1mag<<","<<Avg_U2mag<<","
-				<<Avg_Mu<<","<<Avg_Mu1<<","<<Avg_Mu2
-				<<","<<Avg_DeltaPmag<<","<<Avg_DeltaP1mag<<","<<Avg_DeltaP2mag<<","<<Avg_Alpha1<<","<<Avg_Alpha2<<std::endl;
+		Permeabilityfile<<Time<<","<<
+				","<<GlobalPermeability1X<<","<<GlobalPermeability1Y<<","<<GlobalPermeability1<<
+				","<<GlobalPermeability2X<<","<<GlobalPermeability2Y<<","<<GlobalPermeability2<<
+				","<<GlobalPermeabilityX<<","<<GlobalPermeabilityY<<","<<GlobalPermeability<<
+				","<<PoreGlobalPermeability1X<<","<<PoreGlobalPermeability1Y<<","<<PoreGlobalPermeability1<<
+				","<<PoreGlobalPermeability2X<<","<<PoreGlobalPermeability2Y<<","<<PoreGlobalPermeability2<<
+				","<<PoreGlobalPermeabilityX<<","<<PoreGlobalPermeabilityY<<","<<PoreGlobalPermeability<<
+				","<<Avg_U1x<<","<<Avg_U1y<<","<<Avg_U1mag<<
+				","<<Avg_U2x<<","<<Avg_U2y<<","<<Avg_U2mag<<
+				","<<Avg_Ux<<","<<Avg_Uy<<","<<Avg_Umag<<
+				","<<Avg_Mu<<","<<Avg_Mu1<<","<<Avg_Mu2<<
+				","<<Avg_DeltaP1x<<","<<Avg_DeltaP1y<<","<<Avg_DeltaP1mag<<
+				","<<Avg_DeltaP2x<<","<<Avg_DeltaP2y<<","<<Avg_DeltaP2mag<<
+				","<<Avg_DeltaPx<<","<<Avg_DeltaPy<<","<<Avg_DeltaPmag<<
+				std::endl;
 		Permeabilityfile.close();
-		std::cout<<"Average Permeability [m2]: "<<Permeability<<" Global Permeability [m2]: "<<GlobalPermeability<<" Pore-scale Average Permeability: "<<PorePermeability<<" Pore-scale Global Permeability: "<<PoreGlobalPermeability<<" Average Velocity: "<<Avg_Umag<<" Average DeltaP: "<<Avg_DeltaPmag<<" Average viscosity: "<<Avg_Mu<<" Average Alpha: "<<Avg_Alpha1<<std::endl;
+		std::cout<<"Two-phase Permeability analysis: "<<std::endl<<
+				"Max Global Permeability [m2]: "<<GlobalPermeability<<" Max Global Permeability [lu]: "<<PoreGlobalPermeability<<std::endl<<
+				"Average Ux [lu]: "<<Avg_Ux<<" Average Uy [lu]: "<<Avg_Uy<<" Average Umag [lu]: "<<Avg_Umag<<std::endl<<
+				"Average x_Grad(P) [lu]: "<<Avg_DeltaPmag<<" Average y_Grad(P) [lu]: "<<Avg_DeltaPmag<<" Average Grad(P)mag [lu]: "<<Avg_DeltaPmag<<std::endl<<
+				"Average viscosity [lu]: "<<Avg_Mu<<" Average Alpha: "<<Avg_Alpha1<<std::endl;
 	}
-	return Permeability;
+	return GlobalPermeability;
 }
 void Convergence::Sum_ScalarNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double &sum){
 	sum=0;
