@@ -907,15 +907,6 @@ void D2Q9ColourFluid::run(){
 //		for (int i=1;i<NbStep+1;i++)
 		while(it<NbStep+1)
 		{
-			Colour_gradient();
-			Synchronise_Colour_gradient();
-			//Extrapolate_NormalInSolid();
-			CAngle.ApplyContactAngle2D(Normal);
-			UpdateColourGradientOnWalls();
-			//Impose_ContactAngleInSolid();
-
-			ColourFluid_Collision();
-			SyncToGhost();
 			StreamD2Q9();;
 			ApplyBc();
 			UpdateMacroVariables();
@@ -927,6 +918,17 @@ void D2Q9ColourFluid::run(){
 			SyncVarToSolidGhost(RhoN);
 //			SyncVarFromSolidGhost(RhoN);
 			//SyncVarToGhost(RhoN);
+
+			Colour_gradient();
+			Synchronise_Colour_gradient();
+			//Extrapolate_NormalInSolid();
+			CAngle.ApplyContactAngle2D(Normal);
+			UpdateColourGradientOnWalls();
+			//Impose_ContactAngleInSolid();
+
+			ColourFluid_Collision();
+			SyncToGhost();
+
 
 			if(it%OutPutNStep==0)
 			{
@@ -972,18 +974,20 @@ void D2Q9ColourFluid::run(){
 	{
 		while(it<NbStep+1)
 		{
-			Colour_gradient();
-			//Extrapolate_NormalInSolid();
-			//Impose_ContactAngleInSolid();
-			CAngle.ApplyContactAngle2D(Normal);
-			UpdateColourGradientOnWalls();
-			ColourFluid_Collision();
 			StreamD2Q9();
 			ApplyBc();
 			UpdateMacroVariables();
 			if(CalGradP)
 				UpdatePressure();
 			ExtrapolDensityInSolid();
+
+			Colour_gradient();
+			//Extrapolate_NormalInSolid();
+			//Impose_ContactAngleInSolid();
+			CAngle.ApplyContactAngle2D(Normal);
+			UpdateColourGradientOnWalls();
+			ColourFluid_Collision();
+
 			if(it%OutPutNStep==0)
 			{
 				if(CalPressure&&!CalGradP)
@@ -2005,6 +2009,7 @@ void  D2Q9ColourFluid::ImposeAlpha(int &index, double alpha)
 		Rhor[index]+=f[0]->f[i][index];
 		Rhob[index]+=f[1]->f[i][index];
 	}
+	Rho[index]=Rhor[index]+Rhob[index];
 }
 ///Select and apply boundary conditions
 void D2Q9ColourFluid::ApplyBc(){
@@ -2068,8 +2073,8 @@ void D2Q9ColourFluid::ApplyBc(){
 */
 	for (int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
-		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f[0],Rhor,U[0],U[1]);
-		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f[1],Rhob,U[0],U[1]);
+		ApplyWall(NodeArrays->NodeWall[j],f[0],Rhor,U[0],U[1]);
+		ApplyWall(NodeArrays->NodeWall[j],f[1],Rhob,U[0],U[1]);
 
 	}
 

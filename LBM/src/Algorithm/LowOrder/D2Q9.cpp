@@ -687,14 +687,15 @@ void D2Q9::run(){
 	{
 		while(it<NbStep+1)
 		{
-			CollideD2Q9();
-			SyncToGhost();
 			StreamD2Q9();
 			ApplyBc();
 			UpdateMacroVariables();
 			if(CalGradP)
 				UpdatePressure();
 			SyncMacroVarToGhost();
+			CollideD2Q9();
+			SyncToGhost();
+
 
 			if(it%OutPutNStep==0)
 			{
@@ -738,12 +739,13 @@ void D2Q9::run(){
 	{
 		while(it<NbStep+1)
 		{
-			CollideD2Q9();
 			StreamD2Q9();
 			ApplyBc();
 			UpdateMacroVariables();
 			if(CalGradP)
 					UpdatePressure();
+
+			CollideD2Q9();
 			if(it%OutPutNStep==0)
 			{
 				if(CalPressure&&!CalGradP)
@@ -1458,7 +1460,7 @@ void D2Q9::ApplyBc(){
 	*/
 	for (int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
-		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f);
+		ApplyWall(NodeArrays->NodeWall[j],f);
 	}
 	/*
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
