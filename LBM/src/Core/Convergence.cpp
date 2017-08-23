@@ -176,24 +176,30 @@ void Convergence::Set_Convergence(){
 				ofstream Permeabilityfile;
 				Permeabilityfile.open("Permeability.txt",ios::out | ios::trunc);
 				if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
-					Permeabilityfile<<"Time,Max Global Permeability [m2],Global Permeability in X-direction [lu],Global Permeability in Y-direction [lu],Max Global Permeability [lu]"
-					",Average x_Velocity [lu],Average y_Velocity [lu],Average Velocity Magnitude [lu],Average Viscosity [lu]"
-					",Average y_Grad(P) [lu],Average x_Grad(P) [lu],Average Grad(P) magnitude [lu]"<<std::endl;
-				else
-					Permeabilityfile<<"Time,Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
-					",Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
-					",Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
-					",Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
-					",Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
-					",Global Permeability,Global Permeability Phase 1,Global Permeability Phase 2"
-					",Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2"
-					",Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2"
-					",Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2"
-					",Average Viscosity,Average Viscosity Phase 1,Average Viscosity Phase 2"
-					",Average Delta P,Average Delta P Phase 1,Average Delta P Phase 2"
-					",Average Delta P,Average Delta P Phase 1,Average Delta P Phase 2"
-					",Average Delta P,Average Delta P Phase 1,Average Delta P Phase 2"
-					",Alpha,1-Alpha"<<std::endl;
+					if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
+						Permeabilityfile<<"Time"
+						",X-Global Permeability [m2],Y-Global Permeability [m2],Global Permeability [m2]"
+						",X-Global Permeability [lu],Y-Global Permeability [lu],Global Permeability [lu]"
+						",X-Average Velocity [lu],Y-Average Velocity [lu],Average Mag-Velocity [lu]"
+						",Average Viscosity [lu]"
+						",Average X-Grad(P) [lu],Average Y-Grad(P) [lu],Average Mag-Grad(P)[lu]"
+						<<std::endl;
+					else
+						Permeabilityfile<<"Time,X-Global Permeability Phase 1 [m2],Y-Global Permeability Phase 1 [m2],Global Permeability Phase 1 [m2]"
+						",X-Global Permeability Phase 2 [m2],Y-Global Permeability Phase 2 [m2],Global Permeability Phase 2 [m2]"
+						",X-Global Permeability [m2],Y-Global Permeability [m2],Global Permeability [m2]"
+						",X-Global Permeability Phase 1 [lu],Y-Global Permeability Phase 1 [lu],Global Permeability Phase 1 [lu]"
+						",X-Global Permeability Phase 2 [lu],Y-Global Permeability Phase 2 [lu],Global Permeability Phase 2 [lu]"
+						",X-Global Permeability [lu],Y-Global Permeability [lu],Global Permeability [lu]"
+						",X-Average Velocity Phase 1 [lu],Y-Average Velocity Phase 1 [lu],Average Mag-Velocity Phase 1 [lu]"
+						",X-Average Velocity Phase 2 [lu],Y-Average Velocity Phase 2 [lu],Average Mag-Velocity Phase 2 [lu]"
+						",X-Average Velocity [lu],Y-Average Velocity [lu],Average Mag-Velocity [lu]"
+						",Average Viscosity [lu],Average Viscosity Phase 1 [lu],Average Viscosity Phase 2 [lu]"
+						",Average X-Grad(P) Phase 1 [lu],Average Y-Grad(P) Phase 1 [lu],Average Mag-Grad(P) Phase 1 [lu]"
+						",Average X-Grad(P) Phase 2 [lu],Average Y-Grad(P) Phase 2 [lu],Average Mag-Grad(P) Phase 2 [lu]"
+						",Average X-Grad(P) [lu],Average Y-Grad(P) [lu],Average Mag-Grad(P)[lu]"
+						",Alpha,1-Alpha"
+						<<std::endl;
 				Permeabilityfile.close();
 			}
 		}
@@ -1089,6 +1095,7 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 				","<<Avg_DeltaP1x<<","<<Avg_DeltaP1y<<","<<Avg_DeltaP1mag<<
 				","<<Avg_DeltaP2x<<","<<Avg_DeltaP2y<<","<<Avg_DeltaP2mag<<
 				","<<Avg_DeltaPx<<","<<Avg_DeltaPy<<","<<Avg_DeltaPmag<<
+				Avg_Alpha1<<Avg_Alpha2<<
 				std::endl;
 		Permeabilityfile.close();
 		std::cout<<"Two-phase Permeability analysis: "<<std::endl<<
@@ -1307,117 +1314,6 @@ void Convergence::Set_MarkFluidNodes(){
 				else
 					MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
 }
-/*
-void Convergence::SumFluidVolume(double & sumfluidvolume){
-	sumfluidvolume=0;
-	//sumfluidvolume+=PtrNodeArraysConv->Get_SizeNodeIdInterior();
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdInterior();i++)
-		if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdInterior(i)))
-					sumfluidvolume+=0.25;
-		else if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdInterior(i)))
-			sumfluidvolume+=1;
-		else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdInterior(i)))
-			sumfluidvolume+=0.5;
-
-
-	//sumfluidvolume+=0.5*(PtrNodeArraysConv->Get_SizeNodeIdPressure()+PtrNodeArraysConv->Get_SizeNodeIdVelocity()+PtrNodeArraysConv->Get_SizeNodeIdPeriodic()+PtrNodeArraysConv->Get_SizeNodeIdSymmetry());
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdPressure();i++)
-			if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdPressure(i)))
-				sumfluidvolume+=0.25;
-			else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdPressure(i)))
-				sumfluidvolume+=0.5;
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdVelocity();i++)
-			if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdVelocity(i)))
-				sumfluidvolume+=0.25;
-			else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdVelocity(i)))
-				sumfluidvolume+=0.5;
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdPeriodic();i++)
-			if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdPeriodic(i)))
-				sumfluidvolume+=0.25;
-			else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdPeriodic(i)))
-				sumfluidvolume+=0.5;
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdSymmetry();i++)
-			if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdSymmetry(i)))
-				sumfluidvolume+=0.25;
-			else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdSymmetry(i)))
-				sumfluidvolume+=0.5;
-
-// treatment of walls
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdWall();i++)
-		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
-			if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
-				sumfluidvolume+=0.5;
-	//treatment border of the domain
-			else if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdWall(i)))
-			{
-				//need the normal toward the domain
-				if(IsNormalLimitDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
-					sumfluidvolume+=0.25;
-			}
-			else
-			{
-
-				if(IsWrongSideDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
-				{
-					//treat as a "special wall" of the porous media domain
-					if(IsNormalLimitDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
-						sumfluidvolume+=0.25;
-				}
-				else
-					//wall on the boundary of the porous media domain but toward the domain
-					sumfluidvolume+=0.5;
-			}
-
-// treatment global corner of the computational domain
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdGlobalCorner();i++)
-			if(IsInDomain(PtrNodeArraysConv->Get_NodeIdGlobalCorner(i)))
-				sumfluidvolume+=0.25;
-
-//treatment concave corner
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConcave();i++)
-		//Concave corner in the domain
-		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
-			if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
-				sumfluidvolume+=0.25;
-			//treatment border of the domain
-			//check the orientation toward or not the domain
-			else if(IsWrongSideDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
-			{
-				//keep corner in the domain
-				if(IsNormalLimitDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
-					sumfluidvolume+=0.25;
-			}
-			else
-				sumfluidvolume+=0.25;
-
-
-//treatment of the special wall of the computational domain
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdSpecialWall();i++)
-		if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdSpecialWall(i)))
-		{
-			//keep only the special node oriented toward the domain at the border of the porous media domain
-			if(IsNormalLimitDomain(PtrNodeArraysConv->Get_NodeIdSpecialWall(i)))
-				sumfluidvolume+=0.25;
-		}
-		else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdSpecialWall(i)))
-				sumfluidvolume+=0.25;
-
-
-//	sumfluidvolume+=0.75*PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();i++)
-			if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
-				if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
-					sumfluidvolume+=0.75;
-	//exclude convex corner in the corner of the porous media and with normal toward the outside diagonal
-				else if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
-						{if(!IsConvexCornerNormalOutside(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
-							sumfluidvolume+=0.25;}
-				else if(IsWrongSideDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
-					sumfluidvolume+=0.25;
-				else
-					sumfluidvolume+=0.5;
-}
-*/
 void Convergence::SumSolidVolume(double & sumsolidvolume){
 	sumsolidvolume=0;
 //Solid
