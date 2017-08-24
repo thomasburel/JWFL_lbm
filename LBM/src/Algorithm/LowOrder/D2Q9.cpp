@@ -1460,7 +1460,9 @@ void D2Q9::ApplyBc(){
 	*/
 	for (int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
-		ApplyWall(NodeArrays->NodeWall[j],f);
+//Old version save
+		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f);
+//		ApplyWall(NodeArrays->NodeWall[j],f);
 	}
 	/*
 	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)

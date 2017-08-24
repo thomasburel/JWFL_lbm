@@ -2073,8 +2073,11 @@ void D2Q9ColourFluid::ApplyBc(){
 */
 	for (int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
-		ApplyWall(NodeArrays->NodeWall[j],f[0],Rhor,U[0],U[1]);
-		ApplyWall(NodeArrays->NodeWall[j],f[1],Rhob,U[0],U[1]);
+//Old version save
+		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f[0],Rhor,U[0],U[1]);
+		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f[1],Rhob,U[0],U[1]);
+//		ApplyWall(NodeArrays->NodeWall[j],f[0],Rhor,U[0],U[1]);
+//		ApplyWall(NodeArrays->NodeWall[j],f[1],Rhob,U[0],U[1]);
 
 	}
 
