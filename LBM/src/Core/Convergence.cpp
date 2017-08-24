@@ -240,9 +240,9 @@ void Convergence::Set_Convergence(){
 					ofstream Permeabilityfile;
 					Permeabilityfile.open("Permeability_Darcy.txt",ios::out | ios::trunc);
 					if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
-						Permeabilityfile<<"Time,Permeability,Average Velocity,Average Pore Velocity,Average Viscosity,Delta P,Average Pressure Inlet,Average Pressure Outlet"<<std::endl;
+						Permeabilityfile<<"Time,Permeability,Average Velocity,Average Pore Velocity,Average Viscosity,Delta P,Average Density Inlet,Average Density Outlet"<<std::endl;
 					else
-						Permeabilityfile<<"Time,Permeability,Permeability Phase 1,Permeability Phase 2,Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2,Average Pore Velocity,Average Pore Velocity Phase 1,Average Pore Velocity Phase 2,Average Viscosity,Average Viscosity Phase 1,Average Viscosity Phase 2,Delta P,Average Pressure Inlet,Average Pressure Outlet,Alpha In,Alpha Out"<<std::endl;
+						Permeabilityfile<<"Time,Permeability,Permeability Phase 1,Permeability Phase 2,Average Velocity,Average Velocity Phase 1,Average Velocity Phase 2,Average Pore Velocity,Average Pore Velocity Phase 1,Average Pore Velocity Phase 2,Average Viscosity,Average Viscosity Phase 1,Average Viscosity Phase 2,Delta P,Average Density Inlet,Average Density Outlet,Alpha In,Alpha Out"<<std::endl;
 					Permeabilityfile.close();
 				}
 			}
