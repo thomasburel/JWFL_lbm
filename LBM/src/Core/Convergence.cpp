@@ -228,7 +228,7 @@ void Convergence::Set_Convergence(){
 					{
 						if(PtrMultiBlockConv->IsMainProcessor())
 							std::cerr<<"Normal density not found. No calculation of Permeability will be done."<<std::endl;
-						PtrParmConv->CalculatePermeability(false);
+						PtrParmConv->CalculateDarcyPermeability(false);
 					}
 					PtrPermeabilityDarcy=&Convergence::Calcul_DarcyPermeability_TwoPhases;
 				}
@@ -250,7 +250,7 @@ void Convergence::Set_Convergence(){
 			{
 				if(PtrMultiBlockConv->IsMainProcessor())
 					std::cerr<<"No inlet and/or outlet Patch is/are set. No calculation of Darcy permeability will be done."<<std::endl;
-				PtrParmConv->CalculatePermeability(false);
+				PtrParmConv->CalculateDarcyPermeability(false);
 			}
 		}
 		if(!(PtrParmConv->IsCalculatePermeability() || PtrParmConv->IsCalculateDarcyPermeability() || PtrParmConv->IsCalculateProductionRate()))
@@ -620,7 +620,7 @@ double Convergence::Calcul_Permeability_SinglePhase(int &Time){
 				","<<Avg_DeltaPx<<","<<Avg_DeltaPy<<","<<Avg_DeltaPmag<<
 				std::endl;
 		Permeabilityfile.close();
-		std::cout<<"Two-phase Permeability analysis: "<<std::endl<<
+		std::cout<<"Single-phase Permeability analysis: "<<std::endl<<
 				"Max Global Permeability [m2]: "<<GlobalPermeability<<" Max Global Permeability [lu]: "<<PoreGlobalPermeability<<std::endl<<
 				"Average Ux [lu]: "<<Avg_Ux<<" Average Uy [lu]: "<<Avg_Uy<<" Average Umag [lu]: "<<Avg_Umag<<std::endl<<
 				"Average x_Grad(P) [lu]: "<<Avg_DeltaPmag<<" Average y_Grad(P) [lu]: "<<Avg_DeltaPmag<<" Average Grad(P)mag [lu]: "<<Avg_DeltaPmag<<std::endl<<
