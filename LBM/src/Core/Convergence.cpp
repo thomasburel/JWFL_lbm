@@ -600,8 +600,8 @@ double Convergence::Calcul_Permeability_SinglePhase(int &Time){
 	double Avg_DeltaPmag=sum_DeltaPmag/fluidVolumesum;
 
 //Calculate permeability
-	double PoreGlobalPermeabilityX=porosity*Avg_Ux*Avg_Mu/Avg_DeltaPx;
-	double PoreGlobalPermeabilityY=porosity*Avg_Uy*Avg_Mu/Avg_DeltaPy;
+	double PoreGlobalPermeabilityX=-porosity*Avg_Ux*Avg_Mu/Avg_DeltaPx;
+	double PoreGlobalPermeabilityY=-porosity*Avg_Uy*Avg_Mu/Avg_DeltaPy;
 	double PoreGlobalPermeability=porosity*Avg_Umag*Avg_Mu/Avg_DeltaPmag;
 	//Convert to SI unit
 	double GlobalPermeabilityX=LuToPhy2*PoreGlobalPermeabilityX;
@@ -1048,7 +1048,7 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 	sum_Uy=PtrMultiBlockConv->SumAllProcessors(&sum_Uy);sum_U1y=PtrMultiBlockConv->SumAllProcessors(&sum_U1y);sum_U2y=PtrMultiBlockConv->SumAllProcessors(&sum_U2y);
 	sum_Umag=PtrMultiBlockConv->SumAllProcessors(&sum_Umag);sum_U1mag=PtrMultiBlockConv->SumAllProcessors(&sum_U1mag);sum_U2mag=PtrMultiBlockConv->SumAllProcessors(&sum_U2mag);
 	sum_Mu=PtrMultiBlockConv->SumAllProcessors(&sum_Mu);
-	sum_DeltaPx=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPx);sum_DeltaP1mag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP1x);sum_DeltaP2x=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP2x);
+	sum_DeltaPx=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPx);sum_DeltaP1x=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP1x);sum_DeltaP2x=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP2x);
 	sum_DeltaPy=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPy);sum_DeltaP1y=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP1y);sum_DeltaP2y=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP2y);
 	sum_DeltaPmag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaPmag);sum_DeltaP1mag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP1mag);sum_DeltaP2mag=PtrMultiBlockConv->SumAllProcessors(&sum_DeltaP2mag);
 	sum_Alpha1=PtrMultiBlockConv->SumAllProcessors(&sum_Alpha1);sum_Alpha2=PtrMultiBlockConv->SumAllProcessors(&sum_Alpha2);
@@ -1070,8 +1070,8 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 	double Avg_Alpha1=sum_Alpha1/fluidVolumesum;double Avg_Alpha2=sum_Alpha2/fluidVolumesum;
 
 //Calcul permeability
-	double PoreGlobalPermeabilityX=porosity*Avg_Ux*Avg_Mu/Avg_DeltaPx;double PoreGlobalPermeability1X=porosity*Avg_U1x*Avg_Mu1/Avg_DeltaP1x;double PoreGlobalPermeability2X=porosity*Avg_U2x*Avg_Mu2/Avg_DeltaP2x;
-	double PoreGlobalPermeabilityY=porosity*Avg_Uy*Avg_Mu/Avg_DeltaPy;double PoreGlobalPermeability1Y=porosity*Avg_U1y*Avg_Mu1/Avg_DeltaP1y;double PoreGlobalPermeability2Y=porosity*Avg_U2y*Avg_Mu2/Avg_DeltaP2y;
+	double PoreGlobalPermeabilityX=-porosity*Avg_Ux*Avg_Mu/Avg_DeltaPx;double PoreGlobalPermeability1X=-porosity*Avg_U1x*Avg_Mu1/Avg_DeltaP1x;double PoreGlobalPermeability2X=-porosity*Avg_U2x*Avg_Mu2/Avg_DeltaP2x;
+	double PoreGlobalPermeabilityY=-porosity*Avg_Uy*Avg_Mu/Avg_DeltaPy;double PoreGlobalPermeability1Y=-porosity*Avg_U1y*Avg_Mu1/Avg_DeltaP1y;double PoreGlobalPermeability2Y=-porosity*Avg_U2y*Avg_Mu2/Avg_DeltaP2y;
 	double PoreGlobalPermeability=porosity*Avg_Umag*Avg_Mu/Avg_DeltaPmag;double PoreGlobalPermeability1=porosity*Avg_U1mag*Avg_Mu1/Avg_DeltaP1mag;double PoreGlobalPermeability2=porosity*Avg_U2mag*Avg_Mu2/Avg_DeltaP2mag;
 //Convert to SI
 	double GlobalPermeabilityX=LuToPhy2*PoreGlobalPermeabilityX;double GlobalPermeability1X=LuToPhy2*PoreGlobalPermeability1X;double GlobalPermeability2X=LuToPhy2*PoreGlobalPermeability2X;
