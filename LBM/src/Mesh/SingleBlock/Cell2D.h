@@ -25,16 +25,17 @@ public:
 	virtual ~Cell2D();
 	Node2D* NewNode(NodeType const NodeType_, unsigned int const x=0, unsigned int const y=0);
 	void Set_Face(int FaceNumber, int& node1, int& node2);
-	unsigned int* Get_Face(int FaceNumber)const;
+	short int* Get_Face(int FaceNumber)const;
 	void Set_Connect(int FaceNumber, int face_, int cell_);
-	unsigned int* Get_Connect(int FaceNumber)const;
+	void Remove_Connect(int CellNumber,int FaceNumber);
+	int* Get_Connect(int FaceNumber)const;
 	void Set_NodeNumber(int NodeNumber_[4]);
 	void Set_NodeNumber(int NodeNumber_, int IdNode);
-	unsigned int Get_NodeNumber(int NodeNumber_) const;
+	int Get_NodeNumber(int NodeNumber_) const;
 private:
-	unsigned int NodeNumber[4]; // Map the node number from the block to the cell
-	unsigned int Connect[4][2]; // Map the Face connect to the Face a in the cell b
-	unsigned int* Connect_;
+	int NodeNumber[4]; // Map the node number from the block to the cell
+	int Connect[4][2]; // Map the Face connect to the Face a in the cell b [Facenumber][Face/Cell] Face=0 and Cell=1
+	int* Connect_;
 private:
 	friend class boost::serialization::access;
     template<class Archive>

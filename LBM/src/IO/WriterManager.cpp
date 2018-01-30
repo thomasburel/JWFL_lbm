@@ -8,14 +8,14 @@
 #include "WriterManager.h"
 
 WriterManager::WriterManager() :
-tot_nnodes(0), tot_nelems(0), nnodes(0), nelems(0),outfile(0),VariableOutput(0),NbVariableOutput(0),VariableBreakpoint(0),NbVariableBreakpoint(0)
+tot_nnodes(0), tot_nelems(0), nnodes(0), nelems(0),outfile(0),NbVariableOutput(0),NbVariableBreakpoint(0),VariableOutput(0),VariableBreakpoint(0)
 {
     Dimension=true; // True=2D ; False 3D
     outputfilename="LBM_Output";
 }
 
 WriterManager::~WriterManager() {
-	delete outfile,VariableOutput;
+	delete outfile ;delete VariableOutput;
 }
 void WriterManager::UpdateFileNames(std::string NewFileName){
     outputfilename=NewFileName;

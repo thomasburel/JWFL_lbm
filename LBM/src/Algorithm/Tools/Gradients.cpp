@@ -8,12 +8,12 @@
 
 Gradients::Gradients(){
 	grad=0;
-	Type=FD;
+	Type=ModelEnum::FD;
 	dimension=0;
 	nb_Vel=0;
 }
-void Gradients::initGradients(int dimension_, int nb_vel,GradientType Type_){
-	Type=FD;
+void Gradients::initGradients(int dimension_, int nb_vel,ModelEnum::GradientType Type_){
+	Type=ModelEnum::FD;
 	dimension=dimension_;
 	nb_Vel=nb_vel;
 	SelectGradientType(Type_);
@@ -21,7 +21,7 @@ void Gradients::initGradients(int dimension_, int nb_vel,GradientType Type_){
 Gradients::~Gradients(){
 	delete grad;
 }
-void Gradients::SelectGradientType(GradientType Type_){
+void Gradients::SelectGradientType(ModelEnum::GradientType Type_){
 //	if(Type_!=Type)
 //	{
 		delete grad;
@@ -29,10 +29,10 @@ void Gradients::SelectGradientType(GradientType Type_){
 	// Add new gradient type here
 		switch(Type)
 		{
-		case FD:
+		case ModelEnum::FD:
 			grad=new GradientsFD(dimension, nb_Vel);
 			break;
-		case LBMStencil:
+		case ModelEnum::LBMStencil:
 			grad=new GradientsLBMStencil(dimension, nb_Vel);
 			break;
 		default:

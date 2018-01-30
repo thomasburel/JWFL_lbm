@@ -20,9 +20,9 @@
 class Gradients {
 public:
 	Gradients();
-	void initGradients(int dimension, int nb_vel,GradientType Type_);
+	void initGradients(int dimension, int nb_vel,ModelEnum::GradientType Type_);
 	virtual ~Gradients();
-	void SelectGradientType(GradientType Type_);
+	void SelectGradientType(ModelEnum::GradientType Type_);
 
 //Scalar gradients
 	void Grad (double* grad_, double *Var, int * Connect, int & normal);
@@ -38,7 +38,7 @@ public:
 private:
  // Gradient object to be able to select different kind of gradient automatically
  GradientsDEF* grad;
- GradientType Type;
+ ModelEnum::GradientType Type;
  int dimension, nb_Vel;
 };
 #endif /* ALGORITHM_LOWORDER_GRADIENTS_H_ */

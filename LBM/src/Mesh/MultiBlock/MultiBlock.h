@@ -20,6 +20,7 @@ public:
 	virtual ~MultiBlock();
 	virtual void Partitioning()=0;
 	virtual void Modify_Block()=0;
+	virtual void GeneratePatchBc()=0;
 	virtual Block* Get_Block()=0;
 	virtual int Get_Nx()=0;
 	virtual int Get_Ny()=0;
@@ -37,6 +38,10 @@ public:
 			std::vector<int> & IdGNodeN_,std::vector<int> & IdGNodeE_,std::vector<int> & IdGNodeS_,std::vector<int> & IdGNodeW_,
 			std::vector<int> & IdRNodeSW_,std::vector<int> & IdRNodeSE_,std::vector<int> & IdRNodeNW_,std::vector<int> & IdRNodeNE_,
 			std::vector<int> & IdGNodeSW_,std::vector<int> & IdGNodeSE_,std::vector<int> & IdGNodeNW_,std::vector<int> & IdGNodeNE_)=0;
+	virtual void Get_Connect_SolidNode(std::vector<int> & IdRNodeN_,std::vector<int> & IdRNodeE_,std::vector<int> & IdRNodeS_,std::vector<int> & IdRNodeW_,
+			std::vector<int> & IdGNodeN_,std::vector<int> & IdGNodeE_,std::vector<int> & IdGNodeS_,std::vector<int> & IdGNodeW_,
+			std::vector<int> & IdRNodeSW_,std::vector<int> & IdRNodeSE_,std::vector<int> & IdRNodeNW_,std::vector<int> & IdRNodeNE_,
+			std::vector<int> & IdGNodeSW_,std::vector<int> & IdGNodeSE_,std::vector<int> & IdGNodeNW_,std::vector<int> & IdGNodeNE_)=0;
 	virtual void Communication(double **buf_send,double **buf_recv, int *size_buf)=0;
 	virtual void CommunicationToGhost(double **buf_send,double **buf_recv, int *size_buf)=0;
 	virtual void CommunicationFromGhost(double **buf_send,double **buf_recv, int *size_buf)=0;
@@ -51,6 +56,8 @@ public:
 	virtual double SumBC(double *value)=0;
 	virtual double SumAllProcessors(double *value)=0;
 	virtual int NumberOfProcessors()=0;
+	bool IsMainProcessor(){return parallel->isMainProcessor();};
+	int RankProcessor(){return parallel->getRank();};
 
 protected:
 	bool Check_CleaningMesh(int nbTotalSolidRemoved, int nbTotalSolidadded);

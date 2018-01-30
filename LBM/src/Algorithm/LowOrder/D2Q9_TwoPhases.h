@@ -14,7 +14,7 @@
 #include <iostream>
 #include <cmath>
 #include "Boundaries/D2Q9Bc.h"
-
+#include "../Tools/ContactAngle.h"
 class D2Q9TwoPhases: public SolverTwoPhasesLowOrder2D, public D2Q9Bc, protected D2Q9CommonVar{
 public:
 	D2Q9TwoPhases();
@@ -30,6 +30,7 @@ protected:
 	void InitWall(InitLBM& ini);
 	void InitInterior(InitLBM& ini);
 	void StreamD2Q9();
+	void InitialiseFromFile();
 
 
 protected:
@@ -97,7 +98,9 @@ protected:
 	void CornerNodesSyncFromGhost();
 	void CornerNodesSyncToGhost();
 	void SyncMacroVarToGhost();
-
+	void SyncVarSolidGhost(double *&VarIn);
+	void SyncVarFromSolidGhost(double *&VarIn);
+	void SyncVarToSolidGhost(double *&VarIn);
 	//Tools
 inline	void Normalise(double* Var_x,double* Var_y, int nodenumber){
 	// Normalise
@@ -132,8 +135,8 @@ protected:
 
 	int Nd_MacroVariables_sync;//number of variable has to be synchronise
 	std::vector<double*> SyncVar;
-	double ***buf_MacroSend, ***buf_MacroRecv; //buffers to send and receive
-	int *size_MacroBuf; // size of buffers
+	double ***buf_MacroSend, ***buf_MacroRecv,***buf_MacroSendSolid, ***buf_MacroRecvSolid; //buffers to send and receive
+	int *size_MacroBuf,*size_MacroBufSolid; // size of buffers
 
 
 

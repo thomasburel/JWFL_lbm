@@ -8,12 +8,12 @@
 
 Extrapolation::Extrapolation(){
 	Extrapol=0;
-	Type=TailorExtrapol;
+	Type=ModelEnum::TailorExtrapol;
 	dimension=0;
 	nb_Vel=0;
 }
-void Extrapolation::initExtrapolation(int dimension_, int nb_vel,ExtrapolationType Type_){
-	Type=TailorExtrapol;
+void Extrapolation::initExtrapolation(int dimension_, int nb_vel,ModelEnum::ExtrapolationType Type_){
+	Type=ModelEnum::TailorExtrapol;
 	dimension=dimension_;
 	nb_Vel=nb_vel;
 	SelectExtrapolationType(Type_);
@@ -21,7 +21,7 @@ void Extrapolation::initExtrapolation(int dimension_, int nb_vel,ExtrapolationTy
 Extrapolation::~Extrapolation(){
 	delete Extrapol;
 }
-void Extrapolation::SelectExtrapolationType(ExtrapolationType Type_){
+void Extrapolation::SelectExtrapolationType(ModelEnum::ExtrapolationType Type_){
 //	if(Type_!=Type)
 //	{
 		delete Extrapol;
@@ -29,13 +29,13 @@ void Extrapolation::SelectExtrapolationType(ExtrapolationType Type_){
 	// Add new Extrapolation type here
 		switch(Type)
 		{
-		case NoExtrapol:
+		case ModelEnum::NoExtrapol:
 			Extrapol=new NoExtrapolation();
 			break;
-		case TailorExtrapol:
+		case ModelEnum::TailorExtrapol:
 			Extrapol=new ExtrapolationTailor(dimension, nb_Vel);
 			break;
-		case WeightDistanceExtrapol:
+		case ModelEnum::WeightDistanceExtrapol:
 			Extrapol=new ExtrapolationWeightDistance(dimension, nb_Vel);
 			break;
 		default:

@@ -33,11 +33,15 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 	U[0]=0.0;//Umax*pos[1]/H;
 	U[1]=0.0;
 	//Rho=Pmin;
-	Rho=(Pmax-pos[0]*(Pmax-Pmin)/L);
+	Rho=1.0;//(Pmax-pos[0]*(Pmax-Pmin)/L);
+	if(pos[0]<=0)
+		Rho=Pmax;
+	else
+		Rho=Pmin;
 	alpha=1.0;
 
-	double R=40;//Diameter/2.0;
-	if(pow(pos[0]-50,2.0)+pow(pos[1]-9,2.0)<=R*R+1e-8)
+	double R=30;//Diameter/2.0;
+	if(pow(pos[0]-50,2.0)+pow(pos[1]-cos(teta)*(R+0.0001),2.0)<=R*R+1e-8)
 	{
 		alpha=0.0;
 	}
@@ -47,20 +51,41 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 		alpha=1.0;
 		Rho=Pmin;//+sigma*3.0/R;
 	}*/
-/*	if(pos[0]<=30)
+
+	/*
+	double shift=2;
+	if(pos[0]<=30 && (pos[1]>=shift && pos[1]<=H-shift))
 	{
-		U[0]=0.0;
-		U[1]=0.0;
-		Rho=Pmax;
-		alpha=1.0;
-	}
-	else
-	{
-		U[0]=0.0;
+		U[0]=1.e-5*(1.0-pow(2.0*(pos[1]-H/2.0)/(H-8),2.0));
 		U[1]=0.0;
 		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
 		alpha=0.0;
-	}*/
+	}
+	else
+	{
+		U[0]=1.e-5*(1.0-pow(2.0*(pos[1]-H/2.0)/(H-8),2.0));//1.e-2*(1.0-pow(2.0*(pos[1]-H/2.0)/H,2.0));
+		U[1]=0.0;
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+		alpha=1.0;
+	}
+
+	Rho=1;
+	U[0]=0.0;
+	U[1]=0.0;
+	alpha=0.0;
+	R=10;
+	if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]-H/2,2.0)<=R*R+1e-8)
+	{
+		alpha=1.0;
+	}
+	*/
+//	U[0]=0.0;
+//	if(pos[0]<=100)
+/*
+	U[0]=1.e-2;
+	U[1]=0.0;
+	Rho=1;
+*/
 /*	if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1],2.0)<=R*R+1e-8)
 	{
 		alpha=1.0;
@@ -88,6 +113,29 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 		Rho=Pmin;
 		alpha=0.0;
 	}*/
+	U[0]=0.0;//0.000001;
+	U[1]=0.00;
+//	Rho=1;
+	//alpha=pos[0]/100;
+	if(pos[0]<11 )
+		if(pos[0]<10)
+		alpha=0;
+		else
+			alpha=0.5;
+	else
+		alpha=1;
+
+	if(pos[0]<10)
+		Rho=Pmax;
+	else
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+
+	//Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+
+	//test velocity interface
+	U[0]=Umax;
+	Rho=Pmax;
+
 }
 
 void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& Rho, double* U, double& alpha){
@@ -95,19 +143,19 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 	double teta,sigma,Diameter,Re,Ca;
 	PtrParameters.Get_UserParameters(Umax,H,L,Pmax,Pmin);
 	PtrParameters.Get_UserDroplets(teta,sigma,Diameter,Re,Ca);
-
+	/*
 
 	U[0]=0.0;//Umax*pos[1]/H;
 		U[1]=0.0;
 		//Rho=Pmin;
-		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+		Rho=1.0;//Pmax-pos[0]*(Pmax-Pmin)/L;
 		alpha=1.0;
 
-		double R=40;//Diameter/2.0;
-		if(pow(pos[0]-50,2.0)+pow(pos[1]-9,2.0)<=R*R+1e-8)
+		double R=30;//Diameter/2.0;
+		if(pow(pos[0]-50,2.0)+pow(pos[1]-cos(teta)*(R+0.0001),2.0)<=R*R+1e-8)
 		{
 			alpha=0.0;
-		}
+		}*/
 
 //		if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]+cos(teta)*R,2.0)<=R*R)
 	//	if(pow(pos[0]-(L-10)/2.0,2.0)+pow(pos[1]-H/4.0,2.0)<=R*R+1e-8)
@@ -117,20 +165,50 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 			Rho=Pmin+sigma*3.0/R;
 		}
 */
-/*	if(pos[0]<=30)
+/*	double shift=2;
+	if(pos[0]<=30 && (pos[1]>=shift && pos[1]<=H-shift))
 	{
-		U[0]=0.0;
+		U[0]=1.e-5*(1.0-pow(2.0*(pos[1]-H/2.0)/(H-8),2.0));
 		U[1]=0.0;
-		Rho=Pmax;
-		alpha=1.0;
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+		alpha=0.0;
 	}
 	else
 	{
-		U[0]=0.0;
+		U[0]=1.e-5*(1.0-pow(2.0*(pos[1]-H/2.0)/(H-8),2.0));//1.e-2*(1.0-pow(2.0*(pos[1]-H/2.0)/H,2.0));
 		U[1]=0.0;
-		Rho=Pmin;
-		alpha=0.0;
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;//-pos[0]*(Pmax-Pmin)/L;
+		alpha=1.0;
+	}
+	Rho=1;
+	U[0]=0.0;
+	U[1]=0.0;
+	alpha=0.0;
+	double R=10;
+	if(pow(pos[0]-(L)/2.0,2.0)+pow(pos[1]-H/2,2.0)<=R*R+1e-8)
+	{
+		alpha=1.0;
+	}
+	*/
+//	U[0]=0.0;//1.e-4;
+//	if(pos[0]<=100)
+	/*
+	U[0]=1.e-2;
+	U[1]=0.0;
+	Rho=1;
+	*/
+/*	double R=10;//Diameter/2.0;
+	double xc,yc;
+	double delatx,deltay;
+	delatx=(L/10);
+	deltay=(H/10);
+	xc=round(pos[0]/delatx)*delatx;
+	yc=round(pos[1]/deltay)*deltay;
+	if(pow(pos[0]-xc,2.0)+pow(pos[1]-yc,2.0)<=R*R+1e-8)
+	{
+		alpha=1.0;
 	}*/
+
 /*	double hin=H/2.0;
 	double g=0.00000001;
 	double U1=g*H*H/(8*(2.0*PtrParameters.Get_Tau_1()-1.0)/6.0);
@@ -151,5 +229,27 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 		Rho=Pmin;
 		alpha=0.0;
 	}*/
+	U[0]=0.00;//0.00005;
+	U[1]=0.00;
+	//Rho=1;
+	//alpha=pos[0]/100;
+//	if(pos[0]<4 &&(pos[1]>15 && pos[1]<195))
+	if(pos[0]<11 )
+		if(pos[0]<10)
+		alpha=0;
+		else
+			alpha=0.5;
+	else
+		alpha=1;
+
+	if(pos[0]<10)
+		Rho=Pmax;
+	else
+		Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+
+	//Rho=Pmax-pos[0]*(Pmax-Pmin)/L;
+	//test velocity interface
+	U[0]=Umax;
+	Rho=Pmax;
 }
 

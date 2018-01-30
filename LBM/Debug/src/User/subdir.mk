@@ -8,21 +8,24 @@ CPP_SRCS += \
 ../src/User/UserForce.cpp \
 ../src/User/UserInit.cpp \
 ../src/User/UserMesh.cpp \
-../src/User/UserParameters.cpp 
+../src/User/UserParameters.cpp \
+../src/User/UserPatchBc.cpp 
 
 OBJS += \
 ./src/User/UserContactAngle.o \
 ./src/User/UserForce.o \
 ./src/User/UserInit.o \
 ./src/User/UserMesh.o \
-./src/User/UserParameters.o 
+./src/User/UserParameters.o \
+./src/User/UserPatchBc.o 
 
 CPP_DEPS += \
 ./src/User/UserContactAngle.d \
 ./src/User/UserForce.d \
 ./src/User/UserInit.d \
 ./src/User/UserMesh.d \
-./src/User/UserParameters.d 
+./src/User/UserParameters.d \
+./src/User/UserPatchBc.d 
 
 
 # Each subdirectory must supply rules for building sources it contributes

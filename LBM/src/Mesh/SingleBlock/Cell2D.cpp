@@ -16,7 +16,7 @@ Cell2D::Cell2D()
 		Connect[i][1]=0;
 	}
 	NodeNumber[3]=0;
-	Connect_=new unsigned int[2];
+	Connect_=new int[2];
 }
 
 Cell2D::~Cell2D() {
@@ -90,9 +90,9 @@ void Cell2D::Set_Face(int FaceNumber, int& node1, int& node2)
 	        break;
 	}
 }
-unsigned int* Cell2D::Get_Face(int FaceNumber)const
+short int* Cell2D::Get_Face(int FaceNumber)const
 {
-	unsigned int* Face_=new unsigned int[2];
+	short int* Face_=new short int[2];
 	switch(FaceNumber)
 	{
 	case 0:
@@ -122,13 +122,13 @@ void Cell2D::Set_Connect(int FaceNumber, int face_, int cell_)
 	Connect[FaceNumber][0]=face_;
 	Connect[FaceNumber][1]=cell_;
 }
-unsigned int* Cell2D::Get_Connect(int FaceNumber)const
+int* Cell2D::Get_Connect(int FaceNumber)const
 {
 	Connect_[0]=Connect[FaceNumber][0];
 	Connect_[1]=Connect[FaceNumber][1];
 	return Connect_;
 }
-unsigned int Cell2D::Get_NodeNumber(int NodeNumber_) const
+int Cell2D::Get_NodeNumber(int NodeNumber_) const
 {
 	return NodeNumber[NodeNumber_];
 }
@@ -143,4 +143,7 @@ void Cell2D::Set_NodeNumber(int NodeNumber_[4])
 void Cell2D::Set_NodeNumber(int NodeNumber_, int IdNode)
 {
 	NodeNumber[NodeNumber_]=IdNode;
+}
+void Cell2D::Remove_Connect(int CellNumber,int FaceNumber){
+	Connect[FaceNumber][1]=CellNumber;
 }

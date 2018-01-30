@@ -41,8 +41,8 @@ SolverTwoPhases::SolverTwoPhases() {
 SolverTwoPhases::~SolverTwoPhases() {
 	if(f!=0)
 	{
-	delete [] f[0];
-	delete [] f[1];
+	delete f[0];
+	delete f[1];
 	delete f;
 	}
 	delete [] ftmp;
@@ -85,6 +85,7 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 	PtrBlockCollide=PtrBlockStream;
 	//Node=MultiBlock_->Get_Block()->Get_PtrNode();
 	NodeArrays=MultiBlock_->Get_Block()->Get_NodeArrays2D();
+	PatchsBc=MultiBlock_->Get_Block()->Get_PatchBc();
 	IdBoundaries=MultiBlock_->Get_Block()->Get_PtrIdBc();
 	//InvTau=1.0/PtrParameters->Get_Tau();
 	nbvelo=Solver::PtrParameters->Get_NbVelocities();
@@ -94,6 +95,9 @@ void SolverSinglePhaseLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,Parallel
 	Dic=new Dictionary(2,nbnode);
 	PtrDicConv=Dic;
 	PtrParmConv=PtrParameters_;
+	PtrPatchBcConv=PatchsBc;
+	PtrNodeArraysConv=NodeArrays;
+	PtrViscosityConv=Get_viscosity();
 	Add_OneDistributionToDictionary();
 	Set_Solution(PtrParameters);
 
@@ -136,6 +140,7 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	IniTau(PtrParameters);
 	PtrBlockStream=MultiBlock_->Get_Block();
 	NodeArrays=MultiBlock_->Get_Block()->Get_NodeArrays2D();
+	PatchsBc=MultiBlock_->Get_Block()->Get_PatchBc();
 	IdBoundaries=MultiBlock_->Get_Block()->Get_PtrIdBc();
 	//InvTau=1.0/PtrParameters->Get_Tau();
 	nbvelo=Solver::PtrParameters->Get_NbVelocities();
@@ -145,6 +150,9 @@ void SolverTwoPhasesLowOrder2D::Set_Solver(MultiBlock* PtrMultiBlock_,ParallelMa
 	Dic=new Dictionary(2,nbnode);
 	PtrDicConv=Dic;
 	PtrParmConv=PtrParameters_;
+	PtrPatchBcConv=PatchsBc;
+	PtrNodeArraysConv=NodeArrays;
+	PtrViscosityConv=Get_viscosity();
 	Add_TwoDistributionsToDictionary();
 	Set_Solution(PtrParameters);
 }

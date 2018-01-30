@@ -14,6 +14,7 @@ D2Q9TwoPhases::D2Q9TwoPhases() {
 	PtrParameters=0;
 	f=0;
 	nbvelo=9;
+	Nb_VelocityCollide=nbvelo;
 	nbnode=0;
 	ftmp=0;
 	tmpDistribution=0;
@@ -26,9 +27,9 @@ D2Q9TwoPhases::D2Q9TwoPhases() {
 	size_buf=0;
 	DiagConnect=0;
 	Nd_variables_sync=0;
-	buf_MacroSend=0;
-	buf_MacroRecv=0;
-	size_MacroBuf=0;
+	buf_MacroSend=0;buf_MacroSendSolid=0;
+	buf_MacroRecv=0;buf_MacroRecvSolid=0;
+	size_MacroBuf=0;size_MacroBufSolid=0;
 	Nd_MacroVariables_sync=0;
 	Rho1=0; Rho2=0;
 	Opposite[0]=0;
@@ -68,7 +69,7 @@ void D2Q9TwoPhases::InitD2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* 
 
 	EiCollide=Ei;
 	omegaCollide=omega;
-
+	Nb_VelocityCollide=nbvelo;
 	init(ini);
 }
 D2Q9TwoPhases::~D2Q9TwoPhases() {
@@ -95,18 +96,6 @@ D2Q9TwoPhases::~D2Q9TwoPhases() {
 void D2Q9TwoPhases::init(InitLBM& ini){
 	InitAllDomain(ini);
 	Set_BcType();
-	if(PtrParameters->IsInitFromFile())
-	{
-		for(int i=0;i<PtrParameters->Get_NumberVariableToInit();i++)
-		{
-			Read_Variable(PtrParameters->Get_VariableNameToInit(i),PtrParameters->Get_FileNameToInit(i));
-		}
-	}
-	if(PtrParameters->Get_Verbous())
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
-		{
-			std::cout<<"Processor: "<<parallel->getRank()<<" corner number: "<<j<<" Node index: "<<NodeArrays->NodeCorner[j].Get_index() <<" x: "<<NodeArrays->NodeCorner[j].get_x()<<" y: "<<NodeArrays->NodeCorner[j].get_y()<<" orientation: "<<NodeArrays->NodeCorner[j].Get_BcNormal()<<std::endl;
-		}
 	parallel->barrier();
 
 }
@@ -120,7 +109,7 @@ void D2Q9TwoPhases::InitAllDomain(InitLBM& ini){
 	double* pos =new double[2];
 	double* U_=new double[2];
 	int idx=0;
-	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSolid.size();j++)
 	{
 		idx=NodeArrays->NodeSolid[j].Get_index();
 		pos[0]=NodeArrays->NodeSolid[j].get_x();
@@ -137,7 +126,7 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 	double* pos =new double[2];
 	double* U_=new double[2];
 	int idx=0;
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
 		idx=NodeArrays->NodeGlobalCorner[j].Get_index();
 		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
@@ -149,7 +138,7 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 		NodeArrays->NodeGlobalCorner[j].Set_RhoDef(Rho[idx]);
 		NodeArrays->NodeGlobalCorner[j].Set_AlphaDef(alpha);
 	}
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		idx=NodeArrays->NodeVelocity[j].Get_index();
 		pos[0]=NodeArrays->NodeVelocity[j].get_x();
@@ -161,7 +150,7 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 		NodeArrays->NodeVelocity[j].Set_AlphaDef(alpha);;
 	}
 
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
 		idx=NodeArrays->NodePressure[j].Get_index();
 		pos[0]=NodeArrays->NodePressure[j].get_x();
@@ -172,7 +161,7 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 		NodeArrays->NodePressure[j].Set_RhoDef(Rho[idx]);
 		NodeArrays->NodePressure[j].Set_AlphaDef(alpha);
 	}
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 		idx=NodeArrays->NodeSymmetry[j].Get_index();
 		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
@@ -181,7 +170,7 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
 	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 	{
 		idx=NodeArrays->NodePeriodic[j].Get_index();
 		pos[0]=NodeArrays->NodePeriodic[j].get_x();
@@ -198,7 +187,7 @@ void D2Q9TwoPhases::InitWall(InitLBM& ini){
 	double* pos =new double[2];
 	double* U_=new double[2];
 	int idx=0;
-	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 		idx=NodeArrays->NodeCorner[j].Get_index();
 		pos[0]=NodeArrays->NodeCorner[j].get_x();
@@ -210,7 +199,7 @@ void D2Q9TwoPhases::InitWall(InitLBM& ini){
 		NodeArrays->NodeCorner[j].Set_RhoDef(Rho[idx]);
 		NodeArrays->NodeCorner[j].Set_AlphaDef(alpha);
 	}
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 		idx=NodeArrays->NodeWall[j].Get_index();
 		pos[0]=NodeArrays->NodeWall[j].get_x();
@@ -219,7 +208,7 @@ void D2Q9TwoPhases::InitWall(InitLBM& ini){
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
 	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
 		idx=NodeArrays->NodeSpecialWall[j].Get_index();
 		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
@@ -227,6 +216,9 @@ void D2Q9TwoPhases::InitWall(InitLBM& ini){
 		ini.IniDomainTwoPhases(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, idx,pos,Rho[idx],U_,alpha);
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
+		NodeArrays->NodeSpecialWall[j].Set_UDef(U_[0],U_[1]);
+		NodeArrays->NodeSpecialWall[j].Set_RhoDef(Rho[idx]);
+		NodeArrays->NodeSpecialWall[j].Set_AlphaDef(alpha);
 	}
 
 	delete [] pos;
@@ -238,7 +230,7 @@ void D2Q9TwoPhases::InitInterior(InitLBM& ini){
 	double* U_=new double[2];
 	int idx=0;
 
-	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 	{
 		idx=NodeArrays->NodeInterior[j].Get_index();
 		pos[0]=NodeArrays->NodeInterior[j].get_x();
@@ -247,7 +239,7 @@ void D2Q9TwoPhases::InitInterior(InitLBM& ini){
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
 	}
-	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 		idx=NodeArrays->NodeGhost[j].Get_index();
 		pos[0]=NodeArrays->NodeGhost[j].get_x();
@@ -266,7 +258,7 @@ void D2Q9TwoPhases::StreamD2Q9() {
 	{
 	for (unsigned int i=1;i<(unsigned int)nbvelo;i++) //No need to stream direction 0
 	{
-		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 		{
 			if (NodeArrays->NodeInterior[j].Get_connect()[i]!=NodeArrays->NodeInterior[j].Get_index())
 			{
@@ -274,13 +266,13 @@ void D2Q9TwoPhases::StreamD2Q9() {
 			}
 		}
 
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
 			if (NodeArrays->NodeCorner[j].stream()[i])
 			{
 				ftmp[NodeArrays->NodeCorner[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeCorner[j].Get_index()];
 			}		}
-		for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
 			if (NodeArrays->NodeGlobalCorner[j].stream()[i])
 			{
@@ -288,7 +280,7 @@ void D2Q9TwoPhases::StreamD2Q9() {
 			}
 
 		}
-		for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 		{
 			if (NodeArrays->NodeVelocity[j].stream()[i])
 					{
@@ -296,42 +288,42 @@ void D2Q9TwoPhases::StreamD2Q9() {
 					}
 		}
 
-		for (int j=0;j<NodeArrays->NodePressure.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 		{
 			if (NodeArrays->NodePressure[j].stream()[i])
 					{
 						ftmp[NodeArrays->NodePressure[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodePressure[j].Get_index()];
 					}
 		}
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
 			if (NodeArrays->NodeWall[j].stream()[i])
 			{
 				ftmp[NodeArrays->NodeWall[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeWall[j].Get_index()];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
 			if (NodeArrays->NodeSpecialWall[j].stream()[i])
 			{
 				ftmp[NodeArrays->NodeSpecialWall[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
 			if (NodeArrays->NodeSymmetry[j].stream()[i])
 			{
 				ftmp[NodeArrays->NodeSymmetry[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeSymmetry[j].Get_index()];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 		{
 			if (NodeArrays->NodePeriodic[j].stream()[i])
 			{
 				ftmp[NodeArrays->NodePeriodic[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodePeriodic[j].Get_index()];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
 		{
 			if (NodeArrays->NodeGhost[j].stream()[i])
 			{
@@ -350,40 +342,40 @@ void D2Q9TwoPhases::TmptoDistri(unsigned int& direction, int& IdDistri){
 }
 
 void D2Q9TwoPhases::Set_BcType(){
-	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 		Set_CornerType(NodeArrays->NodeCorner[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
 		Set_CornerType(NodeArrays->NodeGlobalCorner[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		Set_VelocityType(NodeArrays->NodeVelocity[j]);
 	}
 
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
 		Set_PressureType(NodeArrays->NodePressure[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 		Set_WallType(NodeArrays->NodeWall[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
 		Set_WallType(NodeArrays->NodeSpecialWall[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 		Set_SymmetryType(NodeArrays->NodeSymmetry[j]);
 	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 	{
 		Set_PeriodicType(NodeArrays->NodePeriodic[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 		Set_GhostType(NodeArrays->NodeGhost[j]);
 	}
@@ -399,6 +391,8 @@ void D2Q9TwoPhases::Set_WallType(NodeWall2D& NodeIn){
 	bool WallStreaming[9];
 	StreamingOrientation(NodeIn,WallStreaming);
 	NodeIn.Set_stream(WallStreaming,nbvelo);
+	NodeIn.Set_RhoDef(Rho[NodeIn.Get_index()]);
+	NodeIn.Set_UDef(U[0][NodeIn.Get_index()],U[1][NodeIn.Get_index()]);
 }
 void D2Q9TwoPhases::Set_SymmetryType(NodeSymmetry2D& NodeIn){
 	bool SymmetryStreaming[9];
@@ -1158,6 +1152,8 @@ void D2Q9TwoPhases::IniComVariables(){
 	MultiBlock_->Get_Connect_Node(IdNodeN,IdNodeE,IdNodeS,IdNodeW,IdNodeSW,IdNodeSE,IdNodeNW,IdNodeNE);
 	MultiBlock_->Get_Connect_Node(IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW,
 			IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE);
+	MultiBlock_->Get_Connect_SolidNode(SolidIdRNodeN,SolidIdRNodeE,SolidIdRNodeS,SolidIdRNodeW,SolidIdGNodeN,SolidIdGNodeE,SolidIdGNodeS,SolidIdGNodeW,
+			SolidIdRNodeSW,SolidIdRNodeSE,SolidIdRNodeNW,SolidIdRNodeNE,SolidIdGNodeSW,SolidIdGNodeSE,SolidIdGNodeNW,SolidIdGNodeNE);
 	Nd_variables_sync=3*2;
 	buf_send=new double** [Nd_variables_sync];
 	buf_recv=new double** [Nd_variables_sync];
@@ -1186,17 +1182,29 @@ void D2Q9TwoPhases::IniComVariables(){
 	size_buf[3]=IdGNodeN.size();
 // Macro sync
 	Nd_MacroVariables_sync=Dic->Get_NbSyncVar();//6;
-	std::cout<<"Synchromisation ; number of variable: "<<Nd_MacroVariables_sync<<std::endl;
+	if(parallel->isMainProcessor())
+	{
+		std::cout<<"Synchromisation ; number of variable: "<<Nd_MacroVariables_sync<<std::endl<<"Synchronise Variables are: ";
+		std::vector<std::string> syncname=Dic->Get_SyncVarName();
+		for(int i=0;i<Nd_MacroVariables_sync;i++)
+			std::cout<<syncname[i]<<" ";
+		std::cout<<std::endl;
+	}
+
 	SyncVar=Dic->Get_SyncVar();
 	buf_MacroSend=new double** [Nd_MacroVariables_sync];
 	buf_MacroRecv=new double** [Nd_MacroVariables_sync];
+	buf_MacroSendSolid=new double** [Nd_MacroVariables_sync];
+	buf_MacroRecvSolid=new double** [Nd_MacroVariables_sync];
 	for (int i=0;i<Nd_MacroVariables_sync;i++)
 	{
 		buf_MacroSend[i]=new double* [4];
 		buf_MacroRecv[i]=new double* [4];
+		buf_MacroSendSolid[i]=new double* [4];
+		buf_MacroRecvSolid[i]=new double* [4];
 	}
 
-	size_MacroBuf=new int [8];
+	size_MacroBuf=new int [8];size_MacroBufSolid=new int [8];
 
 	for (int i=0;i<Nd_MacroVariables_sync;i++)
 	{
@@ -1208,6 +1216,15 @@ void D2Q9TwoPhases::IniComVariables(){
 		buf_MacroRecv[i][1]=new double[IdGNodeE.size()];
 		buf_MacroRecv[i][2]=new double[IdGNodeN.size()];
 		buf_MacroRecv[i][3]=new double[IdGNodeS.size()];
+
+		buf_MacroSendSolid[i][0]=new double[SolidIdGNodeE.size()];
+		buf_MacroSendSolid[i][1]=new double[SolidIdGNodeW.size()];
+		buf_MacroSendSolid[i][2]=new double[SolidIdGNodeS.size()];
+		buf_MacroSendSolid[i][3]=new double[SolidIdGNodeN.size()];
+		buf_MacroRecvSolid[i][0]=new double[SolidIdRNodeW.size()];
+		buf_MacroRecvSolid[i][1]=new double[SolidIdRNodeE.size()];
+		buf_MacroRecvSolid[i][2]=new double[SolidIdRNodeN.size()];
+		buf_MacroRecvSolid[i][3]=new double[SolidIdRNodeS.size()];
 	}
 	size_MacroBuf[0]=IdRNodeE.size();
 	size_MacroBuf[1]=IdRNodeW.size();
@@ -1217,6 +1234,15 @@ void D2Q9TwoPhases::IniComVariables(){
 	size_MacroBuf[5]=IdGNodeE.size();
 	size_MacroBuf[6]=IdGNodeN.size();
 	size_MacroBuf[7]=IdGNodeS.size();
+
+	size_MacroBufSolid[0]=SolidIdGNodeE.size();
+	size_MacroBufSolid[1]=SolidIdGNodeW.size();
+	size_MacroBufSolid[2]=SolidIdGNodeS.size();
+	size_MacroBufSolid[3]=SolidIdGNodeN.size();
+	size_MacroBufSolid[4]=SolidIdRNodeW.size();
+	size_MacroBufSolid[5]=SolidIdRNodeE.size();
+	size_MacroBufSolid[6]=SolidIdRNodeN.size();
+	size_MacroBufSolid[7]=SolidIdRNodeS.size();
 }
 void D2Q9TwoPhases::GhostNodesSyncFromGhost(){
 
@@ -1242,7 +1268,7 @@ void D2Q9TwoPhases::GhostNodesSyncFromGhost(){
 		buf_send[5][3][i]=f[1]->f[6][IdNodeN[i]];
 	}
 
-	int itmp=0;
+//	int itmp=0;
 	for (int i=0;i<Nd_variables_sync;i++)
 	{
 		MultiBlock_->CommunicationFromGhost(buf_send[i],buf_recv[i],size_buf);
@@ -1557,7 +1583,7 @@ void D2Q9TwoPhases::CornerNodesSyncFromGhost(){
 }
 void D2Q9TwoPhases::CornerNodesSyncToGhost(){
 	 int tag_x_l=1;
-	 int tag_y_b=2;
+//	 int tag_y_b=2;
 	 int tag_d_bl=3;
 	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;
 	MPI_Status status;
@@ -1704,6 +1730,7 @@ void D2Q9TwoPhases::SyncMacroVarToGhost(){
 		for(int j=0;j<Nd_MacroVariables_sync;j++)
 			SyncVar[j][IdGNodeS[i]]=buf_MacroRecv[j][3][i];
 	}
+//Corner
 	if(IdRNodeSE.size()>=1)
 	{
 		for(int j=0;j<Nd_MacroVariables_sync;j++)
@@ -1746,6 +1773,333 @@ void D2Q9TwoPhases::SyncMacroVarToGhost(){
 	}
 }
 
+void D2Q9TwoPhases::SyncVarSolidGhost(double *&VarIn){
+	//Put variables in buffer arrays
+		for (unsigned int i=0;i<SolidIdGNodeW.size();i++)
+		{
+				buf_MacroSendSolid[0][1][i]=VarIn[SolidIdGNodeW[i]];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeS.size();i++)
+		{
+				buf_MacroRecvSolid[0][3][i]=VarIn[SolidIdRNodeS[i]];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeE.size();i++)
+		{
+				buf_MacroRecvSolid[0][1][i]=VarIn[SolidIdRNodeE[i]];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeN.size();i++)
+		{
+				buf_MacroSendSolid[0][3][i]=VarIn[SolidIdGNodeN[i]];
+		}
+	//		MultiBlock_->Communication(buf_MacroSend[0],buf_MacroRecv[0],size_MacroBuf);
+		int tag_x_r=1;
+		int tag_x_l=2;
+		int tag_y_t=3;
+		int tag_y_b=4;
+		int tag_d_bl=5;
+		MPI_Status status;
+		if(SolidIdRNodeE.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][1][0],SolidIdRNodeE.size(),1,tag_x_r);
+		}
+		if(SolidIdGNodeW.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][1][0],SolidIdGNodeW.size(),3,tag_x_r,status);
+		}
+
+		if(SolidIdGNodeW.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSendSolid[0][1][0],SolidIdGNodeW.size(),3,tag_x_l);
+		}
+		if(SolidIdRNodeE.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecvSolid[0][1][0],SolidIdRNodeE.size(),1,tag_x_l,status);
+		}
+		if(SolidIdRNodeN.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][2][0],SolidIdRNodeN.size(),0,tag_y_t);
+		}
+		if(SolidIdGNodeS.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][2][0],SolidIdGNodeS.size(),2,tag_y_t,status);
+		}
+		if(SolidIdRNodeS.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][3][0],SolidIdRNodeS.size(),2,tag_y_b);
+		}
+		if(SolidIdGNodeN.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][3][0],SolidIdGNodeN.size(),0,tag_y_b,status);
+		}
+	//Set variables from buffer to real variables
+		for (unsigned int i=0;i<SolidIdGNodeE.size();i++)
+		{
+			VarIn[SolidIdGNodeE[i]]=buf_MacroSendSolid[0][0][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeN.size();i++)
+		{
+			VarIn[SolidIdGNodeN[i]]=buf_MacroSendSolid[0][3][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeW.size();i++)
+		{
+			VarIn[SolidIdGNodeW[i]]=buf_MacroSendSolid[0][1][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeS.size();i++)
+		{
+			VarIn[SolidIdGNodeS[i]]=buf_MacroSendSolid[0][2][i];
+		}
+
+		if(SolidIdRNodeSE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeSE[0]],1,5,tag_x_l);
+		}
+		if(SolidIdGNodeNW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeNW[0]],1,6,tag_x_l,status);
+		}
+		if(SolidIdRNodeSW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeSW[0]],1,7,tag_x_l);
+		}
+		if(SolidIdGNodeNE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeNE[0]],1,4,tag_x_l,status);
+		}
+		if(SolidIdRNodeNE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeNE[0]],1,4,tag_x_l);
+		}
+		if(SolidIdGNodeSW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeSW[0]],1,7,tag_x_l,status);
+		}
+		if(SolidIdRNodeNW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeNW[0]],1,6,tag_d_bl);
+		}
+		if(SolidIdGNodeSE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeSE[0]],1,5,tag_d_bl,status);
+		}
+}
+void D2Q9TwoPhases::SyncVarToSolidGhost(double *&VarIn){
+	//Put variables in buffer arrays
+		for (unsigned int i=0;i<SolidIdRNodeW.size();i++)
+		{
+				buf_MacroRecvSolid[0][0][i]=VarIn[SolidIdRNodeW[i]];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeS.size();i++)
+		{
+				buf_MacroRecvSolid[0][3][i]=VarIn[SolidIdRNodeS[i]];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeE.size();i++)
+		{
+				buf_MacroRecvSolid[0][1][i]=VarIn[SolidIdRNodeE[i]];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeN.size();i++)
+		{
+				buf_MacroRecvSolid[0][2][i]=VarIn[SolidIdRNodeN[i]];
+		}
+	//		MultiBlock_->Communication(buf_MacroSend[0],buf_MacroRecv[0],size_MacroBuf);
+		int tag_x_r=1;
+		int tag_x_l=2;
+		int tag_y_t=3;
+		int tag_y_b=4;
+		int tag_d_bl=5;
+		MPI_Status status;
+		if(SolidIdRNodeE.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][1][0],SolidIdRNodeE.size(),1,tag_x_r);
+		}
+		if(SolidIdGNodeW.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][1][0],SolidIdGNodeW.size(),3,tag_x_r,status);
+		}
+
+		if(SolidIdRNodeW.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][0][0],SolidIdRNodeW.size(),3,tag_x_l);
+		}
+		if(SolidIdGNodeE.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][0][0],SolidIdGNodeE.size(),1,tag_x_l,status);
+		}
+		if(SolidIdRNodeN.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][2][0],SolidIdRNodeN.size(),0,tag_y_t);
+		}
+		if(SolidIdGNodeS.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][2][0],SolidIdGNodeS.size(),2,tag_y_t,status);
+		}
+		if(SolidIdRNodeS.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroRecvSolid[0][3][0],SolidIdRNodeS.size(),2,tag_y_b);
+		}
+		if(SolidIdGNodeN.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroSendSolid[0][3][0],SolidIdGNodeN.size(),0,tag_y_b,status);
+		}
+	//Set variables from buffer to real variables
+		for (unsigned int i=0;i<SolidIdGNodeE.size();i++)
+		{
+			VarIn[SolidIdGNodeE[i]]=buf_MacroSendSolid[0][0][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeN.size();i++)
+		{
+			VarIn[SolidIdGNodeN[i]]=buf_MacroSendSolid[0][3][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeW.size();i++)
+		{
+			VarIn[SolidIdGNodeW[i]]=buf_MacroSendSolid[0][1][i];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeS.size();i++)
+		{
+			VarIn[SolidIdGNodeS[i]]=buf_MacroSendSolid[0][2][i];
+		}
+
+		if(SolidIdRNodeSE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeSE[0]],1,5,tag_x_l);
+		}
+		if(SolidIdGNodeNW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeNW[0]],1,6,tag_x_l,status);
+		}
+		if(SolidIdRNodeSW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeSW[0]],1,7,tag_x_l);
+		}
+		if(SolidIdGNodeNE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeNE[0]],1,4,tag_x_l,status);
+		}
+		if(SolidIdRNodeNE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeNE[0]],1,4,tag_x_l);
+		}
+		if(SolidIdGNodeSW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeSW[0]],1,7,tag_x_l,status);
+		}
+		if(SolidIdRNodeNW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdRNodeNW[0]],1,6,tag_d_bl);
+		}
+		if(SolidIdGNodeSE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdGNodeSE[0]],1,5,tag_d_bl,status);
+		}
+}
+void D2Q9TwoPhases::SyncVarFromSolidGhost(double *&VarIn){
+	//Put variables in buffer arrays
+		for (unsigned int i=0;i<SolidIdGNodeW.size();i++)
+		{
+				buf_MacroSendSolid[0][1][i]=VarIn[SolidIdGNodeW[i]];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeS.size();i++)
+		{
+				buf_MacroSendSolid[0][2][i]=VarIn[SolidIdGNodeS[i]];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeE.size();i++)
+		{
+				buf_MacroSendSolid[0][0][i]=VarIn[SolidIdGNodeE[i]];
+		}
+		for (unsigned int i=0;i<SolidIdGNodeN.size();i++)
+		{
+				buf_MacroSendSolid[0][3][i]=VarIn[SolidIdGNodeN[i]];
+		}
+	//		MultiBlock_->Communication(buf_MacroSend[0],buf_MacroRecv[0],size_MacroBuf);
+		int tag_x_r=1;
+		int tag_x_l=2;
+		int tag_y_t=3;
+		int tag_y_b=4;
+		int tag_d_bl=5;
+		MPI_Status status;
+		if(SolidIdGNodeE.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSendSolid[0][0][0],SolidIdGNodeE.size(),1,tag_x_r);
+		}
+		if(SolidIdRNodeW.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecvSolid[0][0][0],SolidIdRNodeW.size(),3,tag_x_r,status);
+		}
+
+		if(SolidIdGNodeW.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSendSolid[0][1][0],SolidIdGNodeW.size(),3,tag_x_l);
+		}
+		if(SolidIdRNodeE.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecvSolid[0][1][0],SolidIdRNodeE.size(),1,tag_x_l,status);
+		}
+		if(SolidIdGNodeN.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSendSolid[0][3][0],SolidIdGNodeN.size(),0,tag_y_t);
+		}
+		if(SolidIdRNodeS.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecvSolid[0][3][0],SolidIdRNodeS.size(),2,tag_y_t,status);
+		}
+		if(SolidIdGNodeS.size()>=1)
+		{
+				MultiBlock_->Send(&buf_MacroSendSolid[0][2][0],SolidIdGNodeS.size(),2,tag_y_b);
+		}
+		if(SolidIdRNodeN.size()>=1)
+		{
+				MultiBlock_->Recv(&buf_MacroRecvSolid[0][2][0],SolidIdRNodeN.size(),0,tag_y_b,status);
+		}
+	//Set variables from buffer to real variables
+		for (unsigned int i=0;i<SolidIdRNodeE.size();i++)
+		{
+			VarIn[SolidIdRNodeE[i]]=buf_MacroRecvSolid[0][1][i];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeN.size();i++)
+		{
+			VarIn[SolidIdRNodeN[i]]=buf_MacroRecvSolid[0][2][i];
+		}
+		for (unsigned int i=0;i<SolidIdRNodeW.size();i++)
+		{
+			VarIn[SolidIdRNodeW[i]]=buf_MacroRecvSolid[0][0][i];
+		}
+
+		for (unsigned int i=0;i<SolidIdRNodeS.size();i++)
+		{
+			VarIn[SolidIdRNodeS[i]]=buf_MacroRecvSolid[0][3][i];
+		}
+		if(SolidIdGNodeSE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdGNodeSE[0]],1,5,tag_x_l);
+		}
+		if(SolidIdRNodeNW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdRNodeNW[0]],1,6,tag_x_l,status);
+		}
+		if(SolidIdGNodeSW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdGNodeSW[0]],1,7,tag_x_l);
+		}
+		if(SolidIdRNodeNE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdRNodeNE[0]],1,4,tag_x_l,status);
+		}
+		if(SolidIdGNodeNE.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdGNodeNE[0]],1,4,tag_x_l);
+		}
+		if(SolidIdRNodeSW.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdRNodeSW[0]],1,7,tag_x_l,status);
+		}
+		if(SolidIdGNodeNW.size()>=1)
+		{
+				MultiBlock_->Send(&VarIn[SolidIdGNodeNW[0]],1,6,tag_d_bl);
+		}
+		if(SolidIdRNodeSE.size()>=1)
+		{
+				MultiBlock_->Recv(&VarIn[SolidIdRNodeSE[0]],1,5,tag_d_bl,status);
+		}
+}
 double D2Q9TwoPhases::Convert_Alpha_To_Rho(double alpha)
 {
 
@@ -1755,4 +2109,14 @@ double D2Q9TwoPhases::Convert_Rho_To_Alpha(double Rho)
 {
 
 	return (Rho-PtrParameters->Get_Rho_2()) /(PtrParameters->Get_Rho_1() - PtrParameters->Get_Rho_2());
+}
+void D2Q9TwoPhases::InitialiseFromFile(){
+	//Read From file
+	if(PtrParameters->IsInitFromFile())
+	{
+		for(int i=0;i<PtrParameters->Get_NumberVariableToInit();i++)
+		{
+			Read_Variable(PtrParameters->Get_VariableNameToInit(i),PtrParameters->Get_FileNameToInit(i));
+		}
+	}
 }

@@ -15,6 +15,8 @@ image_nz=0;
 xstartmedia=0;
 ystartmedia=0;
 zstartmedia=0;
+depth=1;
+depth2=depth*depth;
 }
 
 PorousMedia::~PorousMedia() {
@@ -27,11 +29,12 @@ PorousMedia::~PorousMedia() {
 	delete[] image;
 }
 
-void PorousMedia::ReadBinaryImage(std::string filename,int nx, int ny, int nz)
+void PorousMedia::ReadBinaryImage(std::string filename, int nx, int ny, int nz)
 {
 	image_nx=nx;
 	image_ny=ny;
 	image_nz=nz;
+	int solidValue=1;
 	std::ifstream in(filename.c_str(), std::ios::in|std::ios::binary|std::ios::ate);
 	std::streampos size;
 	char * memblock;
@@ -61,7 +64,7 @@ void PorousMedia::ReadBinaryImage(std::string filename,int nx, int ny, int nz)
 			for (int j=0;j<image_ny;j++)
 				for (int i=0;i<image_nx;i++)
 				{
-					if((int)memblock[idx]==1)
+					if((int)memblock[idx]==solidValue)
 						image[k][j][i]=true;
 					else
 						image[k][j][i]=false;
@@ -313,3 +316,11 @@ for (int j=1;j<image_ny-1;j++)
 for (int j=1;j<image_ny-1;j++)
 	DomainBoundaryTreatment();
 	*/
+void PorousMedia::AddHeleShawDragSinglePhase(double const  &u,double const  &v,double const  &mu,double &Fx,double &Fy,double const InterfaceFx,double const InterfaceFy){
+	Fx+=-12.0*mu*u/depth2;
+	Fy+=-12.0*mu*v/depth2;
+}
+void PorousMedia::AddHeleShawDragTwoPhases(double const  &u,double const  &v,double const  &mu,double &Fx,double &Fy,double const InterfaceFx,double const InterfaceFy){
+	Fx+=-12.0*mu*u/depth2+InterfaceFx;
+	Fy+=-12.0*mu*u/depth2+InterfaceFy;
+}

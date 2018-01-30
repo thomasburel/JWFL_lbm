@@ -24,7 +24,7 @@ Dictionary::Dictionary(int dim, int nbNodes) {
 	PtrStringExportVarBreakpoint=0;
 }
 Dictionary::~Dictionary() {
-	for(int i=0;i<Var.size();i++)
+	for(unsigned int i=0;i<Var.size();i++)
 		delete [] Var[i];
 	StringExportVar.clear();
 	ExportVar.clear();
@@ -33,13 +33,13 @@ Dictionary::~Dictionary() {
 	SyncVar.clear();
 	Var.clear();
 	if(PtrStringExportVar!=0)
-		delete PtrStringExportVar;
+		delete [] PtrStringExportVar;
 	if(PtrExportVar!=0)
-			delete PtrExportVar;
+			delete [] PtrExportVar;
 	if(PtrStringExportVarBreakpoint!=0)
-		delete PtrStringExportVarBreakpoint;
+		delete [] PtrStringExportVarBreakpoint;
 	if(PtrExportVarBreakpoint!=0)
-			delete PtrExportVarBreakpoint;
+			delete [] PtrExportVarBreakpoint;
 }
 
 void Dictionary::AddDistributionBreakpoint(std::string VarName,double* & Var_x)
@@ -237,9 +237,10 @@ std::string* Dictionary::Get_PtrExportVarBreakpointName()
 		PtrStringExportVarBreakpoint[i]=StringExportVarBreakpoint[i];
 	return PtrStringExportVarBreakpoint;
 }
-int Dictionary::Get_Id_Var(std::string VarName){
+int Dictionary::Get_Id_Var(std::string VarName, bool &Var_found){
 	 std::map<std::string,int>::iterator it;
 	 it=mapVar.find(VarName);
+	 Var_found=true;
 	 if(it==mapVar.end())
 	 {
 		 std::cerr<<" Variable name ( "<< VarName<<" )in the dictionary is not found"<<std::endl;
@@ -247,6 +248,7 @@ int Dictionary::Get_Id_Var(std::string VarName){
 		 for (it = mapVar.begin() ; it != mapVar.end() ; ++it)
 			 std::cerr<<it->first<<" ; ";
 		 std::cerr<<std::endl;
+		 Var_found=false;
 	 }
 	return mapVar[VarName];
 }

@@ -20,6 +20,12 @@ public:
 
 protected:
 	void Set_ContactAngle(Parameters& PtrParameters, int elem, int nodenumber, double* pos ,double& teta);
+	double desireCangle;
+private:
+	double pi;
+	double beginCangle;
+	double lengthsmooth;
+	double convDegreeToRadian;
 };
 
 #endif /* SRC_USER_USERCONTACTANGLE_H_ */

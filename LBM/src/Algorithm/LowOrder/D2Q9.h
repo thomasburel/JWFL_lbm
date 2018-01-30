@@ -23,6 +23,7 @@ public:
 	virtual void init(InitLBM& ini);
 	virtual void run();
 	virtual void run(Parameters* UpdatedParam);
+	virtual void UpdateAllDomainFromFile(Parameters* UpdatedParam,InitLBM& ini);
 	virtual void UpdateAllDomain(Parameters* UpdatedParam,InitLBM& ini);
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini);
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini);
@@ -30,9 +31,26 @@ public:
 
 
 private:
+	//! Initialise D2Q9.
+    /*!
+      \param ini : initialisation class (generic initialised methods).
+    */
+	void InitD2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini);
+	void InitialiseFromFile();
+	void InitAllDomain(InitLBM& ini);
+	void InitDomainBc(InitLBM& ini);
+	void InitWall(InitLBM& ini);
+	void InitInterior(InitLBM& ini);
+	//! Initialise the distributions.
+	void InitDistAllDomain();
+	void InitDistDomainBc();
+	void InitDistWall();
+	void InitDistInterior();
 
 	void Set_Collide();
 	void CollideD2Q9();
+	void CollideD2Q9_NoBodyForce();
+	void CollideD2Q9_WithBodyForce();
 	void StreamD2Q9();
 
 	void Set_PointersOnFunctions();
@@ -41,10 +59,19 @@ private:
 	void Set_Macro();
 	//void UpdateMacroVariables();
 	void UpdateMacroVariables();
+	//void UpdateMacroVariables without body force();
+	void UpdateMacroVariables_NoBodyForce();
+	//void UpdateMacroVariables with body force();
+	void UpdateMacroVariables_WithBodyForce();
 	/// Calculate \f$\rho\f$ and \f$\vec{U}\f$ in the local domain
 	void MacroVariables(int& idx);
 	/// Calculate \f$\rho\f$ and \f$\vec{U}\f$ in the local domain with including the external force
 	void MacroVariablesWithForce(int& idx);
+
+	//Calculate Pressure
+	void UpdatePressure();
+	void CalculatePressure(int const &idx);
+	double IdealGazIsothermalPressure(double const &Rho);
 
 private:
 	//Streaming by type of node
@@ -88,6 +115,10 @@ private:
 
 	//Apply boundary conditions
 	void ApplyBc();
+	void ApplyPatchPressure(PressurePatchBc& PresPatchBc);
+	void ApplyPatchVelocity(VelocityPatchBc& VelPatchBc);
+	void ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc);
+	void ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc);
 	unsigned int& Connect (int &NodeNumber,unsigned int& direction);
 	//void Set_Connect(int &NodeNumber,unsigned int& direction);
 	double Cal_RhoCorner(int &normalBc, int &nodenumber);
@@ -116,6 +147,7 @@ private:
 	double doubleTmpReturn;
 
 	int Nd_variables_sync;//number of variable has to be synchronise
+	std::vector<double*> SyncVar;
 	double ***buf_send, ***buf_recv; //buffers to send and receive
 	int *size_buf; // size of buffers
 
@@ -124,9 +156,11 @@ private:
 	int *size_MacroBuf; // size of buffers
 
 ///Simplify notation for pointer on a member function of D2Q9ColourFluid class for macroscopic variables calculation methods
-	typedef void(D2Q9::*Macro)(int & nodenumber);
-	Macro PtrMacro;///< Macroscopic pointer
 
+	typedef void(D2Q9::*Macro)();
+	typedef void(D2Q9::*Collision)();
+	Macro PtrMacro;///< Macroscopic pointer
+	Collision PtrCollision;///< Collision pointer
 private:
 	friend class boost::serialization::access;
     template<class Archive>

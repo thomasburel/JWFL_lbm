@@ -21,21 +21,29 @@ public:
 	D2Q9Corner();
 	virtual ~D2Q9Corner();
 
-	void Set_Corner(Parameters *Param);
-	void ApplyCorner(NodeCorner2D& Node, DistriFunct* f_in,double const & RhoDef,double const & UDef,double const & VDef, double *Rho, double *U, double *V);
-	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct* f_in, double *Rho, double *U, double *V);
-	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct* f_in, double *Rho, double *U, double *V);
-	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct* f_in,double const & RhoDef,double const & UDef,double const & VDef);
+	void Set_Corner(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei,unsigned int nbDistributions=1);
+	void ApplyCorner(NodeCorner2D& Node, DistriFunct* f_in, unsigned int idxDistribution,double const & RhoDef,double const & UDef,double const & VDef, double *Rho, double *U, double *V);
+	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct* f_in, unsigned int idxDistribution, double *Rho, double *U, double *V);
+	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct* f_in, unsigned int idxDistribution, double *Rho, double *U, double *V);
+	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct* f_in, unsigned int idxDistribution,double const & RhoDef,double const & UDef,double const & VDef);
 
 private:
-
-	void ApplyBounceBack(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
-	void ApplyDiffuseWall(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
+// initialise specific method
+	void SetHalfWayBounceBack(NodeArrays2D* NodeArrays,unsigned int nbDistributions=1);
+//Wall methods
+	template <class T>
+	void ApplyBounceBack(T& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
+	template <class T>
+	void ApplyHalfWayBounceBack(T& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
+	template <class T>
+	void ApplyDiffuseWall(T& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
 
 	/// Corner treat by Chih-Fung Ho, Cheng Chang, Kuen-Hau Lin and Chao-An Lin
 	/// Consistent Boundary Conditions for 2D and 3D Lattice Boltzmann Simulations
-	void ApplyHoChan(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
-	void ApplyHoChanNoVel(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
+	template <class T>
+	void ApplyHoChan(T& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
+	template <class T>
+	void ApplyHoChanNoVel(T& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
 
 
 	void FUNC_corner (double & a,double & b,double & c,double & d,double & e,double & f,double & g,double & h,double & i,double & U,double & V,double & Rho);
@@ -51,15 +59,18 @@ private:
 // Pointers on function
 ///Simplify notation for pointer on a member function of D2Q9Pressure class for Pressure model used
 	//Corner inside the domain
-	typedef void(D2Q9Corner::*CornerWallMethod)(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
+	typedef void(D2Q9Corner::*CornerWallMethod)(NodeCorner2D& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
+	typedef void(D2Q9Corner::*CornerWallSpecialWallMethod)(NodeWall2D& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
 	typedef void(D2Q9Corner::*CalculRhoCornerWall)(NodeCorner2D& Node, double *Rho);
 	//Corner in the corner of the domain
-	typedef void(D2Q9Corner::*CornerMethod)(int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V);
-
+	typedef void(D2Q9Corner::*CornerMethod)(NodeCorner2D& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
+	typedef void(D2Q9Corner::*CornerSpecialWallMethod)(NodeWall2D& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
 
 //Define name for pointers on functions
 	CornerMethod PtrCornerMethod;
 	CornerWallMethod PtrCornerWallMethod;
+	CornerSpecialWallMethod PtrCornerSpecialWallMethod;
+	CornerWallSpecialWallMethod PtrCornerWallSpecialWallMethod;
 	CalculRhoCornerWall PtrCalculRhoCornerWall;
 	Extrapolation Extrapol;
 	double InvRho,InvU,InvV;

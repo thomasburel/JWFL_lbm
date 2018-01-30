@@ -14,16 +14,17 @@ Parameters::Parameters()
 	nz=1;
 	dimension_=SolverEnum::D2;
 	scheme=SolverEnum::Q9;
+	deltaT=1;deltaX=1;
 	model=SolverEnum::SinglePhase;
-	fluid=Newtonian;
-	UserForce=None;
+	fluid=ModelEnum::Newtonian;
+	UserForce=ModelEnum::None;
 	argc=0;
 	argv=0;
 	verbous=false;
 	parrallel=Serial;
 	VariablesOutput=0;
 	SolverParameters::set_SolverParameters();
-	Set_VariablesOutput(true,true);//export Rho and U by default
+	Set_VariablesOutput(true,true,false);//export Rho and U by default
 	NbGlobalBcType=4;
 	GlobalBcType=new NodeType [NbGlobalBcType];// Bottom: Wall, Outlet: Pressure, Top: Wall, Inlet: Velocity
 	GlobalBcType[0]=Wall;
@@ -40,24 +41,38 @@ Parameters::Parameters()
 	Tau_2=1;
 	tension=0;
 	beta=0.7;
-	A1=0; A2=0;
+	A1=0; A2=0;Atau=0;
 	U_ini=0;V_ini=0;W_ini=0;
 	Re=1;
 	l=1;t=1;dx=1;dt=1;
-	ColourGrad=Gunstensen;
-	Recolouring=LatvaKokkoRothman;
-	ColourOperator=Grunau;
+	ColourGrad=ColourFluidEnum::Gunstensen;
+	Recolouring=ColourFluidEnum::LatvaKokkoRothman;
+	ColourOperator=ColourFluidEnum::Grunau;
+	ColourExtrapolNoramlDensity=true;ColourExtrapolNoramlInterface=true;
 	PressureModelParam=HeZouP;
 	PressureTypeParam=FixP;
 	VelocityModelParam=HeZouV;
 	VelocityTypeParam=FixV;
 	CornerModelParam=HoChan;
 	CornerPressureTypeParam=ExtrapolCP;
-	tetaType=NoTeta;
+	tetaType=ContactAngleEnum::NoTeta;
+	tetaModel=ContactAngleEnum::Interpol;
+	NormalExtrapol=ContactAngleEnum::WeightDistanceExtrapol;
+	NormalInterpol=ContactAngleEnum::LinearLeastSquareInterpol;
+	Switchteta=ContactAngleEnum::Binary;
 	teta=std::acos(-1)/2;// pi/2
 	ErrorMax=1e-10;
 	PeriodicTypeParam=Simple;
 	PressureDropParam=0;
+	RhoLimiter=1e-7;
+	GNormLimiter=0.01;
+	nNodesInterpolInSolid=1;
+	nNodesInterpolInFluid=1;
+	refDensity=1;
+	FluidModel=SolverEnum::Compressible;
+	NormalDensityOutput=true;RedDensityOutput=false;BlueDensityOutput=false;SurfaceForceOutput=false;CurvatureOutput=false;
+	ColourGradientOutput=false;NormColourGradientOutput=true;NormalOutput=false;
+	porousmediacase=false;calculatePorosity=false;calculateProductionRate=false;calculatePermeability=false;
 }
 
 Parameters::~Parameters() {
@@ -198,6 +213,22 @@ SolverEnum::modeltype SolverParameters::Get_Model() const
 {
 	return model;
 }
+void SolverParameters::Set_NumberOfInterpolNode(int nNodes){
+	if(nNodes<2)
+	{
+		std::cout<<"Number of node for interpolation is not enough. It will be set to 2."<<std::endl;
+		nNodesInterpolInSolid=1;
+		nNodesInterpolInFluid=1;
+	}
+	nNodesInterpolInSolid=round(nNodes/2.0);
+	nNodesInterpolInFluid=nNodes-nNodesInterpolInSolid;
+}
+void SolverParameters::Set_NumberOfInterpolNodeInSolid(int nNodes){
+	nNodesInterpolInSolid=nNodes;
+}
+void SolverParameters::Set_NumberOfInterpolNodeInFluid(int nNodes){
+	nNodesInterpolInFluid=nNodes;
+}
 void CalculationParameters::Set_Parallel(parralleltype parrallel_) {
 	parrallel=parrallel_;
 }
@@ -224,9 +255,8 @@ void SolverParameters::set_SolverParameters()
 		{
 		case SolverEnum::Q9:
 			NbVelocities=9;
-			cs=1/std::sqrt(3);
+			cs=1/std::sqrt(3)*deltaX/deltaT;
 			cs2=cs*cs;
-			deltaT=1;
 			break;
 		default:
 			std::cout<< "Scheme not found" << std::endl;
@@ -301,7 +331,52 @@ void Parameters::Add_VariableToInit(std::string filename,SolverEnum::variablesSo
 			NbVariablesInitFromFile=VariableInitFromFile.size();
 		}
 		break;
+	case  SolverEnum::RhoN:
+		if(model==SolverEnum::ColourFluid){
+			InitFromFile=true;
+			NameInitFromFile.push_back(filename);
+			VariableInitFromFile.push_back("RhoN");
+			NbVariablesInitFromFile=VariableInitFromFile.size();
+		}
+		break;
 	default:
 		std::cout<<"Variable to Init is not found"<<std::endl;
 	}
+}
+void PorousMediaParameters::Set_PositionMedia(unsigned int minX,unsigned int maxX,unsigned int minY,unsigned int maxY,unsigned int minZ,unsigned int maxZ){
+	MinX=minX;
+	MaxX=maxX;
+	MinY=minY;
+	MaxY=maxY;
+	MinZ=minZ;
+	MaxZ=maxZ;
+	if(MinX>MaxX)
+		MinX=MaxX;
+	if(MinY>MaxY)
+		MinY=MaxY;
+	if(MinZ>MaxZ)
+		MinZ=MaxZ;
+}
+void PorousMediaParameters::Get_PositionMedia(unsigned int &minX,unsigned int &maxX,unsigned int &minY,unsigned int &maxY,unsigned int &minZ,unsigned int &maxZ){
+	minX=MinX;
+	maxX=MaxX;
+	minY=MinY;
+	maxY=MaxY;
+	minZ=MinZ;
+	maxZ=MaxZ;
+}
+
+void Parameters::CheckParameters()
+{
+	switch(scheme)
+		{
+		case SolverEnum::Q9:
+			NbVelocities=9;
+			cs=1/std::sqrt(3)*deltaX/deltaT;
+			cs2=cs*cs;
+			break;
+		default:
+			std::cout<< "Scheme not found" << std::endl;
+	        break;
+		}
 }

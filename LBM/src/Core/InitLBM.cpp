@@ -16,6 +16,7 @@ void InitLBM::IniMPI(ParallelManager* parrallel_,int *argc, char ***argv, bool v
 
 	/// Initialise MPI
 	parrallel_->init(argc,argv,verbous_);
+	desireCangle=PtrParameters->Get_ContactAngle();
 
 }
 
@@ -44,8 +45,8 @@ void InitLBM::IniDomainTwoPhases(int rank,Node2D & Node,int elem, int nodenumber
 		break;
 	case SpecialWall:
 		UserBc(*PtrParameters,elem, nodenumber, pos,Rho, U,alpha);
-		U[0]=0;
-		U[1]=0;
+		Node.Set_UDef(U[0],U[1]);
+		Node.Set_RhoDef(Rho);
 		break;
 	case Corner:
 		UserBc(*PtrParameters,elem, nodenumber, pos,Rho, U,alpha);
@@ -90,24 +91,24 @@ void InitLBM::IniDomainTwoPhases(int rank,Node2D & Node,int elem, int nodenumber
 	}
 }
 void InitLBM::IniContactAngle(int rank,Node2D & Node,int elem, int nodenumber, double* pos,double & teta){
-	if(PtrParameters->Get_ContactAngleType()!=::NoTeta)
+	if(PtrParameters->Get_ContactAngleType()!=ContactAngleEnum::NoTeta)
 	{
 		switch(Node.get_NodeType())
 		{
 		case Wall:
-			if(PtrParameters->Get_ContactAngleType()==FixTeta)
+			if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::UniformTeta)
 				teta=PtrParameters->Get_ContactAngle();
 			else
 				Set_ContactAngle(*PtrParameters,elem, nodenumber, pos,teta);
 			break;
 		case SpecialWall:
-			if(PtrParameters->Get_ContactAngleType()==FixTeta)
+			if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::UniformTeta)
 				teta=PtrParameters->Get_ContactAngle();
 			else
 				Set_ContactAngle(*PtrParameters,elem, nodenumber, pos,teta);
 			break;
 		case Corner:
-			if(PtrParameters->Get_ContactAngleType()==FixTeta)
+			if(PtrParameters->Get_ContactAngleType()==ContactAngleEnum::UniformTeta)
 				teta=PtrParameters->Get_ContactAngle();
 			else
 				Set_ContactAngle(*PtrParameters,elem, nodenumber, pos,teta);

@@ -8,11 +8,12 @@
 #include "Simulation.h"
 
 Simulation::Simulation()
-:time(0),MultiBlock_(0),parallel(0),Writer(0),Solver_(0),PtrParameters(0),SolverD2Q9(0),MultiBlock2D_(0),WriterCGNS(0),SolverD2Q9TwoPhases(0)
+:time(0),Solver_(0),MultiBlock_(0),parallel(0),Writer(0),PtrParameters(0),WriterCGNS(0),WriterTecplot(0),MultiBlock2D_(0),SolverD2Q9(0),SolverD2Q9TwoPhases(0)
 {}
 void Simulation::InitSimu(Parameters &Parameters_, bool create_mesh)
 {
 	PtrParameters=&Parameters_;
+	PtrParameters->CheckParameters();
 	parallel=new MpiManager;
 	ini.Set_Parameters(PtrParameters);
 	ini.IniMPI(parallel,PtrParameters->Get_Argc(), PtrParameters->Get_Argv(), PtrParameters->Get_Verbous());
@@ -26,6 +27,7 @@ void Simulation::InitSimu(Parameters &Parameters_, bool create_mesh)
 	{
 		Import_Mesh(PtrParameters->Get_MeshFile());
 	}
+	MultiBlock_->GeneratePatchBc();
 	MultiBlock_->Modify_Block();
 	MultiBlock_->ConvertToPhysicalUnit();
 	MultiBlock_->reorganizeNodeByType();
@@ -74,10 +76,12 @@ void Simulation::Create_Mesh(){ //(dimension dim, int Nx, int Ny, int Nz) {
 		WriterCGNS=new CGNS(PtrParameters->Get_Dimension(),PtrParameters->Get_OutputFileName(),tot_nodes_,tot_elems_,MultiBlock_->Get_Start_Nodes(),MultiBlock_->Get_End_Nodes(),MultiBlock_->Get_Start_Elems(),MultiBlock_->Get_End_Elems(),MultiBlock_->Get_X0(),MultiBlock_->Get_Y0(),0,MultiBlock_->Get_Elems0());
 		Writer=WriterCGNS;
 		int it=0;
-		Writer->Write_Output(it);
 		if(PtrParameters->Get_Verbous())
+		{
+			Writer->Write_Output(it);
 			if(parallel->isMainProcessor())
 				std::cout<<"End of Writing of the mesh"<<std::endl;
+		}
 	}
 	else
 	{
@@ -90,6 +94,17 @@ void Simulation::Import_Mesh(string MeshFile_) {
 
 }
 void Simulation::FinalizeSimu() {
+	if (parallel->isMainProcessor())
+		cout<<"Deleting Solvers"<<endl;
+	Solver_->~Solver();
+	if (parallel->isMainProcessor())
+		cout<<"Deleting Writers"<<endl;
+	Writer->~WriterManager();
+	if (parallel->isMainProcessor())
+		cout<<"Deleting Multiblocks"<<endl;
+	MultiBlock_->~MultiBlock();
+	if (parallel->isMainProcessor())
+		cout<<"Deleting Parallel manager"<<endl;
 	parallel->~ParallelManager();
 
 }
@@ -103,7 +118,7 @@ void Simulation::RunSimu()
 	cout<< "Time to run the simulation:    "<<get_time()-time << endl;
 	time=get_time();
 	Save_Simulation();
-
+	cout<< " End Simulation " << endl;
 }
 void Simulation::RunSimu(Parameters &UpdatedParam)
 {
@@ -114,6 +129,10 @@ void Simulation::RunSimu(Parameters &UpdatedParam)
 	cout<< "Time to run the simulation:    "<<get_time()-time << endl;
 	time=get_time();
 
+}
+void Simulation::UpdateAllDomainFromFile(Parameters &UpdatedParam){
+	ini.Set_Parameters(&UpdatedParam);
+	Solver_->UpdateAllDomainFromFile(&UpdatedParam,ini);
 }
 void Simulation::UpdateAllDomain(Parameters &UpdatedParam){
 	ini.Set_Parameters(&UpdatedParam);
@@ -200,7 +219,7 @@ void Simulation::Save_Parameters(Parameters & object){
 	boost::archive::xml_oarchive oa(ofs);
 	oa << BOOST_SERIALIZATION_NVP(object);
 }
-void Simulation::Save_Parameters(Parameters & object,std::string &filename){
+void Simulation::Save_Parameters(Parameters & object,std::string filename){
 	std::cout<< "Parameters are saving in the xml file: "<<filename<<std::endl;
 	// make an archive
 	std::ofstream ofs(filename.c_str());
@@ -217,7 +236,7 @@ void Simulation::Load_Parameters(Parameters & object){
 	assert(ifs.good());
 	boost::archive::xml_iarchive ia(ifs);
 	ia >> BOOST_SERIALIZATION_NVP(object);
-	object.Set_VariablesOutput(object.Get_output_density(),object.Get_output_velocity());
+	object.Set_VariablesOutput(object.Get_output_density(),object.Get_output_velocity(),object.Get_output_pressure());
 }
 
 
@@ -265,12 +284,14 @@ void Simulation::Save_Solver(std::string &filename,ios_base::openmode mode){
 	// make an archive
 	std::ofstream ofs(filename.c_str(),mode);
 	boost::archive::text_oarchive oa(ofs);
-	if (PtrParameters->Get_Dimension()==SolverEnum::D2)
-		if(PtrParameters->Get_Scheme()==SolverEnum::Q9)
+	if (PtrParameters->Get_Dimension()==SolverEnum::D2){
+		if(PtrParameters->Get_Scheme()==SolverEnum::Q9){
 			if(PtrParameters->Get_Model()==SolverEnum::SinglePhase)
 				oa << *SolverD2Q9;
 			else
 				oa << *SolverD2Q9TwoPhases;
+		}
+	}
 	else
 		oa << *Solver_;
 }

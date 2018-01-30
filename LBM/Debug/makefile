@@ -11,6 +11,7 @@ RM := rm -rf
 -include src/User/subdir.mk
 -include src/SpecialTreatment/subdir.mk
 -include src/Parallelism/subdir.mk
+-include src/Mesh/SingleBlock/Patch/subdir.mk
 -include src/Mesh/SingleBlock/subdir.mk
 -include src/Mesh/MultiBlock/subdir.mk
 -include src/IO/subdir.mk
@@ -64,6 +65,5 @@ clean:
 	-@echo ' '
 
 .PHONY: all clean dependents
-.SECONDARY:
 
 -include ../makefile.targets

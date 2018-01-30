@@ -14,12 +14,18 @@
 #define SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9GENERICBC_H_
 #include "D2Q9BoundariesList.h"
 #include "../../../Core/Dictionary.h"
+#include "../../../Mesh/SingleBlock/NodeArrays.h"
 
 class D2Q9GenericBc {
 public:
 	D2Q9GenericBc();
 	virtual ~D2Q9GenericBc();
-	void SetBcObjects( Parameters *Param);
+	//Set Pointer on Function for Boundary conditions
+	void SetBcObjects(Dictionary *PtrDic, NodeArrays2D* NodeArrays,Parameters *Param, double ** &Ei,unsigned int nbDistributions=1);
+	void SetPressure(PressureModel PressureModel_,PressureType PressureType_);
+	void SetVelocity(VelocityModel VelocityModel_,VelocityType VelocityType_);
+	void SetSymmetry(SymmetryType SymmetryType_);
+	void SetPeriodic(PeriodicType PeriodicType_);
 	///Apply Pressure as one 0-moment variable (single phase = 1 density)
 	void ApplyPressure(int const &BcNormal,int const *Connect, double const Rho_def, DistriFunct * & f_in, double weightDensity=1);
 	///Apply Pressure as  several 0-moment variables
@@ -29,25 +35,31 @@ public:
 	///Apply Velocity as  several 0-moment variables
 	void ApplyVelocity(int const &BcNormal,int const *Connect, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
 	///Apply Pressure/Velocity Special Wall as one 0-moment variable (single phase = 1 density)
-	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, double weightDensity=1);
+	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply Pressure/Velocity Special Wall as  several 0-moment variables
 //	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V);
 	///Apply Corner as one 0-moment variable (single phase = 1 density)
-	void ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef, double weightDensity=1);
+	void ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply Corner as  several 0-moment variables
-	void ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, double weightDensity=1);
+	void ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply CornerWall as one 0-moment variable (single phase = 1 density)
-	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in, double weightDensity=1);
+	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply CornerWall as  several 0-moment variables
-	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
+	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply Corner for SpecialWall as one 0-moment variable (single phase = 1 density)
-	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
+	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply Corner for SpecialWall as  several 0-moment variables
 //	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V);
 	///Apply Wall as one 0-moment variable (single phase = 1 density)
-	void ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in, double weightDensity=1);
+	void ApplyWall(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply Wall as  several 0-moment variables
-	void ApplyWall(int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
+	void ApplyWall(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
+	///Apply Wall as one 0-moment variable (single phase = 1 density) for Global Corner
+	void ApplyWall(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in, unsigned int idxDistribution=0, double weightDensity=1);
+	///Apply Wall as  several 0-moment variables for Global Corner
+	void ApplyWall(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
+
+
 	///Apply SpecialWall as one 0-moment variable (single phase = 1 density)
 //	void ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_);
 	///Apply SpecialWall as  several 0-moment variables

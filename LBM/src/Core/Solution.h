@@ -38,7 +38,8 @@ protected:
 
 //Solution variables
 	Dictionary* Dic;
-	double **U, *Rho;
+	double **U, *Rho,*P;
+	bool CalPressure,CalGradP;
 	int nbnodes_real, nbnodes_total; //total include ghost nodes, real without ghost nodes
 };
 class Solution2D:public Solution {
@@ -59,6 +60,7 @@ protected:
 	//std::vector<Node2D*> *Node;
 	NodeArrays2D* NodeArrays;
 	std::vector<int> IdBoundaries;
+	PatchBc* PatchsBc;
 
 
 
