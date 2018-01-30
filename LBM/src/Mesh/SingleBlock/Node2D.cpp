@@ -18,8 +18,8 @@ BOOST_CLASS_EXPORT_IMPLEMENT(NodeVelocity2D);
 BOOST_CLASS_EXPORT_IMPLEMENT(NodePressure2D);
 //**************General Methods for Nodes in 2D***************
 ///Constructor for General Nodes in 2D
-Node2D::Node2D(signed short int x_,signed short int y_): x(x_), y(y_),NodeType_(Ghost),Connect_N(0),Connect_S(0),Connect_W(0),Connect_E(0),NbVelocity(0),Connect(0)
-{index=0;}
+Node2D::Node2D(signed short int x_,signed short int y_): x(x_), y(y_),index(0),Connect_N(0),Connect_S(0),Connect_W(0),Connect_E(0),NodeType_(Ghost),NbVelocity(0),Connect(0)
+{}
 Node2D::Node2D(Node2D const& other){
 	x=other.x;
 	y=other.y;
@@ -27,10 +27,11 @@ Node2D::Node2D(Node2D const& other){
 	index=other.index;
 	Connect_N=other.Connect_N;Connect_S=other.Connect_S;Connect_W=other.Connect_W;Connect_E=other.Connect_E;
 	NbVelocity=other.NbVelocity;
+
 	if(other.Connect!=0)
 	{
 		Connect=new int[NbVelocity];
-		for(int i=0;i<NbVelocity;i++)
+		for(unsigned int i=0;i<NbVelocity;i++)
 			Connect[i]=other.Connect[i];
 	}
 	else
@@ -272,7 +273,7 @@ double NodeGhost2D::Get_RhoDef(){return 0;}//Don't need
 void NodeGhost2D::Set_stream(bool* streaming,int NbVelocity_){
 	NbVelocity=NbVelocity_;
 	GhostStream=new bool [NbVelocity];
-	for (int i=0;i<NbVelocity;i++)
+	for (unsigned int i=0;i<NbVelocity;i++)
 		GhostStream[i]=streaming[i];
 }
 void NodeGhost2D::Set_UDef(double UDef, double VDef){}//Don't need
@@ -286,6 +287,7 @@ NodeVelocity2D::NodeVelocity2D(signed short int x_,signed short int y_,double* U
 	NodeType_=Velocity;
 	VelocityStream=0;
 	BcNormal=0;
+	alphaDef=0;
 	if(UDef_!=0)
 	{
 		UDef[0]=UDef_[0];
@@ -315,7 +317,7 @@ double NodeVelocity2D::Get_RhoDef(){return 0;}//Don't need
 void NodeVelocity2D::Set_stream(bool* streaming,int NbVelocity_){
 	NbVelocity=NbVelocity_;
 	VelocityStream=new bool [NbVelocity];
-	for (int i=0;i<NbVelocity;i++)
+	for (unsigned int i=0;i<NbVelocity;i++)
 		VelocityStream[i]=streaming[i];
 }
 void NodeVelocity2D::Set_UDef(double U_Def, double V_Def){UDef[0]=U_Def;UDef[1]=V_Def;}
@@ -330,6 +332,7 @@ NodePressure2D::NodePressure2D(signed short int x_,signed short int y_,double PD
 	RhoDef=PDef_;
 	PressureStream=0;
 	BcNormal=0;
+	alphaDef=0;
 }
 ///Destructor for Pressure Nodes
 NodePressure2D::~NodePressure2D() {
@@ -357,7 +360,7 @@ double NodePressure2D::Get_RhoDef(){return RhoDef;}
 void NodePressure2D::Set_stream(bool* streaming,int NbVelocity_){
 	NbVelocity=NbVelocity_;
 	PressureStream=new bool [NbVelocity];
-	for (int i=0;i<NbVelocity;i++)
+	for (unsigned int i=0;i<NbVelocity;i++)
 		PressureStream[i]=streaming[i];
 }
 void NodePressure2D::Set_UDef(double UDef, double VDef){}
@@ -389,7 +392,7 @@ double NodePeriodic2D::Get_RhoDef(){return RhoDef;}
 void NodePeriodic2D::Set_stream(bool* streaming,int NbVelocity_){
 	NbVelocity=NbVelocity_;
 	PeriodicStream=new bool [NbVelocity];
-	for (int i=0;i<NbVelocity;i++)
+	for (unsigned int i=0;i<NbVelocity;i++)
 		PeriodicStream[i]=streaming[i];
 }
 void NodePeriodic2D::Set_UDef(double U_Def, double V_Def){UDef[0]=U_Def;UDef[1]=V_Def;}
@@ -406,6 +409,7 @@ NodeCorner2D::NodeCorner2D(signed short int x_,signed short int y_,double PDef_,
 	CornerStream=0;
 	BcNormal=0;
 	CornerType_=Concave;
+	alphaDef=0;
 	if(UDef_!=0)
 	{
 		UDef[0]=UDef_[0];
@@ -415,6 +419,7 @@ NodeCorner2D::NodeCorner2D(signed short int x_,signed short int y_,double PDef_,
 }
 ///Destructor for Corner Nodes
 NodeCorner2D::~NodeCorner2D() {
+	SaveData.clear();
 	delete [] CornerStream;
 }
 /// Set the Pressure at the corner
@@ -453,12 +458,17 @@ double NodeCorner2D::Get_RhoDef(){return RhoDef;}
 void NodeCorner2D::Set_stream(bool* streaming,int NbVelocity_){
 	NbVelocity=NbVelocity_;
 	CornerStream=new bool [NbVelocity];
-	for (int i=0;i<NbVelocity;i++)
+	for (unsigned int i=0;i<NbVelocity;i++)
 		CornerStream[i]=streaming[i];
 }
 void NodeCorner2D::Set_UDef(double U_Def, double V_Def){UDef[0]=U_Def;UDef[1]=V_Def;}
 void NodeCorner2D::Set_RhoDef(double Rho_Def){RhoDef=Rho_Def;}
-
+void NodeCorner2D::Ini_SaveData(unsigned int NbSaveData){
+	if(SaveData.size()>NbSaveData)
+		SaveData.clear();
+	for(unsigned int i=SaveData.size();i<NbSaveData;i++)
+		SaveData.push_back(0);
+}
 
 //**************General Wall Node Methods no distinction between kind of wall nodes as bounce back, half way bounce back***************
 ///Constructor for General Wall Nodes
@@ -475,6 +485,7 @@ NodeWall2D::NodeWall2D(signed short int x_,signed short int y_) {
 }
 ///Destructor for Wall Nodes
 NodeWall2D::~NodeWall2D() {
+	SaveData.clear();
 	delete [] WallStream;
 }
 
@@ -486,12 +497,17 @@ double NodeWall2D::Get_RhoDef(){return RhoDef;}
 void NodeWall2D::Set_stream(bool* streaming,int NbVelocity_){
 	NbVelocity=NbVelocity_;
 	WallStream=new bool [NbVelocity];
-	for (int i=0;i<NbVelocity;i++)
+	for (unsigned int i=0;i<NbVelocity;i++)
 		WallStream[i]=streaming[i];
 }
 void NodeWall2D::Set_UDef(double UDef_, double VDef){UDef[0]=UDef_;UDef[1]=VDef;}
 void NodeWall2D::Set_RhoDef(double RhoDef_){RhoDef=RhoDef_;}
-
+void NodeWall2D::Ini_SaveData(unsigned int NbSaveData){
+	if(SaveData.size()>NbSaveData)
+		SaveData.clear();
+	for(unsigned int i=SaveData.size();i<NbSaveData;i++)
+		SaveData.push_back(0);
+}
 //**************General Symmetry Node Methods no distinction between kind of Symmetry nodes as on node or half way ***************
 ///Constructor for General Symmetry Nodes
 NodeSymmetry2D::NodeSymmetry2D(signed short int x_,signed short int y_) {
@@ -517,7 +533,7 @@ double NodeSymmetry2D::Get_RhoDef(){return RhoDef;}
 void NodeSymmetry2D::Set_stream(bool* streaming,int NbVelocity_){
 	NbVelocity=NbVelocity_;
 	SymmetryStream=new bool [NbVelocity];
-	for (int i=0;i<NbVelocity;i++)
+	for (unsigned int i=0;i<NbVelocity;i++)
 		SymmetryStream[i]=streaming[i];
 }
 void NodeSymmetry2D::Set_UDef(double U_Def, double V_Def){UDef[0]=U_Def;UDef[1]=V_Def;}

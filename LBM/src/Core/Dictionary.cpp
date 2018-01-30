@@ -24,7 +24,7 @@ Dictionary::Dictionary(int dim, int nbNodes) {
 	PtrStringExportVarBreakpoint=0;
 }
 Dictionary::~Dictionary() {
-	for(int i=0;i<Var.size();i++)
+	for(unsigned int i=0;i<Var.size();i++)
 		delete [] Var[i];
 	StringExportVar.clear();
 	ExportVar.clear();

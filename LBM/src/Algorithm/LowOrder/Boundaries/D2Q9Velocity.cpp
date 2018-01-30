@@ -29,7 +29,7 @@ D2Q9Velocity::~D2Q9Velocity() {
 	// TODO Auto-generated destructor stub
 }
 
-void D2Q9Velocity::SetVelocity(Parameters *Param, double ** &Ei){
+void D2Q9Velocity::SetVelocity(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei){
 //Setup the velocity assumptions
 	SetVelocityModel(Param->Get_VelocityModel());
 //Setup the velocity model

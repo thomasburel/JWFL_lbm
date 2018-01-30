@@ -313,12 +313,18 @@ public:
 
 	void Set_CornerType(CornerType CornerType__){CornerType_=CornerType__;};
 	CornerType& Get_CornerType(){return CornerType_;};
+
+	//Save distribution
+	void Ini_SaveData(unsigned int NbSaveData);
+	double Get_SaveData(int idx){return SaveData[idx];};
+	void Set_SaveData(int idx,double value){SaveData[idx]=value;}
 private:
 	double RhoDef,alphaDef; //alpha is for two-phases flows
 	double UDef[2];
 	bool* CornerStream;
 	int BcNormal;
 	CornerType CornerType_;
+	std::vector<double> SaveData;
 private:
 	friend class boost::serialization::access;
     template<class Archive>
@@ -355,12 +361,17 @@ public:
 	//for special walls
 	virtual void Set_AlphaDef(double Alpha){alphaDef=Alpha;};
 	virtual double Get_AlphaDef(){return alphaDef;};
+	//Save distribution
+	void Ini_SaveData(unsigned int NbSaveData);
+	double Get_SaveData(int idx){return SaveData[idx];};
+	void Set_SaveData(int idx,double value){SaveData[idx]=value;}
 private:
 	double RhoDef, alphaDef;
 	double UDef[2];
 	bool* WallStream;
 	int BcNormal;
 	WallSpecialType WallSpecialType_;
+	std::vector<double> SaveData;
 private:
 	friend class boost::serialization::access;
     template<class Archive>

@@ -21,7 +21,7 @@ class D2Q9Bc: public D2Q9GenericBc, public D2Q9GlobalCorner, public D2Q9SpecialW
 public:
 	D2Q9Bc();
 	virtual ~D2Q9Bc();
-	void InitD2Q9Bc(Dictionary *PtrDic_, Parameters *Param, double ** &Ei);
+	void InitD2Q9Bc(Dictionary *PtrDic_, NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei,unsigned int nbDistributions=1);
 
 };
 

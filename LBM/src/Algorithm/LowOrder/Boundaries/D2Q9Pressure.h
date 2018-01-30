@@ -19,7 +19,7 @@ public:
 	D2Q9Pressure();
 	virtual ~D2Q9Pressure();
 
-	void Set_PressureBcs(Parameters *Param, double ** &Ei);
+	void Set_PressureBcs(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei);
 	void SetPressure(PressureModel PressureModel_,PressureType PressureType_);
 	void SetPressureModel(PressureModel PressureModel_);
 	void SetPressureType(PressureType PressureType_);

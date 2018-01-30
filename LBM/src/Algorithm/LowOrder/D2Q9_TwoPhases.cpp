@@ -27,9 +27,9 @@ D2Q9TwoPhases::D2Q9TwoPhases() {
 	size_buf=0;
 	DiagConnect=0;
 	Nd_variables_sync=0;
-	buf_MacroSend=0;
-	buf_MacroRecv=0;
-	size_MacroBuf=0;
+	buf_MacroSend=0;buf_MacroSendSolid=0;
+	buf_MacroRecv=0;buf_MacroRecvSolid=0;
+	size_MacroBuf=0;size_MacroBufSolid=0;
 	Nd_MacroVariables_sync=0;
 	Rho1=0; Rho2=0;
 	Opposite[0]=0;
@@ -109,7 +109,7 @@ void D2Q9TwoPhases::InitAllDomain(InitLBM& ini){
 	double* pos =new double[2];
 	double* U_=new double[2];
 	int idx=0;
-	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSolid.size();j++)
 	{
 		idx=NodeArrays->NodeSolid[j].Get_index();
 		pos[0]=NodeArrays->NodeSolid[j].get_x();
@@ -126,7 +126,7 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 	double* pos =new double[2];
 	double* U_=new double[2];
 	int idx=0;
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
 		idx=NodeArrays->NodeGlobalCorner[j].Get_index();
 		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
@@ -138,7 +138,7 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 		NodeArrays->NodeGlobalCorner[j].Set_RhoDef(Rho[idx]);
 		NodeArrays->NodeGlobalCorner[j].Set_AlphaDef(alpha);
 	}
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		idx=NodeArrays->NodeVelocity[j].Get_index();
 		pos[0]=NodeArrays->NodeVelocity[j].get_x();
@@ -150,7 +150,7 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 		NodeArrays->NodeVelocity[j].Set_AlphaDef(alpha);;
 	}
 
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
 		idx=NodeArrays->NodePressure[j].Get_index();
 		pos[0]=NodeArrays->NodePressure[j].get_x();
@@ -161,7 +161,7 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 		NodeArrays->NodePressure[j].Set_RhoDef(Rho[idx]);
 		NodeArrays->NodePressure[j].Set_AlphaDef(alpha);
 	}
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 		idx=NodeArrays->NodeSymmetry[j].Get_index();
 		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
@@ -170,7 +170,7 @@ void D2Q9TwoPhases::InitDomainBc(InitLBM& ini){
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
 	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 	{
 		idx=NodeArrays->NodePeriodic[j].Get_index();
 		pos[0]=NodeArrays->NodePeriodic[j].get_x();
@@ -187,7 +187,7 @@ void D2Q9TwoPhases::InitWall(InitLBM& ini){
 	double* pos =new double[2];
 	double* U_=new double[2];
 	int idx=0;
-	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 		idx=NodeArrays->NodeCorner[j].Get_index();
 		pos[0]=NodeArrays->NodeCorner[j].get_x();
@@ -199,7 +199,7 @@ void D2Q9TwoPhases::InitWall(InitLBM& ini){
 		NodeArrays->NodeCorner[j].Set_RhoDef(Rho[idx]);
 		NodeArrays->NodeCorner[j].Set_AlphaDef(alpha);
 	}
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 		idx=NodeArrays->NodeWall[j].Get_index();
 		pos[0]=NodeArrays->NodeWall[j].get_x();
@@ -208,7 +208,7 @@ void D2Q9TwoPhases::InitWall(InitLBM& ini){
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
 	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
 		idx=NodeArrays->NodeSpecialWall[j].Get_index();
 		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
@@ -230,7 +230,7 @@ void D2Q9TwoPhases::InitInterior(InitLBM& ini){
 	double* U_=new double[2];
 	int idx=0;
 
-	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 	{
 		idx=NodeArrays->NodeInterior[j].Get_index();
 		pos[0]=NodeArrays->NodeInterior[j].get_x();
@@ -239,7 +239,7 @@ void D2Q9TwoPhases::InitInterior(InitLBM& ini){
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
 	}
-	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 		idx=NodeArrays->NodeGhost[j].Get_index();
 		pos[0]=NodeArrays->NodeGhost[j].get_x();
@@ -258,7 +258,7 @@ void D2Q9TwoPhases::StreamD2Q9() {
 	{
 	for (unsigned int i=1;i<(unsigned int)nbvelo;i++) //No need to stream direction 0
 	{
-		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 		{
 			if (NodeArrays->NodeInterior[j].Get_connect()[i]!=NodeArrays->NodeInterior[j].Get_index())
 			{
@@ -266,13 +266,13 @@ void D2Q9TwoPhases::StreamD2Q9() {
 			}
 		}
 
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
 			if (NodeArrays->NodeCorner[j].stream()[i])
 			{
 				ftmp[NodeArrays->NodeCorner[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeCorner[j].Get_index()];
 			}		}
-		for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
 			if (NodeArrays->NodeGlobalCorner[j].stream()[i])
 			{
@@ -280,7 +280,7 @@ void D2Q9TwoPhases::StreamD2Q9() {
 			}
 
 		}
-		for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 		{
 			if (NodeArrays->NodeVelocity[j].stream()[i])
 					{
@@ -288,42 +288,42 @@ void D2Q9TwoPhases::StreamD2Q9() {
 					}
 		}
 
-		for (int j=0;j<NodeArrays->NodePressure.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 		{
 			if (NodeArrays->NodePressure[j].stream()[i])
 					{
 						ftmp[NodeArrays->NodePressure[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodePressure[j].Get_index()];
 					}
 		}
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
 			if (NodeArrays->NodeWall[j].stream()[i])
 			{
 				ftmp[NodeArrays->NodeWall[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeWall[j].Get_index()];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
 			if (NodeArrays->NodeSpecialWall[j].stream()[i])
 			{
 				ftmp[NodeArrays->NodeSpecialWall[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
 			if (NodeArrays->NodeSymmetry[j].stream()[i])
 			{
 				ftmp[NodeArrays->NodeSymmetry[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeSymmetry[j].Get_index()];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 		{
 			if (NodeArrays->NodePeriodic[j].stream()[i])
 			{
 				ftmp[NodeArrays->NodePeriodic[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodePeriodic[j].Get_index()];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
 		{
 			if (NodeArrays->NodeGhost[j].stream()[i])
 			{
@@ -342,40 +342,40 @@ void D2Q9TwoPhases::TmptoDistri(unsigned int& direction, int& IdDistri){
 }
 
 void D2Q9TwoPhases::Set_BcType(){
-	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 		Set_CornerType(NodeArrays->NodeCorner[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
 		Set_CornerType(NodeArrays->NodeGlobalCorner[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		Set_VelocityType(NodeArrays->NodeVelocity[j]);
 	}
 
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
 		Set_PressureType(NodeArrays->NodePressure[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 		Set_WallType(NodeArrays->NodeWall[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
 		Set_WallType(NodeArrays->NodeSpecialWall[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 		Set_SymmetryType(NodeArrays->NodeSymmetry[j]);
 	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 	{
 		Set_PeriodicType(NodeArrays->NodePeriodic[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 		Set_GhostType(NodeArrays->NodeGhost[j]);
 	}
@@ -1268,7 +1268,7 @@ void D2Q9TwoPhases::GhostNodesSyncFromGhost(){
 		buf_send[5][3][i]=f[1]->f[6][IdNodeN[i]];
 	}
 
-	int itmp=0;
+//	int itmp=0;
 	for (int i=0;i<Nd_variables_sync;i++)
 	{
 		MultiBlock_->CommunicationFromGhost(buf_send[i],buf_recv[i],size_buf);
@@ -1583,7 +1583,7 @@ void D2Q9TwoPhases::CornerNodesSyncFromGhost(){
 }
 void D2Q9TwoPhases::CornerNodesSyncToGhost(){
 	 int tag_x_l=1;
-	 int tag_y_b=2;
+//	 int tag_y_b=2;
 	 int tag_d_bl=3;
 	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;
 	MPI_Status status;

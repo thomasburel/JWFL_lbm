@@ -20,7 +20,7 @@ D2Q9Symmetry::D2Q9Symmetry() {
 D2Q9Symmetry::~D2Q9Symmetry() {
 	// TODO Auto-generated destructor stub
 }
-void D2Q9Symmetry::Set_Symmetry(Parameters *Param, double ** &Ei){
+void D2Q9Symmetry::Set_Symmetry(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei){
 	SetSymmetry(Param->Get_SymmetryType());
 	EiBc=Ei;
 }

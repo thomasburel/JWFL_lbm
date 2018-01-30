@@ -23,7 +23,7 @@ D2Q9Periodic::~D2Q9Periodic() {
 	// TODO Auto-generated destructor stub
 }
 
-void D2Q9Periodic::Set_Periodic(Parameters *Param, double ** &Ei){
+void D2Q9Periodic::Set_Periodic(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei){
 	SetPeriodic(Param->Get_PeriodicType());
 	if(Param->Get_PeriodicType()==PressureForce)
 		PressureDrop=Param->Get_PressureDrop();

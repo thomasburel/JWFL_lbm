@@ -77,10 +77,14 @@ D2Q9BcVar::D2Q9BcVar() {
 	SumWeightConvexSW=omegaBc[1]+omegaBc[2]+omegaBc[5];
 
 	for(int i=0;i<2;i++)
-	{
-		BounceBackWallConnect[0][i]=0;
 		DiffusekWallConnect[0][i]=0;
-	}
+
+	for(int i=1;i<5;i++)
+		BounceBackWallConnect[i]=new int [2];
+	for(int i=5;i<9;i++)
+		BounceBackWallConnect[i]=new int [4];
+
+	BounceBackWallConnect[0]=0;
 	BounceBackWallConnect[1][0]=5;
 	BounceBackWallConnect[1][1]=8;
 	BounceBackWallConnect[2][0]=5;
@@ -89,9 +93,33 @@ D2Q9BcVar::D2Q9BcVar() {
 	BounceBackWallConnect[3][1]=7;
 	BounceBackWallConnect[4][0]=7;
 	BounceBackWallConnect[4][1]=8;
+
+	BounceBackWallConnect[5][0]=1;
+	BounceBackWallConnect[5][1]=2;
+	BounceBackWallConnect[5][2]=6;
+	BounceBackWallConnect[5][3]=8;
+
+	BounceBackWallConnect[6][0]=2;
+	BounceBackWallConnect[6][1]=3;
+	BounceBackWallConnect[6][2]=5;
+	BounceBackWallConnect[6][3]=7;
+
+	BounceBackWallConnect[7][0]=3;
+	BounceBackWallConnect[7][1]=4;
+	BounceBackWallConnect[7][2]=6;
+	BounceBackWallConnect[7][3]=8;
+
+	BounceBackWallConnect[8][0]=1;
+	BounceBackWallConnect[8][1]=4;
+	BounceBackWallConnect[8][2]=5;
+	BounceBackWallConnect[8][3]=7;
 }
 
 D2Q9BcVar::~D2Q9BcVar() {
 	// TODO Auto-generated destructor stub
+	for(int i=1;i<5;i++)
+		delete [] BounceBackWallConnect[i];
+	for(int i=5;i<9;i++)
+		delete [] BounceBackWallConnect[i];
 }
 

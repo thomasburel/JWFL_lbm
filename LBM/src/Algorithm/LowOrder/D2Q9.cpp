@@ -35,29 +35,6 @@ D2Q9::D2Q9() {
 	PtrCollision=0;
 }
 D2Q9::D2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini) {
-
-/*
-	f=new DistriFunct(MultiBlock__->Get_nnodes(),Parameters_->Get_NbVelocities());
-	Set_Solver(MultiBlock__,parallel__,Writer__,Parameters_);
-	ftmp=new double[nbnode];
-	PtrFiStream=f;
-	PtrFiCollide=PtrFiStream;
-	InvTau=1.0/PtrParameters->Get_Tau();
-	intTmpReturn=0;
-	doubleTmpReturn=0;
-
-	EiCollide=Ei;
-	Nb_VelocityCollide=nbvelo;
-	omegaCollide=omega;
-	//if(PtrParameters->Get_WallType()==BounceBack)
-		Dic->AddSync("Density",Rho);
-	if(PtrParameters->Get_UserForceType()== ModelEnum::BodyForce ||PtrParameters->Get_HeleShawBodyForce()!= PorousMediaEnum::no)
-	{
-		F=new double*[2];
-		Dic->AddVar(Vector,"BodyForce",true,false,false,F[0],F[1]);
-		for(int i=0;i<nbnodes_total;i++)
-			{F[0][i]=0;	F[1][i]=0;}
-	}*/
 	// Init D2Q9
 		InitD2Q9(MultiBlock__,parallel__,Writer__,Parameters_,ini);
 	//Set Pointers On Functions for selecting the right model dynamically
@@ -65,7 +42,7 @@ D2Q9::D2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* W
 	// Initialise domain
 		init(ini);
 	//Initialise boundary conditions.
-		InitD2Q9Bc(Dic, Parameters_,Ei);
+		InitD2Q9Bc(Dic, NodeArrays,Parameters_,Ei);
 	//Set_Convergence
 		Set_Convergence();
 	//Initialise communication between processors
@@ -191,127 +168,15 @@ void D2Q9::InitD2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterM
 	}
 }
 void D2Q9::init(InitLBM& ini){
-	/*	double* pos =new double[2];
-	double* U_=new double[2];
-	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
-	{
-		pos[0]=NodeArrays->NodeInterior[j].get_x();
-		pos[1]=NodeArrays->NodeInterior[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeInterior[j],0, NodeArrays->NodeInterior[j].Get_index(),pos,Rho[NodeArrays->NodeInterior[j].Get_index()],U_);
-		U[0][NodeArrays->NodeInterior[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodeInterior[j].Get_index()]=U_[1];
-		if(Rho[j]==0)
-			std::cerr<<" Density set to 0"<< pos[NodeArrays->NodeInterior[j].Get_index()]<<" "<<pos[1]<<std::endl;
-	}
-	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
-	{
-		pos[0]=NodeArrays->NodeCorner[j].get_x();
-		pos[1]=NodeArrays->NodeCorner[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeCorner[j],0, NodeArrays->NodeCorner[j].Get_index(),pos,Rho[NodeArrays->NodeCorner[j].Get_index()],U_);
-		U[0][NodeArrays->NodeCorner[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodeCorner[j].Get_index()]=U_[1];
-	}
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
-	{
-		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
-		pos[1]=NodeArrays->NodeGlobalCorner[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeGlobalCorner[j],0, NodeArrays->NodeGlobalCorner[j].Get_index(),pos,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()],U_);
-		U[0][NodeArrays->NodeGlobalCorner[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodeGlobalCorner[j].Get_index()]=U_[1];
-		NodeArrays->NodeGlobalCorner[j].Set_UDef(U_[0],U_[1]);
-		NodeArrays->NodeGlobalCorner[j].Set_RhoDef(Rho[NodeArrays->NodeGlobalCorner[j].Get_index()]);
-	}
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
-	{
-		pos[0]=NodeArrays->NodeVelocity[j].get_x();
-		pos[1]=NodeArrays->NodeVelocity[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeVelocity[j],0, NodeArrays->NodeVelocity[j].Get_index(),pos,Rho[NodeArrays->NodeVelocity[j].Get_index()],U_);
-		U[0][NodeArrays->NodeVelocity[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodeVelocity[j].Get_index()]=U_[1];
-	}
 
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
-	{
-		pos[0]=NodeArrays->NodePressure[j].get_x();
-		pos[1]=NodeArrays->NodePressure[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodePressure[j],0, NodeArrays->NodePressure[j].Get_index(),pos,Rho[NodeArrays->NodePressure[j].Get_index()],U_);
-		U[0][NodeArrays->NodePressure[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodePressure[j].Get_index()]=U_[1];
-	}
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
-	{
-		pos[0]=NodeArrays->NodeWall[j].get_x();
-		pos[1]=NodeArrays->NodeWall[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeWall[j],0, NodeArrays->NodeWall[j].Get_index(),pos,Rho[NodeArrays->NodeWall[j].Get_index()],U_);
-		U[0][NodeArrays->NodeWall[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodeWall[j].Get_index()]=U_[1];
-	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
-	{
-		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
-		pos[1]=NodeArrays->NodeSpecialWall[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeSpecialWall[j],0, NodeArrays->NodeSpecialWall[j].Get_index(),pos,Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U_);
-		U[0][NodeArrays->NodeSpecialWall[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodeSpecialWall[j].Get_index()]=U_[1];
-	}
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
-	{
-		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
-		pos[1]=NodeArrays->NodeSymmetry[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeSymmetry[j],0, NodeArrays->NodeSymmetry[j].Get_index(),pos,Rho[NodeArrays->NodeSymmetry[j].Get_index()],U_);
-		U[0][NodeArrays->NodeSymmetry[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodeSymmetry[j].Get_index()]=U_[1];
-	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
-	{
-		pos[0]=NodeArrays->NodePeriodic[j].get_x();
-		pos[1]=NodeArrays->NodePeriodic[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodePeriodic[j],0, NodeArrays->NodePeriodic[j].Get_index(),pos,Rho[NodeArrays->NodePeriodic[j].Get_index()],U_);
-		U[0][NodeArrays->NodePeriodic[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodePeriodic[j].Get_index()]=U_[1];
-	}
-	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
-	{
-		pos[0]=NodeArrays->NodeGhost[j].get_x();
-		pos[1]=NodeArrays->NodeGhost[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeGhost[j],0, NodeArrays->NodeGhost[j].Get_index(),pos,Rho[NodeArrays->NodeGhost[j].Get_index()],U_);
-		U[0][NodeArrays->NodeGhost[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodeGhost[j].Get_index()]=U_[1];
-	}
-	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
-	{
-		pos[0]=NodeArrays->NodeSolid[j].get_x();
-		pos[1]=NodeArrays->NodeSolid[j].get_y();
-		ini.IniDomainSinglePhase(parallel->getRank(),NodeArrays->NodeSolid[j],0, NodeArrays->NodeSolid[j].Get_index(),pos,Rho[NodeArrays->NodeSolid[j].Get_index()],U_);
-		U[0][NodeArrays->NodeSolid[j].Get_index()]=U_[0];
-		U[1][NodeArrays->NodeSolid[j].Get_index()]=U_[1];
-	}*/
 //Initialise Domain
 	InitAllDomain(ini);
 //Initialise from file or Restart
 	InitialiseFromFile();
-/*	if(PtrParameters->IsInitFromFile())
-	{
-		for(int i=0;i<PtrParameters->Get_NumberVariableToInit();i++)
-		{
-			Read_Variable(PtrParameters->Get_VariableNameToInit(i),PtrParameters->Get_FileNameToInit(i));
-		}
-	}
-	*/
 //Initialise distribution
-		InitDistAllDomain();
-		/*
-	for (int i=0;i<nbvelo;i++)
-	{
-		for (int j=0;j<nbnode;j++)
-		{
-			f->f[i][j]=CollideLowOrder::CollideEquillibrium(Rho[j], U[0][j], U[1][j], &Ei[i][0], omega[i]);
-		}
-	}
-*/
+	InitDistAllDomain();
 	Set_BcType();
-//	delete [] pos;
-//	delete [] U_;
+
 	if(CalPressure)
 		UpdatePressure();
 
@@ -334,7 +199,7 @@ void D2Q9::InitAllDomain(InitLBM& ini){
 	double* pos =new double[2];
 	double* U_=new double[2];
 	int idx=0;
-	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSolid.size();j++)
 	{
 		idx=NodeArrays->NodeSolid[j].Get_index();
 		pos[0]=NodeArrays->NodeSolid[j].get_x();
@@ -351,7 +216,7 @@ void D2Q9::InitDomainBc(InitLBM& ini){
 	double* pos =new double[2];
 	double* U_=new double[2];
 	int idx=0;
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
 		idx=NodeArrays->NodeGlobalCorner[j].Get_index();
 		pos[0]=NodeArrays->NodeGlobalCorner[j].get_x();
@@ -362,7 +227,7 @@ void D2Q9::InitDomainBc(InitLBM& ini){
 		NodeArrays->NodeGlobalCorner[j].Set_UDef(U_[0],U_[1]);
 		NodeArrays->NodeGlobalCorner[j].Set_RhoDef(Rho[idx]);
 	}
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		idx=NodeArrays->NodeVelocity[j].Get_index();
 		pos[0]=NodeArrays->NodeVelocity[j].get_x();
@@ -373,7 +238,7 @@ void D2Q9::InitDomainBc(InitLBM& ini){
 		NodeArrays->NodeVelocity[j].Set_UDef(U_[0],U_[1]);
 	}
 
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
 		idx=NodeArrays->NodePressure[j].Get_index();
 		pos[0]=NodeArrays->NodePressure[j].get_x();
@@ -383,7 +248,7 @@ void D2Q9::InitDomainBc(InitLBM& ini){
 		U[1][idx]=U_[1];
 		NodeArrays->NodePressure[j].Set_RhoDef(Rho[idx]);
 	}
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 		idx=NodeArrays->NodeSymmetry[j].Get_index();
 		pos[0]=NodeArrays->NodeSymmetry[j].get_x();
@@ -392,7 +257,7 @@ void D2Q9::InitDomainBc(InitLBM& ini){
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
 	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 	{
 		idx=NodeArrays->NodePeriodic[j].Get_index();
 		pos[0]=NodeArrays->NodePeriodic[j].get_x();
@@ -408,7 +273,7 @@ void D2Q9::InitWall(InitLBM& ini){
 	double* pos =new double[2];
 	double* U_=new double[2];
 	int idx=0;
-	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 		idx=NodeArrays->NodeCorner[j].Get_index();
 		pos[0]=NodeArrays->NodeCorner[j].get_x();
@@ -419,7 +284,7 @@ void D2Q9::InitWall(InitLBM& ini){
 		NodeArrays->NodeCorner[j].Set_UDef(U_[0],U_[1]);
 		NodeArrays->NodeCorner[j].Set_RhoDef(Rho[idx]);
 	}
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 		idx=NodeArrays->NodeWall[j].Get_index();
 		pos[0]=NodeArrays->NodeWall[j].get_x();
@@ -428,7 +293,7 @@ void D2Q9::InitWall(InitLBM& ini){
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
 	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
 		idx=NodeArrays->NodeSpecialWall[j].Get_index();
 		pos[0]=NodeArrays->NodeSpecialWall[j].get_x();
@@ -448,7 +313,7 @@ void D2Q9::InitInterior(InitLBM& ini){
 	double* U_=new double[2];
 	int idx=0;
 
-	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 	{
 		idx=NodeArrays->NodeInterior[j].Get_index();
 		pos[0]=NodeArrays->NodeInterior[j].get_x();
@@ -457,7 +322,7 @@ void D2Q9::InitInterior(InitLBM& ini){
 		U[0][idx]=U_[0];
 		U[1][idx]=U_[1];
 	}
-	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 		idx=NodeArrays->NodeGhost[j].Get_index();
 		pos[0]=NodeArrays->NodeGhost[j].get_x();
@@ -480,7 +345,7 @@ void D2Q9::InitDistAllDomain(){
 	double* U_=new double[2];
 	int idx=0;
 
-	for (int j=0;j<NodeArrays->NodeSolid.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSolid.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodeSolid[j].Get_index();
@@ -498,7 +363,7 @@ void D2Q9::InitDistDomainBc(){
 	double* pos =new double[2];
 	double* U_=new double[2];
 	int idx=0;
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodeGlobalCorner[j].Get_index();
@@ -507,7 +372,7 @@ void D2Q9::InitDistDomainBc(){
 			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
 		}
 	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodeSpecialWall[j].Get_index();
@@ -516,7 +381,7 @@ void D2Q9::InitDistDomainBc(){
 			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
 		}
 	}
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodeVelocity[j].Get_index();
@@ -526,7 +391,7 @@ void D2Q9::InitDistDomainBc(){
 		}
 	}
 
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodePressure[j].Get_index();
@@ -535,7 +400,7 @@ void D2Q9::InitDistDomainBc(){
 			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
 		}
 	}
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodeSymmetry[j].Get_index();
@@ -544,7 +409,7 @@ void D2Q9::InitDistDomainBc(){
 			f->f[i][idx]=CollideLowOrder::CollideEquillibrium(Rho[idx], U[0][idx], U[1][idx], &Ei[i][0], omega[i]);
 		}
 	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodePeriodic[j].Get_index();
@@ -561,7 +426,7 @@ void D2Q9::InitDistWall(){
 	double* U_=new double[2];
 	int idx=0;
 
-	for (int j=0;j<NodeArrays->CornerConcave.size();j++)
+	for (unsigned int j=0;j<NodeArrays->CornerConcave.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodeCorner[NodeArrays->CornerConcave[j]].Get_index();
@@ -571,7 +436,7 @@ void D2Q9::InitDistWall(){
 		}
 	}
 
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodeWall[j].Get_index();
@@ -581,7 +446,7 @@ void D2Q9::InitDistWall(){
 		}
 	}
 
-	for (int j=0;j<NodeArrays->CornerConvex.size();j++)
+	for (unsigned int j=0;j<NodeArrays->CornerConvex.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodeCorner[NodeArrays->CornerConvex[j]].Get_index();
@@ -598,7 +463,7 @@ void D2Q9::InitDistInterior(){
 	double* U_=new double[2];
 	int idx=0;
 
-	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodeInterior[j].Get_index();
@@ -608,7 +473,7 @@ void D2Q9::InitDistInterior(){
 		}
 	}
 
-	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 // Set Index
 		idx=NodeArrays->NodeGhost[j].Get_index();
@@ -798,77 +663,78 @@ void D2Q9::StreamD2Q9() {
 
 	for (unsigned int i=1;i<(unsigned int)nbvelo;i++) //No need to stream direction 0
 	{
-		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 		{
-			if (NodeArrays->NodeInterior[j].Get_connect()[i]!=NodeArrays->NodeInterior[j].Get_index())
-			{
+			//if (NodeArrays->NodeInterior[j].Get_connect()[i]!=NodeArrays->NodeInterior[j].Get_index())
+			//{
 				ftmp[NodeArrays->NodeInterior[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeInterior[j].Get_index()];
-			}
+			//}
 		}
 
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
-			if (NodeArrays->NodeCorner[j].stream()[i])
-			{
+			//if (NodeArrays->NodeCorner[j].stream()[i])
+			//{
 				ftmp[NodeArrays->NodeCorner[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeCorner[j].Get_index()];
-			}		}
-		for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+			//}
+		}
+		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
-			if (NodeArrays->NodeGlobalCorner[j].stream()[i])
-			{
+			//if (NodeArrays->NodeGlobalCorner[j].stream()[i])
+			//{
 				ftmp[NodeArrays->NodeGlobalCorner[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];
-			}
+			//}
 
 		}
-		for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 		{
-			if (NodeArrays->NodeVelocity[j].stream()[i])
-					{
-						ftmp[NodeArrays->NodeVelocity[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeVelocity[j].Get_index()];
-					}
+			//if (NodeArrays->NodeVelocity[j].stream()[i])
+			//	{
+					ftmp[NodeArrays->NodeVelocity[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeVelocity[j].Get_index()];
+			//	}
 		}
 
-		for (int j=0;j<NodeArrays->NodePressure.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 		{
-			if (NodeArrays->NodePressure[j].stream()[i])
-					{
-						ftmp[NodeArrays->NodePressure[j].Get_connect()[i]]=f->f[i][NodeArrays->NodePressure[j].Get_index()];
-					}
+			//if (NodeArrays->NodePressure[j].stream()[i])
+			//	{
+				ftmp[NodeArrays->NodePressure[j].Get_connect()[i]]=f->f[i][NodeArrays->NodePressure[j].Get_index()];
+			//	}
 		}
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
-			if (NodeArrays->NodeWall[j].stream()[i])
-			{
+			//if (NodeArrays->NodeWall[j].stream()[i])
+			//{
 				ftmp[NodeArrays->NodeWall[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeWall[j].Get_index()];
-			}
+			//}
 		}
-		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
-			if (NodeArrays->NodeSpecialWall[j].stream()[i])
-			{
+			//if (NodeArrays->NodeSpecialWall[j].stream()[i])
+			//{
 				ftmp[NodeArrays->NodeSpecialWall[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];
-			}
+			//}
 		}
-		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
-			if (NodeArrays->NodeSymmetry[j].stream()[i])
-			{
+			//if (NodeArrays->NodeSymmetry[j].stream()[i])
+			//{
 				ftmp[NodeArrays->NodeSymmetry[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeSymmetry[j].Get_index()];
-			}
+			//}
 		}
-		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 		{
-			if (NodeArrays->NodePeriodic[j].stream()[i])
-			{
+			//if (NodeArrays->NodePeriodic[j].stream()[i])
+			//{
 				ftmp[NodeArrays->NodePeriodic[j].Get_connect()[i]]=f->f[i][NodeArrays->NodePeriodic[j].Get_index()];
-			}
+			//}
 		}
-		for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
 		{
-			if (NodeArrays->NodeGhost[j].stream()[i])
-			{
+			//if (NodeArrays->NodeGhost[j].stream()[i])
+			//{
 				ftmp[NodeArrays->NodeGhost[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeGhost[j].Get_index()];
-			}
+			//}
 		}
 		D2Q9::TmptoDistri(i);
 	}
@@ -878,127 +744,127 @@ void D2Q9::CollideD2Q9(){
 	(this->*PtrCollision)();
 }
 void D2Q9::CollideD2Q9_NoBodyForce(){
-	double wtmp=0;
-	double Fx, Fy, InvTau_tmp;
+//	double wtmp=0;
+	double Fx, Fy;// InvTau_tmp;
 	double *fi_tmp; fi_tmp=new double [nbvelo];
 	double *localforce;localforce=new double [nbvelo];
-	 		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	 		for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 		{
 			Fx=0;Fy=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeInterior[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeInterior[j].Get_index()], U[0][NodeArrays->NodeInterior[j].Get_index()], U[1][NodeArrays->NodeInterior[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeInterior[j].Get_index()]=fi_tmp[i];
 			}
 		}
 
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
 			Fx=0;Fy=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeCorner[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeCorner[j].Get_index()], U[0][NodeArrays->NodeCorner[j].Get_index()], U[1][NodeArrays->NodeCorner[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeCorner[j].Get_index()]=fi_tmp[i];
 			}
 		}
 
-		for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
 			Fx=0;Fy=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()], U[0][NodeArrays->NodeGlobalCorner[j].Get_index()], U[1][NodeArrays->NodeGlobalCorner[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 		{
 			Fx=0;Fy=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeVelocity[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeVelocity[j].Get_index()], U[0][NodeArrays->NodeVelocity[j].Get_index()], U[1][NodeArrays->NodeVelocity[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeVelocity[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodePressure.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 		{
 			Fx=0;Fy=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodePressure[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodePressure[j].Get_index()], U[0][NodeArrays->NodePressure[j].Get_index()], U[1][NodeArrays->NodePressure[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodePressure[j].Get_index()]=fi_tmp[i];
 			}
 		}
 
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
 			Fx=0;Fy=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeWall[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeWall[j].Get_index()], U[0][NodeArrays->NodeWall[j].Get_index()], U[1][NodeArrays->NodeWall[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeWall[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
 			Fx=0;Fy=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeSpecialWall[j].Get_index()], U[0][NodeArrays->NodeSpecialWall[j].Get_index()], U[1][NodeArrays->NodeSpecialWall[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()]=fi_tmp[i];
 			}
 		}
 
-		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
 			Fx=0;Fy=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeSymmetry[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeSymmetry[j].Get_index()], U[0][NodeArrays->NodeSymmetry[j].Get_index()], U[1][NodeArrays->NodeSymmetry[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeSymmetry[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 		{
 			Fx=0;Fy=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodePeriodic[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodePeriodic[j].Get_index()], U[0][NodeArrays->NodePeriodic[j].Get_index()], U[1][NodeArrays->NodePeriodic[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodePeriodic[j].Get_index()]=fi_tmp[i];
 			}
@@ -1006,133 +872,133 @@ void D2Q9::CollideD2Q9_NoBodyForce(){
 
 }
 void D2Q9::CollideD2Q9_WithBodyForce(){
-	double wtmp=0;
+//	double wtmp=0;
 	//double InvTau_tmp;
 	double *fi_tmp; fi_tmp=new double [nbvelo];
 	double *localforce;localforce=new double [nbvelo];
 
-	 		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	 		for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 		{
 	 			F[0][NodeArrays->NodeInterior[j].Get_index()]=0;
 	 			F[1][NodeArrays->NodeInterior[j].Get_index()]=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeInterior[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeInterior[j].Get_index()], U[0][NodeArrays->NodeInterior[j].Get_index()], U[1][NodeArrays->NodeInterior[j].Get_index()],localforce, F[0][NodeArrays->NodeInterior[j].Get_index()], F[1][NodeArrays->NodeInterior[j].Get_index()], Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeInterior[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
  			F[0][NodeArrays->NodeCorner[j].Get_index()]=0;
  			F[1][NodeArrays->NodeCorner[j].Get_index()]=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeCorner[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeCorner[j].Get_index()], U[0][NodeArrays->NodeCorner[j].Get_index()], U[1][NodeArrays->NodeCorner[j].Get_index()],localforce, F[0][NodeArrays->NodeCorner[j].Get_index()], F[1][NodeArrays->NodeCorner[j].Get_index()], Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeCorner[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
  			F[0][NodeArrays->NodeGlobalCorner[j].Get_index()]=0;
  			F[1][NodeArrays->NodeGlobalCorner[j].Get_index()]=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()], U[0][NodeArrays->NodeGlobalCorner[j].Get_index()], U[1][NodeArrays->NodeGlobalCorner[j].Get_index()],localforce, F[0][NodeArrays->NodeGlobalCorner[j].Get_index()], F[1][NodeArrays->NodeGlobalCorner[j].Get_index()], Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 		{
  			F[0][NodeArrays->NodeVelocity[j].Get_index()]=0;
  			F[1][NodeArrays->NodeVelocity[j].Get_index()]=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeVelocity[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeVelocity[j].Get_index()], U[0][NodeArrays->NodeVelocity[j].Get_index()], U[1][NodeArrays->NodeVelocity[j].Get_index()],localforce, F[0][NodeArrays->NodeVelocity[j].Get_index()], F[1][NodeArrays->NodeVelocity[j].Get_index()], Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeVelocity[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodePressure.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 		{
  			F[0][NodeArrays->NodePressure[j].Get_index()]=0;
  			F[1][NodeArrays->NodePressure[j].Get_index()]=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodePressure[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodePressure[j].Get_index()], U[0][NodeArrays->NodePressure[j].Get_index()], U[1][NodeArrays->NodePressure[j].Get_index()],localforce, F[0][NodeArrays->NodePressure[j].Get_index()], F[1][NodeArrays->NodePressure[j].Get_index()], Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodePressure[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
  			F[0][NodeArrays->NodeWall[j].Get_index()]=0;
  			F[1][NodeArrays->NodeWall[j].Get_index()]=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeWall[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeWall[j].Get_index()], U[0][NodeArrays->NodeWall[j].Get_index()], U[1][NodeArrays->NodeWall[j].Get_index()],localforce, F[0][NodeArrays->NodeWall[j].Get_index()], F[1][NodeArrays->NodeWall[j].Get_index()], Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeWall[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
  			F[0][NodeArrays->NodeSpecialWall[j].Get_index()]=0;
  			F[1][NodeArrays->NodeSpecialWall[j].Get_index()]=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeSpecialWall[j].Get_index()], U[0][NodeArrays->NodeSpecialWall[j].Get_index()], U[1][NodeArrays->NodeSpecialWall[j].Get_index()],localforce, F[0][NodeArrays->NodeSpecialWall[j].Get_index()], F[1][NodeArrays->NodeSpecialWall[j].Get_index()], Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
  			F[0][NodeArrays->NodeSymmetry[j].Get_index()]=0;
  			F[1][NodeArrays->NodeSymmetry[j].Get_index()]=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeSymmetry[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeSymmetry[j].Get_index()], U[0][NodeArrays->NodeSymmetry[j].Get_index()], U[1][NodeArrays->NodeSymmetry[j].Get_index()],localforce, F[0][NodeArrays->NodeSymmetry[j].Get_index()], F[1][NodeArrays->NodeSymmetry[j].Get_index()], Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeSymmetry[j].Get_index()]=fi_tmp[i];
 			}
 		}
-		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 		{
  			F[0][NodeArrays->NodePeriodic[j].Get_index()]=0;
  			F[1][NodeArrays->NodePeriodic[j].Get_index()]=0;
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodePeriodic[j].Get_index()];localforce[i]=0;
 			}
 			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodePeriodic[j].Get_index()], U[0][NodeArrays->NodePeriodic[j].Get_index()], U[1][NodeArrays->NodePeriodic[j].Get_index()],localforce, F[0][NodeArrays->NodePeriodic[j].Get_index()], F[1][NodeArrays->NodePeriodic[j].Get_index()], Get_InvTau(),Get_Mu());
-			for (int i=0;i<9;i++)
+			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodePeriodic[j].Get_index()]=fi_tmp[i];
 			}
@@ -1143,78 +1009,78 @@ void D2Q9::UpdateMacroVariables(){
 	(this->*PtrMacro)();
 }
 void D2Q9::UpdateMacroVariables_NoBodyForce(){
-		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 		{
 			MacroVariables(NodeArrays->NodeInterior[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
 			MacroVariables(NodeArrays->NodeCorner[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
 			MacroVariables(NodeArrays->NodeGlobalCorner[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 		{
 			MacroVariables(NodeArrays->NodeVelocity[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodePressure.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 		{
 			MacroVariables(NodeArrays->NodePressure[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
 			MacroVariables(NodeArrays->NodeWall[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
 			MacroVariables(NodeArrays->NodeSpecialWall[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
 			MacroVariables(NodeArrays->NodeSymmetry[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 		{
 			MacroVariables(NodeArrays->NodePeriodic[j].Get_index());
 		}
 }
 
 void D2Q9::UpdateMacroVariables_WithBodyForce(){
-		for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 		{
 			MacroVariablesWithForce(NodeArrays->NodeInterior[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
 			MacroVariablesWithForce(NodeArrays->NodeCorner[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
 			MacroVariablesWithForce(NodeArrays->NodeGlobalCorner[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 		{
 			MacroVariablesWithForce(NodeArrays->NodeVelocity[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodePressure.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 		{
 			MacroVariablesWithForce(NodeArrays->NodePressure[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
 			MacroVariablesWithForce(NodeArrays->NodeWall[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
 			MacroVariablesWithForce(NodeArrays->NodeSpecialWall[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 		{
 			MacroVariablesWithForce(NodeArrays->NodeSymmetry[j].Get_index());
 		}
-		for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 		{
 			MacroVariablesWithForce(NodeArrays->NodePeriodic[j].Get_index());
 		}
@@ -1261,40 +1127,40 @@ void D2Q9::TmptoDistri(unsigned int& direction){
 
 
 void D2Q9::Set_BcType(){
-	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 		Set_CornerType(NodeArrays->NodeCorner[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
 		Set_CornerType(NodeArrays->NodeGlobalCorner[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		Set_VelocityType(NodeArrays->NodeVelocity[j]);
 	}
 
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
 		Set_PressureType(NodeArrays->NodePressure[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 		Set_WallType(NodeArrays->NodeWall[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
 		Set_WallType(NodeArrays->NodeSpecialWall[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 		Set_SymmetryType(NodeArrays->NodeSymmetry[j]);
 	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 	{
 		Set_PeriodicType(NodeArrays->NodePeriodic[j]);
 	}
-	for (int j=0;j<NodeArrays->NodeGhost.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
 	{
 		Set_GhostType(NodeArrays->NodeGhost[j]);
 	}
@@ -1348,16 +1214,16 @@ void D2Q9::ApplyPatchVelocity(VelocityPatchBc& VelPatchBc){
 	std::vector<int> NodeIdxSpecialWalls=VelPatchBc.Get_NodeIndexByTypeSpecialWalls();
 	std::vector<int> NodeIdxGlobalCorner=VelPatchBc.Get_NodeIndexByTypeGlobalCorner();
 
-	for (int j=0;j<NodeIdx.size();j++)
+	for (unsigned int j=0;j<NodeIdx.size();j++)
 	{
 		ApplyVelocity(NodeArrays->NodeVelocity[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_connect(),NodeArrays->NodeVelocity[NodeIdx[j]].Get_UDef(), f,Rho,U[0],U[1]);
 	}
-	for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
 	{
 		ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
 		ApplyVelocityWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
 	}
-	for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeIdxGlobalCorner.size();j++)
 	{
 		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
 	}
@@ -1369,16 +1235,16 @@ void D2Q9::ApplyPatchPressure(PressurePatchBc& PresPatchBc){
 	std::vector<int> NodeIdxSpecialWalls=PresPatchBc.Get_NodeIndexByTypeSpecialWalls();
 	std::vector<int> NodeIdxGlobalCorner=PresPatchBc.Get_NodeIndexByTypeGlobalCorner();
 
-	for (int j=0;j<NodeIdx.size();j++)
+	for (unsigned int j=0;j<NodeIdx.size();j++)
 	{
 		ApplyPressure(NodeArrays->NodePressure[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePressure[NodeIdx[j]].Get_connect(),NodeArrays->NodePressure[NodeIdx[j]].Get_RhoDef(), f,Rho,U[0],U[1]);
 	}
-	for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
 	{
 		ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_connect(),NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_BcNormal());
 		ApplyPressureWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
 	}
-	for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeIdxGlobalCorner.size();j++)
 	{
 		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
 	}
@@ -1390,15 +1256,15 @@ void D2Q9::ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc){
 	std::vector<int> NodeIdxSpecialWalls=SymPatchBc.Get_NodeIndexByTypeSpecialWalls();
 	std::vector<int> NodeIdxGlobalCorner=SymPatchBc.Get_NodeIndexByTypeGlobalCorner();
 
-	for (int j=0;j<NodeIdx.size();j++)
+	for (unsigned int j=0;j<NodeIdx.size();j++)
 	{
 			ApplySymmetry(NodeArrays->NodeSymmetry[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_connect(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodeSymmetry[NodeIdx[j]].Get_UDef(),f,Rho,U[0],U[1]);
 	}
-	for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
 	{
 		ApplySymmetryWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
 	}
-	for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeIdxGlobalCorner.size();j++)
 	{
 		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
 	}
@@ -1409,15 +1275,15 @@ void D2Q9::ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc){
 	std::vector<int> NodeIdx=PerPatchBc.Get_NodeIndexByType();
 	std::vector<int> NodeIdxSpecialWalls=PerPatchBc.Get_NodeIndexByTypeSpecialWalls();
 	std::vector<int> NodeIdxGlobalCorner=PerPatchBc.Get_NodeIndexByTypeGlobalCorner();
-	for (int j=0;j<NodeIdx.size();j++)
+	for (unsigned int j=0;j<NodeIdx.size();j++)
 	{
 			ApplyPeriodic(NodeArrays->NodePeriodic[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_connect(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_UDef(),f,Rho,U[0],U[1]);
 	}
-	for (int j=0;j<NodeIdxSpecialWalls.size();j++)
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
 	{
 		ApplyPeriodicWall(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
 	}
-	for (int j=0;j<NodeIdxGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeIdxGlobalCorner.size();j++)
 	{
 		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
 	}
@@ -1458,10 +1324,10 @@ void D2Q9::ApplyBc(){
 		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_RhoDef(), f);
 	}
 	*/
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 //Old version save
-		ApplyWall(NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f);
+		ApplyWall(NodeArrays->NodeWall[j],NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f);
 //		ApplyWall(NodeArrays->NodeWall[j],f);
 	}
 	/*
@@ -1472,7 +1338,7 @@ void D2Q9::ApplyBc(){
 
 	}
 	*/
-	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 		ApplyCornerWall(NodeArrays->NodeCorner[j], f);
 	}
@@ -1913,7 +1779,7 @@ void D2Q9::GhostNodesSyncFromGhost(){
 		buf_send[2][3][i]=f->f[6][IdNodeN[i]];
 	}
 
-	int itmp=0;
+//	int itmp=0;
 	for (int i=0;i<Nd_variables_sync;i++)
 	{
 		MultiBlock_->CommunicationFromGhost(buf_send[i],buf_recv[i],size_buf);
@@ -2074,7 +1940,7 @@ void D2Q9::CornerNodesSyncFromGhost(){
 }
 void D2Q9::CornerNodesSyncToGhost(){
 	 int tag_x_l=1;
-	 int tag_y_b=2;
+//	 int tag_y_b=2;
 	 int tag_d_bl=3;
 	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;
 	MPI_Status status;
@@ -2254,39 +2120,39 @@ void D2Q9::SyncMacroVarToGhost(){
 		}
 }
 void D2Q9::UpdatePressure(){
-	for (int j=0;j<NodeArrays->NodeInterior.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 	{
 		CalculatePressure(NodeArrays->NodeInterior[j].Get_index());
 	}
-	for (int j=0;j<NodeArrays->NodeCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{
 		CalculatePressure(NodeArrays->NodeCorner[j].Get_index());
 	}
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 	{
 		CalculatePressure(NodeArrays->NodeGlobalCorner[j].Get_index());
 	}
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 	{
 		CalculatePressure(NodeArrays->NodeVelocity[j].Get_index());
 	}
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 	{
 		CalculatePressure(NodeArrays->NodePressure[j].Get_index());
 	}
-	for (int j=0;j<NodeArrays->NodeWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 	{
 		CalculatePressure(NodeArrays->NodeWall[j].Get_index());
 	}
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 	{
 		CalculatePressure(NodeArrays->NodeSpecialWall[j].Get_index());
 	}
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
 	{
 		CalculatePressure(NodeArrays->NodeSymmetry[j].Get_index());
 	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
+	for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
 	{
 		CalculatePressure(NodeArrays->NodePeriodic[j].Get_index());
 	}

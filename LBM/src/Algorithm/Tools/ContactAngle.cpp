@@ -28,6 +28,8 @@ ContactAngle::ContactAngle() {
 	MapCornerConcaveId=0;
 	MapCornerConvexId=0;
 	InvSqrt2=1.0/std::sqrt(2.0);
+	ExtrapolNormalInSolid=0;
+	ImposeNormalOnWall=0;
 }
 
 ContactAngle::~ContactAngle() {
@@ -70,7 +72,7 @@ void ContactAngle::AllocateTeta(NodeArrays2D *PtrNode,Parameters *PtrParam,doubl
 				nodeWallIdx++;
 			}*/
 
-			for(int i=0;i<PtrNode->CornerConcave.size()+PtrNode->CornerConvex.size()+PtrNode->NodeWall.size()+PtrNode->NodeSpecialWall.size();i++)
+			for(unsigned int i=0;i<PtrNode->CornerConcave.size()+PtrNode->CornerConvex.size()+PtrNode->NodeWall.size()+PtrNode->NodeSpecialWall.size();i++)
 				teta[i]=0;
 
 			break;
@@ -297,26 +299,26 @@ void ContactAngle::Set_TwoChoiceOfContactAngle2D(int &nodeWallIdx){
 
 void ContactAngle::Extrapolate_NormalInSolid2D(double **&Normal){
 
-	for (int j=0;j<PtrNodeCa->CornerConcave.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConcave.size();j++)
 	{
 		ExtraPolNormalCa.ExtrapolationCornerConcaveToSolid(Normal[0],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal());
 		ExtraPolNormalCa.ExtrapolationCornerConcaveToSolid(Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal());
 		//Normalise(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect()[PtrOppositeCa[PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal()]]);
 		NormaliseConcaveCornerExtraPol(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal());
 	}
-	for (int j=0;j<PtrNodeCa->NodeWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeWall.size();j++)
 	{
 		ExtraPolNormalCa.ExtrapolationWallToSolid(Normal[0],PtrNodeCa->NodeWall[j].Get_connect(),PtrNodeCa->NodeWall[j].Get_BcNormal());
 		ExtraPolNormalCa.ExtrapolationWallToSolid(Normal[1],PtrNodeCa->NodeWall[j].Get_connect(),PtrNodeCa->NodeWall[j].Get_BcNormal());
 		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeWall[j].Get_connect()[PtrOppositeCa[PtrNodeCa->NodeWall[j].Get_BcNormal()]]);
 	}
-	for (int j=0;j<PtrNodeCa->CornerConvex.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConvex.size();j++)
 	{
 		ExtraPolNormalCa.ExtrapolationCornerConvexToSolid(Normal[0],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_BcNormal());
 		ExtraPolNormalCa.ExtrapolationCornerConvexToSolid(Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_BcNormal());
 		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_connect()[PtrOppositeCa[PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_BcNormal()]]);
 	}
-	for (int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
 	{
 		ExtraPolNormalCa.ExtrapolationCornerConcaveToSolid(Normal[0],PtrNodeCa->NodeSpecialWall[j].Get_connect(),PtrNodeCa->NodeSpecialWall[j].Get_BcNormal());
 		ExtraPolNormalCa.ExtrapolationCornerConcaveToSolid(Normal[1],PtrNodeCa->NodeSpecialWall[j].Get_connect(),PtrNodeCa->NodeSpecialWall[j].Get_BcNormal());
@@ -326,39 +328,39 @@ void ContactAngle::Extrapolate_NormalInSolid2D(double **&Normal){
 void ContactAngle::Impose_ContactAngleInSolidAndInterpol2DFixTeta(double **&Normal){
 	int nodeWallIdx=0;
 	//define the contact angle in the solid
-	for (int j=0;j<PtrNodeCa->CornerConcave.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConcave.size();j++)
 	{
 		ContactAngleConcaveCornerInSolid2D(nodeWallIdx,Normal,PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal());
 	}
-	for (int j=0;j<PtrNodeCa->NodeWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeWall.size();j++)
 	{
 		ContactAngleWallInSolid2D(nodeWallIdx,Normal,PtrNodeCa->NodeWall[j].Get_connect(),PtrNodeCa->NodeWall[j].Get_BcNormal());
 	}
-	for (int j=0;j<PtrNodeCa->CornerConvex.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConvex.size();j++)
 	{
 		ContactAngleConvexCornerInSolid2D(nodeWallIdx,Normal,PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_BcNormal());
 	}
-	for (int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
 	{
 		ContactAngleConcaveCornerInSolid2D(nodeWallIdx,Normal,PtrNodeCa->NodeSpecialWall[j].Get_connect(),PtrNodeCa->NodeSpecialWall[j].Get_BcNormal());
 	}
 	//interpolate the contact angle on the boundary from in the solid and in the interior fluid
-	for (int j=0;j<PtrNodeCa->CornerConcave.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConcave.size();j++)
 	{
 		InterPolNormalCa.InterpolationOnCornerConcave(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal());
 		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_index());
 	}
-	for (int j=0;j<PtrNodeCa->NodeWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeWall.size();j++)
 	{
 		InterPolNormalCa.InterpolationOnWall(Normal[0],Normal[1],PtrNodeCa->NodeWall[j].Get_connect(),PtrNodeCa->NodeWall[j].Get_BcNormal());
 		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeWall[j].Get_index());
 	}
-	for (int j=0;j<PtrNodeCa->CornerConvex.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConvex.size();j++)
 	{
 		InterPolNormalCa.InterpolationOnCornerConvex(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_BcNormal());
 		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_index());
 	}
-	for (int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
 	{
 	//	ExtraPolNormalCa.ExtrapolationOnCornerConcave(Normal[0],PtrNodeCa->NodeSpecialWall[j].Get_connect(),PtrNodeCa->NodeSpecialWall[j].Get_BcNormal());
 	//	ExtraPolNormalCa.ExtrapolationOnCornerConcave(Normal[1],PtrNodeCa->NodeSpecialWall[j].Get_connect(),PtrNodeCa->NodeSpecialWall[j].Get_BcNormal());
@@ -391,43 +393,43 @@ void ContactAngle::Impose_ContactAngleInSolidAndInterpol2DFixTeta(double **&Norm
 void ContactAngle::Impose_ContactAngleInSolidAndInterpol2DNonCstTeta(double **&Normal){
 	int nodeWallIdx=0;
 	//define the contact angle in the solid
-	for (int j=0;j<PtrNodeCa->CornerConcave.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConcave.size();j++)
 	{
 		ContactAngleConcaveCornerInSolid2D(nodeWallIdx,Normal,PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal());
 		nodeWallIdx++;
 	}
-	for (int j=0;j<PtrNodeCa->NodeWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeWall.size();j++)
 	{
 		ContactAngleWallInSolid2D(nodeWallIdx,Normal,PtrNodeCa->NodeWall[j].Get_connect(),PtrNodeCa->NodeWall[j].Get_BcNormal());
 		nodeWallIdx++;
 	}
-	for (int j=0;j<PtrNodeCa->CornerConvex.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConvex.size();j++)
 	{
 		ContactAngleConvexCornerInSolid2D(nodeWallIdx,Normal,PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_BcNormal());
 		nodeWallIdx++;
 	}
-	for (int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
 	{
 		ContactAngleConcaveCornerInSolid2D(nodeWallIdx,Normal,PtrNodeCa->NodeSpecialWall[j].Get_connect(),PtrNodeCa->NodeSpecialWall[j].Get_BcNormal());
 		nodeWallIdx++;
 	}
 	//interpolate the contact angle on the boundary from in the solid and in the interior fluid
-	for (int j=0;j<PtrNodeCa->CornerConcave.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConcave.size();j++)
 	{
 		InterPolNormalCa.InterpolationOnCornerConcave(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal());
 		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_index());
 	}
-	for (int j=0;j<PtrNodeCa->NodeWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeWall.size();j++)
 	{
 		InterPolNormalCa.InterpolationOnWall(Normal[0],Normal[1],PtrNodeCa->NodeWall[j].Get_connect(),PtrNodeCa->NodeWall[j].Get_BcNormal());
 		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeWall[j].Get_index());
 	}
-	for (int j=0;j<PtrNodeCa->CornerConvex.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConvex.size();j++)
 	{
 		InterPolNormalCa.InterpolationOnCornerConvex(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_BcNormal());
 		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_index());
 	}
-	for (int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
 	{
 		InterPolNormalCa.InterpolationOnCornerConcave(Normal[0],Normal[1],PtrNodeCa->NodeSpecialWall[j].Get_connect(),PtrNodeCa->NodeSpecialWall[j].Get_BcNormal());
 		Normalise(Normal[0],Normal[1],PtrNodeCa->NodeSpecialWall[j].Get_index());
@@ -466,19 +468,19 @@ void ContactAngle::BinarySwitchContactAngle2D(int &nodeWallIdx, double & rin,int
 void ContactAngle::Impose_ContactAngleOnWall2DFixTeta(double **&Normal){
 	int nodeWallIdx=0;
 	//define the contact angle on walls
-	for (int j=0;j<PtrNodeCa->CornerConcave.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConcave.size();j++)
 	{
 		ContactAngleonWalls2D(nodeWallIdx,Normal,PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal());
 	}
-	for (int j=0;j<PtrNodeCa->NodeWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeWall.size();j++)
 	{
 		ContactAngleonWalls2D(nodeWallIdx,Normal,PtrNodeCa->NodeWall[j].Get_connect(),PtrNodeCa->NodeWall[j].Get_BcNormal());
 	}
-	for (int j=0;j<PtrNodeCa->CornerConvex.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConvex.size();j++)
 	{
 		ContactAngleonWalls2D(nodeWallIdx,Normal,PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_BcNormal());
 	}
-	for (int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
 	{
 		ContactAngleonWalls2D(nodeWallIdx,Normal,PtrNodeCa->NodeSpecialWall[j].Get_connect(),PtrNodeCa->NodeSpecialWall[j].Get_BcNormal());
 	}
@@ -486,22 +488,22 @@ void ContactAngle::Impose_ContactAngleOnWall2DFixTeta(double **&Normal){
 void ContactAngle::Impose_ContactAngleOnWall2DNonCstTeta(double **&Normal){
 	int nodeWallIdx=0;
 	//define the contact angle on walls
-	for (int j=0;j<PtrNodeCa->CornerConcave.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConcave.size();j++)
 	{
 		ContactAngleonWalls2D(nodeWallIdx,Normal,PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConcave[j]].Get_BcNormal());
 		nodeWallIdx++;
 	}
-	for (int j=0;j<PtrNodeCa->NodeWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeWall.size();j++)
 	{
 		ContactAngleonWalls2D(nodeWallIdx,Normal,PtrNodeCa->NodeWall[j].Get_connect(),PtrNodeCa->NodeWall[j].Get_BcNormal());
 		nodeWallIdx++;
 	}
-	for (int j=0;j<PtrNodeCa->CornerConvex.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->CornerConvex.size();j++)
 	{
 		ContactAngleonWalls2D(nodeWallIdx,Normal,PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_connect(),PtrNodeCa->NodeCorner[PtrNodeCa->CornerConvex[j]].Get_BcNormal());
 		nodeWallIdx++;
 	}
-	for (int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
+	for (unsigned int j=0;j<PtrNodeCa->NodeSpecialWall.size();j++)
 	{
 		ContactAngleonWalls2D(nodeWallIdx,Normal,PtrNodeCa->NodeSpecialWall[j].Get_connect(),PtrNodeCa->NodeSpecialWall[j].Get_BcNormal());
 		nodeWallIdx++;

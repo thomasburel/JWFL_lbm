@@ -39,7 +39,7 @@ NodeArrays2D::~NodeArrays2D() {
 
 
 void NodeArrays2D::Get_coordinate(int index,double & x, double & y){
-	if(index<TypeOfNode.size())
+	if((unsigned int)index<TypeOfNode.size())
 	{
 		int localidx=NodeIndexByType[index];
 		switch(TypeOfNode[index])
@@ -281,7 +281,7 @@ void NodeArrays2D::ChangeNodeType(int NodeNumber,NodeType OldNodeType_, NodeType
 		Node[NodeNumber]->Set_Index(index);
 }*/
 void NodeArrays2D::Get_CoordinateNextNodeAtNormal(int index,double & x, double & y){
-	if(index<TypeOfNode.size())
+	if((unsigned int)index<TypeOfNode.size())
 	{
 		int localidx=NodeIndexByType[index];
 		switch(TypeOfNode[index])

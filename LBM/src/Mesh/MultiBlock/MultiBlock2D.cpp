@@ -8,9 +8,7 @@
 #include "MultiBlock2D.h"
 
 MultiBlock2D::MultiBlock2D() :
-	Nx_G(1),Ny_G(1),
-	start_nodes(1),end_nodes(0),start_elems(1),end_elems(0),
-	reorder(false),COMM_CART(0),rank_in_topo(0),VertComm(0),HorizComm(0)
+Nx_G(1),Ny_G(1),start_nodes(1),end_nodes(0),start_elems(1),end_elems(0),COMM_CART(0),VertComm(0),HorizComm(0),reorder(false),rank_in_topo(0)
 {
 	for (int i=0;i<2;i++)
 		{
@@ -41,7 +39,7 @@ MultiBlock2D::MultiBlock2D() :
 //MultiBlock2D::MultiBlock2D(ParrallelManager* parallel_, int Nx_, int Ny_) :
 MultiBlock2D::MultiBlock2D(ParallelManager* parallel_, Parameters * PtrParameters_) :
 		start_nodes(1),end_nodes(0),start_elems(1),end_elems(0),
-		reorder(false),COMM_CART(0),VertComm(0),HorizComm(0)
+		COMM_CART(0),VertComm(0),HorizComm(0),reorder(false)
 {
 	PtrParameters=PtrParameters_;
 	for (int i=0;i<2;i++)
@@ -87,7 +85,7 @@ MultiBlock2D::MultiBlock2D(ParallelManager* parallel_, Parameters * PtrParameter
 
 MultiBlock2D::~MultiBlock2D() {
 //	delete parallel;
-	delete [] Nx,Ny;
+	delete [] Nx;delete [] Ny;
 }
 
 void MultiBlock2D::Partitioning() {
@@ -637,10 +635,10 @@ void MultiBlock2D::Get_Connect_SolidNode(std::vector<int> & IdRNodeN_,std::vecto
 	 int tag_x_l=2;
 	 int tag_y_t=3;
 	 int tag_y_b=4;
-	 int tag_d_tr=5;
+/*	 int tag_d_tr=5;
 	 int tag_d_tl=6;
 	 int tag_d_br=7;
-	 int tag_d_bl=8;
+	 int tag_d_bl=8;*/
 	 MPI_Status status;
 
 	 //MPI_Allgather(&Nx[0],1,MPI_INT ,&Nx_tmp[0],1,MPI_INT , MPI_COMM_WORLD); // static_cast<void*>(sendBuf)
@@ -686,14 +684,14 @@ void MultiBlock2D::Get_Connect_SolidNode(std::vector<int> & IdRNodeN_,std::vecto
  }
  void MultiBlock2D::CommunicationToGhost(double **buf_send,double **buf_recv, int *size_buf)
  {
-	 int tag_x_r=1;
+//	 int tag_x_r=1;
 	 int tag_x_l=2;
-	 int tag_y_t=3;
+//	 int tag_y_t=3;
 	 int tag_y_b=4;
-	 int tag_d_tr=5;
-	 int tag_d_tl=6;
-	 int tag_d_br=7;
-	 int tag_d_bl=8;
+//	 int tag_d_tr=5;
+//	 int tag_d_tl=6;
+//	 int tag_d_br=7;
+//	 int tag_d_bl=8;
 	 MPI_Status status;
 
 	 if(BlockNeighbour[W]>=0)
@@ -716,9 +714,9 @@ void MultiBlock2D::Get_Connect_SolidNode(std::vector<int> & IdRNodeN_,std::vecto
  void MultiBlock2D::CommunicationFromGhost(double **buf_send,double **buf_recv, int *size_buf)
   {
  	 int tag_x_r=1;
- 	 int tag_x_l=2;
+ //	 int tag_x_l=2;
  	 int tag_y_t=3;
- 	 int tag_y_b=4;
+// 	 int tag_y_b=4;
 
  	 MPI_Status status;
  	 if(BlockNeighbour[E]>=0)
@@ -741,9 +739,9 @@ void MultiBlock2D::Get_Connect_SolidNode(std::vector<int> & IdRNodeN_,std::vecto
  void MultiBlock2D::CommunicationFromGhost(double **buf_send,double **buf_recv, int *size_buf,MPI_Status * status,MPI_Request * request)
  {
 	 int tag_x_r=1;
-	 int tag_x_l=2;
+//	 int tag_x_l=2;
 	 int tag_y_t=3;
-	 int tag_y_b=4;
+//	 int tag_y_b=4;
 
 	 if(BlockNeighbour[E]>=0)
 	 {
@@ -841,9 +839,9 @@ void MultiBlock2D::reorganizeNodeByType(){
 
 void MultiBlock2D::Correct_SolidGhost()
 {
-	 int tag_x_r=1;
+//	 int tag_x_r=1;
 	 int tag_x_l=2;
-	 int tag_y_t=3;
+//	 int tag_y_t=3;
 	 int tag_y_b=4;
 	 std::vector<int> IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE;
 	 std::vector<int> IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE;
@@ -996,9 +994,9 @@ void MultiBlock2D::Correct_SolidGhost()
 }
 void MultiBlock2D::Correct_SolidGhostAsGhost()
 {
-	 int tag_x_r=1;
+//	 int tag_x_r=1;
 	 int tag_x_l=2;
-	 int tag_y_t=3;
+//	 int tag_y_t=3;
 	 int tag_y_b=4;
 	 std::vector<int> IdRNodeN,IdRNodeE,IdRNodeS,IdRNodeW,IdRNodeSW,IdRNodeSE,IdRNodeNW,IdRNodeNE;
 	 std::vector<int> IdGNodeN,IdGNodeE,IdGNodeS,IdGNodeW,IdGNodeSW,IdGNodeSE,IdGNodeNW,IdGNodeNE;
@@ -1077,9 +1075,9 @@ void MultiBlock2D::Correct_SolidGhostAsGhost()
 
 void MultiBlock2D::Remove_SolidInComunicators()
 {
-	 int tag_x_r=1;
+//	 int tag_x_r=1;
 	 int tag_x_l=2;
-	 int tag_y_t=3;
+//	 int tag_y_t=3;
 	 int tag_y_b=4;
 	 int tag_d_bl=5;
 	//N=0,E=1,S=2,W=3,NE=4, SE=5, NW=6, SW=7;

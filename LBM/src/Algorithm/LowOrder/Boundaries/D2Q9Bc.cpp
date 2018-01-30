@@ -16,7 +16,7 @@
 D2Q9Bc::D2Q9Bc() {
 
 }
-void D2Q9Bc::InitD2Q9Bc(Dictionary *PtrDic_, Parameters *Param, double ** &Ei){
+void D2Q9Bc::InitD2Q9Bc(Dictionary *PtrDic_, NodeArrays2D* NodeArrays,Parameters *Param, double ** &Ei,unsigned int nbDistributions){
 //Initialise Variables shared between boundary conditions
 	PtrD2Q9BcDic=	PtrDic_;
 	//pointers for generic boundary conditions
@@ -26,9 +26,9 @@ void D2Q9Bc::InitD2Q9Bc(Dictionary *PtrDic_, Parameters *Param, double ** &Ei){
 	PtrD2Q9BcDic->Get_PtrVar("VelocityY",PtrD2Q9BcV,Var_found);
 
 //Initialise the Boundaries conditions classes
-	SetBcObjects(Param,Ei);
-	Set_GlobalCorner(Param,this);
-	Set_SpecialWall(Param,this);
+	SetBcObjects(PtrDic_,NodeArrays,Param,Ei,nbDistributions);
+	Set_GlobalCorner(PtrDic_,NodeArrays,Param,this);
+	Set_SpecialWall(PtrDic_,NodeArrays,Param,this);
 }
 D2Q9Bc::~D2Q9Bc() {
 	// TODO Auto-generated destructor stub

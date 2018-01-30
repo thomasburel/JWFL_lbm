@@ -18,7 +18,7 @@ using namespace std;
 
  
 int main(int argc, char *argv[]) {
-	int idx=0;
+//	int idx=0;
 /*	if (argv[1]==0)
 	{
 		std::cout<<"No argument. Index set to 1"<<std::endl;
@@ -67,17 +67,17 @@ int main(int argc, char *argv[]) {
 
 
 	double lambda=1.0/5.0;
-	double nu_1=2.5*1.e-2*5.0;//4.91*1.e-2/lambda;
+	double nu_1=1.0/6.0;//4.91*1.e-2/lambda;
 	double nu_2=lambda*nu_1;
 
 	double tau1=0.5+nu_1*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
 	double tau2=0.5+nu_2*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
-	double La=0;
+//	double La=0;
 	double sigma=1.e-3;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
 
 
-	double Mach =U2_ref*std::sqrt(3);
-	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
+//	double Mach =U2_ref*std::sqrt(3);
+//	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
 //Pressure drop
 	double deltaP=0;//0.1*L/1322;
 	double refPressure=1.0;
@@ -125,14 +125,14 @@ int main(int argc, char *argv[]) {
 	Param.Set_PressureType(FixP);//FixP,zeroPGrad1st
 /// Set Global Corner type
 	Param.Set_CornerPressureType(ExtrapolCP);//FixCP,ExtrapolCP
-/// Wall boundary condition type (Implemented BounceBack and Diffuse)
-	Param.Set_WallType(BounceBack);//BounceBack,HeZouWall
+/// Wall boundary condition type (Implemented BounceBack, HalfWayBounceBack, and Diffuse)
+	Param.Set_WallType(HalfWayBounceBack);//BounceBack,HalfWayBounceBack,HeZouWall
 	Param.Set_VelocityModel(HeZouV);
 /// Set Periodic boundary condition to add a pressure drop term
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
-	Param.Set_PressureDrop(deltaP);
+	Param.Set_PressureDrop(0.0001);
 /// Number of maximum timestep
-	Param.Set_NbStep(150000);
+	Param.Set_NbStep(10000);
 /// Interval for output
 	Param.Set_OutPutNSteps(1000);// interval
 ///Display information during the calculation every N iteration
@@ -205,7 +205,7 @@ int main(int argc, char *argv[]) {
 				<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
 				<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
 		FileExportStream.str("");
-		FileExportStream<<"Test_Poiseuille_BodyForce"<< fixed << setprecision(0)<<L<<"x"<<H;
+		FileExportStream<<"Test_Poiseuille_BodyForce_Half_WayBounceBack"<< fixed << setprecision(0)<<L<<"x"<<H;
 
 //		FileExportStream<<"Test_Vel_interface__With_estimator_CSFV2"<< fixed << setprecision(0)<<L<<"x"<<H;
 //		FileExportStream<<"LinearLeastSquareInterpol_linearswitch_teta170_beta0.7_5fluids_3Solid";

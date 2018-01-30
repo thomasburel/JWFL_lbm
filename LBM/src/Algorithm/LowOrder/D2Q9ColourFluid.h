@@ -160,7 +160,7 @@ private:
 
 private:
 //Multiphase variables
-	double *testVar;
+	//double *testVar;
 	double *RhoN;// Normal density
 	double *Rhor;// Density red fluid
 	double *Rhob;// DensityBlue fluid
@@ -177,8 +177,8 @@ private:
 	double A2;///< Guntensen parameter for the blue fluid
 	double Bi[9];///< Reis correction
 	double Rho_limiter,LimitGNorm;///< Approximation to null density
-	int I_tmp;// Temporary integer
-	int& IntRef(int I_input){I_tmp=I_input;return I_tmp;};
+	//int I_tmp;// Temporary integer
+//	int& IntRef(int I_input){I_tmp=I_input;return I_tmp;};
 	double D_tmp;// Temporary double
 	double& doubleRef(int D_input){D_tmp=D_input;return D_tmp;};
 	double* PtrD_tmp;// Temporary pointer for a double
@@ -218,7 +218,7 @@ private:
 //	CalNormal PtrCalNormal;///< Calcul Normal
 //	CalNormal PtrCalNormalWall;///< Calcul or fix normal at the wall
 
-	int idxcheck;
+	//int idxcheck;
 };
 
 #endif /* SRC_ALGORITHM_LOWORDER_D2Q9COLOURFLUID_H_ */

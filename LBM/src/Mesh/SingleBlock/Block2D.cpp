@@ -20,17 +20,18 @@ Block2D::Block2D(int dx_, int dy_) : dx(dx_),dy(dy_)
 	periodic[0]=false;
 	periodic[1]=false;
 	nx=0;ny=0;
+	intTmpReturn=false;
 }
 
 Block2D::~Block2D() {
 	//NodeArrays.~NodeArrays2D();
 	delete [] Coord_physical;
-	for(int i=0;i<CellArray.size();i++) delete CellArray[i];
-	for(int i=0;i<GhostCellArraytmp.size();i++) delete GhostCellArraytmp[i];
-	for(int i=0;i<Node.size();i++) delete Node[i];
-	for(int i=0;i<Node_Ghosttmp.size();i++) delete Node_Ghosttmp[i];
-	for(int i=0;i<Node_Solidtmp.size();i++) delete Node_Solidtmp[i];
-	for(int i=0;i<Node_tmp.size();i++) delete Node_tmp[i];
+	for(unsigned int i=0;i<CellArray.size();i++) delete CellArray[i];
+	for(unsigned int i=0;i<GhostCellArraytmp.size();i++) delete GhostCellArraytmp[i];
+	for(unsigned int i=0;i<Node.size();i++) delete Node[i];
+	for(unsigned int i=0;i<Node_Ghosttmp.size();i++) delete Node_Ghosttmp[i];
+	for(unsigned int i=0;i<Node_Solidtmp.size();i++) delete Node_Solidtmp[i];
+	for(unsigned int i=0;i<Node_tmp.size();i++) delete Node_tmp[i];
 
 }
 ///Correct Ordering Ghost node for real cells
@@ -105,7 +106,7 @@ void Block2D::Set_Connect() {
 
 
 
-	for (int i=0;i<CellArray.size();i++)
+	for (unsigned int i=0;i<CellArray.size();i++)
 	{
 		//CellArray[CellArray[i]->Get_Connect(0)[1]]->Get_NodeNumber(0);
 		if(verbous)
@@ -273,7 +274,7 @@ void Block2D::AddBlock(int TotalNumberCells_x,int TotalNumberCells_y,int dims[2]
 	int Node2D_GlobalDomain[4];
 	int nNode2D_SubDomain=1;
 	int nComputationalNode=1;
-	int nNodes_Y=(NyCell_G+1)*TotalNumberCells_x;
+//	int nNodes_Y=(NyCell_G+1)*TotalNumberCells_x;
 	GhostNodes[0]=false;
 	GhostNodes[1]=false;
 	GhostNodes[2]=false;
@@ -1305,7 +1306,7 @@ void Block2D::AddBlock(int TotalNumberCells_x,int TotalNumberCells_y,int dims[2]
 
 }
 void Block2D::ConvertSolidInGhostToGhostnode(){
-	for(int i=NbRealNodes;i<Node.size();i++)
+	for(unsigned int i=NbRealNodes;i<Node.size();i++)
 		if(Node[i]->get_NodeType()==Solid)
 			ChangeNodeType(i,SolidGhost);
 }
@@ -1758,7 +1759,7 @@ void Block2D::AddGhostCells(int TotalNumberCells_x,int TotalNumberCells_y)
 void Block2D::RemoveWrongGhostCells(){
 	std::vector<int> CellToBeRemoved,NodeToBeRemoved;
 	//Get Cells and node to be removed
-	for(int i=0;i<IdGhostCell.size();i++)
+	for(unsigned int i=0;i<IdGhostCell.size();i++)
 	{
 		for(int j=0;j<4;j++)
 			if(IsGhostConnectToGhost(CellArray[IdGhostCell[i]]->Get_NodeNumber(j)-1))
@@ -1868,8 +1869,8 @@ void Block2D::WriteCells()
 	snprintf(buffer, sizeof(buffer), "Cells_%d.txt", rank);
 	std::ofstream myFlux;
 	myFlux.open(buffer);
-	int it;
-	for (it=0; it<CellArray.size(); it++)
+	//unsigned int it;
+	for (unsigned int it=0; it<CellArray.size(); it++)
 	{
 	myFlux<<"Cell: "<<it<<std::endl;
 	myFlux<<"Nodes: "<<CellArray[it]->Get_NodeNumber(0)<<" "<<CellArray[it]->Get_NodeNumber(1)<<" "<<CellArray[it]->Get_NodeNumber(2)<<" "<<CellArray[it]->Get_NodeNumber(3)<<std::endl;
@@ -1886,8 +1887,8 @@ void Block2D::WriteNodes()
 	snprintf(buffer, sizeof(buffer), "Nodes_%d.txt", rank);
 	std::ofstream myFlux;
 	myFlux.open(buffer);
-	int it;
-	for (it=0; it<Node.size(); it++)
+	//int it;
+	for (unsigned int it=0; it<Node.size(); it++)
 	{
 	myFlux<<"Node: "<<it<<std::endl;
 	myFlux<<"X Y: "<<Node[it]->get_x()<<" "<<Node[it]->get_y()<<std::endl;
@@ -1959,7 +1960,7 @@ void Block2D::ChangeNodeType(int NodeNumber, NodeType NewNodeType_)
 	unsigned int Connect_W_tmp=Node[NodeNumber]->Get_connect(3)+1;
 	unsigned int Connect_E_tmp=Node[NodeNumber]->Get_connect(1)+1;
 	unsigned int NbVelocity_tmp=Node[NodeNumber]->Get_NbVelocity();
-	NodeType OldNodeType_=Node[NodeNumber]->get_NodeType();
+//	NodeType OldNodeType_=Node[NodeNumber]->get_NodeType();
 	int index=Node[NodeNumber]->Get_index();
 
 	delete Node[NodeNumber];
@@ -2190,7 +2191,7 @@ void Block2D::GenerateSolid(Parameters &Param)
 	PtrParametersUserMesh=&Param;
 	UserMesh::SetUserMeshVariables();
 	//for (int i=0;i<NbRealNodes;i++)
-	for (int i=0;i<Node.size();i++)
+	for (unsigned int i=0;i<Node.size();i++)
 	{
 		testSolid=false;//Fluid by default
 		Node[i]->Set_Index(i);
@@ -2206,7 +2207,7 @@ void Block2D::GenerateSolid(Parameters &Param)
 			//Store the number of Solid node
 //			ndSolidNode++;
 			//store id of solid nodes
-			if(i<NbRealNodes)
+			if(i<(unsigned int)NbRealNodes)
 	//		if(Node[i]->get_NodeType()!=Ghost)
 				IdSolidNode.push_back(i);
 			//create the solid node}
@@ -2248,19 +2249,19 @@ void Block2D::GenerateSolid(Parameters &Param)
 }
 void Block2D::SetSolidBoundaries(){
 //Detect boundaries
-	for(int i=0;i<IdSolidNode.size();i++)
+	for(unsigned int i=0;i<IdSolidNode.size();i++)
 	{
 		if(DetectSolidBoundaries(IdSolidNode[i]))
 			IdSolidBc.push_back(IdSolidNode[i]);
 	}
 //Create wall and corners
-	for (int i=0;i<IdWalltmp.size();i++)
+	for (unsigned int i=0;i<IdWalltmp.size();i++)
 		CreateWall(IdWalltmp[i]);
-	for (int i=0;i<IdSpecialWalltmp.size();i++)
+	for (unsigned int i=0;i<IdSpecialWalltmp.size();i++)
 		CreateSpecialWall(IdSpecialWalltmp[i]);
-	for (int i=0;i<IdCornerConcavetmp.size();i++)
+	for (unsigned int i=0;i<IdCornerConcavetmp.size();i++)
 		CreateCornerConcave(IdCornerConcavetmp[i]);
-	for (int i=0;i<IdCornerConvextmp.size();i++)
+	for (unsigned int i=0;i<IdCornerConvextmp.size();i++)
 		CreateCornerConvex(IdCornerConvextmp[i]);
 //Remove wrong solid
 /*	for (int i=0;i<IDRemoveSolidtmp.size();i++)
@@ -2281,7 +2282,7 @@ void Block2D::RemoveUnphysicalSolid(int &nbTotalSolidRemoved,int &nbTotalSolidad
 //	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 //	while( count<maxclean && (nbTotalSolidRemoved>0 || nbTotalSolidadded>0))//(count<maxclean ||(nbTotalSolidRemoved>0 && nbTotalSolidadded>0))// &&
 //	{
-		for(int i=0;i<IdSolidNode.size();i++)
+		for(unsigned int i=0;i<IdSolidNode.size();i++)
 		{
 			DetectUnphysicalSolid(IdSolidNode[i]);
 		}
@@ -2291,7 +2292,7 @@ void Block2D::RemoveUnphysicalSolid(int &nbTotalSolidRemoved,int &nbTotalSolidad
 		std::sort( IDRemoveSolidtmp.begin(), IDRemoveSolidtmp.end() );
 		IDRemoveSolidtmp.erase( std::unique( IDRemoveSolidtmp.begin(), IDRemoveSolidtmp.end() ), IDRemoveSolidtmp.end() );
 
-		for (int i=0;i<IDRemoveSolidtmp.size();i++)
+		for (unsigned int i=0;i<IDRemoveSolidtmp.size();i++)
 		{
 			position = std::find(IdSolidNode.begin(), IdSolidNode.end(), IDRemoveSolidtmp[i]);
 			if (position != IdSolidNode.end()) // == myVector.end() means the element was not found
@@ -2303,7 +2304,7 @@ void Block2D::RemoveUnphysicalSolid(int &nbTotalSolidRemoved,int &nbTotalSolidad
 		std::sort( IDRemoveSolidToBctmp.begin(), IDRemoveSolidToBctmp.end() );
 		IDRemoveSolidToBctmp.erase( std::unique( IDRemoveSolidToBctmp.begin(), IDRemoveSolidToBctmp.end() ), IDRemoveSolidToBctmp.end() );
 
-		for (int i=0;i<IDRemoveSolidToBctmp.size();i++)
+		for (unsigned int i=0;i<IDRemoveSolidToBctmp.size();i++)
 		{
 			position = std::find(IdSolidNode.begin(), IdSolidNode.end(), IDRemoveSolidToBctmp[i]);
 			if (position != IdSolidNode.end()) // == myVector.end() means the element was not found
@@ -2341,7 +2342,7 @@ void Block2D::RemoveUnphysicalSolid(int &nbTotalSolidRemoved,int &nbTotalSolidad
 		std::sort( IDAddSolidtmp.begin(), IDAddSolidtmp.end() );
 		IDAddSolidtmp.erase( std::unique( IDAddSolidtmp.begin(), IDAddSolidtmp.end() ), IDAddSolidtmp.end() );
 		// Convert node to interior
-		for (int i=0;i<IDAddSolidtmp.size();i++)
+		for (unsigned int i=0;i<IDAddSolidtmp.size();i++)
 			{Block2D::ChangeNodeType(IDAddSolidtmp[i],Solid);}
 		nbTotalSolidadded=IDAddSolidtmp.size();
 //		std::cout<<"Processor: "<<rank<<"Number of solid added: "<<nbTotalSolidadded<<std::endl;
@@ -2355,7 +2356,7 @@ void Block2D::RemoveUnphysicalSolid(int &nbTotalSolidRemoved,int &nbTotalSolidad
 void Block2D::DetectUnphysicalSolid(int & nodeID){
 	int nbSolidDirect=0;
 	int nbSolidDiagonal=0;
-	int nbWall=0;
+//	int nbWall=0;
 	for(unsigned int j=1;j<5;j++)
 	{
 		if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Solid)
@@ -2432,7 +2433,7 @@ void Block2D::DetectUnphysicalSolid(int & nodeID){
 bool Block2D::DetectSolidBoundaries(int & nodeID){
 	int nbSolidDirect=0;
 	int nbSolidDiagonal=0;
-	int nbWall=0;
+//	int nbWall=0;
 	for(unsigned int j=1;j<5;j++)
 	{
 		if(Node[Connect_lowOrder(nodeID,j)]->get_NodeType()==Solid)
@@ -2541,7 +2542,7 @@ void Block2D::DetectDirectInterior(int & nodeID, int & nbinterior)
 void Block2D::DetectSpecialWall(int & nodeID,int x,int y, bool & specialwall, unsigned int & directionwall)
 {
 	directionwall=-1;//Negative value to generate an error if it is not a special wall
-	int nbspecialwall=0;// check if only one special wall is detected
+//	int nbspecialwall=0;// check if only one special wall is detected
 	specialwall=false;
 //	int nx,ny,x,y;
 	if(x==0 && (Node[Node[nodeID]->Get_connect(3)]->get_NodeType()==Solid||Node[Node[nodeID]->Get_connect(3)]->get_NodeType()==Corner||Node[Node[nodeID]->Get_connect(3)]->get_NodeType()==ConcaveCorner||Node[Node[nodeID]->Get_connect(3)]->get_NodeType()==ConvexCorner||Node[Node[nodeID]->Get_connect(3)]->get_NodeType()==Wall))
@@ -2659,7 +2660,7 @@ void Block2D::ConvertToPhysicalUnit(Parameters &Param){
 	std::vector<double>::iterator it;
 	double convertx=Param.Get_deltax();//local variable is quicker
 	double converty=Param.Get_deltax();//local variable is quicker
-	for (int i=0;i<x.size() ; ++i)
+	for (unsigned int i=0;i<x.size() ; ++i)
 	{
 		x[i]=convertx*x[i];
 		y[i]=converty*y[i];
@@ -2725,7 +2726,7 @@ void Block2D::reorganizeNodeByType(){
 	unsigned int NbVelocity_tmp=0;
 	int count=0;
 
-	for (int i=0;i<Node.size();i++)
+	for (unsigned int i=0;i<Node.size();i++)
 	{
 		NodeArrays.TypeOfNode[i]=Node[i]->get_NodeType();
 		signed short int x_tmp=(signed short int)Node[i]->get_x();
@@ -2888,7 +2889,7 @@ void Block2D::Set_Connect(Parameters& Param){
 	for(int i=0;i<NbTotalNodes;i++)
 	{
 		tmpConnect[0]=i;
-		for (unsigned int j=1;j<Param.Get_NbVelocities();j++)
+		for (unsigned int j=1;j<(unsigned  int)Param.Get_NbVelocities();j++)
 			tmpConnect[j]=Connect_lowOrder(i,j);
 		switch(NodeArrays.TypeOfNode[i])
 		{
@@ -2998,42 +2999,42 @@ int Block2D::Connect_lowOrder(int &NodeNumber,unsigned int& direction){
 }
 void Block2D::Set_BcNormal()
 {
-	for (int i=0;i<NodeArrays.NodeWall.size();i++)
+	for (unsigned int i=0;i<NodeArrays.NodeWall.size();i++)
 	{
 			NodeArrays.NodeWall[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeWall[i]));
 	}
-	for (int i=0;i<NodeArrays.NodeSpecialWall.size();i++)
+	for (unsigned int i=0;i<NodeArrays.NodeSpecialWall.size();i++)
 	{
 			NodeArrays.NodeSpecialWall[i].Set_BcNormal(Get_BcNormal_SpecialWall(NodeArrays.NodeSpecialWall[i]));
 	}
-	for (int i=0;i<NodeArrays.NodeCorner.size();i++)
+	for (unsigned int i=0;i<NodeArrays.NodeCorner.size();i++)
 	{
 			NodeArrays.NodeCorner[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeCorner[i]));
 	}
-	for (int i=0;i<NodeArrays.NodeGlobalCorner.size();i++)
+	for (unsigned int i=0;i<NodeArrays.NodeGlobalCorner.size();i++)
 	{
 			NodeArrays.NodeGlobalCorner[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeGlobalCorner[i]));
 	}
-	for (int i=0;i<NodeArrays.NodeSymmetry.size();i++)
+	for (unsigned int i=0;i<NodeArrays.NodeSymmetry.size();i++)
 	{
 			NodeArrays.NodeSymmetry[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeSymmetry[i]));
 	}
-	for (int i=0;i<NodeArrays.NodePeriodic.size();i++)
+	for (unsigned int i=0;i<NodeArrays.NodePeriodic.size();i++)
 	{
 			NodeArrays.NodePeriodic[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodePeriodic[i]));
 	}
-	for (int i=0;i<NodeArrays.NodePressure.size();i++)
+	for (unsigned int i=0;i<NodeArrays.NodePressure.size();i++)
 	{
 			NodeArrays.NodePressure[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodePressure[i]));
 	}
-	for (int i=0;i<NodeArrays.NodeVelocity.size();i++)
+	for (unsigned int i=0;i<NodeArrays.NodeVelocity.size();i++)
 	{
 			NodeArrays.NodeVelocity[i].Set_BcNormal(Get_BcNormal(NodeArrays.NodeVelocity[i]));
 	}
 }
 int Block2D::Get_BcNormal(NodeCorner2D & nodeIn)
 {
-	int nbinterior=0, count=0;
+	int nbinterior=0;//, count=0;
 	int tmpdirection[4];
 	int intTmpReturn=0;
 
@@ -3177,40 +3178,19 @@ int Block2D::Get_BcNormal(NodeWall2D & nodeIn)
 	return intTmpReturn;
 }
 int Block2D::Get_BcNormal_SpecialWall(NodeWall2D & nodeIn)
-
-{NodeType check;
+{
 	intTmpReturn=0;
 	//treat global corner convert to special node
 	if((nodeIn.get_x()==0 && nodeIn.get_y()==0)  || (nodeIn.get_x()==0 && nodeIn.get_y()==ny)  || (nodeIn.get_x()==nx && nodeIn.get_y()==0)  || (nodeIn.get_x()==nx && nodeIn.get_y()==ny))
 	{
 		if((nodeIn.get_x()==0 && nodeIn.get_y()==0))
-		{
 			intTmpReturn=5;
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]];
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]];
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[7]];
-		}
 		else if((nodeIn.get_x()==nx && nodeIn.get_y()==0))
-		{
 			intTmpReturn=6;
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]];
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[4]];
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[8]];
-		}
 		else if((nodeIn.get_x()==nx && nodeIn.get_y()==ny))
-		{
 			intTmpReturn=7;
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[1]];
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]];
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[5]];
-		}
 		else if((nodeIn.get_x()==0 && nodeIn.get_y()==ny))
-		{
 			intTmpReturn=8;
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[2]];
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[3]];
-			check=NodeArrays.TypeOfNode[nodeIn.Get_connect()[6]];
-		}
 	}
 	else
 	{
@@ -3317,22 +3297,22 @@ void Block2D::Get_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & Node
 {
 
 // Get Node type of the sides of the 2D block for the real nodes
-	for(int i=0;i<IdRNodeN.size();i++)
+	for(unsigned int i=0;i<IdRNodeN.size();i++)
 		NodeTypeN.push_back((int)Node[IdRNodeN[i]]->get_NodeType());
-	for(int i=0;i<IdRNodeE.size();i++)
+	for(unsigned int i=0;i<IdRNodeE.size();i++)
 		NodeTypeE.push_back((int)Node[IdRNodeE[i]]->get_NodeType());
-	for(int i=0;i<IdRNodeS.size();i++)
+	for(unsigned int i=0;i<IdRNodeS.size();i++)
 		NodeTypeS.push_back((int)Node[IdRNodeS[i]]->get_NodeType());
-	for(int i=0;i<IdRNodeW.size();i++)
+	for(unsigned int i=0;i<IdRNodeW.size();i++)
 		NodeTypeW.push_back((int)Node[IdRNodeW[i]]->get_NodeType());
 // Get Node type of the corners of the 2D block
-	for(int i=0;i<IdRNodeSW.size();i++)
+	for(unsigned int i=0;i<IdRNodeSW.size();i++)
 		NodeTypeSW.push_back((int)Node[IdRNodeSW[i]]->get_NodeType());
-	for(int i=0;i<IdRNodeSE.size();i++)
+	for(unsigned int i=0;i<IdRNodeSE.size();i++)
 		NodeTypeSE.push_back((int)Node[IdRNodeSE[i]]->get_NodeType());
-	for(int i=0;i<IdRNodeNW.size();i++)
+	for(unsigned int i=0;i<IdRNodeNW.size();i++)
 		NodeTypeNW.push_back((int)Node[IdRNodeNW[i]]->get_NodeType());
-	for(int i=0;i<IdRNodeNE.size();i++)
+	for(unsigned int i=0;i<IdRNodeNE.size();i++)
 		NodeTypeNE.push_back((int)Node[IdRNodeNE[i]]->get_NodeType());
 
 
@@ -3345,7 +3325,7 @@ void Block2D::Get_SolidGhost(std::vector<int> & GhostSolidIdN,std::vector<int> &
 
 	if(!NodeArrays.TypeOfNode.empty()){
 	// Get Node type of the sides of the 2D block for the real nodes
-		for(int i=0;i<IdRNodeN.size();i++)
+		for(unsigned int i=0;i<IdRNodeN.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeN[i]]==Solid)
 			{
@@ -3354,7 +3334,7 @@ void Block2D::Get_SolidGhost(std::vector<int> & GhostSolidIdN,std::vector<int> &
 			else
 				GhostSolidIdN.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeE.size();i++)
+		for(unsigned int i=0;i<IdRNodeE.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeE[i]]==Solid)
 			{
@@ -3363,7 +3343,7 @@ void Block2D::Get_SolidGhost(std::vector<int> & GhostSolidIdN,std::vector<int> &
 			else
 				GhostSolidIdE.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeS.size();i++)
+		for(unsigned int i=0;i<IdRNodeS.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeS[i]]==Solid)
 			{
@@ -3372,7 +3352,7 @@ void Block2D::Get_SolidGhost(std::vector<int> & GhostSolidIdN,std::vector<int> &
 			else
 				GhostSolidIdS.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeW.size();i++)
+		for(unsigned int i=0;i<IdRNodeW.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeW[i]]==Solid)
 			{
@@ -3382,7 +3362,7 @@ void Block2D::Get_SolidGhost(std::vector<int> & GhostSolidIdN,std::vector<int> &
 				GhostSolidIdW.push_back(-1);
 		}
 		// Get Node type of the corners of the 2D block
-		for(int i=0;i<IdRNodeSW.size();i++)
+		for(unsigned int i=0;i<IdRNodeSW.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeSW[i]]==Solid)
 			{
@@ -3391,7 +3371,7 @@ void Block2D::Get_SolidGhost(std::vector<int> & GhostSolidIdN,std::vector<int> &
 			else
 				GhostSolidIdSW.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeSE.size();i++)
+		for(unsigned int i=0;i<IdRNodeSE.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeSE[i]]==Solid)
 			{
@@ -3400,7 +3380,7 @@ void Block2D::Get_SolidGhost(std::vector<int> & GhostSolidIdN,std::vector<int> &
 			else
 				GhostSolidIdSE.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeNW.size();i++)
+		for(unsigned int i=0;i<IdRNodeNW.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeNW[i]]==Solid)
 			{
@@ -3409,7 +3389,7 @@ void Block2D::Get_SolidGhost(std::vector<int> & GhostSolidIdN,std::vector<int> &
 			else
 				GhostSolidIdNW.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeNE.size();i++)
+		for(unsigned int i=0;i<IdRNodeNE.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeNE[i]]==Solid)
 			{
@@ -3431,7 +3411,7 @@ void Block2D::Get_GhostFirstLayer(std::vector<int> & GhostSolidIdN,std::vector<i
 
 	if(!NodeArrays.TypeOfNode.empty()){
 	// Get Node type of the sides of the 2D block for the real nodes
-		for(int i=0;i<IdRNodeN.size();i++)
+		for(unsigned int i=0;i<IdRNodeN.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeN[i]]==Solid)
 			{
@@ -3443,7 +3423,7 @@ void Block2D::Get_GhostFirstLayer(std::vector<int> & GhostSolidIdN,std::vector<i
 			else
 				GhostSolidIdN.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeE.size();i++)
+		for(unsigned int i=0;i<IdRNodeE.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeE[i]]==Solid)
 			{
@@ -3455,7 +3435,7 @@ void Block2D::Get_GhostFirstLayer(std::vector<int> & GhostSolidIdN,std::vector<i
 			else
 				GhostSolidIdE.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeS.size();i++)
+		for(unsigned int i=0;i<IdRNodeS.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeS[i]]==Solid)
 			{
@@ -3467,7 +3447,7 @@ void Block2D::Get_GhostFirstLayer(std::vector<int> & GhostSolidIdN,std::vector<i
 			else
 				GhostSolidIdS.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeW.size();i++)
+		for(unsigned int i=0;i<IdRNodeW.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeW[i]]==Solid)
 			{
@@ -3480,7 +3460,7 @@ void Block2D::Get_GhostFirstLayer(std::vector<int> & GhostSolidIdN,std::vector<i
 				GhostSolidIdW.push_back(-1);
 		}
 		// Get Node type of the corners of the 2D block
-		for(int i=0;i<IdRNodeSW.size();i++)
+		for(unsigned int i=0;i<IdRNodeSW.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeSW[i]]==Solid)
 			{
@@ -3492,7 +3472,7 @@ void Block2D::Get_GhostFirstLayer(std::vector<int> & GhostSolidIdN,std::vector<i
 			else
 				GhostSolidIdSW.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeSE.size();i++)
+		for(unsigned int i=0;i<IdRNodeSE.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeSE[i]]==Solid)
 			{
@@ -3504,7 +3484,7 @@ void Block2D::Get_GhostFirstLayer(std::vector<int> & GhostSolidIdN,std::vector<i
 			else
 				GhostSolidIdSE.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeNW.size();i++)
+		for(unsigned int i=0;i<IdRNodeNW.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeNW[i]]==Solid)
 			{
@@ -3516,7 +3496,7 @@ void Block2D::Get_GhostFirstLayer(std::vector<int> & GhostSolidIdN,std::vector<i
 			else
 				GhostSolidIdNW.push_back(-1);
 		}
-		for(int i=0;i<IdRNodeNE.size();i++)
+		for(unsigned int i=0;i<IdRNodeNE.size();i++)
 		{
 			if(NodeArrays.TypeOfNode[IdRNodeNE[i]]==Solid)
 			{
@@ -3539,29 +3519,29 @@ void Block2D::Set_GhostType(std::vector<int> & NodeTypeN,std::vector<int> & Node
 
 	// Get Node type of the sides of the 2D block
 	if(IdGNodeN.size()>0)
-	for(int i=0;i<IdGNodeN.size();i++)
+	for(unsigned int i=0;i<IdGNodeN.size();i++)
 		Correct_GhostType(IdGNodeN[i], (NodeType)NodeTypeN[i]);
 	if(IdGNodeE.size()>0)
-	for(int i=0;i<IdGNodeE.size();i++)
+	for(unsigned int i=0;i<IdGNodeE.size();i++)
 		Correct_GhostType(IdGNodeE[i], (NodeType)NodeTypeE[i]);
 	if(IdGNodeS.size()>0)
-	for(int i=0;i<IdGNodeS.size();i++)
+	for(unsigned int i=0;i<IdGNodeS.size();i++)
 		Correct_GhostType(IdGNodeS[i], (NodeType)NodeTypeS[i]);
 	if(IdGNodeW.size()>0)
-	for(int i=0;i<IdGNodeW.size();i++)
+	for(unsigned int i=0;i<IdGNodeW.size();i++)
 		Correct_GhostType(IdGNodeW[i], (NodeType)NodeTypeW[i]);
 // Get Node type of the corners of the 2D block
 	if(IdGNodeSW.size()>0)
-	for(int i=0;i<IdGNodeSW.size();i++)
+	for(unsigned int i=0;i<IdGNodeSW.size();i++)
 		Correct_GhostType(IdGNodeSW[i], (NodeType)NodeTypeSW[i]);
 	if(IdGNodeSE.size()>0)
-	for(int i=0;i<IdGNodeSE.size();i++)
+	for(unsigned int i=0;i<IdGNodeSE.size();i++)
 		Correct_GhostType(IdGNodeSE[i], (NodeType)NodeTypeSE[i]);
 	if(IdGNodeNW.size()>0)
-	for(int i=0;i<IdGNodeNW.size();i++)
+	for(unsigned int i=0;i<IdGNodeNW.size();i++)
 		Correct_GhostType(IdGNodeNW[i], (NodeType)NodeTypeNW[i]);
 	if(IdGNodeNE.size()>0)
-	for(int i=0;i<IdGNodeNE.size();i++)
+	for(unsigned int i=0;i<IdGNodeNE.size();i++)
 		Correct_GhostType(IdGNodeNE[i], (NodeType)NodeTypeNE[i]);
 
 }
@@ -3571,29 +3551,29 @@ void Block2D::Set_GhostTypeAsGhost(std::vector<int> & NodeTypeN,std::vector<int>
 
 	// Get Node type of the sides of the 2D block
 	if(IdGNodeN.size()>0)
-	for(int i=0;i<IdGNodeN.size();i++)
+	for(unsigned int i=0;i<IdGNodeN.size();i++)
 		Correct_SolidGhostType(IdGNodeN[i], (NodeType)NodeTypeN[i]);
 	if(IdGNodeE.size()>0)
-	for(int i=0;i<IdGNodeE.size();i++)
+	for(unsigned int i=0;i<IdGNodeE.size();i++)
 		Correct_SolidGhostType(IdGNodeE[i], (NodeType)NodeTypeE[i]);
 	if(IdGNodeS.size()>0)
-	for(int i=0;i<IdGNodeS.size();i++)
+	for(unsigned int i=0;i<IdGNodeS.size();i++)
 		Correct_SolidGhostType(IdGNodeS[i], (NodeType)NodeTypeS[i]);
 	if(IdGNodeW.size()>0)
-	for(int i=0;i<IdGNodeW.size();i++)
+	for(unsigned int i=0;i<IdGNodeW.size();i++)
 		Correct_SolidGhostType(IdGNodeW[i], (NodeType)NodeTypeW[i]);
 // Get Node type of the corners of the 2D block
 	if(IdGNodeSW.size()>0)
-	for(int i=0;i<IdGNodeSW.size();i++)
+	for(unsigned int i=0;i<IdGNodeSW.size();i++)
 		Correct_SolidGhostType(IdGNodeSW[i], (NodeType)NodeTypeSW[i]);
 	if(IdGNodeSE.size()>0)
-	for(int i=0;i<IdGNodeSE.size();i++)
+	for(unsigned int i=0;i<IdGNodeSE.size();i++)
 		Correct_SolidGhostType(IdGNodeSE[i], (NodeType)NodeTypeSE[i]);
 	if(IdGNodeNW.size()>0)
-	for(int i=0;i<IdGNodeNW.size();i++)
+	for(unsigned int i=0;i<IdGNodeNW.size();i++)
 		Correct_SolidGhostType(IdGNodeNW[i], (NodeType)NodeTypeNW[i]);
 	if(IdGNodeNE.size()>0)
-	for(int i=0;i<IdGNodeNE.size();i++)
+	for(unsigned int i=0;i<IdGNodeNE.size();i++)
 		Correct_SolidGhostType(IdGNodeNE[i], (NodeType)NodeTypeNE[i]);
 
 }
@@ -3601,49 +3581,49 @@ void Block2D::Remove_SolidTypeInCommunicatorsForRealNodes(){
 
 	std::vector<int> RealNodeType,RealIdToSaved,GhostIdToSaved;
 	// Get Node type of the sides of the 2D block
-	for(int i=0;i<IdRNodeN.size();i++)
+	for(unsigned int i=0;i<IdRNodeN.size();i++)
 		RealNodeType.push_back((int)NodeArrays.TypeOfNode[IdRNodeN[i]]);
 	Remove_SolidTypeInCommunicatorForRealNodes(RealNodeType,IdRNodeN,RealIdToSaved);
 	SetCommunicatorinSolidForRealNodes(SolidIdRNodeN,RealIdToSaved);
 	RealNodeType.clear();RealIdToSaved.clear();
 
-	for(int i=0;i<IdRNodeE.size();i++)
+	for(unsigned int i=0;i<IdRNodeE.size();i++)
 		RealNodeType.push_back((int)NodeArrays.TypeOfNode[IdRNodeE[i]]);
 	Remove_SolidTypeInCommunicatorForRealNodes(RealNodeType,IdRNodeE,RealIdToSaved);
 	SetCommunicatorinSolidForRealNodes(SolidIdRNodeE,RealIdToSaved);
 	RealNodeType.clear();RealIdToSaved.clear();
 
-	for(int i=0;i<IdRNodeS.size();i++)
+	for(unsigned int i=0;i<IdRNodeS.size();i++)
 		RealNodeType.push_back((int)NodeArrays.TypeOfNode[IdRNodeS[i]]);
 	Remove_SolidTypeInCommunicatorForRealNodes(RealNodeType,IdRNodeS,RealIdToSaved);
 	SetCommunicatorinSolidForRealNodes(SolidIdRNodeS,RealIdToSaved);
 	RealNodeType.clear();RealIdToSaved.clear();
 
-	for(int i=0;i<IdRNodeW.size();i++)
+	for(unsigned int i=0;i<IdRNodeW.size();i++)
 		RealNodeType.push_back((int)NodeArrays.TypeOfNode[IdRNodeW[i]]);
 	Remove_SolidTypeInCommunicatorForRealNodes(RealNodeType,IdRNodeW,RealIdToSaved);
 	SetCommunicatorinSolidForRealNodes(SolidIdRNodeW,RealIdToSaved);
 	RealNodeType.clear();RealIdToSaved.clear();
 // Get Node type of the corners of the 2D block
-	for(int i=0;i<IdRNodeSW.size();i++)
+	for(unsigned int i=0;i<IdRNodeSW.size();i++)
 		RealNodeType.push_back((int)NodeArrays.TypeOfNode[IdRNodeSW[i]]);
 	Remove_SolidTypeInCommunicatorForRealNodes(RealNodeType,IdRNodeSW,RealIdToSaved);
 	SetCommunicatorinSolidForRealNodes(SolidIdRNodeSW,RealIdToSaved);
 	RealNodeType.clear();RealIdToSaved.clear();
 
-	for(int i=0;i<IdRNodeSE.size();i++)
+	for(unsigned int i=0;i<IdRNodeSE.size();i++)
 		RealNodeType.push_back((int)NodeArrays.TypeOfNode[IdRNodeSE[i]]);
 	Remove_SolidTypeInCommunicatorForRealNodes(RealNodeType,IdRNodeSE,RealIdToSaved);
 	SetCommunicatorinSolidForRealNodes(SolidIdRNodeSE,RealIdToSaved);
 	RealNodeType.clear();RealIdToSaved.clear();
 
-	for(int i=0;i<IdRNodeNW.size();i++)
+	for(unsigned int i=0;i<IdRNodeNW.size();i++)
 		RealNodeType.push_back((int)NodeArrays.TypeOfNode[IdRNodeNW[i]]);
 	Remove_SolidTypeInCommunicatorForRealNodes(RealNodeType,IdRNodeNW,RealIdToSaved);
 	SetCommunicatorinSolidForRealNodes(SolidIdRNodeNW,RealIdToSaved);
 	RealNodeType.clear();RealIdToSaved.clear();
 
-	for(int i=0;i<IdRNodeNE.size();i++)
+	for(unsigned int i=0;i<IdRNodeNE.size();i++)
 		RealNodeType.push_back((int)NodeArrays.TypeOfNode[IdRNodeNE[i]]);
 	Remove_SolidTypeInCommunicatorForRealNodes(RealNodeType,IdRNodeNE,RealIdToSaved);
 	SetCommunicatorinSolidForRealNodes(SolidIdRNodeNE,RealIdToSaved);
@@ -3655,7 +3635,7 @@ void Block2D::Remove_SolidTypeInCommunicatorForRealNodes(std::vector<int> & Real
 		  std::vector<int> & RealNodeId,std::vector<int> & RealIdToBeSaved){
 	std::vector<int> RealIdToBeRemoved;
 	RealIdToBeSaved.clear();
-	for(int i=0;i<RealNodeType.size();i++)
+	for(unsigned int i=0;i<RealNodeType.size();i++)
 	{
 		if ((NodeType)RealNodeType[i]==Solid)
 			RealIdToBeRemoved.push_back(i);
@@ -3672,9 +3652,9 @@ void Block2D::SetCommunicatorinSolidForRealNodes(std::vector<int> & RealNodeId,s
 
 //	RealNodeId=RealIdToBeSaved;
 	//remove node who are not in the first layer
-	int idx=0;
+	unsigned int idx=0;
 	RealNodeId.clear();
-	for(int i=0;i<RealIdToBeSaved.size();i++)
+	for(unsigned int i=0;i<RealIdToBeSaved.size();i++)
 	{
 		idx=NodeArrays.NodeIndexByType[RealIdToBeSaved[i]];
 		if(idx<NodeArrays.NodeSolid.size())
@@ -3731,13 +3711,13 @@ void Block2D::Remove_SolidTypeInCommunicatorForGhostNodes(std::vector<int> & Gho
 	std::vector<int> GhostIdToBeRemoved,GhostSolidIdToBeRemoved;
 	GhostIdToBeSaved.clear();
 	//mark solids
-	for(int i=0;i<GhostSolidId.size();i++)
+	for(unsigned int i=0;i<GhostSolidId.size();i++)
 	{
 		if (GhostSolidId[i]>-1)
 			GhostIdToBeRemoved.push_back(GhostSolidId[i]);
 	}
 	//Filtering the first layer
-	for(int i=0;i<GhostSolidFirstLayerId.size();i++)
+	for(unsigned int i=0;i<GhostSolidFirstLayerId.size();i++)
 	{
 		if (GhostSolidFirstLayerId[i]>-1)
 			GhostSolidIdToBeRemoved.push_back(GhostSolidFirstLayerId[i]);
@@ -3834,7 +3814,7 @@ void Block2D::Set_CommNodes()
 	IdRNodeW.push_back(IdNodeSW[0]);
 	IdRNodeW.insert(IdRNodeW.end(),IdNodeW.begin(),IdNodeW.end());
 	IdGNodeW.push_back(Node[IdNodeSW[0]]->Get_connect(3));
-	for(int i=0;i<IdNodeW.size();i++)
+	for(unsigned int i=0;i<IdNodeW.size();i++)
 		IdGNodeW.push_back(Node[IdNodeW[i]]->Get_connect(3));
 	if(Node[IdNodeNW[0]]->get_NodeType()!=Ghost)
 	{
@@ -3852,7 +3832,7 @@ void Block2D::Set_CommNodes()
 	IdRNodeS.push_back(IdNodeSW[0]);
 	IdRNodeS.insert(IdRNodeS.end(),IdNodeS.begin(),IdNodeS.end());
 	IdGNodeS.push_back(Node[IdNodeSW[0]]->Get_connect(0));
-	for(int i=0;i<IdNodeS.size();i++)
+	for(unsigned int i=0;i<IdNodeS.size();i++)
 		IdGNodeS.push_back(Node[IdNodeS[i]]->Get_connect(0));
 	if(Node[IdNodeSE[0]]->get_NodeType()!=Ghost)
 	{
@@ -3880,14 +3860,14 @@ void Block2D::Set_CommNodes()
 			IdRNodeN.insert(IdRNodeN.end(),IdNodeN.rbegin(),IdNodeN.rend());
 			IdRNodeN.push_back(IdNodeNE[0]);
 
-			for(int i=0;i<IdRNodeN.size();i++)
+			for(unsigned int i=0;i<IdRNodeN.size();i++)
 				IdGNodeN.push_back(Node[IdRNodeN[i]]->Get_connect(2));
 
 
 			IdRNodeE.push_back(IdNodeSE[0]);
 			IdRNodeE.insert(IdRNodeE.end(),IdNodeE.begin(),IdNodeE.end());
 			IdRNodeE.push_back(IdNodeNE[0]);
-			for(int i=0;i<IdRNodeE.size();i++)
+			for(unsigned int i=0;i<IdRNodeE.size();i++)
 				IdGNodeE.push_back(Node[IdRNodeE[i]]->Get_connect(1));
 		}
 		else
@@ -3898,13 +3878,13 @@ void Block2D::Set_CommNodes()
 			IdGNodeN.push_back(IdNodeNW[0]);
 			IdGNodeN.insert(IdGNodeN.end(),IdNodeN.rbegin(),IdNodeN.rend());
 			IdGNodeN.push_back(IdNodeNE[0]);
-			for(int i=0;i<IdGNodeN.size();i++)
+			for(unsigned int i=0;i<IdGNodeN.size();i++)
 				IdRNodeN.push_back(Node[IdGNodeN[i]]->Get_connect(0));
 
 
 			IdRNodeE.push_back(IdNodeSE[0]);
 			IdRNodeE.insert(IdRNodeE.end(),IdNodeE.begin(),IdNodeE.end());
-			for(int i=0;i<IdRNodeE.size();i++)
+			for(unsigned int i=0;i<IdRNodeE.size();i++)
 				IdGNodeE.push_back(Node[IdRNodeE[i]]->Get_connect(1));
 		}
 	}
@@ -3917,13 +3897,13 @@ void Block2D::Set_CommNodes()
 
 			IdRNodeN.push_back(IdNodeNW[0]);
 			IdRNodeN.insert(IdRNodeN.end(),IdNodeN.rbegin(),IdNodeN.rend());
-			for(int i=0;i<IdRNodeN.size();i++)
+			for(unsigned int i=0;i<IdRNodeN.size();i++)
 				IdGNodeN.push_back(Node[IdRNodeN[i]]->Get_connect(2));
 
 			IdGNodeE.push_back(IdNodeSE[0]);
 			IdGNodeE.insert(IdGNodeE.end(),IdNodeE.begin(),IdNodeE.end());
 			IdGNodeE.push_back(IdNodeNE[0]);
-			for(int i=0;i<IdGNodeE.size();i++)
+			for(unsigned int i=0;i<IdGNodeE.size();i++)
 				IdRNodeE.push_back(Node[IdGNodeE[i]]->Get_connect(3));
 		}
 		else
@@ -3933,12 +3913,12 @@ void Block2D::Set_CommNodes()
 
 			IdGNodeN.push_back(IdNodeNW[0]);
 			IdGNodeN.insert(IdGNodeN.end(),IdNodeN.rbegin(),IdNodeN.rend());
-			for(int i=0;i<IdGNodeN.size();i++)
+			for(unsigned int i=0;i<IdGNodeN.size();i++)
 				IdRNodeN.push_back(Node[IdGNodeN[i]]->Get_connect(0));
 
 			IdGNodeE.push_back(IdNodeSE[0]);
 			IdGNodeE.insert(IdGNodeE.end(),IdNodeE.begin(),IdNodeE.end());
-			for(int i=0;i<IdGNodeE.size();i++)
+			for(unsigned int i=0;i<IdGNodeE.size();i++)
 				IdRNodeE.push_back(Node[IdGNodeE[i]]->Get_connect(3));
 		}
 	}
@@ -3952,12 +3932,12 @@ void Block2D::Set_CommNodes()
 	{
 		if(Coord[0]==0)
 		{
-			for(int i=0;i<IdRNodeW.size();i++)
+			for(unsigned int i=0;i<IdRNodeW.size();i++)
 				IdRNodeW[i]=Node[IdRNodeW[i]]->Get_connect(1);
 		}
 		if(Coord[0]==Dims[0]-1)
 		{
-			for(int i=0;i<IdRNodeE.size();i++)
+			for(unsigned int i=0;i<IdRNodeE.size();i++)
 				IdRNodeE[i]=Node[IdRNodeE[i]]->Get_connect(3);
 		}
 	}
@@ -3972,12 +3952,12 @@ void Block2D::Set_CommNodes()
 	{
 		if(Coord[1]==0)
 		{
-			for(int i=0;i<IdRNodeS.size();i++)
+			for(unsigned int i=0;i<IdRNodeS.size();i++)
 				IdRNodeS[i]=Node[IdRNodeS[i]]->Get_connect(2);
 		}
 		if(Coord[1]==Dims[1]-1)
 		{
-			for(int i=0;i<IdRNodeN.size();i++)
+			for(unsigned int i=0;i<IdRNodeN.size();i++)
 				IdRNodeN[i]=Node[IdRNodeN[i]]->Get_connect(0);
 		}
 	}
@@ -4179,7 +4159,7 @@ void Block2D::Set_CommNodes()
 }
 
 void Block2D::Mark1stLayerSolid(){
-	for(int i=0;i<NodeArrays.NodeWall.size();i++)
+	for(unsigned int i=0;i<NodeArrays.NodeWall.size();i++)
 		switch(NodeArrays.NodeWall[i].Get_BcNormal())
 		{
 		case 1:
@@ -4195,7 +4175,7 @@ void Block2D::Mark1stLayerSolid(){
 			NodeArrays.Solid1stLayer.push_back(NodeArrays.NodeWall[i].Get_connect()[2]);
 			break;
 		}
-	for(int i=0;i<NodeArrays.NodeCorner.size();i++)
+	for(unsigned int i=0;i<NodeArrays.NodeCorner.size();i++)
 		switch(NodeArrays.NodeCorner[i].Get_BcNormal())
 		{
 		case 5:
@@ -4254,7 +4234,7 @@ void Block2D::Mark1stLayerSolid(){
 		}
 	std::sort( NodeArrays.Solid1stLayer.begin(), NodeArrays.Solid1stLayer.end() );
 	NodeArrays.Solid1stLayer.erase( std::unique( NodeArrays.Solid1stLayer.begin(), NodeArrays.Solid1stLayer.end() ), NodeArrays.Solid1stLayer.end() );
-	for(int i=0;i<NodeArrays.Solid1stLayer.size();i++)
+	for(unsigned int i=0;i<NodeArrays.Solid1stLayer.size();i++)
 	{
 		if(NodeArrays.TypeOfNode[NodeArrays.Solid1stLayer[i]]==Solid)
 			NodeArrays.NodeSolid[NodeArrays.NodeIndexByType[NodeArrays.Solid1stLayer[i]]].Set_FirstLayer(true);
@@ -4267,7 +4247,7 @@ void  Block2D::RemoveSolid(){
 	std::map<int,int> MapCellArraytmp,MapNodeArraytmp,MapFirstWallLayerArraytmp;
 	std::vector<int> IdCellSolid,IdCellGhost,IdCellFirstWallLayer,IdCellFirstGhostLayer;
 	int countSolid,countGhost;
-	for(int i=0;i<CellArray.size();i++)
+	for(unsigned int i=0;i<CellArray.size();i++)
 	{
 		countSolid=0;countGhost=0;
 		for(int j=0;j<4;j++)
@@ -4277,7 +4257,7 @@ void  Block2D::RemoveSolid(){
 			if(Node[CellArray[i]->Get_NodeNumber(j)]->get_NodeType()==Ghost)
 				countGhost++;
 		}
-		if(countSolid>0)
+		if(countSolid>0){
 			if(countSolid>=4)
 			{
 				IdCellSolid.push_back(i);
@@ -4293,7 +4273,8 @@ void  Block2D::RemoveSolid(){
 			}
 			else
 				IdCellFirstWallLayer.push_back(i);
-		if(countGhost>0)
+		}
+		if(countGhost>0){
 			if(countGhost>=4)
 			{
 				IdCellGhost.push_back(i);
@@ -4307,6 +4288,7 @@ void  Block2D::RemoveSolid(){
 			}
 			else
 				IdCellFirstGhostLayer.push_back(i);
+		}
 		//Save computational cells
 		if(countSolid==0&&countGhost==0)
 		{
@@ -4316,7 +4298,7 @@ void  Block2D::RemoveSolid(){
 	}
 	int nbSolidToRemove=0; int nbGhostToRemove=0; int notSolid=0; int nbGhostConnect=0;
 	//Removing Solid nodes in the node array
-	for(int i=0;i<Node.size();i++)
+	for(int i=0;i<(int)Node.size();i++)
 	{
 		if(Node[i]->get_NodeType()==Ghost)
 		{
@@ -4378,7 +4360,7 @@ void  Block2D::RemoveSolid(){
 
 	}
 	//Correct numbering for the connections between cells
-	for(int i=0;i<CellArraytmp.size();i++)
+	for(unsigned int i=0;i<CellArraytmp.size();i++)
 	{
 		for(int j=0;j<4;j++)
 		{
@@ -4390,6 +4372,7 @@ void  Block2D::RemoveSolid(){
 	}
 }
 void Block2D::InitPatchBc(Parameters *PtrParam){
+	std::vector<Node2D*> Nodetest=Node;
 	PatchsBc.initPatchBc(Node, PtrParam);
 	std::vector<int> PatchIdInType=PatchsBc.Get_PatchIdInType();
 	std::vector<SolverEnum::PatchType> PatchTypeInType=PatchsBc.Get_PatchTypeInType();
@@ -4401,31 +4384,31 @@ void Block2D::InitPatchBc(Parameters *PtrParam){
 		{
 			case SolverEnum::Pressure:
 				NodeIdx=PatchsBc.Get_PressurePatch()[PatchIdInType[j]].Get_NodeIndex();
-				for (int i=0;i<NodeIdx.size();i++)
+				for (unsigned int i=0;i<NodeIdx.size();i++)
 					if(Node[NodeIdx[i]]->get_NodeType()!=GlobalCorner && Node[NodeIdx[i]]->get_NodeType()!=Ghost)
 						ChangeNodeType(NodeIdx[i], Pressure);
 			break;
 			case SolverEnum::Velocity:
 				NodeIdx=PatchsBc.Get_VelocityPatch()[PatchIdInType[j]].Get_NodeIndex();
-				for (int i=0;i<NodeIdx.size();i++)
+				for (unsigned int i=0;i<NodeIdx.size();i++)
 					if(Node[NodeIdx[i]]->get_NodeType()!=GlobalCorner && Node[NodeIdx[i]]->get_NodeType()!=Ghost)
 						ChangeNodeType(NodeIdx[i], Velocity);
 			break;
 			case SolverEnum::Periodic:
 				NodeIdx=PatchsBc.Get_PeriodicPatch()[PatchIdInType[j]].Get_NodeIndex();
-				for (int i=0;i<NodeIdx.size();i++)
+				for (unsigned int i=0;i<NodeIdx.size();i++)
 					if(Node[NodeIdx[i]]->get_NodeType()!=GlobalCorner && Node[NodeIdx[i]]->get_NodeType()!=Ghost)
 						ChangeNodeType(NodeIdx[i], Periodic);
 			break;
 			case SolverEnum::Symmetry:
 				NodeIdx=PatchsBc.Get_SymmetryPatch()[PatchIdInType[j]].Get_NodeIndex();
-				for (int i=0;i<NodeIdx.size();i++)
+				for (unsigned int i=0;i<NodeIdx.size();i++)
 					if(Node[NodeIdx[i]]->get_NodeType()!=GlobalCorner && Node[NodeIdx[i]]->get_NodeType()!=Ghost)
 						ChangeNodeType(NodeIdx[i], Symmetry);
 			break;
 			case SolverEnum::Wall:
 				NodeIdx=PatchsBc.Get_WallPatch()[PatchIdInType[j]].Get_NodeIndex();
-				for (int i=0;i<NodeIdx.size();i++)
+				for (unsigned int i=0;i<NodeIdx.size();i++)
 					if(Node[NodeIdx[i]]->get_NodeType()!=GlobalCorner && Node[NodeIdx[i]]->get_NodeType()!=Ghost)
 						ChangeNodeType(NodeIdx[i], Wall);
 			break;
@@ -4450,7 +4433,7 @@ void Block2D::Set_NodeIndexByTypeForPatchBc(){
 				NodeIdxbyTypetmp.clear();
 				NodeIdxbyTypeSpecialWallstmp.clear();
 				NodeIdxbyTypeGlobalCornertmp.clear();
-				for (int i=0;i<NodeIdx.size();i++)
+				for (unsigned int i=0;i<NodeIdx.size();i++)
 				{
 					if(NodeArrays.TypeOfNode[NodeIdx[i]]==Pressure)//Removing solid and special wall
 					{
@@ -4484,7 +4467,7 @@ void Block2D::Set_NodeIndexByTypeForPatchBc(){
 				NodeIdxbyTypetmp.clear();
 				NodeIdxbyTypeSpecialWallstmp.clear();
 				NodeIdxbyTypeGlobalCornertmp.clear();
-				for (int i=0;i<NodeIdx.size();i++)
+				for (unsigned int i=0;i<NodeIdx.size();i++)
 				{
 					if(NodeArrays.TypeOfNode[NodeIdx[i]]==Velocity)//Removing solid and special wall
 					{
@@ -4517,7 +4500,7 @@ void Block2D::Set_NodeIndexByTypeForPatchBc(){
 				NodeIdxbyTypetmp.clear();
 				NodeIdxbyTypeSpecialWallstmp.clear();
 				NodeIdxbyTypeGlobalCornertmp.clear();
-				for (int i=0;i<NodeIdx.size();i++)
+				for (unsigned int i=0;i<NodeIdx.size();i++)
 				{
 					if(NodeArrays.TypeOfNode[NodeIdx[i]]==Periodic)//Removing solid and special wall
 					{
@@ -4550,7 +4533,7 @@ void Block2D::Set_NodeIndexByTypeForPatchBc(){
 				NodeIdxbyTypetmp.clear();
 				NodeIdxbyTypeSpecialWallstmp.clear();
 				NodeIdxbyTypeGlobalCornertmp.clear();
-				for (int i=0;i<NodeIdx.size();i++)
+				for (unsigned int i=0;i<NodeIdx.size();i++)
 				{
 					if(NodeArrays.TypeOfNode[NodeIdx[i]]==Symmetry)//Removing solid and special wall
 					{
@@ -4615,56 +4598,56 @@ void Block2D::Write_CommunicationNodes(){
  	myFlux.open(buffer);
  	myFlux<<std::endl<<" ****** Communication in Fluid *******"<<std::endl;
  	myFlux<<"West real nodes: "<<std::endl;
- 	for(int i=0;i<IdRNodeW.size();i++)
+ 	for(unsigned int i=0;i<IdRNodeW.size();i++)
  	{
  		index=IdRNodeW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"West Ghost nodes: "<<std::endl;
- 	for(int i=0;i<IdGNodeW.size();i++)
+ 	for(unsigned int i=0;i<IdGNodeW.size();i++)
  	{
  		index=IdGNodeW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North real nodes: "<<std::endl;
- 	for(int i=0;i<IdRNodeN.size();i++)
+ 	for(unsigned int i=0;i<IdRNodeN.size();i++)
  	{
  		index=IdRNodeN[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North Ghost nodes: "<<std::endl;
- 	for(int i=0;i<IdGNodeN.size();i++)
+ 	for(unsigned int i=0;i<IdGNodeN.size();i++)
  	{
  		index=IdGNodeN[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South real nodes: "<<std::endl;
- 	for(int i=0;i<IdRNodeS.size();i++)
+ 	for(unsigned int i=0;i<IdRNodeS.size();i++)
  	{
  		index=IdRNodeS[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South Ghost nodes: "<<std::endl;
- 	for(int i=0;i<IdGNodeS.size();i++)
+ 	for(unsigned int i=0;i<IdGNodeS.size();i++)
  	{
  		index=IdGNodeS[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"East real nodes: "<<std::endl;
- 	for(int i=0;i<IdRNodeE.size();i++)
+ 	for(unsigned int i=0;i<IdRNodeE.size();i++)
  	{
  		index=IdRNodeE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"East Ghost nodes: "<<std::endl;
- 	for(int i=0;i<IdGNodeE.size();i++)
+ 	for(unsigned int i=0;i<IdGNodeE.size();i++)
  	{
  		index=IdGNodeE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
@@ -4673,56 +4656,56 @@ void Block2D::Write_CommunicationNodes(){
 
  	myFlux<<std::endl<<std::endl;
  	myFlux<<"South West real nodes: "<<std::endl;
- 	for(int i=0;i<IdRNodeSW.size();i++)
+ 	for(unsigned int i=0;i<IdRNodeSW.size();i++)
  	{
  		index=IdRNodeSW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South West Ghost nodes: "<<std::endl;
- 	for(int i=0;i<IdGNodeSW.size();i++)
+ 	for(unsigned int i=0;i<IdGNodeSW.size();i++)
  	{
  		index=IdGNodeSW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North West real nodes: "<<std::endl;
- 	for(int i=0;i<IdRNodeNW.size();i++)
+ 	for(unsigned int i=0;i<IdRNodeNW.size();i++)
  	{
  		index=IdRNodeNW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North West Ghost nodes: "<<std::endl;
- 	for(int i=0;i<IdGNodeNW.size();i++)
+ 	for(unsigned int i=0;i<IdGNodeNW.size();i++)
  	{
  		index=IdGNodeNW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South East real nodes: "<<std::endl;
- 	for(int i=0;i<IdRNodeSE.size();i++)
+ 	for(unsigned int i=0;i<IdRNodeSE.size();i++)
  	{
  		index=IdRNodeSE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South East Ghost nodes: "<<std::endl;
- 	for(int i=0;i<IdGNodeSE.size();i++)
+ 	for(unsigned int i=0;i<IdGNodeSE.size();i++)
  	{
  		index=IdGNodeSE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North East real nodes: "<<std::endl;
- 	for(int i=0;i<IdRNodeNE.size();i++)
+ 	for(unsigned int i=0;i<IdRNodeNE.size();i++)
  	{
  		index=IdRNodeNE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North East Ghost nodes: "<<std::endl;
- 	for(int i=0;i<IdGNodeNE.size();i++)
+ 	for(unsigned int i=0;i<IdGNodeNE.size();i++)
  	{
  		index=IdGNodeNE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
@@ -4741,56 +4724,56 @@ void Block2D::Write_CommunicationSolidNodes(){
  	myFlux.open(buffer);
  	myFlux<<std::endl<<" ****** Communication in Solid *******"<<std::endl;
  	myFlux<<"West real nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdRNodeW.size();i++)
+ 	for(unsigned int i=0;i<SolidIdRNodeW.size();i++)
  	{
  		index=SolidIdRNodeW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"West Ghost nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdGNodeW.size();i++)
+ 	for(unsigned int i=0;i<SolidIdGNodeW.size();i++)
  	{
  		index=SolidIdGNodeW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North real nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdRNodeN.size();i++)
+ 	for(unsigned int i=0;i<SolidIdRNodeN.size();i++)
  	{
  		index=SolidIdRNodeN[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North Ghost nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdGNodeN.size();i++)
+ 	for(unsigned int i=0;i<SolidIdGNodeN.size();i++)
  	{
  		index=SolidIdGNodeN[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South real nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdRNodeS.size();i++)
+ 	for(unsigned int i=0;i<SolidIdRNodeS.size();i++)
  	{
  		index=SolidIdRNodeS[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South Ghost nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdGNodeS.size();i++)
+ 	for(unsigned int i=0;i<SolidIdGNodeS.size();i++)
  	{
  		index=SolidIdGNodeS[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"East real nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdRNodeE.size();i++)
+ 	for(unsigned int i=0;i<SolidIdRNodeE.size();i++)
  	{
  		index=SolidIdRNodeE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"East Ghost nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdGNodeE.size();i++)
+ 	for(unsigned int i=0;i<SolidIdGNodeE.size();i++)
  	{
  		index=SolidIdGNodeE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
@@ -4799,56 +4782,56 @@ void Block2D::Write_CommunicationSolidNodes(){
 
  	myFlux<<std::endl<<std::endl;
  	myFlux<<"South West real nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdRNodeSW.size();i++)
+ 	for(unsigned int i=0;i<SolidIdRNodeSW.size();i++)
  	{
  		index=SolidIdRNodeSW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South West Ghost nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdGNodeSW.size();i++)
+ 	for(unsigned int i=0;i<SolidIdGNodeSW.size();i++)
  	{
  		index=SolidIdGNodeSW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North West real nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdRNodeNW.size();i++)
+ 	for(unsigned int i=0;i<SolidIdRNodeNW.size();i++)
  	{
  		index=SolidIdRNodeNW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North West Ghost nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdGNodeNW.size();i++)
+ 	for(unsigned int i=0;i<SolidIdGNodeNW.size();i++)
  	{
  		index=SolidIdGNodeNW[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South East real nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdRNodeSE.size();i++)
+ 	for(unsigned int i=0;i<SolidIdRNodeSE.size();i++)
  	{
  		index=SolidIdRNodeSE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"South East Ghost nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdGNodeSE.size();i++)
+ 	for(unsigned int i=0;i<SolidIdGNodeSE.size();i++)
  	{
  		index=SolidIdGNodeSE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North East real nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdRNodeNE.size();i++)
+ 	for(unsigned int i=0;i<SolidIdRNodeNE.size();i++)
  	{
  		index=SolidIdRNodeNE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);
  		myFlux<<"Node ID: "<<index<<" x: "<<x_tmp <<" y: "<<y_tmp<<std::endl;
  	}
  	myFlux<<std::endl<<"North East Ghost nodes: "<<std::endl;
- 	for(int i=0;i<SolidIdGNodeNE.size();i++)
+ 	for(unsigned int i=0;i<SolidIdGNodeNE.size();i++)
  	{
  		index=SolidIdGNodeNE[i];
  		NodeArrays.Get_coordinate(index,x_tmp, y_tmp);

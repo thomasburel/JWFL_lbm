@@ -8,7 +8,7 @@
 #include "Simulation.h"
 
 Simulation::Simulation()
-:time(0),MultiBlock_(0),parallel(0),Writer(0),Solver_(0),PtrParameters(0),SolverD2Q9(0),MultiBlock2D_(0),WriterCGNS(0),SolverD2Q9TwoPhases(0)
+:time(0),Solver_(0),MultiBlock_(0),parallel(0),Writer(0),PtrParameters(0),WriterCGNS(0),WriterTecplot(0),MultiBlock2D_(0),SolverD2Q9(0),SolverD2Q9TwoPhases(0)
 {}
 void Simulation::InitSimu(Parameters &Parameters_, bool create_mesh)
 {
@@ -284,12 +284,14 @@ void Simulation::Save_Solver(std::string &filename,ios_base::openmode mode){
 	// make an archive
 	std::ofstream ofs(filename.c_str(),mode);
 	boost::archive::text_oarchive oa(ofs);
-	if (PtrParameters->Get_Dimension()==SolverEnum::D2)
-		if(PtrParameters->Get_Scheme()==SolverEnum::Q9)
+	if (PtrParameters->Get_Dimension()==SolverEnum::D2){
+		if(PtrParameters->Get_Scheme()==SolverEnum::Q9){
 			if(PtrParameters->Get_Model()==SolverEnum::SinglePhase)
 				oa << *SolverD2Q9;
 			else
 				oa << *SolverD2Q9TwoPhases;
+		}
+	}
 	else
 		oa << *Solver_;
 }

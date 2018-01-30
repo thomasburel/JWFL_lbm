@@ -20,7 +20,7 @@ public:
 	D2Q9Velocity();
 	virtual ~D2Q9Velocity();
 
-	void SetVelocity(Parameters *Param, double ** &Ei);
+	void SetVelocity(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei);
 	void SetVelocity(VelocityModel VelocityModel_,VelocityType VelocityType_);
 	void SetVelocityModel(VelocityModel VelocityModel_);
 	void SetVelocityType(VelocityType VelocityType_);

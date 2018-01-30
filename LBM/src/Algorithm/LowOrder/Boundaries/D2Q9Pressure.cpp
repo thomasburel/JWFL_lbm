@@ -24,7 +24,7 @@ D2Q9Pressure::~D2Q9Pressure() {
 	// TODO Auto-generated destructor stub
 }
 
-void D2Q9Pressure::Set_PressureBcs(Parameters *Param, double ** &Ei){
+void D2Q9Pressure::Set_PressureBcs(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei){
 //Setup the pressure assumptions and the model
 	SetPressure(Param->Get_PressureModel(),Param->Get_PressureType());
 	EiBc=Ei;

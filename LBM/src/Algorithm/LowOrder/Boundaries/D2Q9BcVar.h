@@ -18,6 +18,8 @@
 #include "../../../Core/Parameters.h"
 #include "../../../Core/GlobalDef.h"
 #include <map>
+#include "../../../Core/Dictionary.h"
+#include "../../../Mesh/SingleBlock/NodeArrays.h"
 
 class D2Q9BcVar{
 public:
@@ -35,7 +37,7 @@ protected:
 	double SumWeightS,SumWeightE,SumWeightN,SumWeightW;
 	double SumWeightConcaveSE,SumWeightConcaveNE,SumWeightConcaveNW,SumWeightConcaveSW;
 	double SumWeightConvexSE,SumWeightConvexNE,SumWeightConvexNW,SumWeightConvexSW;
-	int BounceBackWallConnect[9][2];///Keep the rule of bounce back to avoid a "if" condition
+	int *BounceBackWallConnect[9];///Keep the rule of bounce back to avoid a "if" condition
 	int DiffusekWallConnect[9][3];///Keep the rule of diffuse to avoid a "if" condition
 };
 

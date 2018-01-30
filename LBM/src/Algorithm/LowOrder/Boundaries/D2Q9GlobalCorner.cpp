@@ -15,13 +15,14 @@
 D2Q9GlobalCorner::D2Q9GlobalCorner() {
 	// TODO Auto-generated constructor stub
 	BcMethods=0;
+	RhoDef_tmp=0,UDef_tmp=0,VDef_tmp=0;
 }
 
 D2Q9GlobalCorner::~D2Q9GlobalCorner() {
 	// TODO Auto-generated destructor stub
 }
 
-void D2Q9GlobalCorner::Set_GlobalCorner(Parameters *Param,D2Q9GenericBc* D2Q9GenericBc ){
+void D2Q9GlobalCorner::Set_GlobalCorner(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param,D2Q9GenericBc* D2Q9GenericBc ){
 	BcMethods=D2Q9GenericBc;
 }
 
@@ -66,7 +67,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -94,7 +95,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -125,7 +126,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -153,7 +154,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -227,7 +228,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -255,7 +256,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -287,7 +288,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -315,7 +316,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -387,7 +388,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -415,7 +416,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -447,7 +448,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -475,7 +476,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -547,7 +548,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -575,7 +576,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -607,7 +608,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);
@@ -636,7 +637,7 @@ void D2Q9GlobalCorner::FunctionGlobalCorner(NodeCorner2D& Node, double const Rho
 					BcMethods->ApplySymmetry(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V);
 					break;
 				case Wall:
-					BcMethods->ApplyWall(normal,Node.Get_connect(),f_in,Rho,U,V);
+					BcMethods->ApplyWall(Node,normal,Node.Get_connect(),f_in,Rho,U,V);
 					break;
 				case Periodic:
 					BcMethods->ApplyPeriodic(normal,Node.Get_connect(),Rho_def,UDef,f_in,Rho,U,V,weightDensity);

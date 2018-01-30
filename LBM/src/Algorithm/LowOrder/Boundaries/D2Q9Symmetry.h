@@ -20,7 +20,7 @@ public:
 	D2Q9Symmetry();
 	virtual ~D2Q9Symmetry();
 
-	void Set_Symmetry(Parameters *Param, double ** &Ei);
+	void Set_Symmetry(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei);
 	void SetSymmetry(SymmetryType SymmetryType_);
 	void SetSymmetryType(SymmetryType SymmetryType_);
 	void ApplySymmetry(int const &BcNormal,int const *Connect, double const &Rho_def, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V);

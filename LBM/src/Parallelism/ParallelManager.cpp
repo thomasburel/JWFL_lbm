@@ -8,8 +8,7 @@
 #include "ParallelManager.h"
 
 ParallelManager::ParallelManager()
-	: taskId(0),
-	  numTasks(0)
+	: numTasks(0),taskId(0)
 {
 }
 

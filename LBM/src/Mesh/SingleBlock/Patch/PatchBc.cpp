@@ -48,10 +48,10 @@ void PatchBc::initPatchBc(std::vector<Node2D*> Node, Parameters *PtrParam){
 	int ny=PtrParam->Get_Ny();
 
 	pos=new double[2];
-	int Bcbottom=0;int BcRight=0;int BcTop=0;int BcLeft=0;
+	//int Bcbottom=0;int BcRight=0;int BcTop=0;int BcLeft=0;
 
 	//Get index for patches
-	for(int i=0;i<Node.size();i++)
+	for(unsigned int i=0;i<Node.size();i++)
 	{
 		pos[0]=Node[i]->get_x();pos[1]=Node[i]->get_y();
 		if(Node[i]->get_NodeType()!=Ghost && Node[i]->get_NodeType()!=SolidGhost &&
@@ -131,7 +131,7 @@ void PatchBc::initPatchBc(std::vector<Node2D*> Node, Parameters *PtrParam){
 			IdToRemove.push_back(i);
 	}
 	//remove patches
-	for(int i=0;i<IdToRemove.size();i++)
+	for(unsigned int i=0;i<IdToRemove.size();i++)
 		RemovePatchBc(IdToRemove[i]);;
 	//Adjust arrays
 	for(int i=IdToRemove.size()-1;i>=0;i--)
@@ -397,56 +397,58 @@ void PatchBc::SelectPatchBc(NodeType Type_, Parameters *PtrParam, string PatchBc
 	case Wall:
 		AddWallPatch(PatchBcNames, PtrParam->Get_WallType());
 		break;
+	default:
+		std::cerr<<"Patch type not set up."<<std::endl;
 	}
 }
 void PatchBc::RemovePatchBc(int PatchId){
 	switch(PatchTypeInType[PatchId])
 		{
 		case SolverEnum::Pressure:
-			if (PatchIdInType[PatchId]<=PressurePatch.size()-1)
+			if ((unsigned  int)PatchIdInType[PatchId]<=PressurePatch.size()-1)
 				for (int i=PatchId;i<NumberOfPatchBc+4;i++)
-					if (PatchTypeInType[i]==Pressure)
+					if ((unsigned int)PatchTypeInType[i]==(unsigned int)Pressure)
 						PatchIdInType[i]=PatchIdInType[i]-1;
 			if(!PressurePatch.empty())
 				PressurePatch.erase(PressurePatch.begin()+PatchIdInType[PatchId]);
 			break;
 		case SolverEnum::Velocity:
-			if (PatchIdInType[PatchId]<=VelocityPatch.size()-1)
+			if ((unsigned  int)PatchIdInType[PatchId]<=VelocityPatch.size()-1)
 				for (int i=PatchId;i<NumberOfPatchBc+4;i++)
-					if (PatchTypeInType[i]==Velocity)
+					if ((unsigned int)PatchTypeInType[i]==(unsigned int)Velocity)
 						PatchIdInType[i]=PatchIdInType[i]-1;
 			if(!VelocityPatch.empty())
 				VelocityPatch.erase(VelocityPatch.begin()+PatchIdInType[PatchId]);
 			break;
 		case SolverEnum::Symmetry:
-			if (PatchIdInType[PatchId]<=SymmetryPatch.size()-1)
+			if ((unsigned  int)PatchIdInType[PatchId]<=SymmetryPatch.size()-1)
 				for (int i=PatchId;i<NumberOfPatchBc+4;i++)
-					if (PatchTypeInType[i]==Symmetry)
+					if ((unsigned int)PatchTypeInType[i]==(unsigned int)Symmetry)
 						PatchIdInType[i]=PatchIdInType[i]-1;
 			if(!SymmetryPatch.empty())
 				SymmetryPatch.erase(SymmetryPatch.begin()+PatchIdInType[PatchId]);
 			break;
 		case SolverEnum::Periodic:
-			if (PatchIdInType[PatchId]<=PeriodicPatch.size()-1)
+			if ((unsigned  int)PatchIdInType[PatchId]<=PeriodicPatch.size()-1)
 				for (int i=PatchId;i<NumberOfPatchBc+4;i++)
-					if (PatchTypeInType[i]==Periodic)
+					if ((unsigned int)PatchTypeInType[i]==(unsigned int)Periodic)
 						PatchIdInType[i]=PatchIdInType[i]-1;
 			if(!PeriodicPatch.empty())
 				PeriodicPatch.erase(PeriodicPatch.begin()+PatchIdInType[PatchId]);
 			break;
 		case SolverEnum::Wall:
-			if (PatchIdInType[PatchId]<=WallPatch.size()-1)
+			if ((unsigned  int)PatchIdInType[PatchId]<=WallPatch.size()-1)
 				for (int i=PatchId;i<NumberOfPatchBc+4;i++)
-					if (PatchTypeInType[i]==Wall)
+					if ((unsigned int)PatchTypeInType[i]==(unsigned int)Wall)
 						PatchIdInType[i]=PatchIdInType[i]-1;
 			if(!WallPatch.empty())
 				WallPatch.erase(WallPatch.begin()+PatchIdInType[PatchId]);
 			break;
-
+//enum SolverEnum::PatchType’ and ‘enum NodeType
 		}
 }
 bool PatchBc::Get_NodeIndex(int idPatch,std::vector<int>* &NodeIndex,std::vector<int>* &NodeIndexSpecialWalls,std::vector<int>* &NodeIndexGlobalCorner){
-	bool NonEmptyPatch;
+	bool NonEmptyPatch=true;
 	switch(PatchTypeInType[idPatch])
 			{
 			case SolverEnum::Periodic:

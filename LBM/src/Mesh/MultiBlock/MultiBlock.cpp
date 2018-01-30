@@ -8,7 +8,7 @@
 #include "MultiBlock.h"
 
 MultiBlock::MultiBlock() :
-parallel(0),PtrParameters(0)
+PtrParameters(0),parallel(0)
 {
 	ndims=2;
 	// TODO Auto-generated constructor stub

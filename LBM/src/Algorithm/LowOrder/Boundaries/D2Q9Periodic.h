@@ -20,7 +20,7 @@ public:
 	D2Q9Periodic();
 	virtual ~D2Q9Periodic();
 
-	void Set_Periodic(Parameters *Param, double ** &Ei);
+	void Set_Periodic(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei);
 	void SetPeriodic(PeriodicType PeriodicType_);
 	void SetPeriodicType(PeriodicType PeriodicType_);
 	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const &Rho_def, double weightDensity, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V);

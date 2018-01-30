@@ -76,6 +76,7 @@ InterpolationLinearLeastSquare::InterpolationLinearLeastSquare(){
 	nWalls=0;
 	x0=0;y0=0;
 	result1=0;result2=0;
+	nSolidNodes=0,nFluidNodes=0, nWalls=0;
 }
 InterpolationLinearLeastSquare::InterpolationLinearLeastSquare(int dimension_,int nb_vel,unsigned int *PtrOppositeInterpol_){
 	dimension=dimension_;
@@ -86,6 +87,7 @@ InterpolationLinearLeastSquare::InterpolationLinearLeastSquare(int dimension_,in
 	nWalls=0;
 	x0=0;y0=0;
 	result1=0;result2=0;
+	nSolidNodes=0,nFluidNodes=0, nWalls=0;
 }
 InterpolationLinearLeastSquare::~InterpolationLinearLeastSquare(){
 
@@ -103,7 +105,7 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 	double x_tmp=0;double y_tmp=0;
 
 	if(PtrNodes->CornerConcave.size()>0)
-	for (int i=0;i<PtrNodes->CornerConcave.size();i++)
+	for (unsigned int i=0;i<PtrNodes->CornerConcave.size();i++)
 	{
 		//Reset variables
 		SolidChecked.clear();FluidChecked.clear();
@@ -151,7 +153,7 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		countnWalls++;
 	}
 		if(PtrNodes->NodeWall.size()>0)
-	for (int i=0;i<PtrNodes->NodeWall.size();i++)
+	for (unsigned int i=0;i<PtrNodes->NodeWall.size();i++)
 	{
 		//Reset variables
 		SolidChecked.clear();FluidChecked.clear();
@@ -199,7 +201,7 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		countnWalls++;
 	}
 	if(PtrNodes->CornerConvex.size()>0)
-	for (int i=0;i<PtrNodes->CornerConvex.size();i++)
+	for (unsigned int i=0;i<PtrNodes->CornerConvex.size();i++)
 	{
 		//Reset variables
 		SolidChecked.clear();FluidChecked.clear();
@@ -246,7 +248,7 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 		countnWalls++;
 	}
 	if(PtrNodes->NodeSpecialWall.size()>0)
-	for (int i=0;i<PtrNodes->NodeSpecialWall.size();i++)
+	for (unsigned int i=0;i<PtrNodes->NodeSpecialWall.size();i++)
 	{
 		//Reset variables
 		SolidChecked.clear();FluidChecked.clear();
@@ -296,13 +298,13 @@ void InterpolationLinearLeastSquare::InitInterpol(NodeArrays2D *PtrNodes, Parame
 
 }
 void InterpolationLinearLeastSquare::Mark_FluidIds(NodeArrays2D *PtrNodes,std::vector<NextNode>& next, int &countnwalls, int &countfluid){
-	int nodeIdlocal=0;
-	for(int i=0;i<next.size();i++)
+//	int nodeIdlocal=0;
+	for(unsigned int i=0;i<next.size();i++)
 	{
 		if(countfluid<nFluidNodes)
 		{
 			countfluid++;
-			nodeIdlocal=PtrNodes->NodeIndexByType[next[i].index];
+			//nodeIdlocal=PtrNodes->NodeIndexByType[next[i].index];
 			//fluidId[countnwalls][countfluid]=nodeIdlocal;
 			fluidIdtmp.push_back(next[i].index);
 			//fluidDist[countnwalls][countfluid]=next[i].distance;
@@ -314,11 +316,11 @@ void InterpolationLinearLeastSquare::Mark_FluidIds(NodeArrays2D *PtrNodes,std::v
 	}
 }
 void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::vector<int>& next, int &countnwalls, int &countsolid){
-	int nodeIdlocal=0;
+	unsigned int nodeIdlocal=0;
 	//int nodeIdlocaltmp=0;
 	NextNode NextNodetmp;
 	double x_tmp,y_tmp;
-	for(int i=0;i<next.size();i++)
+	for(unsigned int i=0;i<next.size();i++)
 	{
 		nodeIdlocal=PtrNodes->NodeIndexByType[next[i]];
 		switch (PtrNodes->TypeOfNode[next[i]])
@@ -430,11 +432,11 @@ void InterpolationLinearLeastSquare::Mark_SolidIds(NodeArrays2D *PtrNodes,std::v
 }
 
 void InterpolationLinearLeastSquare::Next_WallId(NodeArrays2D *PtrNodes,std::vector<int> nextback,std::vector<int>& next){
-	int nodeIdlocal=0;
+	unsigned int nodeIdlocal=0;
 	next.clear();
 	std::vector<NextNode> VectNextNodetmp;
 	NextNode NextNodetmp;
-	for(int i=0;i<nextback.size();i++)
+	for(unsigned int i=0;i<nextback.size();i++)
 	{
 		nodeIdlocal=PtrNodes->NodeIndexByType[nextback[i]];
 
@@ -726,11 +728,11 @@ void InterpolationLinearLeastSquare::Next_WallId(NodeArrays2D *PtrNodes,std::vec
 	}*/
 	if(VectNextNodetmp.size()>0)
 	{
-		for(int i=0;i<VectNextNodetmp.size();i++)
+		for(unsigned int i=0;i<VectNextNodetmp.size();i++)
 			if(PtrNodes->TypeOfNode[VectNextNodetmp[i].index]!= Wall||PtrNodes->TypeOfNode[VectNextNodetmp[i].index]!= Corner||PtrNodes->TypeOfNode[VectNextNodetmp[i].index]!= ConcaveCorner||PtrNodes->TypeOfNode[VectNextNodetmp[i].index]!= ConvexCorner)
 				VectNextNodetmp.erase(VectNextNodetmp.begin()+i);
 		if(SolidChecked.size()>0)
-			for(int i=0;i<SolidChecked.size();i++)
+			for(unsigned int i=0;i<SolidChecked.size();i++)
 			{
 				itnextWall = find_if(VectNextNodetmp.begin(),VectNextNodetmp.end(), MatchNextNode(SolidChecked[i].index));
 
@@ -740,20 +742,21 @@ void InterpolationLinearLeastSquare::Next_WallId(NodeArrays2D *PtrNodes,std::vec
 			}
 
 		std::sort(VectNextNodetmp.begin(), VectNextNodetmp.end(), by_distance());
-		for(int i=0;i<VectNextNodetmp.size();i++)
+		for(unsigned int i=0;i<VectNextNodetmp.size();i++)
 			next.push_back(VectNextNodetmp[i].index);
 	}
 }
 void InterpolationLinearLeastSquare::Next_FluidId(NodeArrays2D *PtrNodes,std::vector<NextNode> nextbak,std::vector<NextNode>& next){
-	next.clear();int nodeIdlocal=0;
+	next.clear();unsigned int nodeIdlocal=0;
 	NextNode NextNodetmp;
-	for(int i=0;i<nextbak.size();i++)
+	for(unsigned int i=0;i<nextbak.size();i++)
 	{
 		nodeIdlocal=PtrNodes->NodeIndexByType[nextbak[i].index];
-		switch (PtrNodes->TypeOfNode[nextbak[i].index])
-		{
-		case Interior:
-			for(int i=1;i<9;i++)
+		//switch (PtrNodes->TypeOfNode[nextbak[i].index])
+		//{
+		//case Interior:
+		if(PtrNodes->TypeOfNode[nextbak[i].index]==Interior)
+			for(unsigned int i=1;i<9;i++)
 				if(PtrNodes->TypeOfNode[PtrNodes->NodeInterior[nodeIdlocal].Get_connect()[i]]==Interior)
 				{
 					NextNodetmp.index=PtrNodes->NodeInterior[nodeIdlocal].Get_connect()[i];
@@ -761,14 +764,14 @@ void InterpolationLinearLeastSquare::Next_FluidId(NodeArrays2D *PtrNodes,std::ve
 					next.push_back(NextNodetmp);
 				}
 
-			break;
-		}
+		//	break;
+		//}
 	}
 	//Remove node already checked. To speed up, it is split in two cases.
 	if(next.size()>0)
 	{
 		if(FluidChecked.size()<next.size())
-			for(int i=0;i<FluidChecked.size();i++)
+			for(unsigned int i=0;i<FluidChecked.size();i++)
 			{
 				itnextFluid = find_if(next.begin(),next.end(), MatchNextNode(FluidChecked[i].index));
 
@@ -776,7 +779,7 @@ void InterpolationLinearLeastSquare::Next_FluidId(NodeArrays2D *PtrNodes,std::ve
 				  next.erase(itnextFluid);
 			}
 		else
-			for(int i=0;i<next.size();i++)
+			for(unsigned int i=0;i<next.size();i++)
 			{
 				itnextFluid = find_if(FluidChecked.begin(),FluidChecked.end(), MatchNextNode(next[i].index));
 
@@ -817,14 +820,14 @@ void InterpolationLinearLeastSquare::InterpolationOnCornerConvex (double *Var1, 
 }
 void InterpolationLinearLeastSquare::CalculLeastSquareMethod(double *Var,int wallId){
 	sumX=0;	sumY=0;sumXY=0;sumX2=0;
-	for(int i=0;i< fluidId[wallId].size();i++)
+	for(unsigned int i=0;i< fluidId[wallId].size();i++)
 	{
 		sumX+=fluidDist[wallId][i];
 		sumX2+=fluidDist[wallId][i]*fluidDist[wallId][i];
 		sumY+=Var[fluidId[wallId][i]];
 		sumXY+=fluidDist[wallId][i]*Var[fluidId[wallId][i]];
 	}
-	for(int i=0;i< solidId[wallId].size();i++)
+	for(unsigned int i=0;i< solidId[wallId].size();i++)
 	{
 		sumX+=solidDist[wallId][i];
 		sumX2+=solidDist[wallId][i]*solidDist[wallId][i];
@@ -836,14 +839,14 @@ void InterpolationLinearLeastSquare::CalculLeastSquareMethod(double *Var,int wal
 }
 void InterpolationLinearLeastSquare::CalculLeastSquareMethod(double *Var1,double *Var2,int wallId){
 	sumX=0;	sumY=0;sumXY=0;sumX2=0;
-	for(int i=0;i< fluidId[wallId].size();i++)
+	for(unsigned int i=0;i< fluidId[wallId].size();i++)
 	{
 		sumX+=fluidDist[wallId][i];
 		sumX2+=fluidDist[wallId][i]*fluidDist[wallId][i];
 		sumY+=Var1[fluidId[wallId][i]];
 		sumXY+=fluidDist[wallId][i]*Var1[fluidId[wallId][i]];
 	}
-	for(int i=0;i< solidId[wallId].size();i++)
+	for(unsigned int i=0;i< solidId[wallId].size();i++)
 	{
 		sumX+=solidDist[wallId][i];
 		sumX2+=solidDist[wallId][i]*solidDist[wallId][i];
@@ -853,12 +856,12 @@ void InterpolationLinearLeastSquare::CalculLeastSquareMethod(double *Var1,double
 	result1=(sumY*sumX2-sumX*sumXY)/((fluidId[wallId].size()+solidId[wallId].size())*sumX2-sumX*sumX);
 	sumY=0;sumXY=0;
 
-	for(int i=0;i< fluidId[wallId].size();i++)
+	for(unsigned int i=0;i< fluidId[wallId].size();i++)
 	{
 		sumY+=Var2[fluidId[wallId][i]];
 		sumXY+=fluidDist[wallId][i]*Var2[fluidId[wallId][i]];
 	}
-	for(int i=0;i< solidId[wallId].size();i++)
+	for(unsigned int i=0;i< solidId[wallId].size();i++)
 	{
 		sumY+=Var2[solidId[wallId][i]];
 		sumXY+=solidDist[wallId][i]*Var2[solidId[wallId][i]];

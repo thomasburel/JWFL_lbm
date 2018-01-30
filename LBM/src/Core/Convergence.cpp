@@ -42,6 +42,12 @@ Convergence::Convergence() {
 	LengthMedium=100;
 	SectionMedium=40;
 	PtrPermeabilityDarcy=0;
+	fluidVolumesum=0;solidVolumesum=0;
+	minXMedia=0;maxXMedia=0;minYMedia=0;maxYMedia=0;minZMedia=0;maxZMedia=0;
+	PtrPermeability=0;
+	LuToPhy2=1;
+	PressureConv=0;
+	DeltaP=0;
 }
 
 Convergence::~Convergence() {
@@ -87,14 +93,15 @@ void Convergence::Set_Convergence(){
 //Porous media cases
 	if(PtrParmConv->IsPorousMediaCase())
 	{
+
 		LengthMedium=PtrParmConv->Get_LenghtMedia();
 		SectionMedium=PtrParmConv->Get_SectionMedia();
 		PtrParmConv->Get_PositionMedia(minXMedia,maxXMedia,minYMedia,maxYMedia,minZMedia,maxZMedia);
-		if(minXMedia<0) minXMedia=0;if(maxXMedia>PtrParmConv->Get_Nx()) maxXMedia=PtrParmConv->Get_Nx();
+		if(minXMedia<0) minXMedia=0;if((int)maxXMedia>PtrParmConv->Get_Nx()) maxXMedia=PtrParmConv->Get_Nx();
 		if(minXMedia>maxXMedia)minXMedia=maxXMedia;
-		if(minYMedia<0) minYMedia=0;if(maxYMedia>PtrParmConv->Get_Ny()) maxYMedia=PtrParmConv->Get_Ny();
+		if(minYMedia<0) minYMedia=0;if((int)maxYMedia>PtrParmConv->Get_Ny()) maxYMedia=PtrParmConv->Get_Ny();
 		if(minYMedia>maxYMedia)minYMedia=maxYMedia;
-		if(minZMedia<0) minZMedia=0;if(maxZMedia>PtrParmConv->Get_Nz()) maxZMedia=PtrParmConv->Get_Nz();
+		if(minZMedia<0) minZMedia=0;if((int)maxZMedia>PtrParmConv->Get_Nz()) maxZMedia=PtrParmConv->Get_Nz();
 		if(minZMedia>maxZMedia)minZMedia=maxZMedia;
 		if(PtrParmConv->IsCalculatePorosity() || PtrParmConv->IsCalculatePermeability())
 		{
@@ -152,7 +159,7 @@ void Convergence::Set_Convergence(){
 			PtrDicConv->Get_PtrVar("Pressure",PressureConv,Var_found);
 			DeltaP=new double*[2];
 			PtrDicConv->AddVar(Vector,"Delata P",false, false,false,DeltaP[0],DeltaP[1]);
-			for(int i=0;i<PtrNodeArraysConv->TypeOfNode.size();i++)
+			for(unsigned int i=0;i<PtrNodeArraysConv->TypeOfNode.size();i++)
 			{
 				DeltaP[0][i]=0;DeltaP[1][i]=0;
 			}
@@ -175,7 +182,7 @@ void Convergence::Set_Convergence(){
 			{
 				ofstream Permeabilityfile;
 				Permeabilityfile.open("Permeability.txt",ios::out | ios::trunc);
-				if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
+				if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase){
 					if(PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
 						Permeabilityfile<<"Time"
 						",X-Global Permeability [m2],Y-Global Permeability [m2],Global Permeability [m2]"
@@ -200,6 +207,7 @@ void Convergence::Set_Convergence(){
 						",Average X-Grad(P) [lu],Average Y-Grad(P) [lu],Average Mag-Grad(P)[lu]"
 						",Alpha,1-Alpha"
 						<<std::endl;
+				}
 				Permeabilityfile.close();
 			}
 		}
@@ -305,7 +313,7 @@ double Convergence::Calcul_ProductionRate(int &Time){
 
 	double ProductionRate=0;
 	double sum=0,sumtmp=0,nbsumnodes=0;
-	for (int i=0;i<OutletPatchId.size();i++)
+	for (unsigned int i=0;i<OutletPatchId.size();i++)
 	{
 		if(PtrPatchBcConv->Get_NodeIndex(OutletPatchId[i],NodeId,NodeIdSpeWall,NodeIdGloCorner))
 		{
@@ -334,7 +342,7 @@ double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 	double sumtmp=0,nbsumnodesIn=0,nbsumnodesOut=0;
 	double sumRhoIn=0,sumRhoOut=0,sumUIn=0,sumUOut=0;
 	double sumMuIn=0,sumMuOut=0;
-	for (int i=0;i<InletPatchId.size();i++)
+	for (unsigned int i=0;i<InletPatchId.size();i++)
 	{
 		if(PtrPatchBcConv->Get_NodeIndex(InletPatchId[i],NodeId,NodeIdSpeWall,NodeIdGloCorner))
 		{
@@ -355,7 +363,7 @@ double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 	sumUIn=PtrMultiBlockConv->SumAllProcessors(&sumUIn);;
 	sumMuIn=PtrMultiBlockConv->SumAllProcessors(&sumMuIn);
 	nbsumnodesIn=PtrMultiBlockConv->SumAllProcessors(&nbsumnodesIn);
-	for (int i=0;i<OutletPatchId.size();i++)
+	for (unsigned int i=0;i<OutletPatchId.size();i++)
 	{
 		if(PtrPatchBcConv->Get_NodeIndex(OutletPatchId[i],NodeId,NodeIdSpeWall,NodeIdGloCorner))
 		{
@@ -411,9 +419,7 @@ double Convergence::Calcul_DarcyPermeability_SinglePhase(int &Time){
 
 }
 double Convergence::Calcul_Permeability_SinglePhase(int &Time){
-	double Umag=0;double Ux=0;double Uy=0;
-	double DeltaPmag=0;double DeltaPx=0;double DeltaPy=0;
-	double visco=0;
+
 	double sum_Umag=0;double sum_Ux=0;double sum_Uy=0;
 	double sum_DeltaPmag=0;double sum_DeltaPx=0;double sum_DeltaPy=0;
 	double sum_Mu=0;
@@ -428,7 +434,7 @@ double Convergence::Calcul_Permeability_SinglePhase(int &Time){
 	Calcul_localDeltaP();
 
 
-	for (int i=0;i<MarkFluidNode_V1.size();i++){
+	for (unsigned int i=0;i<MarkFluidNode_V1.size();i++){
 		//cache variables
 		int idx_1D=MarkFluidNode_V1[i];
 		double DeltaPx_cache=DeltaP[0][idx_1D];
@@ -466,7 +472,7 @@ double Convergence::Calcul_Permeability_SinglePhase(int &Time){
 		sum_DeltaPy_tmp=0;
 		sum_DeltaPmag_tmp=0;
 
-	for (int i=0;i<MarkFluidNode_V075.size();i++){
+	for (unsigned int i=0;i<MarkFluidNode_V075.size();i++){
 		//cache variables
 		int idx_1D=MarkFluidNode_V075[i];
 		double DeltaPx_cache=DeltaP[0][idx_1D];
@@ -507,7 +513,7 @@ double Convergence::Calcul_Permeability_SinglePhase(int &Time){
 	sum_DeltaPmag_tmp=0;
 
 
-	for (int i=0;i<MarkFluidNode_V05.size();i++){
+	for (unsigned int i=0;i<MarkFluidNode_V05.size();i++){
 		//cache variables
 		int idx_1D=MarkFluidNode_V05[i];
 		double DeltaPx_cache=DeltaP[0][idx_1D];
@@ -547,7 +553,7 @@ double Convergence::Calcul_Permeability_SinglePhase(int &Time){
 	sum_DeltaPy_tmp=0;
 	sum_DeltaPmag_tmp=0;
 
-	for (int i=0;i<MarkFluidNode_V025.size();i++){
+	for (unsigned int i=0;i<MarkFluidNode_V025.size();i++){
 		//cache variables
 		int idx_1D=MarkFluidNode_V025[i];
 		double DeltaPx_cache=DeltaP[0][idx_1D];
@@ -635,7 +641,7 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 	//double sumUIn=0,sumUOut=0,sumRhoIn=0,sumRhoOut=0,sumRhoNIn=0,sumRhoNOut=0;
 	double sumRho1In=0,sumRho2In=0,sumRho1Out=0,sumRho2Out=0,sumU1In=0,sumU1Out=0,sumU2In=0,sumU2Out=0;
 	double sumMu1In=0,sumMu2In=0,sumMu1Out=0,sumMu2Out=0,sumAlpha1In=0,sumAlpha2In=0,sumAlpha1Out=0,sumAlpha2Out=0;
-	for (int i=0;i<InletPatchId.size();i++)
+	for (unsigned int i=0;i<InletPatchId.size();i++)
 	{
 		if(PtrPatchBcConv->Get_NodeIndex(InletPatchId[i],NodeId,NodeIdSpeWall,NodeIdGloCorner))
 		{
@@ -645,7 +651,6 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 			Sum_ScalarNodeArray(*NodeId,*NodeIdSpeWall,*NodeIdGloCorner,RhoPerm,RhoNPerm,false,sumtmp);
 			sumRho2In=sumtmp;
 			//sum U1 and U2 with weight (alpha*U1 or (1-alpha)*U2)
-			int orienta=PtrPatchBcConv->Get_Orientation(InletPatchId[i]);
 			Sum_ScalarNodeArray(*NodeId,*NodeIdSpeWall,*NodeIdGloCorner,UPerm[PtrPatchBcConv->Get_Orientation(InletPatchId[i])],RhoNPerm,true,sumtmp);
 			sumU1In+=sumtmp;
 			Sum_ScalarNodeArray(*NodeId,*NodeIdSpeWall,*NodeIdGloCorner,UPerm[PtrPatchBcConv->Get_Orientation(InletPatchId[i])],RhoNPerm,false,sumtmp);
@@ -673,7 +678,7 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 	sumMu1In=PtrMultiBlockConv->SumAllProcessors(&sumMu1In);
 	sumMu2In=PtrMultiBlockConv->SumAllProcessors(&sumMu2In);
 	nbsumnodesIn=PtrMultiBlockConv->SumAllProcessors(&nbsumnodesIn);
-	for (int i=0;i<OutletPatchId.size();i++)
+	for (unsigned int i=0;i<OutletPatchId.size();i++)
 	{
 		if(PtrPatchBcConv->Get_NodeIndex(OutletPatchId[i],NodeId,NodeIdSpeWall,NodeIdGloCorner))
 		{
@@ -711,10 +716,10 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 	sumMu2Out=PtrMultiBlockConv->SumAllProcessors(&sumMu2Out);
 	nbsumnodesOut=PtrMultiBlockConv->SumAllProcessors(&nbsumnodesOut);
 
-	double avgRho1In=sumRho1In/sumAlpha1In;
-	double avgRho2In=sumRho2In/sumAlpha2In;
-	double avgRho1Out=sumRho1Out/sumAlpha1Out;
-	double avgRho2Out=sumRho2Out/sumAlpha2Out;
+	//double avgRho1In=sumRho1In/sumAlpha1In;
+	//double avgRho2In=sumRho2In/sumAlpha2In;
+	//double avgRho1Out=sumRho1Out/sumAlpha1Out;
+	//double avgRho2Out=sumRho2Out/sumAlpha2Out;
 	double avgRhoIn=(sumRho1In+sumRho2In)/(sumAlpha1In+sumAlpha2In);
 	double avgRhoOut=(sumRho1Out+sumRho2Out)/(sumAlpha1Out+sumAlpha2Out);
 
@@ -731,7 +736,7 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 	double avgMu1=(sumMu1In+sumMu1Out)/(sumAlpha1);
 	double avgMu2=(sumMu2In+sumMu2Out)/(sumAlpha2);
 	double avgMu=(sumMu1In+sumMu1Out+sumMu2In+sumMu2Out)/(sumAlpha1+sumAlpha2);
-
+/*
 	if(sumAlpha1In==0)
 		avgRho1In=0;
 	if(sumAlpha1Out==0)
@@ -740,6 +745,7 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 		avgRho2In=0;
 	if(sumAlpha2Out==0)
 		avgRho2Out=0;
+	*/
 	if(sumAlpha1==0)
 	{
 		avgU1Pore=0;
@@ -755,8 +761,8 @@ double Convergence::Calcul_DarcyPermeability_TwoPhases(int &Time){
 	double avgU2=scale*avgU2Pore;
 	double avgU=scale*avgUPore;
 
-	double deltaP1=RhoToP(avgRho1In-avgRho1Out);
-	double deltaP2=RhoToP(avgRho2In-avgRho2Out);
+//	double deltaP1=RhoToP(avgRho1In-avgRho1Out);
+//	double deltaP2=RhoToP(avgRho2In-avgRho2Out);
 	double deltaP=RhoToP(avgRhoIn-avgRhoOut);
 
 	double Permeability=0;//As single Phase
@@ -816,7 +822,7 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 	Calcul_localDeltaP();
 
 
-	for (int i=0;i<MarkFluidNode_V1.size();i++){
+	for (unsigned int i=0;i<MarkFluidNode_V1.size();i++){
 		//cache variables
 		int idx_1D=MarkFluidNode_V1[i];
 		double Rhon_cache=RhoNPerm[idx_1D];
@@ -874,7 +880,7 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
 
 
-	for (int i=0;i<MarkFluidNode_V075.size();i++){
+	for (unsigned int i=0;i<MarkFluidNode_V075.size();i++){
 		//cache variables
 		int idx_1D=MarkFluidNode_V075[i];
 		double Rhon_cache=RhoNPerm[idx_1D];
@@ -933,7 +939,7 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 	sum_DeltaPmag_tmp=0;sum_DeltaP1mag_tmp=0;sum_DeltaP2mag_tmp=0;
 	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
 
-	for (int i=0;i<MarkFluidNode_V05.size();i++){
+	for (unsigned int i=0;i<MarkFluidNode_V05.size();i++){
 		//cache variables
 		int idx_1D=MarkFluidNode_V05[i];
 		double Rhon_cache=RhoNPerm[idx_1D];
@@ -992,7 +998,7 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 	sum_DeltaPmag_tmp=0;sum_DeltaP1mag_tmp=0;sum_DeltaP2mag_tmp=0;
 	sum_Alpha1_tmp=0;sum_Alpha2_tmp=0;
 
-	for (int i=0;i<MarkFluidNode_V025.size();i++){
+	for (unsigned int i=0;i<MarkFluidNode_V025.size();i++){
 		//cache variables
 		int idx_1D=MarkFluidNode_V025[i];
 		double Rhon_cache=RhoNPerm[idx_1D];
@@ -1081,7 +1087,7 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 	{
 		ofstream Permeabilityfile;
 		Permeabilityfile.open("Permeability.txt",ios::out | ios::app);
-		Permeabilityfile<<Time<<","<<
+		Permeabilityfile<<Time<<
 				","<<GlobalPermeability1X<<","<<GlobalPermeability1Y<<","<<GlobalPermeability1<<
 				","<<GlobalPermeability2X<<","<<GlobalPermeability2Y<<","<<GlobalPermeability2<<
 				","<<GlobalPermeabilityX<<","<<GlobalPermeabilityY<<","<<GlobalPermeability<<
@@ -1095,7 +1101,7 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 				","<<Avg_DeltaP1x<<","<<Avg_DeltaP1y<<","<<Avg_DeltaP1mag<<
 				","<<Avg_DeltaP2x<<","<<Avg_DeltaP2y<<","<<Avg_DeltaP2mag<<
 				","<<Avg_DeltaPx<<","<<Avg_DeltaPy<<","<<Avg_DeltaPmag<<
-				Avg_Alpha1<<Avg_Alpha2<<
+				","<<Avg_Alpha1<<","<<Avg_Alpha2<<
 				std::endl;
 		Permeabilityfile.close();
 		std::cout<<"Two-phase Permeability analysis: "<<std::endl<<
@@ -1109,11 +1115,11 @@ double Convergence::Calcul_Permeability_TwoPhases(int &Time){
 void Convergence::Sum_ScalarNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double &sum){
 	sum=0;
 	double sum_tmp=0;
-	for(int i=0;i<NodeArray.size();i++)
+	for(unsigned int i=0;i<NodeArray.size();i++)
 		sum+=Var1[NodeArray[i]];
-	for(int i=0;i<NodeArraySpecialWall.size();i++)
+	for(unsigned int i=0;i<NodeArraySpecialWall.size();i++)
 		sum_tmp+=Var1[NodeArraySpecialWall[i]];
-	for(int i=0;i<NodeArrayGlobalCorner.size();i++)
+	for(unsigned int i=0;i<NodeArrayGlobalCorner.size();i++)
 		sum_tmp+=Var1[NodeArrayGlobalCorner[i]];
 	sum_tmp/=2.0;
 	sum+=sum_tmp;
@@ -1121,35 +1127,35 @@ void Convergence::Sum_ScalarNodeArray(std::vector<int>& NodeArray,std::vector<in
 void Convergence::Sum_ScalarNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double *&weight,bool phase1,double &sum){
 	sum=0;
 	double sum_tmp=0;
-	for(int i=0;i<NodeArray.size();i++)
+	for(unsigned int i=0;i<NodeArray.size();i++)
 		sum+=Get_Weigth(weight[NodeArray[i]],phase1)*Var1[NodeArray[i]];
-	for(int i=0;i<NodeArraySpecialWall.size();i++)
+	for(unsigned int i=0;i<NodeArraySpecialWall.size();i++)
 		sum_tmp+=Get_Weigth(weight[NodeArraySpecialWall[i]],phase1)*Var1[NodeArraySpecialWall[i]];
-	for(int i=0;i<NodeArrayGlobalCorner.size();i++)
+	for(unsigned int i=0;i<NodeArrayGlobalCorner.size();i++)
 		sum_tmp+=Get_Weigth(weight[NodeArrayGlobalCorner[i]],phase1)*Var1[NodeArrayGlobalCorner[i]];
 	sum_tmp/=2.0;
 	sum+=sum_tmp;
 }
 void Convergence::Sum_VectorNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double *&Var2,double &sum1,double &sum2){
 	sum1=0;sum2=0;
-	for(int i=0;i<NodeArray.size();i++)
+	for(unsigned int i=0;i<NodeArray.size();i++)
 		{sum1+=Var1[NodeArray[i]];sum2+=Var2[NodeArray[i]];}
 	double sum_tmp1=0;double sum_tmp2=0;
-	for(int i=0;i<NodeArraySpecialWall.size();i++)
+	for(unsigned int i=0;i<NodeArraySpecialWall.size();i++)
 		{sum_tmp1+=Var1[NodeArraySpecialWall[i]];sum_tmp2+=Var2[NodeArraySpecialWall[i]];}
-	for(int i=0;i<NodeArrayGlobalCorner.size();i++)
+	for(unsigned int i=0;i<NodeArrayGlobalCorner.size();i++)
 		{sum_tmp1+=Var1[NodeArrayGlobalCorner[i]];sum_tmp2+=Var2[NodeArrayGlobalCorner[i]];}
 	sum_tmp1/=2.0;sum_tmp2/=2.0;
 	sum1+=sum_tmp1;sum2+=sum_tmp2;
 }
 void Convergence::Sum_VectorNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Var1,double *&Var2,double *&weight,bool phase1,double &sum1,double &sum2){
 	sum1=0;sum2=0;
-	for(int i=0;i<NodeArray.size();i++)
+	for(unsigned int i=0;i<NodeArray.size();i++)
 		{sum1+=Get_Weigth(weight[NodeArray[i]],phase1)*Var1[NodeArray[i]];sum2+=Get_Weigth(weight[NodeArray[i]],phase1)*Var2[NodeArray[i]];}
 	double sum_tmp1=0;double sum_tmp2=0;
-	for(int i=0;i<NodeArraySpecialWall.size();i++)
+	for(unsigned int i=0;i<NodeArraySpecialWall.size();i++)
 		{sum_tmp1+=Get_Weigth(weight[NodeArraySpecialWall[i]],phase1)*Var1[NodeArraySpecialWall[i]];sum_tmp2+=Get_Weigth(weight[NodeArraySpecialWall[i]],phase1)*Var2[NodeArraySpecialWall[i]];}
-	for(int i=0;i<NodeArrayGlobalCorner.size();i++)
+	for(unsigned int i=0;i<NodeArrayGlobalCorner.size();i++)
 		{sum_tmp1+=Get_Weigth(weight[NodeArrayGlobalCorner[i]],phase1)*Var1[NodeArrayGlobalCorner[i]];sum_tmp2+=Get_Weigth(weight[NodeArrayGlobalCorner[i]],phase1)*Var2[NodeArrayGlobalCorner[i]];}
 	sum_tmp1/=2.0;sum_tmp2/=2.0;
 	sum1+=sum_tmp1;sum2+=sum_tmp2;
@@ -1157,11 +1163,11 @@ void Convergence::Sum_VectorNodeArray(std::vector<int>& NodeArray,std::vector<in
 void Convergence::Sum_WeightNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&weight,bool phase1,double &sum){
 	sum=0;
 	double sum_tmp=0;
-	for(int i=0;i<NodeArray.size();i++)
+	for(unsigned int i=0;i<NodeArray.size();i++)
 		sum+=Get_Weigth(weight[NodeArray[i]],phase1);
-	for(int i=0;i<NodeArraySpecialWall.size();i++)
+	for(unsigned int i=0;i<NodeArraySpecialWall.size();i++)
 		sum_tmp+=Get_Weigth(weight[NodeArraySpecialWall[i]],phase1);
-	for(int i=0;i<NodeArrayGlobalCorner.size();i++)
+	for(unsigned int i=0;i<NodeArrayGlobalCorner.size();i++)
 		sum_tmp+=Get_Weigth(weight[NodeArrayGlobalCorner[i]],phase1);
 	sum_tmp/=2.0;
 	sum+=sum_tmp;
@@ -1170,11 +1176,11 @@ void Convergence::Sum_WeightNodeArray(std::vector<int>& NodeArray,std::vector<in
 void Convergence::Sum_ViscosityNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Rho,double *&weight,bool phase1,double &sum){
 	sum=0;
 	double sum_tmp=0;
-	for(int i=0;i<NodeArray.size();i++)
+	for(unsigned int i=0;i<NodeArray.size();i++)
 		sum+=Get_Weigth(weight[NodeArray[i]],phase1)*PtrViscosityConv->Get_Mu(Rho[NodeArray[i]],weight[NodeArray[i]]);
-	for(int i=0;i<NodeArraySpecialWall.size();i++)
+	for(unsigned int i=0;i<NodeArraySpecialWall.size();i++)
 		sum_tmp+=Get_Weigth(weight[NodeArraySpecialWall[i]],phase1)*PtrViscosityConv->Get_Mu(Rho[NodeArraySpecialWall[i]],weight[NodeArraySpecialWall[i]]);
-	for(int i=0;i<NodeArrayGlobalCorner.size();i++)
+	for(unsigned int i=0;i<NodeArrayGlobalCorner.size();i++)
 		sum_tmp+=Get_Weigth(weight[NodeArrayGlobalCorner[i]],phase1)*PtrViscosityConv->Get_Mu(Rho[NodeArrayGlobalCorner[i]],weight[NodeArrayGlobalCorner[i]]);
 	sum_tmp/=2.0;
 	sum+=sum_tmp;
@@ -1182,11 +1188,11 @@ void Convergence::Sum_ViscosityNodeArray(std::vector<int>& NodeArray,std::vector
 void Convergence::Sum_ViscosityNodeArray(std::vector<int>& NodeArray,std::vector<int>& NodeArraySpecialWall,std::vector<int>& NodeArrayGlobalCorner,double *&Rho,double &sum){
 	sum=0;
 	double sum_tmp=0;
-	for(int i=0;i<NodeArray.size();i++)
+	for(unsigned int i=0;i<NodeArray.size();i++)
 		sum+=PtrViscosityConv->Get_Mu();
-	for(int i=0;i<NodeArraySpecialWall.size();i++)
+	for(unsigned int i=0;i<NodeArraySpecialWall.size();i++)
 		sum_tmp+=PtrViscosityConv->Get_Mu();
-	for(int i=0;i<NodeArrayGlobalCorner.size();i++)
+	for(unsigned int i=0;i<NodeArrayGlobalCorner.size();i++)
 		sum_tmp+=PtrViscosityConv->Get_Mu();
 	sum_tmp/=2.0;
 	sum+=sum_tmp;
@@ -1239,7 +1245,7 @@ void Convergence::Set_MarkFluidNodes(){
 
 // treatment of walls
 	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdWall();i++)
-		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
+		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdWall(i))){
 			if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
 				MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdWall(i));
 	//treatment border of the domain
@@ -1262,6 +1268,7 @@ void Convergence::Set_MarkFluidNodes(){
 					//wall on the boundary of the porous media domain but toward the domain
 					MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdWall(i));
 			}
+		}
 
 // treatment global corner of the computational domain
 	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdGlobalCorner();i++)
@@ -1271,7 +1278,7 @@ void Convergence::Set_MarkFluidNodes(){
 //treatment concave corner
 	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConcave();i++)
 		//Concave corner in the domain
-		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
+		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i))){
 			if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
 				MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConcave(i));
 			//treatment border of the domain
@@ -1284,6 +1291,7 @@ void Convergence::Set_MarkFluidNodes(){
 			}
 			else
 				MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConcave(i));
+		}
 
 
 //treatment of the special wall of the computational domain
@@ -1299,8 +1307,8 @@ void Convergence::Set_MarkFluidNodes(){
 
 
 //	sumfluidvolume+=0.75*PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();
-	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();i++)
-			if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();i++){
+			if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i))){
 				if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
 					MarkFluidNode_V075.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
 	//exclude convex corner in the corner of the porous media and with normal toward the outside diagonal
@@ -1313,21 +1321,24 @@ void Convergence::Set_MarkFluidNodes(){
 					MarkFluidNode_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
 				else
 					MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
+			}
+	}
 }
 void Convergence::SumSolidVolume(double & sumsolidvolume){
 	sumsolidvolume=0;
 //Solid
 	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdSolid();i++)
-		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdSolid(i)))
+		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdSolid(i))){
 			if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdSolid(i)))
 				sumsolidvolume+=0.25;
 			else if(IsBoundary(PtrNodeArraysConv->Get_NodeIdSolid(i)))
 				sumsolidvolume+=0.5;
 			else
 				sumsolidvolume++;
+		}
 //Convex corner
 	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();i++)
-		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i))){
 			if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
 				sumsolidvolume+=0.25;
 //keep convex corner in the corner of the porous media and with normal toward the outside diagonal
@@ -1336,10 +1347,11 @@ void Convergence::SumSolidVolume(double & sumsolidvolume){
 						sumsolidvolume+=0.25;}
 			else if(IsWrongSideDomain(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
 				sumsolidvolume+=0.25;
+		}
 
 // wall
 	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdWall();i++)
-		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
+		if(IsInDomain(PtrNodeArraysConv->Get_NodeIdWall(i))){
 			if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdWall(i)))
 				sumsolidvolume+=0.5;
 	//treatment border of the domain
@@ -1358,6 +1370,7 @@ void Convergence::SumSolidVolume(double & sumsolidvolume){
 					//treat as a "special wall" of the porous media domain
 					sumsolidvolume+=0.25;
 			}
+		}
 
 //Special wall
 	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdSpecialWall();i++)
@@ -1369,7 +1382,7 @@ void Convergence::SumSolidVolume(double & sumsolidvolume){
 	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConcave();i++)
 
 	//Concave corner in the domain
-	if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
+	if(IsInDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i))){
 		if(IsInsideDomain(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
 			sumsolidvolume+=0.75;
 		//treatment border of the domain
@@ -1384,6 +1397,7 @@ void Convergence::SumSolidVolume(double & sumsolidvolume){
 			else
 				sumsolidvolume+=0.5;
 		}
+	}
 
 }
 bool Convergence::IsBoundary(int idx){
