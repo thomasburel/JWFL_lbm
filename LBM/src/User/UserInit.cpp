@@ -29,8 +29,8 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 	double teta,sigma,Diameter,Re,Ca;
 	PtrParameters.Get_UserParameters(Umax,H,L,Pmax,Pmin);
 	PtrParameters.Get_UserDroplets(teta,sigma,Diameter,Re,Ca);
-	double HeighChannel=19.0;
-	double first_wall=3;
+	double HeighChannel=20.0;
+	double first_wall=2.5;
 	double visco=0.1;
 	U[0]=0.0;
 	U[1]=0.0;
@@ -40,6 +40,7 @@ void UserInit::UserBc(Parameters& PtrParameters, int elem, int nodenumber, doubl
 		alpha=1.0;
 	if(pos[0]<=1)
 		U[0]=Umax*(1.0-pow(2.0*(pos[1]-HeighChannel/2.0-first_wall)/HeighChannel,2.0));
+//		U[0]=Umax*(1.0-pow(2.0*(pos[1]-HeighChannel/2.0-first_wall)/HeighChannel,2.0));
 	else
 		U[0]=0.0;
 }
@@ -60,10 +61,7 @@ void UserInit::UserIc (Parameters& PtrParameters, int elem, int nodenumber, doub
 	double R=8;
 
 	if(pos[0]<=5)
-	{
-
 		alpha=1.0;
-	}
 
 }
 

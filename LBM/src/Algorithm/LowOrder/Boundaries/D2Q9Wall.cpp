@@ -121,6 +121,7 @@ void D2Q9Wall::ApplyBounceBackWall(T& Node,int const &BcNormal,int const *Connec
 ///HalfWay Bounceback Wall treatment
 template <class T>
 void D2Q9Wall::ApplyHalfWayBounceBackWall(T& Node,int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution){
+//	std::cout<<"wall id"<<idxDistribution<<std::endl;
 	unsigned int idx0=idxDistribution*3;
 	unsigned int idx1=idx0+1;unsigned int idx2=idx0+2;
 	f_in->f[BcNormal][Connect[0]]=Node.Get_SaveData(idx0);
@@ -134,6 +135,7 @@ void D2Q9Wall::ApplyHalfWayBounceBackWall(T& Node,int const &BcNormal,int const 
 ///HalfWay Bounceback Wall treatment before streaming
 template <class T>
 void D2Q9Wall::ApplyHalfWayBounceBackWallPreStream(T& Node,int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution){
+//	std::cout<<"Pre wall id"<<idxDistribution<<std::endl;
 	unsigned int idx0=idxDistribution*3;
 	unsigned int idx1=idx0+1;unsigned int idx2=idx0+2;
 	Node.Set_SaveData(idx0,f_in->f[OppositeBc[BcNormal]][Connect[0]]);

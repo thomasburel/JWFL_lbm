@@ -269,22 +269,21 @@ void D2Q9Corner::ApplyBounceBack(T& Node,int const &BcNormal,int const *Connect,
 template <class T>
 void D2Q9Corner::ApplyHalfWayBounceBack(T& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution){
 //	double tmp=0;
+//	std::cout<<"corner id"<<idxDistribution<<std::endl;
 	unsigned int idx0=idxDistribution*5;
 	f_in->f[BcNormal][Connect[0]]=Node.Get_SaveData(idx0);//f_in->f[OppositeBc[BcNormal]][Connect[OppositeBc[BcNormal]]];
-	//Node.Set_SaveData(idx0,f_in->f[OppositeBc[BcNormal]][Connect[0]]);
-	
 	if (concave)
 	{
 		idx0++;
 		for (unsigned int i=0;i<4;i++){
 			f_in->f[BounceBackWallConnect[BcNormal][i]][Connect[0]]= Node.Get_SaveData(idx0+i);
-		//	Node.Set_SaveData(idx0+i,f_in->f[OppositeBc[BounceBackWallConnect[BcNormal][i]]][Connect[0]]);
 		}
 	}
 
 }
 template <class T>
 void D2Q9Corner::ApplyHalfWayBounceBackPreStream(T& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution){
+//	std::cout<<"Pre corner id"<<idxDistribution<<std::endl;
 	unsigned int idx0=idxDistribution*5;
 	Node.Set_SaveData(idx0,f_in->f[OppositeBc[BcNormal]][Connect[0]]);
 	if (concave)

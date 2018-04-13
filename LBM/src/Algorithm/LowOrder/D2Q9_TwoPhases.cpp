@@ -70,6 +70,8 @@ void D2Q9TwoPhases::InitD2Q9TwoPhases(MultiBlock* MultiBlock__,ParallelManager* 
 	EiCollide=Ei;
 	omegaCollide=omega;
 	Nb_VelocityCollide=nbvelo;
+
+
 	init(ini);
 }
 D2Q9TwoPhases::~D2Q9TwoPhases() {
@@ -364,7 +366,6 @@ void D2Q9TwoPhases::TmptoDistri(unsigned int& direction, int& IdDistri){
 	f[IdDistri]->f[direction]=ftmp;
 	ftmp=tmpDistribution;
 }
-
 void D2Q9TwoPhases::Set_BcType(){
 	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 	{

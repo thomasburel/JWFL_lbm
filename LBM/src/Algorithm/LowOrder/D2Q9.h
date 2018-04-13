@@ -51,8 +51,7 @@ private:
 	void CollideD2Q9();
 	void CollideD2Q9_NoBodyForce();
 	void CollideD2Q9_WithBodyForce();
-	void CollideD2Q9_ExcludeWalls_NoBodyForce();
-	void CollideD2Q9_ExcludeWalls_WithBodyForce();
+
 	void StreamD2Q9();
 
 	void Set_PointersOnFunctions();

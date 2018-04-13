@@ -940,6 +940,7 @@ void D2Q9::CollideD2Q9_NoBodyForce(){
 		}
 
 }
+/*
 void D2Q9::CollideD2Q9_ExcludeWalls_NoBodyForce(){
 	double Fx, Fy;// InvTau_tmp;
 	double *fi_tmp; fi_tmp=new double [nbvelo];
@@ -996,24 +997,6 @@ void D2Q9::CollideD2Q9_ExcludeWalls_NoBodyForce(){
 				f->f[i][NodeArrays->NodePressure[j].Get_index()]=fi_tmp[i];
 			}
 		}
-/*		//Force no slip condition
-		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
-		{
-			if(NodeArrays->NodeWall[j].Get_BcNormal()+Opposite[NodeArrays->NodeWall[j].Get_BcNormal()]==4)
-			{
-				double density_tmp=f->f[2][NodeArrays->NodeWall[j].Get_index()]+f->f[4][NodeArrays->NodeWall[j].Get_index()];
-				density_tmp*=0.5;
-				f->f[2][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
-				f->f[4][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
-			}
-			else
-			{
-				double density_tmp=f->f[1][NodeArrays->NodeWall[j].Get_index()]+f->f[3][NodeArrays->NodeWall[j].Get_index()];
-				density_tmp*=0.5;
-				f->f[1][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
-				f->f[3][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
-			}
-		}*/
 		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
 			Fx=0;Fy=0;
@@ -1056,6 +1039,7 @@ void D2Q9::CollideD2Q9_ExcludeWalls_NoBodyForce(){
 		}
 
 }
+*/
 void D2Q9::CollideD2Q9_WithBodyForce(){
 	double *fi_tmp; fi_tmp=new double [nbvelo];
 	double *localforce;localforce=new double [nbvelo];
@@ -1191,6 +1175,7 @@ void D2Q9::CollideD2Q9_WithBodyForce(){
 		}
 		delete [] fi_tmp;delete [] localforce;
 }
+/*
 void D2Q9::CollideD2Q9_ExcludeWalls_WithBodyForce(){
 	double *fi_tmp; fi_tmp=new double [nbvelo];
 	double *localforce;localforce=new double [nbvelo];
@@ -1251,25 +1236,7 @@ void D2Q9::CollideD2Q9_ExcludeWalls_WithBodyForce(){
 				f->f[i][NodeArrays->NodePressure[j].Get_index()]=fi_tmp[i];
 			}
 		}
-/*//Force no slip condition
-		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
-		{
-			if(NodeArrays->NodeWall[j].Get_BcNormal()+Opposite[NodeArrays->NodeWall[j].Get_BcNormal()]==4)
-			{
-				double density_tmp=f->f[2][NodeArrays->NodeWall[j].Get_index()]+f->f[4][NodeArrays->NodeWall[j].Get_index()];
-				density_tmp*=0.5;
-				f->f[2][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
-				f->f[4][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
-			}
-			else
-			{
-				double density_tmp=f->f[1][NodeArrays->NodeWall[j].Get_index()]+f->f[3][NodeArrays->NodeWall[j].Get_index()];
-				density_tmp*=0.5;
-				f->f[1][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
-				f->f[3][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
-			}
-		}
-		*/
+
 		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
  			F[0][NodeArrays->NodeSpecialWall[j].Get_index()]=0;
@@ -1314,6 +1281,7 @@ void D2Q9::CollideD2Q9_ExcludeWalls_WithBodyForce(){
 		}
 		delete [] fi_tmp;delete [] localforce;
 }
+*/
 void D2Q9::UpdateMacroVariables(){
 	(this->*PtrMacro)();
 }

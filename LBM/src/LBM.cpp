@@ -121,7 +121,7 @@ int main(int argc, char *argv[]) {
 /// Set Global Corner type
 	Param.Set_CornerPressureType(ExtrapolCP);//FixCP,ExtrapolCP
 /// Wall boundary condition type (Implemented BounceBack and Diffuse)
-	Param.Set_WallType(BounceBack);//BounceBack,HeZouWall
+	Param.Set_WallType(HalfWayBounceBack);//BounceBack,HeZouWall
 	Param.Set_CollisionOnWalls(true);
 	Param.Set_VelocityModel(HeZouV);
 /// Set Periodic boundary condition to add a pressure drop term
@@ -252,7 +252,7 @@ int main(int argc, char *argv[]) {
 		U2_ref=Re*nu_1/HeighChannel;
 		Ca=U2_ref*nu_1/sigma;
 		FileExportStream.str("");
-		FileExportStream<<"Serpentine_"<< fixed << setprecision(0)<<H<<"x"<<L<<"_Hchannel_"<<HeighChannel
+		FileExportStream<<"Serpentine_Half-Way_"<< fixed << setprecision(0)<<H<<"x"<<L<<"_Hchannel_"<<HeighChannel
 						<< scientific<<setprecision(2)<<"_Re_"<<Re<<"_Ca_"<<Ca<<"_Sigma_"<<sigma;
 		Param.Set_OutputFileName(FileExportStream.str());
 		Param.Set_UserParameters(U2_ref,H,L,Pmax,Pmin);

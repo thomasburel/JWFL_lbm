@@ -156,7 +156,14 @@ private:
 	void ApplyCorner(NodeCorner2D& Node);
 	void ApplyBounceBack(NodeCorner2D& Node);
 	void ApplySymmetryPressureOnNode(NodeSymmetry2D& NodeIn);*/
-
+//Apply conditions before streaming
+	void ApplyPreStreamBc();
+	void ApplyPreStreamBc_on();
+	void ApplyPreStreamBc_off(){};
+	void ApplyPatchPressurePreStream(PressurePatchBc& PresPatchBc);
+	void ApplyPatchVelocityPreStream(VelocityPatchBc& VelPatchBc);
+	void ApplyPatchSymmetryPreStream(SymmetryPatchBc& SymPatchBc);
+	void ApplyPatchPeriodicPreStream(PeriodicPatchBc& PerPatchBc);
 
 private:
 //Multiphase variables
@@ -202,6 +209,8 @@ private:
 //	typedef void(D2Q9ColourFluid::*ExtrapolDensity)(int const & idxNodeArray, int & nodenumber, int* connect,int & normal);
 ///Simplify notation for pointer on a member function of D2Q9ColourFluid class for collision models
 	typedef void(D2Q9ColourFluid::*Collision)(int & nodenumber, int* connect,int & normal,double* fi);
+	///Simplify notation for pointer on a member function of D2Q9ColourFluid class for pre streaming operations if needed
+	typedef void(D2Q9ColourFluid::*PreStream)();
 ///Simplify notation for pointer on a member function of D2Q9ColourFluid class for the normalisation of the Colour Gradient
 //	typedef void(D2Q9ColourFluid::*CalNormal)(int & nodenumber, int* connect,int & normal);
 //Define name for pointers on functions
@@ -217,7 +226,7 @@ private:
 	Collision PtrCollisionCorner;///< Collision pointer
 //	CalNormal PtrCalNormal;///< Calcul Normal
 //	CalNormal PtrCalNormalWall;///< Calcul or fix normal at the wall
-
+	PreStream PtrPreStream;///< Pre-streaming pointer for applying BC in two times as for half-way bounce-back
 	//int idxcheck;
 };
 
