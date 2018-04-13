@@ -256,82 +256,106 @@ void D2Q9TwoPhases::StreamD2Q9() {
 
 	for (int k=0;k<2;k++)
 	{
-	for (unsigned int i=1;i<(unsigned int)nbvelo;i++) //No need to stream direction 0
-	{
-		for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
+		for (unsigned int i=1;i<(unsigned int)nbvelo;i++) //No need to stream direction 0
 		{
-			if (NodeArrays->NodeInterior[j].Get_connect()[i]!=NodeArrays->NodeInterior[j].Get_index())
+			for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
 			{
-				ftmp[NodeArrays->NodeInterior[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeInterior[j].Get_index()];
-			}
-		}
-
-		for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
-		{
-			if (NodeArrays->NodeCorner[j].stream()[i])
-			{
-				ftmp[NodeArrays->NodeCorner[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeCorner[j].Get_index()];
-			}		}
-		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
-		{
-			if (NodeArrays->NodeGlobalCorner[j].stream()[i])
-			{
-				ftmp[NodeArrays->NodeGlobalCorner[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];
+				if (NodeArrays->NodeInterior[j].Get_connect()[i]!=NodeArrays->NodeInterior[j].Get_index())
+				{
+					ftmp[NodeArrays->NodeInterior[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeInterior[j].Get_index()];
+				}
 			}
 
-		}
-		for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
-		{
-			if (NodeArrays->NodeVelocity[j].stream()[i])
-					{
-						ftmp[NodeArrays->NodeVelocity[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeVelocity[j].Get_index()];
-					}
-		}
+			for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
+			{
+				if (NodeArrays->NodeCorner[j].stream()[i])
+				{
+					ftmp[NodeArrays->NodeCorner[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeCorner[j].Get_index()];
+				}		}
+			for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+			{
+				if (NodeArrays->NodeGlobalCorner[j].stream()[i])
+				{
+					ftmp[NodeArrays->NodeGlobalCorner[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];
+				}
 
-		for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
-		{
-			if (NodeArrays->NodePressure[j].stream()[i])
-					{
-						ftmp[NodeArrays->NodePressure[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodePressure[j].Get_index()];
-					}
-		}
-		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
-		{
-			if (NodeArrays->NodeWall[j].stream()[i])
-			{
-				ftmp[NodeArrays->NodeWall[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeWall[j].Get_index()];
 			}
-		}
-		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
-		{
-			if (NodeArrays->NodeSpecialWall[j].stream()[i])
+			for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
 			{
-				ftmp[NodeArrays->NodeSpecialWall[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];
+				if (NodeArrays->NodeVelocity[j].stream()[i])
+						{
+							ftmp[NodeArrays->NodeVelocity[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeVelocity[j].Get_index()];
+						}
 			}
-		}
-		for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
-		{
-			if (NodeArrays->NodeSymmetry[j].stream()[i])
+
+			for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
 			{
-				ftmp[NodeArrays->NodeSymmetry[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeSymmetry[j].Get_index()];
+				if (NodeArrays->NodePressure[j].stream()[i])
+						{
+							ftmp[NodeArrays->NodePressure[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodePressure[j].Get_index()];
+						}
 			}
-		}
-		for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
-		{
-			if (NodeArrays->NodePeriodic[j].stream()[i])
+			for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 			{
-				ftmp[NodeArrays->NodePeriodic[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodePeriodic[j].Get_index()];
+				if (NodeArrays->NodeWall[j].stream()[i])
+				{
+					ftmp[NodeArrays->NodeWall[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeWall[j].Get_index()];
+				}
 			}
-		}
-		for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
-		{
-			if (NodeArrays->NodeGhost[j].stream()[i])
+			for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 			{
-				ftmp[NodeArrays->NodeGhost[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeGhost[j].Get_index()];
+				if (NodeArrays->NodeSpecialWall[j].stream()[i])
+				{
+					ftmp[NodeArrays->NodeSpecialWall[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];
+				}
 			}
+			for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+			{
+				if (NodeArrays->NodeSymmetry[j].stream()[i])
+				{
+					ftmp[NodeArrays->NodeSymmetry[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeSymmetry[j].Get_index()];
+				}
+			}
+			for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
+			{
+				if (NodeArrays->NodePeriodic[j].stream()[i])
+				{
+					ftmp[NodeArrays->NodePeriodic[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodePeriodic[j].Get_index()];
+				}
+			}
+			for (unsigned int j=0;j<NodeArrays->NodeGhost.size();j++)
+			{
+				if (NodeArrays->NodeGhost[j].stream()[i])
+				{
+					ftmp[NodeArrays->NodeGhost[j].Get_connect()[i]]=f[k]->f[i][NodeArrays->NodeGhost[j].Get_index()];
+				}
+			}
+			D2Q9TwoPhases::TmptoDistri(i,k);
 		}
-		D2Q9TwoPhases::TmptoDistri(i,k);
 	}
+	if(!PtrParameters->Get_CollisionOnWalls())
+	{
+//Force no slip condition
+		for (int k=0;k<2;k++)
+		{
+			for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
+			{
+				if(NodeArrays->NodeWall[j].Get_BcNormal()+Opposite[NodeArrays->NodeWall[j].Get_BcNormal()]==4)
+				{
+					double density_tmp=f[k]->f[2][NodeArrays->NodeWall[j].Get_index()]+f[k]->f[4][NodeArrays->NodeWall[j].Get_index()];
+					density_tmp*=0.5;
+					f[k]->f[2][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
+					f[k]->f[4][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
+				}
+				else
+				{
+					double density_tmp=f[k]->f[1][NodeArrays->NodeWall[j].Get_index()]+f[k]->f[3][NodeArrays->NodeWall[j].Get_index()];
+					density_tmp*=0.5;
+					f[k]->f[1][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
+					f[k]->f[3][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
+				}
+			}
+		}
 	}
 }
 

@@ -37,7 +37,7 @@ public:
 	///Apply Pressure/Velocity Special Wall as one 0-moment variable (single phase = 1 density)
 	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply Pressure/Velocity Special Wall as  several 0-moment variables
-//	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V);
+//Corner treatment
 	///Apply Corner as one 0-moment variable (single phase = 1 density)
 	void ApplyCorner(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply Corner as  several 0-moment variables
@@ -48,26 +48,40 @@ public:
 	void ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply Corner for SpecialWall as one 0-moment variable (single phase = 1 density)
 	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
-	///Apply Corner for SpecialWall as  several 0-moment variables
-//	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V);
-	///Apply Wall as one 0-moment variable (single phase = 1 density)
+	///Apply Corner  before streaming as one 0-moment variable (single phase = 1 density)
+	void ApplyCornerPreStream(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef, unsigned int idxDistribution=0, double weightDensity=1);
+	///Apply Corner before streaming  as  several 0-moment variables
+	void ApplyCornerPreStream(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
+	///Apply CornerWall before streaming  as one 0-moment variable (single phase = 1 density)
+	void ApplyCornerWallPreStream(NodeCorner2D& Node, DistriFunct * & f_in, unsigned int idxDistribution=0, double weightDensity=1);
+	///Apply CornerWal before streaming l as  several 0-moment variables
+	void ApplyCornerWallPreStream(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
+	///Apply Corner before streaming  for SpecialWall as one 0-moment variable (single phase = 1 density)
+	void ApplyCornerSpecialWallPreStream(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
+//Wall treatment
+	///Apply Wall as one 0-moment variable (single phase = 1 weight density)
 	void ApplyWall(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply Wall as  several 0-moment variables
 	void ApplyWall(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
-	///Apply Wall as one 0-moment variable (single phase = 1 density) for Global Corner
+	///Apply Wall as one 0-moment variable (single phase = 1 weight density) for Global Corner
 	void ApplyWall(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in, unsigned int idxDistribution=0, double weightDensity=1);
 	///Apply Wall as  several 0-moment variables for Global Corner
 	void ApplyWall(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
+	///Apply Wall before streaming as one 0-moment variable (single phase = 1 weight density)
+	void ApplyWallPreStream(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in, unsigned int idxDistribution=0, double weightDensity=1);
+	///Apply Wall before streaming as  several 0-moment variables
+	void ApplyWallPreStream(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
+	///Apply Wall before streaming as one 0-moment variable (single phase = 1 weight density) for Global Corner
+	void ApplyWallPreStream(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in, unsigned int idxDistribution=0, double weightDensity=1);
+	///Apply Wall before streaming as  several 0-moment variables for Global Corner
+	void ApplyWallPreStream(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0, double weightDensity=1);
 
-
-	///Apply SpecialWall as one 0-moment variable (single phase = 1 density)
-//	void ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_);
-	///Apply SpecialWall as  several 0-moment variables
-//	void ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_,double * & Rho, double * &U, double * &V);
+//Symmetry treatment
 	///Apply Symmetry as one 0-moment variable (single phase = 1 density)
 	void ApplySymmetry(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in, double weightDensity=1);
 	///Apply Symmetry as  several 0-moment variables
 	void ApplySymmetry(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, double weightDensity=1);
+//Periodic treatment
 	///Apply Periodic as one 0-moment variable (single phase = 1 density)
 	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const Rho_def, double const *UDef, DistriFunct * & f_in, double weightDensity=1);
 	///Apply Periodic as  several 0-moment variables

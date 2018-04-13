@@ -959,7 +959,7 @@ void D2Q9ColourFluid::run(){
 					std::cout<< " Time per iteration: "<<time_run/it<<"s"<<std::endl;
 					std::cout<<"Error is: "<<Get_Error()<<std::endl;
 				}
-				if(Get_Error()<max_error)
+				if(Get_Error()<max_error||boost::math::isnan(Get_Error()))
 				{
 					if(CalPressure&&!CalGradP)
 						UpdatePressure();
@@ -1014,7 +1014,7 @@ void D2Q9ColourFluid::run(){
 				std::cout<<trunc(time_run)<<"Seconds ";
 				std::cout<< " Time per iteration: "<<time_run/it<<"s"<<std::endl;
 				std::cout<<"Error is: "<<Get_Error()<<std::endl;
-				if(Get_Error()<max_error)
+				if(Get_Error()<max_error||boost::math::isnan(Get_Error()))
 				{
 					if(CalPressure&&!CalGradP)
 						UpdatePressure();

@@ -21,34 +21,15 @@ UserMesh::UserMesh() {
 	a=std::tan(beta);
 	b=(H-L*a)/2.0;
 
+//	std::string filename("../serpentine2_58_19.raw");	
+//	std::string filename("../serpentine2_119_38.raw");
+	std::string filename("../serpentine2_244_74.raw");
+//	std::string filename("../Serpentine_432_132.raw");
 
-//	std::string filename("../P0.8G1.raw");
-//	ReadBinaryImage(filename,204, 204, 1);// single resolution
-//	std::string filename("../Proceded_LBM__DVM_berea_662_530.raw");
-	//std::string filename("../Proceded_LBM_berea_662_530.raw");
-//	ReadBinaryImage(filename,662, 530, 1);// double resolution
-/*	std::string filename("../Proceded_LBM_DVM_berea_1323_1059.raw");
-//	std::string filename("../Proceded_LBM_berea_1323_1059.raw");
-	ReadBinaryImage(filename,1323, 1059, 1);// double resolution
-	*/
-//	std::string filename("../Proceded_LBM_DVM_cone2_filtered_1949_1323.raw");
-//	ReadBinaryImage(filename,1949, 1323, 1);// double resolution
-//	std::string filename("../Proceded_LBM_berea_1984_1588.raw");
-//	ReadBinaryImage(filename,1984, 1588, 1);// triple resolution
-
-//	std::cout<<"**** check read file***"<<std::endl;
-
-//	std::string filename("../Pipe_1290_455.raw");
-
-//	std::string filename("../Perpentine_1290_371.raw");
-//		ReadBinaryImage(filename,1290, 371, 1);// double resolution
-//		std::cout<<"**** check read file***"<<std::endl;
-
-//	std::string filename("../rooster_363_470.raw");
-//		ReadBinaryImage(filename,363, 470, 1);// double resolution
-
-	//std::string filename("../Image_1162_filtered_filled_404_201.raw");
-	//	ReadBinaryImage(filename,404, 201, 1);// double resolution
+	L_Image=244;//58;
+	H_Image=74;//19;
+	ReadBinaryImage(filename,L_Image, H_Image, 1);
+	//std::cout<<"**** check read file***"<<std::endl;
 }
 void UserMesh::SetUserMeshVariables(){
 	H=PtrParametersUserMesh->Get_UserH();
@@ -69,137 +50,15 @@ UserMesh::~UserMesh() {
 
 void UserMesh::ChangeNode(Node2D &Node, bool &solid )
 {
-//	if(Node.get_x()>199 && Node.get_x()<2149 && Node.get_y()>-1 && Node.get_y()<1323 )
-	//if(Node.get_x()>-1 && Node.get_x()<662 && Node.get_y()>-1 && Node.get_y()<530 )
-//	if(Node.get_x()>-1 && Node.get_x()<1323 && Node.get_y()>-1 && Node.get_y()<1059 )
-	//if(Node.get_x()>-1 && Node.get_x()<1984 && Node.get_y()>-1 && Node.get_y()<1588 )
-//		solid=image[0][(int)Node.get_y()][(int)Node.get_x()-200];
-//	else
-//		solid=false;
 
 
-
-/*
-	if(Node.get_x()>=(L/2.0-R) &&Node.get_x()<=(L/2.0+R) && Node.get_y()>=(-R) &&Node.get_y()<=(+R) )
+	if(Node.get_x()>-1&& Node.get_x()<L_Image && Node.get_y()>-1 && Node.get_y()<H_Image )
+		solid=image[0][(int)Node.get_y()][(int)Node.get_x()];
+	else if(Node.get_y()<=0 ||Node.get_y()>=H_Image)
 		solid=true;
 	else
 		solid=false;
-*/
 
-/*	if(Node.get_y()<=a*Node.get_x()+b+epsilon)
-		solid=true;
-	else
-		solid=false;*/
-//	if(Node.get_y()<=H/2.0+std::cos(teta)*R && Node.get_x()>=10 &&Node.get_x()<=390 && Node.get_y()>=10 )
-/*	if(Node.get_y()<=a*(Node.get_x()+std::sin(beta)*R)+b+std::cos(beta)*std::cos(teta)*R && Node.get_x()>=10 &&Node.get_x()<=390 && Node.get_y()>=10 )
-
-			solid=true;
-		else
-			solid=false;*/
-/*
-	if(pow(Node.get_x()-L/2.0,2.0)+pow(Node.get_y(),2.0)<=R*R+1e-8)
-		solid=true;
-	else
-		solid=false;
-*/
-
-
-/*	//Cross
-	double xmiddle=(L+1)/2.0+0.5;
-	double ymiddle=(H+1)/2.0+0.5;
-	double factor=6;
-	double widthsquare=(factor-1.0)*2+1.0;
-	double xfirstcorner=xmiddle-0.5-factor;
-	double yfirstcorner=ymiddle-0.5-factor;
-	if(Node.get_x()>=xfirstcorner-widthsquare && Node.get_x()<=xfirstcorner+2*widthsquare && Node.get_y()>=yfirstcorner-widthsquare && Node.get_y()<=yfirstcorner+2*widthsquare)
-		if((Node.get_x()>=xfirstcorner && Node.get_x()<=xfirstcorner+widthsquare)||( Node.get_y()>=yfirstcorner && Node.get_y()<=yfirstcorner+widthsquare))
-		{
-			solid=true;
-		}
-		else
-		{
-			solid=false;
-		}
-	else
-		solid=false;
-
-	*/
-
-
-	/*if(Node.get_x()==44 && Node.get_y()==44)
-		std::cout<<"x: "<<Node.get_x()<<" y: "<<Node.get_y()<<" Solid type: "<<solid<<std::endl;
-	if(Node.get_x()==43 && Node.get_y()==44)
-		std::cout<<"x: "<<Node.get_x()<<" y: "<<Node.get_y()<<" Solid type: "<<solid<<std::endl;
-	if(Node.get_x()==44 && Node.get_y()==43)
-		std::cout<<"x: "<<Node.get_x()<<" y: "<<Node.get_y()<<" Solid type: "<<solid<<std::endl;
-	if(Node.get_x()==43 && Node.get_y()==43)
-		std::cout<<"x: "<<Node.get_x()<<" y: "<<Node.get_y()<<" Solid type: "<<solid<<std::endl;*/
-/*
-	if(Node.get_y()<=(H/2.0-R) || Node.get_y()>=(H/2.0+R) )
-		solid=true;
-	else
-		solid=false;*/
-
-
-/*
-	if(Node.get_x()>-1&& Node.get_x()<1290 && Node.get_y()>-1 && Node.get_y()<371 )
-			solid=image[0][(int)Node.get_y()][(int)Node.get_x()];
-		else
-			solid=false;
-	*/
-
-
-
-	//if((Node.get_x()<10 || Node.get_x()>90) &&(Node.get_y()<10 || Node.get_y()>40 ))
-/*	if(Node.get_y()<20 || Node.get_y()>40)
-		if((Node.get_x()>140 && Node.get_x()<160)||(Node.get_x()>190 && Node.get_x()<210)||(Node.get_x()>240 && Node.get_x()<260)||(Node.get_x()>290 && Node.get_x()<310)||(Node.get_x()>340 && Node.get_x()<360))
-			solid=true;
-		else
-			solid=false;
-	else
-		solid=false;
-	//force walls
-	if(Node.get_x()>10 && Node.get_x()<490)
-	if(Node.get_y()<=1 ||Node.get_y()>=59)
-		solid=true;
-*/
-	/*
-	if(Node.get_y()<4 || Node.get_y()>H-4)
-		solid=true;
-*/
-	//contraction 1162
-	/*
-	if(Node.get_x()>100 && Node.get_x()<504)
-		if(Node.get_y()<=0 || Node.get_y()>=194)
-			solid=true;
-		else
-			solid=image[0][(int)Node.get_y()+1][(int)Node.get_x()-100];
-		else
-			solid=false;
-			*/
-/*	if(Node.get_x()>50)
-		if(Node.get_y()<=3 || Node.get_y()>=201)
-					solid=true;
-				else
-					solid=false;
-	*/
-// slant channel
-/*	if(Node.get_y()<100.0*Node.get_x()/100.0+5.0 ||Node.get_y()>100.0*Node.get_x()/100.0+35.0)
-		solid=true;
-*/
-/*
-	if((Node.get_y()<6||Node.get_y()>44)||
-			(Node.get_x()>=45 && Node.get_x()<=55 &&(Node.get_y()>=16 && Node.get_y()<=34)))
-		solid=true;
-	else
-		solid=false;
-*/
-	/*
-	if(Node.get_y()<5||Node.get_y()>95)
-		solid=true;
-	else if((Node.get_y()<45||Node.get_y()>55)&&(Node.get_x()>=30 && Node.get_x()<=1005))
-		solid=true;
-*/
 }
 void UserMesh::SetSymmetryType(SymmetryType &Type, double x, double y)
 {

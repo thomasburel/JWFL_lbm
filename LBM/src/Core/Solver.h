@@ -21,6 +21,7 @@
 #include <boost/serialization/utility.hpp>
 #include <boost/serialization/list.hpp>
 #include <boost/serialization/assume_abstract.hpp>
+#include <boost/math/special_functions/fpclassify.hpp> // isnan
 #include "../Algorithm/Tools/Gradients.h"
 #include "../Algorithm/Tools/Extrapolation.h"
 
@@ -36,6 +37,7 @@ public:
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void SetUserForce(Parameters* UpdatedParam)=0;
 protected:
 	void saveParameters();
 protected:
@@ -66,6 +68,7 @@ public:
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void SetUserForce(Parameters* UpdatedParam)=0;
 	void set_f_ini();
 	double** get_f_ini();
 	void set_f_name();
@@ -95,6 +98,7 @@ public:
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void SetUserForce(Parameters* UpdatedParam)=0;
 
 protected:
 	DistriFunct** f;
@@ -122,6 +126,7 @@ public:
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void SetUserForce(Parameters* UpdatedParam){Set_UserForce(UpdatedParam);};
 private:
 	friend class boost::serialization::access;
     template<class Archive>
@@ -144,6 +149,7 @@ public:
 	virtual void UpdateDomainBc(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateWall(Parameters* UpdatedParam,InitLBM& ini)=0;
 	virtual void UpdateInterior(Parameters* UpdatedParam,InitLBM& ini)=0;
+	virtual void SetUserForce(Parameters* UpdatedParam){Set_UserForce(UpdatedParam);};
 private:
 	friend class boost::serialization::access;
     template<class Archive>

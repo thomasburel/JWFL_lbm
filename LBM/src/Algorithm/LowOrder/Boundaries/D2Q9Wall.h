@@ -25,6 +25,10 @@ public:
 	void ApplyWall(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution, double const *Rho, double const *U, double const *V);
 	// Apply wall treatment depending of the parameters for special corners
 	void ApplyWall(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution, double const *Rho, double const *U, double const *V);
+	// Apply wall treatment before streaming depending of the parameters
+	void ApplyWallPreStream(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution, double const *Rho, double const *U, double const *V);
+	// Apply wall treatment before streaming depending of the parameters for special corners
+	void ApplyWallPreStream(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution, double const *Rho, double const *U, double const *V);
 	//Special Walls are the wall on the boundary of the domain. They need two treatments: The boundary treatment and the wall treatment
 	//void ApplySpecialWall(NodeWall2D & Node, DistriFunct* f_in, std::map<int,NodeType> TypeOfNode_, double const *Rho, double const *U, double const *V, unsigned int idxDistribution=0);
 
@@ -41,6 +45,10 @@ private:
 	template <class T>
 	void ApplyHeZouWall(T& Node,int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution);
 	void FUNC_HeZou_NoU (double & a,double & b,double & c,double & d,double & e,double & f,double & g,double & h,double & i);
+
+//Before streaming
+	template <class T>
+	void ApplyHalfWayBounceBackWallPreStream(T& Node,int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution);
 /*
 //Special wall methods
 //	void ApplyWallWall(NodeWall2D & Node, DistriFunct* f_in, std::map<int,NodeType> & TypeOfNode_);
@@ -58,6 +66,8 @@ private:
 //Define name for pointers on functions
 	WallMethod PtrWallMethod;
 	WallGlobalCornerMethod PtrWallGlobalCornerMethod;
+	WallMethod PtrPreStreamWallMethod;
+	WallGlobalCornerMethod PtrPreStreamWallGlobalCornerMethod;
 //	SpecialWallMethod PtrSpecialWallMethod;
 
 	double feq,Rho;

@@ -23,30 +23,30 @@ UserPatchBc::~UserPatchBc() {
 
 void UserPatchBc::IntitialiseUserPatchBc(Parameters& PtrParameters,int &NumberOfPatchBc){
 	//Set Number of Patch needed (User)
-	NumberOfPatchBc=4;
+	NumberOfPatchBc=2;
 	//Define each patch
-//Patch 0
+//Patch 0 (Left)
 	//	AddWallPatch("Wall",BounceBack);
 
 		//AddPressurePatch("Inlet",HeZouP, FixP);
 		//PressurePatch.back().Set_Inlet(true);
-		//AddVelocityPatch("Inlet",HeZouV, FixV);
+		AddVelocityPatch("Inlet",HeZouV, FixV);
 		//AddPeriodicPatch("Inlet",Simple);
 
-//Patch 1
+//Patch 1 (Right)
 		//AddVelocityPatch("Outlet",HeZouV, zeroVGrad1st); //FixV,zeroVGrad1st
-		//AddPressurePatch("Outlet",HeZouP, FixP);
-		//PressurePatch.back().Set_extrapolationAlpha(true);
-		//PressurePatch.back().Set_Outlet(true);
+		AddPressurePatch("Outlet",HeZouP, FixP);
+		PressurePatch.back().Set_extrapolationAlpha(true);
+		PressurePatch.back().Set_Outlet(true);
 		//AddPeriodicPatch("Outlet",Simple);
 		//PressurePatch.back().Set_extrapolationNormal(true);
 		//AddPressurePatch("Outlet",HeZouP, FixP);
 
-//Patch 2
+//Patch 2 (Bottom)
 		//AddWallPatch("Wall",BounceBack);
 		//AddSymmetryPatch("Symmetry",OnNode);
 
-//Patch 3
+//Patch 3 (Top)
 		//AddWallPatch("Wall",BounceBack);
 		//AddSymmetryPatch("Symmetry",OnNode);
 

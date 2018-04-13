@@ -17,10 +17,11 @@
 #include "../Mesh/SingleBlock/Patch/PatchBc.h"
 #include "Viscosity.h"
 #include "../Algorithm/Tools/Gradients.h"
+#include "../User/UserConvergence.h"
 enum TypeConverge{none,GlobalConvergence,FieldConvergence};
 enum TypeConvergeScalar{SacalarGlobal, ScalarField};
 enum TypeConvergeVector{VectorGlobal,VectorField};
-class Convergence {
+class Convergence: public UserConvergence {
 public:
 	Convergence();
 	virtual ~Convergence();
@@ -29,11 +30,25 @@ public:
 	double Get_Error(){return Error;};
 
 private:
+	void Calcul_LpError();
+	void CalCul_L1Error();
+
 	void Calcul_Error_ScalarField();
 	void Calcul_Error_VectorField();
 	void NoCalcul_Error(){};
 	double Calcul_Error_ScalarFieldInOneProc();
 	void Set_ConvergencePatchBc();
+
+	void Set_MarkFluidNodesError();
+	bool IsBoundaryError(int idx);
+	bool IsWrongSideDomainError(int idx);
+	bool IsNormalLimitDomainError(int idx);
+	bool IsInDomainError(int idx);
+	bool IsInsideDomainError(int idx);
+	bool IsGlobalCornerASpecialWallError(int idx);
+	bool IsConvexCornerNormalOutsideError(int idx);
+
+
 	void Calcul_PorousMediaConvergence(int &Time);
 	double Calcul_ProductionRate(int &Time);
 	double Calcul_Permeability_SinglePhase(int &Time);
@@ -87,6 +102,10 @@ private:
 	double Error;///< Save error and it used inside the sum if needed
 	double Error_sum, Error_avg;
 	double Error_tmp;
+	std::vector<int> MarkFluidNodeError_V1,MarkFluidNodeError_V075,MarkFluidNodeError_V05,MarkFluidNodeError_V025;///< Mark fluid node for error over the domain
+
+	double *RhoError,**UError;
+	int nbnodesErrorLp;
 
 	std::vector<int> InletPatchId,OutletPatchId;
 	double *RhoNProductionRate,**UPerm,*RhoPerm,*RhoNPerm;

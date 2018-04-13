@@ -18,7 +18,8 @@ using namespace std;
 
  
 int main(int argc, char *argv[]) {
-//	int idx=0;
+
+	int idx=0;
 /*	if (argv[1]==0)
 	{
 		std::cout<<"No argument. Index set to 1"<<std::endl;
@@ -43,12 +44,11 @@ int main(int argc, char *argv[]) {
 // Scheme
 	Param.Set_Scheme(SolverEnum::Q9);
 
-
-
 // fluid 2 is the continuous fluid	and fluid 1 the droplet
+//Domain size
+	double L=243;//118;//57;//431;
+	double H=73;//37;//18;//131;
 // Set Domain size
-	double L=500;//1322;//1983;//661;
-	double H=50;//1058;//1587;//529;/home/thomas/Geometry/Gmsh/Proceded_LBM_DVM_canvas_793_789.raw
 	Param.Set_Domain_Size((int)L,(int)H); //Cells
 //Set Lattice unity
 	double deltaTLattice=1;
@@ -56,100 +56,100 @@ int main(int argc, char *argv[]) {
 // Set lattice size and lattice time step (default value is 1 for both)
 	 Param.Set_deltaT(deltaTLattice);Param.Set_deltaX(deltaXLattice);
 
-	 double Diameter=H;
-	double Ca=0;
+	double Diameter=H;
+//	double Ca=0;
 
-	double U2_ref=0.0;
-	double Re=1;
+	double U2_ref=0.01;
+
 
 	double Rho1_ref=1;
 	double Rho2_ref=Rho1_ref;
 
-
-	double lambda=1.0/5.0;
-	double nu_1=1.0/6.0;//4.91*1.e-2/lambda;
-	double nu_2=lambda*nu_1;
+	double nu_1=1.0/(6.0*6.0);
+	double lambda=6.0;///5;
+	double nu_2=nu_1*lambda;
 
 	double tau1=0.5+nu_1*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
 	double tau2=0.5+nu_2*deltaTLattice*3.0/(deltaXLattice*deltaXLattice);
-//	double La=0;
-	double sigma=1.e-3;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
+	double La=0;
+	double sigma=0.0001;//La*(Rho1_ref*nu_1)*2/Diameter;//0.001;//0.01;//0.001;
 
 
 //	double Mach =U2_ref*std::sqrt(3);
 //	double Kn=(Mach/Re)*std::sqrt(pi/2.0);
 //Pressure drop
-	double deltaP=0;//0.1*L/1322;
-	double refPressure=1.0;
+	double deltaP=0.0001;
 // Pressure inlet
-	double Pmax=refPressure+deltaP;
+	double Pmax=1+deltaP;
 // Pressure outlet
-	double Pmin=refPressure-deltaP;
+	double Pmin=1-deltaP;
 
 
 
+/// Set User Parameters
 
-
-
-// Set User Parameters
-	//U2_ref=0.01;Pmax=1;Pmin=1;
 //Contact angle parameters
-	double contactangle=170*pi/180.0;//30
-	Param.Set_ContactAngleType(ContactAngleEnum::NoTeta);//NoTeta, UniformTeta or UserTeta
+	double contactangle=90*pi/180.0;//30
+	Param.Set_ContactAngleType(ContactAngleEnum::UniformTeta);//NoTeta, UniformTeta or UserTeta
 	Param.Set_ContactAngleModel(ContactAngleEnum::Interpol);//Standard or Interpol
 	Param.Set_SwitchSelectTeta(ContactAngleEnum::Linear);//Binary or Linear
 	Param.Set_NormalExtrapolType(ContactAngleEnum::WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,or WeightDistanceExtrapol
 	Param.Set_NormalInterpolType(ContactAngleEnum::LinearLeastSquareInterpol);//NoInterpol,LinearInterpol,LinearLeastSquareInterpol
-	Param.Set_NumberOfInterpolNodeInSolid(3);
-	Param.Set_NumberOfInterpolNodeInFluid(1);
+	Param.Set_NumberOfInterpolNodeInSolid(1);
+	Param.Set_NumberOfInterpolNodeInFluid(3);
 	if(Param.Get_ContactAngleType()==ContactAngleEnum::NoTeta)
 		contactangle=pi/2.0;
 	Param.Set_ContactAngle(contactangle);
 
-	Param.Set_UserDroplets(contactangle,sigma,Diameter,Re,Ca);
+//	Param.Set_UserDroplets(contactangle,sigma,Diameter,Re,Ca);
 	Param.Set_UserParameters(U2_ref,H,L,Pmax,Pmin);
 
 // Set User Force type
-	Param.Set_UserForceType(ModelEnum::BodyForce);//None,LocalForce or BodyForce
+	Param.Set_UserForceType(ModelEnum::None);//None,LocalForce or BodyForce
 // Set delta x for conversion from lattice unit to physical unit
-	Param.Set_deltax(1);//1774*1e-6/L
+	Param.Set_deltax(1.0);//1774*1e-6/L
 
 
 /// Set Boundary condition type for the boundaries of the domain
 /// Boundary condition accepted: Wall, Pressure, Velocity, Periodic and Symmetry
 /// Order Bottom, Right, Top, Left, (Front, Back for 3D)
-	Param.Set_BcType(Wall,Periodic,Wall,Periodic);
+	Param.Set_BcType(Symmetry,Pressure,Symmetry,Velocity);
 
 	Param.Set_ModelOfFluid(SolverEnum::Compressible);
 /// Set Pressure Type
 	Param.Set_PressureType(FixP);//FixP,zeroPGrad1st
 /// Set Global Corner type
 	Param.Set_CornerPressureType(ExtrapolCP);//FixCP,ExtrapolCP
-/// Wall boundary condition type (Implemented BounceBack, HalfWayBounceBack, and Diffuse)
-	Param.Set_WallType(HalfWayBounceBack);//BounceBack,HalfWayBounceBack,HeZouWall
+/// Wall boundary condition type (Implemented BounceBack and Diffuse)
+	Param.Set_WallType(BounceBack);//BounceBack,HeZouWall
+	Param.Set_CollisionOnWalls(true);
 	Param.Set_VelocityModel(HeZouV);
 /// Set Periodic boundary condition to add a pressure drop term
 	Param.Set_PeriodicType(Simple);//Simple,PressureForce
-	Param.Set_PressureDrop(0.0001);
+	Param.Set_PressureDrop(deltaP);
 /// Number of maximum timestep
-	Param.Set_NbStep(10000);
+	Param.Set_NbStep(5000000);
 /// Interval for output
-	Param.Set_OutPutNSteps(1000);// interval
+	Param.Set_OutPutNSteps(40000);// interval
 ///Display information during the calculation every N iteration
-	Param.Set_listing(1000);
-	Param.Set_ErrorMax(1e-20);
-	Param.Set_ErrorVariable(SolverEnum::VelocityX);
-
+	Param.Set_listing(20000);
+	Param.Set_ErrorMax(5e-18*H*L);
+	Param.Set_ErrorVariable(SolverEnum::RhoN);
+	Param.SetErrorLpCase(false);
 ///Selection of variables to export
-	Param.Set_VariablesOutput(true,true,false);// export Rho,U,P
+	Param.Set_VariablesOutput(true,true,false);// export Rho,U,
 
-	// Multiphase model (SinglePhase or ColourFluid)
-	Param.Set_Model(SolverEnum::SinglePhase);
-	Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
+
+// Multiphase model (SinglePhase or ColourFluid)
+	Param.Set_Model(SolverEnum::ColourFluid);
+	if(tau1==tau2 || Param.Get_Model()==SolverEnum::SinglePhase)
+		Param.Set_ViscosityType(ConstViscosity);//ConstViscosity,HarmonicViscosity
+	else
+		Param.Set_ViscosityType(HarmonicViscosity);//ConstViscosity,HarmonicViscosity
 	if(Param.Get_ViscosityType()==ConstViscosity)
 		lambda=1;
 
-	//Gradient definition
+//Gradient definition
 	Param.Set_GradientType(ModelEnum::LBMStencil); //FD or LBMStencil
 	Param.Set_ExtrapolationType(ModelEnum::WeightDistanceExtrapol);//NoExtrapol,TailorExtrapol,WeightDistanceExtrapol
 
@@ -161,16 +161,15 @@ int main(int argc, char *argv[]) {
 /// Multiphase Parameters
 	// outputs
 	//Colour gradient
-	Param.Set_ColourGradientOutput(false);
+	Param.Set_ColourGradientOutput(true);
 	//Density of Red fluid
 	Param.Set_BlueDensityOutput(false);
 	//Density of blue fluid
 	Param.Set_RedDensityOutput(false);
 	//Normal of the interface
-	Param.Set_NormalOutput(false);
+	Param.Set_NormalOutput(true);
 	//RhoN
 	Param.Set_NormalDensityOutput(true);
-
 
 	//Density of each fluid
 	Param.Set_Rho_1(Rho1_ref);
@@ -182,8 +181,8 @@ int main(int argc, char *argv[]) {
 	Param.Set_SurfaceTension(sigma);
 	Param.Set_ATau(Param.Convert_SigmaToATau());
 	//Colour fluid Parameters
-	Param.Set_ColourGradLimiter(0.01);
-	Param.Set_Beta(0.7);// Between 0 and 1
+	Param.Set_ColourGradLimiter(0.00000001);
+	Param.Set_Beta(0.95);// Between 0 and 1
 	Param.Set_ColourGradType(ColourFluidEnum::DensityNormalGrad);//Gunstensen or DensityGrad or DensityNormalGrad
 	Param.Set_RecolouringType(ColourFluidEnum::LatvaKokkoRothmanEstimator);//LatvaKokkoRothman or LatvaKokkoRothmanEstimator
 	Param.Set_ColourOperatorType(ColourFluidEnum::SurfaceForce);//Grunau or Reis or SurfaceForce
@@ -200,78 +199,78 @@ int main(int argc, char *argv[]) {
 	Param.Set_HeleShawBodyForce(PorousMediaEnum::no);
 	Param.Set_Depth(24.54*1e-06/Param.Get_deltax());
 
-	/// Define the Output filename
-	/*	FileExportStream<<"Droplet_shear_"<< fixed << setprecision(0)<<H<<"x"<<L
-				<<setprecision(2)<<"Re_"<<Re<<"_Ca_"<<Ca<<"_Conf_"<<confinement<<"_lambda_"<<viscosity_ratio
-				<< scientific<<setprecision(3)<<"sigma_"<<sigma;*/
-		FileExportStream.str("");
-		FileExportStream<<"Test_Poiseuille_BodyForce_Half_WayBounceBack"<< fixed << setprecision(0)<<L<<"x"<<H;
-
-//		FileExportStream<<"Test_Vel_interface__With_estimator_CSFV2"<< fixed << setprecision(0)<<L<<"x"<<H;
-//		FileExportStream<<"LinearLeastSquareInterpol_linearswitch_teta170_beta0.7_5fluids_3Solid";
-		if(Param.Get_Model()==SolverEnum::SinglePhase)
-		{
-
-		}
-		else
-		{
-			if(Param.Get_ContactAngleType()==ContactAngleEnum::NoTeta)
-			{
-				FileExportStream<<"NoTeta_";
-			}
-			else
-			{
-				if(Param.Get_ContactAngleModel()==ContactAngleEnum::Interpol)
-				{
-					if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearLeastSquareInterpol)
-					{
-						FileExportStream<<"_LinearLeastSquareInterpol_"
-								<<Param.Get_NumberOfInterpolNodeInFluid()<<"-Fluids_"
-								<<Param.Get_NumberOfInterpolNodeInSolid()<<"-Solids_";
-					}
-					if(Param.Get_NormalInterpolType()==ContactAngleEnum::LinearInterpol)
-							FileExportStream<<"LinearInterpol_";
-				}
-				else
-					FileExportStream<<"Standard_";
-				if(Param.Get_SwitchSelectTeta()==ContactAngleEnum::Linear)
-					FileExportStream<<"LinearSwitch_";
-				if(Param.Get_SwitchSelectTeta()==ContactAngleEnum::Binary)
-					FileExportStream<<"BinarySwitch_";
-			}
-			FileExportStream<<setprecision(2)<<lambda<<"-lambda_"
-					<<Param.Get_Beta()<<"-beta_"<<Param.Get_ContactAngle()*180.0/pi<<"-teta_"
-							<< scientific<<setprecision(3)<<"sigma_"<<sigma<<"_ColourGradLimiter"<<Param.Get_ColourGradLimiter();
-		}
-		Param.Set_OutputFileName(FileExportStream.str());
-
-//	Param.Set_OutputFileName("Testread");
+/// Define the Output filename
+	FileExportStream.str("");
+//	FileExportStream<<"Serpentine_Two_Phase_90Degree_Init_SPhase"<< fixed << setprecision(0)<<H<<"x"<<L;
+	FileExportStream<<"Serpentine_Two_Phase_90Degree"<< fixed << setprecision(0)<<H<<"x"<<L;
+	Param.Set_OutputFileName(FileExportStream.str());
 /*
-	Param.Add_VariableToInit("TestBcs_OnePhase_lowCa_V2_100000.cgns",SolverEnum::Density);
-	Param.Add_VariableToInit("TestBcs_OnePhase_lowCa_V2_100000.cgns",SolverEnum::VelocityX);
-	Param.Add_VariableToInit("TestBcs_OnePhase_lowCa_V2_100000.cgns",SolverEnum::VelocityY);
+	Param.Add_VariableToInit("../../../SinglePhase/run/Serpentine_Single_Phase_73x243_15000.cgns",SolverEnum::Density);
+	Param.Add_VariableToInit("../../../SinglePhase/run/Serpentine_Single_Phase_73x243_15000.cgns",SolverEnum::VelocityX);
+	Param.Add_VariableToInit("../../../SinglePhase/run/Serpentine_Single_Phase_73x243_15000.cgns",SolverEnum::VelocityY);
 */
-//	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::Density);
-//	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::VelocityX);
-//	Param.Add_VariableToInit("Contraction1162_50000.cgns",SolverEnum::VelocityY);
-//	Param.Add_VariableToInit("Contraction1162_testdeltaT_50000.cgns",SolverEnum::RhoN);
 
 /// Initialise the simulation with parameters
+
 	simu.InitSimu(Param, true);
+	if(simu.Is_MainProcessor())
+		simu.Save_Parameters(Param,"iniParamInclined.xml");
+	double Re=1;
+
+	if(simu.Is_MainProcessor())
+		cout<<"Reynolds: "<<Re<<" Surface tension is: "<<sigma<< " Tau 1: "<<tau1<< " Tau 2: "<<tau2<<" U max: "<<U2_ref<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<std::endl;
+
 
 	simu.barrier();
 
+	if(simu.Is_MainProcessor())
+		cout<<"Tau 1: "<<tau1<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<std::endl;
+//Setup for simulation loop	
+	double HeighChannel=19;
+	double mySigma[] = {1e-02,1e-03,1e-04,1e-05};
+
+	double Ca=0;
+	std::vector<double> vectloop (mySigma, mySigma + sizeof(mySigma) / sizeof(double) );
+//Check first value
+	sigma=vectloop[0];
+	U2_ref=Re*nu_1/HeighChannel;
+	Ca=U2_ref*nu_1/sigma;
+	if(simu.Is_MainProcessor())
+		cout<<"U: "<<U2_ref<<" Ca: "<<Ca<<endl;
+	Param.Set_UserParameters(U2_ref,H,L,Pmax,Pmin);
+	Param.Set_UserDroplets(contactangle,sigma,Diameter,Re,Ca);
+	// reinit the field
+	 //  	simu.UpdateAllDomain(Param);
+	for(int i=0;i<vectloop.size();i++)
+	{
+		
+	//Surface tension
+		sigma=vectloop[i];
+		Param.Set_SurfaceTension(sigma);
+		Param.Set_ATau(Param.Convert_SigmaToATau());
+
+		U2_ref=Re*nu_1/HeighChannel;
+		Ca=U2_ref*nu_1/sigma;
+		FileExportStream.str("");
+		FileExportStream<<"Serpentine_"<< fixed << setprecision(0)<<H<<"x"<<L<<"_Hchannel_"<<HeighChannel
+						<< scientific<<setprecision(2)<<"_Re_"<<Re<<"_Ca_"<<Ca<<"_Sigma_"<<sigma;
+		Param.Set_OutputFileName(FileExportStream.str());
+		Param.Set_UserParameters(U2_ref,H,L,Pmax,Pmin);
+		Param.Set_UserDroplets(contactangle,sigma,Diameter,Re,Ca);
 		if(simu.Is_MainProcessor())
-			cout<<" Surface tension is: "<<sigma<< " Tau 1: "<<tau1<<" Tau 2: "<<tau2<<" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<std::endl;
+			cout<<"U 1: "<<U2_ref<<" Ca: "<<Ca<<
+			" Number of cell in x direction: "<<L<<" Number of cell in y direction: "<<H<<std::endl;
 
-//	simu.UpdateAllDomain(Param);
-
+// reinit the field
+   		simu.UpdateAllDomain(Param);
+   	//	simu.UpdateDomainBc(Param);
 /// Run the simulation
-	simu.RunSimu(Param);
-
-
+		simu.RunSimu(Param);
+	}
 	simu.FinalizeSimu();
+
 	if(simu.Is_MainProcessor())
 		cout<<" END Simulation"<<endl;
+
 }
 

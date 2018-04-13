@@ -32,6 +32,9 @@ Convergence::Convergence() {
 	Scalar_CurrentTime=0;
 	Vector_CurrentTime=0;
 
+	RhoError=0;
+	UError=0;
+	nbnodesErrorLp=1;
 
 	RhoNProductionRate=0;
 	UPerm=0;RhoPerm=0;RhoNPerm=0;
@@ -51,6 +54,8 @@ Convergence::Convergence() {
 }
 
 Convergence::~Convergence() {
+	if(PtrParmConv->IsLpErrorCase())
+		delete [] UError;
 	// TODO Auto-generated destructor stub
 }
 void Convergence::Set_Convergence(){
@@ -88,8 +93,45 @@ void Convergence::Set_Convergence(){
 	{
 		Scalar_last[i]=1.0;
 	}
-
-
+	Set_MarkFluidNodesError();
+	if(PtrMultiBlockConv->IsMainProcessor())
+	{
+		std::cout<<"Number of fluid nodes in domain:  "<<MarkFluidNodeError_V1.size()+MarkFluidNodeError_V075.size()+MarkFluidNodeError_V05.size()+MarkFluidNodeError_V025.size()<<std::endl;;
+		std::cout<<"Volume of fluid in domain:  "<<MarkFluidNodeError_V1.size()+0.75*MarkFluidNodeError_V075.size()+0.5*MarkFluidNodeError_V05.size()+0.25*MarkFluidNodeError_V025.size()<<std::endl;;
+	}
+//Error Lp setup
+	if(PtrParmConv->IsLpErrorCase() &&PtrParmConv->Get_Model()==SolverEnum::SinglePhase)
+	{
+		nbnodesErrorLp=PtrNodeArraysConv->Get_SizeNodeIdInterior()+PtrNodeArraysConv->Get_SizeNodeIdPressure()+PtrNodeArraysConv->Get_SizeNodeIdVelocity()+PtrNodeArraysConv->Get_SizeNodeIdPeriodic()+PtrNodeArraysConv->Get_SizeNodeIdSymmetry()+PtrNodeArraysConv->Get_SizeNodeIdWall()+PtrNodeArraysConv->Get_SizeNodeIdGlobalCorner()+PtrNodeArraysConv->Get_SizeNodeIdCornerConcave()+PtrNodeArraysConv->Get_SizeNodeIdSpecialWall()+PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();
+		PtrDicConv->Get_PtrVar("Density",RhoError,Var_found);
+		if(!Var_found)
+		{
+			if(PtrMultiBlockConv->IsMainProcessor())
+				std::cerr<<"Density is not found. No Lp errors will be done."<<std::endl;
+			PtrParmConv->SetErrorLpCase(false);
+		}
+		UError=new double*[2];
+		PtrDicConv->Get_PtrVar("VelocityX",UError[0],Var_found);
+		if(!Var_found)
+		{
+			if(PtrMultiBlockConv->IsMainProcessor())
+				std::cerr<<"VelocityX is not found. No Lp errors will be done."<<std::endl;
+			PtrParmConv->SetErrorLpCase(false);
+		}
+		PtrDicConv->Get_PtrVar("VelocityY",UError[1],Var_found);
+		if(!Var_found)
+		{
+			if(PtrMultiBlockConv->IsMainProcessor())
+				std::cerr<<"VelocityY is not found. No Lp errors will be done."<<std::endl;
+			PtrParmConv->SetErrorLpCase(false);
+		}
+		if(!PtrParmConv->IsLpErrorCase())
+			delete [] UError;
+		else
+			nbnodesErrorLp=PtrMultiBlockConv->SumAllProcessors(&nbnodesErrorLp);
+	}
+	else
+		PtrParmConv->SetErrorLpCase(false);
 //Porous media cases
 	if(PtrParmConv->IsPorousMediaCase())
 	{
@@ -107,7 +149,8 @@ void Convergence::Set_Convergence(){
 		{
 			Set_MarkFluidNodes();
 			if(PtrMultiBlockConv->IsMainProcessor())
-				std::cout<<"Number of fluid nodes:  "<<MarkFluidNode_V1.size()+0.75*MarkFluidNode_V075.size()+0.5*MarkFluidNode_V05.size()+0.25*MarkFluidNode_V025.size()<<std::endl;;
+				std::cout<<"Number of fluid nodes in porous media:  "<<MarkFluidNode_V1.size()+0.75*MarkFluidNode_V075.size()+0.5*MarkFluidNode_V05.size()+0.25*MarkFluidNode_V025.size()<<std::endl;;
+
 			porosity=Porosity();
 			LuToPhy2=PtrParmConv->Get_deltax()*PtrParmConv->Get_deltax();
 		}
@@ -275,18 +318,27 @@ void Convergence::Set_Convergence(){
 		}
 	}
 }
+
 void Convergence::Calcul_Error(int &Time){
 
 	Calcul_Error_ScalarField();
 	if(PtrParmConv->IsPorousMediaCase())
 		Calcul_PorousMediaConvergence(Time);
+	if(PtrParmConv->IsLpErrorCase())
+		Calcul_LpError();
 }
 void Convergence::Calcul_Error_ScalarField(){
+//#pragma omp single
 	Calcul_Error_ScalarFieldInOneProc();
-	Error_tmp=PtrMultiBlockConv->SumAllProcessors(&Error_tmp);
-	Sum_Current=PtrMultiBlockConv->SumAllProcessors(&Sum_Current);
+#pragma omp master
+	{
+		Error_tmp=PtrMultiBlockConv->SumAllProcessors(&Error_tmp);
+		Sum_Current=PtrMultiBlockConv->SumAllProcessors(&Sum_Current);
+	}
+#pragma omp barrier
 	Error=Error_tmp/(Sum_Current+1e-15);
 }
+/*
 double Convergence::Calcul_Error_ScalarFieldInOneProc(){
 	Sum_Current=0;Error_tmp=0;
 	for(int i=0;i<NbNodes;i++)
@@ -295,9 +347,198 @@ double Convergence::Calcul_Error_ScalarFieldInOneProc(){
 		Sum_Current+=std::abs(Scalar_CurrentTime[i]);
 		Scalar_last[i]=Scalar_CurrentTime[i];//Save the new value
 	}
-//	Error_tmp=Error_tmp/(Sum_Current+1e-15);//std::abs(Scalar_CurrentTime[idx]-Scalar_last[idx])/(std::abs(Scalar_CurrentTime[idx])+1e-15);
+	return Error_tmp;
+}*/
+double Convergence::Calcul_Error_ScalarFieldInOneProc(){
+	Sum_Current=0;Error_tmp=0;
+	double Sum_Current_Thread=0;double Error_tmp_Thread=0;
+	double Sum_Error_tmp=0;double Sum_Current_tmp=0;
+#pragma omp for schedule(guided)
+	for (unsigned int i=0;i<MarkFluidNodeError_V1.size();i++){
+		//cache variables
+		int idx_1D=MarkFluidNodeError_V1[i];
+		Sum_Error_tmp+=std::abs(Scalar_CurrentTime[idx_1D]-Scalar_last[idx_1D]);
+		Sum_Current_tmp+=std::abs(Scalar_CurrentTime[idx_1D]);
+		Scalar_last[idx_1D]=Scalar_CurrentTime[idx_1D];//Save the new value
+	}
+
+//Add to the sum with the weight according to the volume of the cell
+	Error_tmp_Thread+=Sum_Error_tmp;
+	Sum_Current_Thread+=Sum_Current_tmp;
+
+//Re initialisation of internal sum
+	Sum_Error_tmp=0;
+	Sum_Current_tmp=0;
+#pragma omp for schedule(guided)
+	for (unsigned int i=0;i<MarkFluidNodeError_V075.size();i++){
+		//cache variables
+		int idx_1D=MarkFluidNodeError_V075[i];
+		Sum_Error_tmp+=std::abs(Scalar_CurrentTime[idx_1D]-Scalar_last[idx_1D]);
+		Sum_Current_tmp+=std::abs(Scalar_CurrentTime[idx_1D]);
+		Scalar_last[idx_1D]=Scalar_CurrentTime[idx_1D];//Save the new value
+	}
+//Set the weight for the volume of the cell related to the node location
+	double coef=0.75;
+//Add to the sum with the weight according to the volume of the cell
+	Error_tmp_Thread+=coef*Sum_Error_tmp;
+	Sum_Current_Thread+=coef*Sum_Current_tmp;
+
+	//Re initialisation of internal sum
+		Sum_Error_tmp=0;
+		Sum_Current_tmp=0;
+
+#pragma omp for schedule(guided)
+	for (unsigned int i=0;i<MarkFluidNodeError_V05.size();i++){
+		//cache variables
+		int idx_1D=MarkFluidNodeError_V05[i];
+		Sum_Error_tmp+=std::abs(Scalar_CurrentTime[idx_1D]-Scalar_last[idx_1D]);
+		Sum_Current_tmp+=std::abs(Scalar_CurrentTime[idx_1D]);
+		Scalar_last[idx_1D]=Scalar_CurrentTime[idx_1D];//Save the new value
+	}
+//Set the weight for the volume of the cell related to the node location
+	coef=0.5;
+	//Add to the sum with the weight according to the volume of the cell
+		Error_tmp_Thread+=coef*Sum_Error_tmp;
+		Sum_Current_Thread+=coef*Sum_Current_tmp;
+
+		//Re initialisation of internal sum
+			Sum_Error_tmp=0;
+			Sum_Current_tmp=0;
+#pragma omp for schedule(guided)
+	for (unsigned int i=0;i<MarkFluidNodeError_V025.size();i++){
+		//cache variables
+		int idx_1D=MarkFluidNodeError_V025[i];
+		Sum_Error_tmp+=std::abs(Scalar_CurrentTime[idx_1D]-Scalar_last[idx_1D]);
+		Sum_Current_tmp+=std::abs(Scalar_CurrentTime[idx_1D]);
+		Scalar_last[idx_1D]=Scalar_CurrentTime[idx_1D];//Save the new value
+	}
+//Set the weight for the volume of the cell related to the node location
+	coef=0.25;
+	//Add to the sum with the weight according to the volume of the cell
+		Error_tmp_Thread+=coef*Sum_Error_tmp;
+		Sum_Current_Thread+=coef*Sum_Current_tmp;
+#pragma omp atomic
+			Error_tmp+=Error_tmp_Thread;
+#pragma omp atomic
+			Sum_Current+=Sum_Current_Thread;
+
+#pragma omp barrier
+
+//Calculate Error
+
 
 	return Error_tmp;
+}
+void Convergence::Calcul_LpError(){
+	CalCul_L1Error();
+}
+void Convergence::CalCul_L1Error(){
+	int idx=0;
+	double* pos=0;
+	double *U_tmp=0;
+	pos=new double[2];
+	U_tmp=new double[2];
+	double alpha=0;
+	double L1Error_tmp=0,L1Exact_tmp=0;
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdInterior();i++){
+		idx=PtrNodeArraysConv->Get_NodeIdInterior(i);
+		PtrNodeArraysConv->Get_coordinate(idx,pos[0],pos[1]);
+		for(unsigned int j=0;j<2;j++)
+			U_tmp[j]=UError[j][idx];
+		L1Error_tmp+=UserError(idx, pos,RhoError[idx], U_tmp,alpha);
+		L1Exact_tmp+=UserExact(idx, pos,RhoError[idx], U_tmp,alpha);
+
+	}
+//Treatment boundary conditions of the domain
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdPressure();i++){
+		idx=PtrNodeArraysConv->Get_NodeIdPressure(i);
+		PtrNodeArraysConv->Get_coordinate(idx,pos[0],pos[1]);
+		for(unsigned int j=0;j<2;j++)
+			U_tmp[j]=UError[j][idx];
+		L1Error_tmp+=UserError(idx, pos,RhoError[idx], U_tmp,alpha);
+		L1Exact_tmp+=UserExact(idx, pos,RhoError[idx], U_tmp,alpha);
+	}
+
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdVelocity();i++){
+		idx=PtrNodeArraysConv->Get_NodeIdVelocity(i);
+		PtrNodeArraysConv->Get_coordinate(idx,pos[0],pos[1]);
+		for(unsigned int j=0;j<2;j++)
+			U_tmp[j]=UError[j][idx];
+		L1Error_tmp+=UserError(idx, pos,RhoError[idx], U_tmp,alpha);
+		L1Exact_tmp+=UserExact(idx, pos,RhoError[idx], U_tmp,alpha);
+	}
+
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdPeriodic();i++){
+		idx=PtrNodeArraysConv->Get_NodeIdPeriodic(i);
+		PtrNodeArraysConv->Get_coordinate(idx,pos[0],pos[1]);
+		for(unsigned int j=0;j<2;j++)
+			U_tmp[j]=UError[j][idx];
+		L1Error_tmp+=UserError(idx, pos,RhoError[idx], U_tmp,alpha);
+		L1Exact_tmp+=UserExact(idx, pos,RhoError[idx], U_tmp,alpha);
+	}
+
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdSymmetry();i++){
+		idx=PtrNodeArraysConv->Get_NodeIdSymmetry(i);
+		PtrNodeArraysConv->Get_coordinate(idx,pos[0],pos[1]);
+		for(unsigned int j=0;j<2;j++)
+			U_tmp[j]=UError[j][idx];
+		L1Error_tmp+=UserError(idx, pos,RhoError[idx], U_tmp,alpha);
+		L1Exact_tmp+=UserExact(idx, pos,RhoError[idx], U_tmp,alpha);
+	}
+
+
+// treatment of walls
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdWall();i++){
+		idx=PtrNodeArraysConv->Get_NodeIdWall(i);
+		PtrNodeArraysConv->Get_coordinate(idx,pos[0],pos[1]);
+		for(unsigned int j=0;j<2;j++)
+			U_tmp[j]=UError[j][idx];
+		L1Error_tmp+=UserError(idx, pos,RhoError[idx], U_tmp,alpha);
+		L1Exact_tmp+=UserExact(idx, pos,RhoError[idx], U_tmp,alpha);
+	}
+// treatment global corner of the computational domain
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdGlobalCorner();i++){
+		idx=PtrNodeArraysConv->Get_NodeIdGlobalCorner(i);
+		PtrNodeArraysConv->Get_coordinate(idx,pos[0],pos[1]);
+		for(unsigned int j=0;j<2;j++)
+			U_tmp[j]=UError[j][idx];
+		L1Error_tmp+=UserError(idx, pos,RhoError[idx], U_tmp,alpha);
+		L1Exact_tmp+=UserExact(idx, pos,RhoError[idx], U_tmp,alpha);
+	}
+//treatment concave corner
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConcave();i++){
+		idx=PtrNodeArraysConv->Get_NodeIdCornerConcave(i);
+		PtrNodeArraysConv->Get_coordinate(idx,pos[0],pos[1]);
+		for(unsigned int j=0;j<2;j++)
+			U_tmp[j]=UError[j][idx];
+		L1Error_tmp+=UserError(idx, pos,RhoError[idx], U_tmp,alpha);
+		L1Exact_tmp+=UserExact(idx, pos,RhoError[idx], U_tmp,alpha);
+	}
+//Special wall Errors
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdSpecialWall();i++){
+		idx=PtrNodeArraysConv->Get_NodeIdSpecialWall(i);
+		PtrNodeArraysConv->Get_coordinate(idx,pos[0],pos[1]);
+		for(unsigned int j=0;j<2;j++)
+			U_tmp[j]=UError[j][idx];
+		L1Error_tmp+=UserError(idx, pos,RhoError[idx], U_tmp,alpha);
+		L1Exact_tmp+=UserExact(idx, pos,RhoError[idx], U_tmp,alpha);
+	}
+//Convex corner Errors
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();i++){
+		idx=PtrNodeArraysConv->Get_NodeIdCornerConvex(i);
+		PtrNodeArraysConv->Get_coordinate(idx,pos[0],pos[1]);
+		for(unsigned int j=0;j<2;j++)
+			U_tmp[j]=UError[j][idx];
+		L1Error_tmp+=UserError(idx, pos,RhoError[idx], U_tmp,alpha);
+		L1Exact_tmp+=UserExact(idx, pos,RhoError[idx], U_tmp,alpha);
+	}
+	L1Error_tmp=PtrMultiBlockConv->SumAllProcessors(&L1Error_tmp);
+	L1Exact_tmp=PtrMultiBlockConv->SumAllProcessors(&L1Exact_tmp);
+	if(PtrMultiBlockConv->IsMainProcessor()){
+		std::cout<<"Average Error L1 is: "<<L1Error_tmp/nbnodesErrorLp<<"    Average Exact is: "<<L1Exact_tmp/nbnodesErrorLp<<"   Relative error L1 is: "<<L1Error_tmp/L1Exact_tmp<<std::endl;
+	}
+	delete [] pos;
+	delete [] U_tmp;
 }
 void Convergence::Calcul_PorousMediaConvergence(int &Time){
 	if(PtrParmConv->IsCalculateProductionRate())
@@ -1220,7 +1461,6 @@ void Convergence::Set_MarkFluidNodes(){
 		else if(IsInDomain(PtrNodeArraysConv->Get_NodeIdInterior(i)))
 			MarkFluidNode_V05.push_back(PtrNodeArraysConv->Get_NodeIdInterior(i));
 
-
 //Treatment boundary conditions of the domain
 	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdPressure();i++)
 			if(IsGlobalCornerASpecialWall(PtrNodeArraysConv->Get_NodeIdPressure(i)))
@@ -1529,4 +1769,177 @@ void Convergence::Calcul_localDeltaP(){
 			DeltaP[0][PtrNodeArraysConv->Get_NodeIdPeriodic(j)]=tmp[0];DeltaP[1][PtrNodeArraysConv->Get_NodeIdPeriodic(j)]=tmp[1];
 //			NormDeltaP[PtrNodeArraysConv->Get_NodeIdPeriodic(j)]=std::sqrt(tmp[0]*tmp[0]+tmp[1]*tmp[1]);
 	}
+}
+void Convergence::Set_MarkFluidNodesError(){
+	MarkFluidNodeError_V1.clear();MarkFluidNodeError_V075.clear();MarkFluidNodeError_V05.clear();MarkFluidNodeError_V025.clear();
+//treatment Interior of the domain
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdInterior();i++)
+		if(IsGlobalCornerASpecialWallError(PtrNodeArraysConv->Get_NodeIdInterior(i)))
+			MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdInterior(i));
+		else if(IsInsideDomainError(PtrNodeArraysConv->Get_NodeIdInterior(i)))
+			MarkFluidNodeError_V1.push_back(PtrNodeArraysConv->Get_NodeIdInterior(i));
+		else if(IsInDomainError(PtrNodeArraysConv->Get_NodeIdInterior(i)))
+			MarkFluidNodeError_V05.push_back(PtrNodeArraysConv->Get_NodeIdInterior(i));
+
+//Treatment boundary conditions of the domain
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdPressure();i++)
+			if(IsGlobalCornerASpecialWallError(PtrNodeArraysConv->Get_NodeIdPressure(i)))
+				MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdPressure(i));
+			else if(IsInDomainError(PtrNodeArraysConv->Get_NodeIdPressure(i)))
+				MarkFluidNodeError_V05.push_back(PtrNodeArraysConv->Get_NodeIdPressure(i));
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdVelocity();i++)
+			if(IsGlobalCornerASpecialWallError(PtrNodeArraysConv->Get_NodeIdVelocity(i)))
+				MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdVelocity(i));
+			else if(IsInDomainError(PtrNodeArraysConv->Get_NodeIdVelocity(i)))
+				MarkFluidNodeError_V05.push_back(PtrNodeArraysConv->Get_NodeIdVelocity(i));
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdPeriodic();i++)
+			if(IsGlobalCornerASpecialWallError(PtrNodeArraysConv->Get_NodeIdPeriodic(i)))
+				MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdPeriodic(i));
+			else if(IsInDomainError(PtrNodeArraysConv->Get_NodeIdPeriodic(i)))
+				MarkFluidNodeError_V05.push_back(PtrNodeArraysConv->Get_NodeIdPeriodic(i));
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdSymmetry();i++)
+			if(IsGlobalCornerASpecialWallError(PtrNodeArraysConv->Get_NodeIdSymmetry(i)))
+				MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdSymmetry(i));
+			else if(IsInDomainError(PtrNodeArraysConv->Get_NodeIdSymmetry(i)))
+				MarkFluidNodeError_V05.push_back(PtrNodeArraysConv->Get_NodeIdSymmetry(i));
+
+// treatment of walls
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdWall();i++)
+		if(IsInDomainError(PtrNodeArraysConv->Get_NodeIdWall(i))){
+			if(IsInsideDomainError(PtrNodeArraysConv->Get_NodeIdWall(i)))
+				MarkFluidNodeError_V05.push_back(PtrNodeArraysConv->Get_NodeIdWall(i));
+	//treatment border of the domain
+			else if(IsGlobalCornerASpecialWallError(PtrNodeArraysConv->Get_NodeIdWall(i)))
+			{
+				//need the normal toward the domain
+				if(IsNormalLimitDomainError(PtrNodeArraysConv->Get_NodeIdWall(i)))
+					MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdWall(i));
+			}
+			else
+			{
+
+				if(IsWrongSideDomainError(PtrNodeArraysConv->Get_NodeIdWall(i)))
+				{
+					//treat as a "special wall" of the porous media domain
+					if(IsNormalLimitDomainError(PtrNodeArraysConv->Get_NodeIdWall(i)))
+						MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdWall(i));
+				}
+				else
+					//wall on the boundary of the porous media domain but toward the domain
+					MarkFluidNodeError_V05.push_back(PtrNodeArraysConv->Get_NodeIdWall(i));
+			}
+		}
+
+// treatment global corner of the computational domain
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdGlobalCorner();i++)
+			if(IsInDomainError(PtrNodeArraysConv->Get_NodeIdGlobalCorner(i)))
+				MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdGlobalCorner(i));
+
+//treatment concave corner
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConcave();i++)
+		//Concave corner in the domain
+		if(IsInDomainError(PtrNodeArraysConv->Get_NodeIdCornerConcave(i))){
+			if(IsInsideDomainError(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
+				MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConcave(i));
+			//treatment border of the domain
+			//check the orientation toward or not the domain
+			else if(IsWrongSideDomainError(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
+			{
+				//keep corner in the domain
+				if(IsNormalLimitDomainError(PtrNodeArraysConv->Get_NodeIdCornerConcave(i)))
+					MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConcave(i));
+			}
+			else
+				MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConcave(i));
+		}
+
+
+//treatment of the special wall of the computational domain
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdSpecialWall();i++)
+		if(IsGlobalCornerASpecialWallError(PtrNodeArraysConv->Get_NodeIdSpecialWall(i)))
+		{
+			//keep only the special node oriented toward the domain at the border of the porous media domain
+			if(IsNormalLimitDomainError(PtrNodeArraysConv->Get_NodeIdSpecialWall(i)))
+				MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdSpecialWall(i));
+		}
+		else if(IsInDomainError(PtrNodeArraysConv->Get_NodeIdSpecialWall(i)))
+			MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdSpecialWall(i));
+
+
+//	sumfluidvolume+=0.75*PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();
+	for (int i=0;i<PtrNodeArraysConv->Get_SizeNodeIdCornerConvex();i++){
+			if(IsInDomainError(PtrNodeArraysConv->Get_NodeIdCornerConvex(i))){
+				if(IsInsideDomainError(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+					MarkFluidNodeError_V075.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
+	//exclude convex corner in the corner of the porous media and with normal toward the outside diagonal
+				else if(IsGlobalCornerASpecialWallError(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+						{
+							if(!IsConvexCornerNormalOutsideError(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+								MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
+						}
+				else if(IsWrongSideDomainError(PtrNodeArraysConv->Get_NodeIdCornerConvex(i)))
+					MarkFluidNodeError_V025.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
+				else
+					MarkFluidNodeError_V05.push_back(PtrNodeArraysConv->Get_NodeIdCornerConvex(i));
+			}
+	}
+}
+bool Convergence::IsBoundaryError(int idx){
+	double x,y;
+	PtrNodeArraysConv->Get_coordinate(idx,x,y);
+	if(x==0 || x==PtrParmConv->Get_Nx()||y==0 || y==PtrParmConv->Get_Ny())
+		return true;
+	else
+		return false;
+}
+bool Convergence::IsInDomainError(int idx){
+	double x,y;
+	PtrNodeArraysConv->Get_coordinate(idx,x,y);
+	if(x>=0 && x<=PtrParmConv->Get_Nx() && y>=0 && y<=PtrParmConv->Get_Ny())
+		return true;
+	else
+		return false;
+}
+bool Convergence::IsInsideDomainError(int idx){
+	double x,y;
+	PtrNodeArraysConv->Get_coordinate(idx,x,y);
+	if(x>0 && x<PtrParmConv->Get_Nx() && y>0 && y<PtrParmConv->Get_Ny())
+		return true;
+	else
+		return false;
+}
+bool Convergence::IsGlobalCornerASpecialWallError(int idx){
+	double x,y;
+	PtrNodeArraysConv->Get_coordinate(idx,x,y);
+	if((x==0 && y==0)|| (x==0 && y==PtrParmConv->Get_Ny()) ||(x==PtrParmConv->Get_Nx() && y==0) || (x==PtrParmConv->Get_Nx() && y==PtrParmConv->Get_Ny()))
+		return true;
+	else
+		return false;
+}
+//Check if the normal of the wall is in the domain
+bool Convergence::IsWrongSideDomainError(int idx){
+	double x,y;
+	PtrNodeArraysConv->Get_CoordinateNextNodeAtNormal(idx,x,y);
+	if(x>0 && x<PtrParmConv->Get_Nx() && y>0 && y<PtrParmConv->Get_Ny())
+		return false;
+	else
+		return true;
+}
+//check if the wall is in the limit of the porous media box similar of a special wall for the computational domain
+bool Convergence::IsNormalLimitDomainError(int idx){
+	double x,y;
+	PtrNodeArraysConv->Get_CoordinateNextNodeAtNormal(idx,x,y);
+	if((x==0 || x==PtrParmConv->Get_Nx() || y==0 || y==PtrParmConv->Get_Ny()) &&
+			(x>=0 && x<=PtrParmConv->Get_Nx() && y>=0 && y<=PtrParmConv->Get_Ny()))
+		return true;
+	else
+		return false;
+}
+bool Convergence::IsConvexCornerNormalOutsideError(int idx){
+	double x,y;
+	PtrNodeArraysConv->Get_CoordinateNextNodeAtNormal(idx,x,y);
+	if((x<0 && y<0)|| (x<0 && y>PtrParmConv->Get_Ny()) ||(x>PtrParmConv->Get_Nx() && y<0) || (x>PtrParmConv->Get_Nx() && y>PtrParmConv->Get_Ny()))
+		return true;
+	else
+		return false;
 }

@@ -21,7 +21,9 @@ D2Q9Corner::D2Q9Corner() {
 	PtrCornerSpecialWallMethod=0;
 	PtrCornerWallSpecialWallMethod=0;
 	PtrCalculRhoCornerWall=0;
-
+	PtrPreStreamCornerMethod=0;
+	PtrPreStreamCornerWallMethod=0;
+	PtrPreStreamCornerSpecialWallMethod=0;
 	doubleTmpReturn=0;
 	direction1=0;
 	direction2=0;
@@ -33,24 +35,28 @@ D2Q9Corner::~D2Q9Corner() {
 void D2Q9Corner::Set_Corner(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *Param, double ** &Ei,unsigned int nbDistributions){
 	PtrCornerMethod=&D2Q9Corner::ApplyHoChan;
 	PtrCornerSpecialWallMethod=&D2Q9Corner::ApplyHoChan;
+	PtrCornerWallSpecialWallMethod=&D2Q9Corner::ApplyHoChan;
 	switch(Param->Get_WallType())
 	{
 	case Diffuse:
 		PtrCornerWallMethod=&D2Q9Corner::ApplyDiffuseWall;
-		PtrCornerWallSpecialWallMethod=&D2Q9Corner::ApplyDiffuseWall;
+		//PtrCornerWallSpecialWallMethod=&D2Q9Corner::ApplyDiffuseWall;
 		break;
 	case BounceBack:
 		PtrCornerWallMethod=&D2Q9Corner::ApplyBounceBack;
-		PtrCornerWallSpecialWallMethod=&D2Q9Corner::ApplyBounceBack;
+		//PtrCornerWallSpecialWallMethod=&D2Q9Corner::ApplyBounceBack;
 		break;
 	case HalfWayBounceBack:
 		PtrCornerWallMethod=&D2Q9Corner::ApplyHalfWayBounceBack;
-		PtrCornerWallSpecialWallMethod=&D2Q9Corner::ApplyHalfWayBounceBack;
+		//PtrCornerWallSpecialWallMethod=&D2Q9Corner::ApplyHalfWayBounceBack;
+		PtrPreStreamCornerMethod=&D2Q9Corner::ApplyHalfWayBounceBackPreStream;
+		PtrPreStreamCornerWallMethod=&D2Q9Corner::ApplyHalfWayBounceBackPreStream;
+		PtrPreStreamCornerSpecialWallMethod=&D2Q9Corner::ApplyHalfWayBounceBackPreStream;
 		SetHalfWayBounceBack(NodeArrays,nbDistributions);
 		break;
 	case HeZouWall:
 		PtrCornerWallMethod=&D2Q9Corner::ApplyHoChanNoVel;
-		PtrCornerWallSpecialWallMethod=&D2Q9Corner::ApplyHoChanNoVel;
+		//PtrCornerWallSpecialWallMethod=&D2Q9Corner::ApplyHoChanNoVel;
 		break;
 	default:
 		std::cerr<<"Wall node type not found."<<std::endl;
@@ -64,6 +70,9 @@ void D2Q9Corner::Set_Corner(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Paramet
 	case ExtrapolCP:
 		Extrapol.SelectExtrapolationType(ModelEnum::WeightDistanceExtrapol);
 		PtrCalculRhoCornerWall=&D2Q9Corner::ExtrapolationAvgRho;
+		break;
+	case LocalCP:
+		PtrCalculRhoCornerWall=&D2Q9Corner::LocalRho;
 		break;
 	default:
 		std::cerr<<"Corner pressure type not found."<<std::endl;
@@ -83,10 +92,10 @@ void D2Q9Corner::ApplyCorner(NodeCorner2D& Node, DistriFunct* f_in, unsigned int
 	Rho[Node.Get_index()]=RhoDef;
 	U[Node.Get_index()]=UDef;
 	V[Node.Get_index()]=VDef;
-	(this->*PtrCornerMethod)(Node,Node.Get_BcNormal(),Node.Get_connect(),Node.Get_CornerType()==::Concave, f_in, GetRho(Node, Rho), U[Node.Get_index()], V[Node.Get_index()],idxDistribution);
+	(this->*PtrCornerMethod)(Node,Node.Get_BcNormal(),Node.Get_connect(),Node.Get_CornerType()==::Concave, f_in, GetRho(Node, Rho,f_in), U[Node.Get_index()], V[Node.Get_index()],idxDistribution);
 }
 void D2Q9Corner::ApplyCornerWall(NodeCorner2D& Node, DistriFunct* f_in, unsigned int idxDistribution, double *Rho, double *U, double *V){
-	(this->*PtrCornerWallMethod)(Node,Node.Get_BcNormal(),Node.Get_connect(),Node.Get_CornerType()==::Concave,f_in, GetRho(Node, Rho), U[Node.Get_index()], V[Node.Get_index()],idxDistribution);
+	(this->*PtrCornerWallMethod)(Node,Node.Get_BcNormal(),Node.Get_connect(),Node.Get_CornerType()==::Concave,f_in, GetRho(Node, Rho,f_in), U[Node.Get_index()], V[Node.Get_index()],idxDistribution);
 }
 
 void D2Q9Corner::ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct* f_in, unsigned int idxDistribution, double *Rho, double *U, double *V){
@@ -94,6 +103,20 @@ void D2Q9Corner::ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct* f_in, uns
 }
 void D2Q9Corner::ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct* f_in, unsigned int idxDistribution,double const & RhoDef,double const & UDef,double const & VDef){
 	(this->*PtrCornerWallSpecialWallMethod)(Node,Node.Get_BcNormal(),Node.Get_connect(),true,f_in, RhoDef, UDef, VDef,idxDistribution);
+}
+
+void D2Q9Corner::ApplyCornerPreStream(NodeCorner2D& Node, DistriFunct* f_in, unsigned int idxDistribution,double const & RhoDef,double const & UDef,double const & VDef, double *Rho, double *U, double *V){
+	Rho[Node.Get_index()]=RhoDef;
+	U[Node.Get_index()]=UDef;
+	V[Node.Get_index()]=VDef;
+	(this->*PtrPreStreamCornerMethod)(Node,Node.Get_BcNormal(),Node.Get_connect(),Node.Get_CornerType()==::Concave, f_in, GetRho(Node, Rho,f_in), U[Node.Get_index()], V[Node.Get_index()],idxDistribution);
+}
+void D2Q9Corner::ApplyCornerWallPreStream(NodeCorner2D& Node, DistriFunct* f_in, unsigned int idxDistribution, double *Rho, double *U, double *V){
+	(this->*PtrPreStreamCornerWallMethod)(Node,Node.Get_BcNormal(),Node.Get_connect(),Node.Get_CornerType()==::Concave,f_in, GetRho(Node, Rho,f_in), U[Node.Get_index()], V[Node.Get_index()],idxDistribution);
+}
+
+void D2Q9Corner::ApplyCornerSpecialWallPreStream(NodeWall2D& Node, DistriFunct* f_in, unsigned int idxDistribution, double *Rho, double *U, double *V){
+	(this->*PtrPreStreamCornerSpecialWallMethod)(Node,Node.Get_BcNormal(),Node.Get_connect(),true, f_in, Rho[Node.Get_index()], U[Node.Get_index()], V[Node.Get_index()],idxDistribution);
 }
 /// Corner treat by Chih-Fung Ho, Cheng Chang, Kuen-Hau Lin and Chao-An Lin
 /// Consistent Boundary Conditions for 2D and 3D Lattice Boltzmann Simulations
@@ -248,29 +271,70 @@ void D2Q9Corner::ApplyHalfWayBounceBack(T& Node,int const &BcNormal,int const *C
 //	double tmp=0;
 	unsigned int idx0=idxDistribution*5;
 	f_in->f[BcNormal][Connect[0]]=Node.Get_SaveData(idx0);//f_in->f[OppositeBc[BcNormal]][Connect[OppositeBc[BcNormal]]];
-	Node.Set_SaveData(idx0,f_in->f[OppositeBc[BcNormal]][Connect[0]]);
-	idx0++;
+	//Node.Set_SaveData(idx0,f_in->f[OppositeBc[BcNormal]][Connect[0]]);
+	
 	if (concave)
 	{
+		idx0++;
 		for (unsigned int i=0;i<4;i++){
-			f_in->f[BounceBackWallConnect[BcNormal][i]][Connect[0]]= Node.Get_SaveData(idx0+i);//f_in->f[OppositeBc[BounceBackWallConnect[BcNormal][i]]][Connect[OppositeBc[BounceBackWallConnect[BcNormal][i]]]];
+			f_in->f[BounceBackWallConnect[BcNormal][i]][Connect[0]]= Node.Get_SaveData(idx0+i);
+		//	Node.Set_SaveData(idx0+i,f_in->f[OppositeBc[BounceBackWallConnect[BcNormal][i]]][Connect[0]]);
+		}
+	}
+
+}
+template <class T>
+void D2Q9Corner::ApplyHalfWayBounceBackPreStream(T& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution){
+	unsigned int idx0=idxDistribution*5;
+	Node.Set_SaveData(idx0,f_in->f[OppositeBc[BcNormal]][Connect[0]]);
+	if (concave)
+	{
+		idx0++;
+		for (unsigned int i=0;i<4;i++){
 			Node.Set_SaveData(idx0+i,f_in->f[OppositeBc[BounceBackWallConnect[BcNormal][i]]][Connect[0]]);
 		}
 	}
 
 }
+
 //Get the density from the global variable
-double D2Q9Corner::GetRho(NodeCorner2D& Node, double *Rho){
-	(this->*PtrCalculRhoCornerWall)(Node, Rho);
+double D2Q9Corner::GetRho(NodeCorner2D& Node, double *Rho,DistriFunct* f_in){
+	(this->*PtrCalculRhoCornerWall)(Node, Rho,f_in);
 	return Rho[Node.Get_index()];
 }
-//double D2Q9Corner::FixRho(NodeCorner2D& Node, double *Rho){
-void D2Q9Corner::FixRho(NodeCorner2D& Node, double *Rho){
+//Use the previous rho
+void D2Q9Corner::FixRho(NodeCorner2D& Node, double *Rho,DistriFunct* f_in){
 //	Extrapol.ExtrapolationOnCornerConcave(Rho,Node.Get_connect(),Node.Get_BcNormal());
 //	return Rho[Node.Get_index()];
 }
+//use the known distribution to calculate rho
+void D2Q9Corner::LocalRho(NodeCorner2D& Node, double *Rho,DistriFunct* f_in){
+	switch(Node.Get_BcNormal())
+	{
+	case 5:
+		Rho[Node.Get_connect()[0]]=f_in->f[0][Node.Get_connect()[0]]+2.0*(f_in->f[3][Node.Get_connect()[0]]+f_in->f[4][Node.Get_connect()[0]]+f_in->f[7][Node.Get_connect()[0]]);
+		if(Node.Get_CornerType()==Convex)
+			Rho[Node.Get_connect()[0]]+=f_in->f[6][Node.Get_connect()[0]]+f_in->f[8][Node.Get_connect()[0]];
+		break;
+	case 6:
+		Rho[Node.Get_connect()[0]]=f_in->f[0][Node.Get_connect()[0]]+2.0*(f_in->f[1][Node.Get_connect()[0]]+f_in->f[4][Node.Get_connect()[0]]+f_in->f[8][Node.Get_connect()[0]]);
+		if(Node.Get_CornerType()==Convex)
+			Rho[Node.Get_connect()[0]]+=f_in->f[5][Node.Get_connect()[0]]+f_in->f[7][Node.Get_connect()[0]];
+		break;
+	case 7:
+		Rho[Node.Get_connect()[0]]=f_in->f[0][Node.Get_connect()[0]]+2.0*(f_in->f[1][Node.Get_connect()[0]]+f_in->f[2][Node.Get_connect()[0]]+f_in->f[5][Node.Get_connect()[0]]);
+		if(Node.Get_CornerType()==Convex)
+			Rho[Node.Get_connect()[0]]+=f_in->f[6][Node.Get_connect()[0]]+f_in->f[8][Node.Get_connect()[0]];
+		break;
+	case 8:
+		Rho[Node.Get_connect()[0]]=f_in->f[0][Node.Get_connect()[0]]+2.0*(f_in->f[2][Node.Get_connect()[0]]+f_in->f[3][Node.Get_connect()[0]]+f_in->f[6][Node.Get_connect()[0]]);
+		if(Node.Get_CornerType()==Convex)
+			Rho[Node.Get_connect()[0]]+=f_in->f[5][Node.Get_connect()[0]]+f_in->f[7][Node.Get_connect()[0]];
+		break;
+	}
+}
 //Get the density by using the two direct neighbours
-void D2Q9Corner::ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho){
+void D2Q9Corner::ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho,DistriFunct* f_in){
 	switch(Node.Get_BcNormal())
 	{
 	case 5:

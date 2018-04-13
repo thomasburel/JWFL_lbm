@@ -18,6 +18,8 @@ D2Q9Wall::D2Q9Wall() {
 	PtrWallMethod=0;
 	//PtrSpecialWallMethod=0;
 	PtrWallGlobalCornerMethod=0;
+	PtrPreStreamWallMethod=0;
+	PtrPreStreamWallGlobalCornerMethod=0;
 }
 
 D2Q9Wall::~D2Q9Wall() {
@@ -38,6 +40,8 @@ void D2Q9Wall::SetWall(Dictionary *PtrDic,NodeArrays2D* NodeArrays, Parameters *
 	case HalfWayBounceBack:
 		PtrWallMethod=&D2Q9Wall::ApplyHalfWayBounceBackWall;
 		PtrWallGlobalCornerMethod=&D2Q9Wall::ApplyHalfWayBounceBackWall;
+		PtrPreStreamWallMethod=&D2Q9Wall::ApplyHalfWayBounceBackWallPreStream;
+		PtrPreStreamWallGlobalCornerMethod=&D2Q9Wall::ApplyHalfWayBounceBackWallPreStream;
 		SetHalfWayBounceBack(NodeArrays,nbDistributions);
 		break;
 	case HeZouWall:
@@ -64,7 +68,12 @@ void D2Q9Wall::ApplyWall(NodeWall2D& Node, int const &BcNormal,int const *Connec
 void D2Q9Wall::ApplyWall(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution, double const *Rho, double const *U, double const *V){
 	(this->*PtrWallGlobalCornerMethod)(Node,BcNormal,Connect,f_in, idxDistribution);
 }
-
+void D2Q9Wall::ApplyWallPreStream(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution, double const *Rho, double const *U, double const *V){
+	(this->*PtrPreStreamWallMethod)(Node,BcNormal,Connect,f_in, idxDistribution);
+}
+void D2Q9Wall::ApplyWallPreStream(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution, double const *Rho, double const *U, double const *V){
+	(this->*PtrPreStreamWallGlobalCornerMethod)(Node,BcNormal,Connect,f_in, idxDistribution);
+}
 template <class T>
 void D2Q9Wall::ApplyDiffuseWall(T& Node,int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution){
 
@@ -117,6 +126,16 @@ void D2Q9Wall::ApplyHalfWayBounceBackWall(T& Node,int const &BcNormal,int const 
 	f_in->f[BcNormal][Connect[0]]=Node.Get_SaveData(idx0);
 	f_in->f[BounceBackWallConnect[BcNormal][0]][Connect[0]]=Node.Get_SaveData(idx1);
 	f_in->f[BounceBackWallConnect[BcNormal][1]][Connect[0]]=Node.Get_SaveData(idx2);
+/*	Node.Set_SaveData(idx0,f_in->f[OppositeBc[BcNormal]][Connect[0]]);
+	Node.Set_SaveData(idx1,f_in->f[OppositeBc[BounceBackWallConnect[BcNormal][0]]][Connect[0]]);
+	Node.Set_SaveData(idx2,f_in->f[OppositeBc[BounceBackWallConnect[BcNormal][1]]][Connect[0]]);
+*/
+}
+///HalfWay Bounceback Wall treatment before streaming
+template <class T>
+void D2Q9Wall::ApplyHalfWayBounceBackWallPreStream(T& Node,int const &BcNormal,int const *Connect, DistriFunct* f_in, unsigned int idxDistribution){
+	unsigned int idx0=idxDistribution*3;
+	unsigned int idx1=idx0+1;unsigned int idx2=idx0+2;
 	Node.Set_SaveData(idx0,f_in->f[OppositeBc[BcNormal]][Connect[0]]);
 	Node.Set_SaveData(idx1,f_in->f[OppositeBc[BounceBackWallConnect[BcNormal][0]]][Connect[0]]);
 	Node.Set_SaveData(idx2,f_in->f[OppositeBc[BounceBackWallConnect[BcNormal][1]]][Connect[0]]);

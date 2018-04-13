@@ -113,6 +113,8 @@ void Simulation::barrier() {
 }
 void Simulation::RunSimu()
 {
+	Solver_->Set_UserConvergence(PtrParameters);
+	Solver_->SetUserForce(PtrParameters);
 	Solver_->run();
 	if (parallel->isMainProcessor())
 	cout<< "Time to run the simulation:    "<<get_time()-time << endl;
@@ -123,6 +125,8 @@ void Simulation::RunSimu()
 void Simulation::RunSimu(Parameters &UpdatedParam)
 {
 	PtrParameters=&UpdatedParam;
+	Solver_->Set_UserConvergence(PtrParameters);
+	Solver_->SetUserForce(PtrParameters);
 	Writer->UpdateFileNames(PtrParameters->Get_OutputFileName());
 	Solver_->run(PtrParameters);
 	if (parallel->isMainProcessor())

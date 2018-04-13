@@ -73,6 +73,9 @@ Parameters::Parameters()
 	NormalDensityOutput=true;RedDensityOutput=false;BlueDensityOutput=false;SurfaceForceOutput=false;CurvatureOutput=false;
 	ColourGradientOutput=false;NormColourGradientOutput=true;NormalOutput=false;
 	porousmediacase=false;calculatePorosity=false;calculateProductionRate=false;calculatePermeability=false;
+	CollisionOnWalls=true;
+	LpErrorCase=false;
+	L1ErrorCase=false;
 }
 
 Parameters::~Parameters() {

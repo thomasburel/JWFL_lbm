@@ -13,6 +13,7 @@
 #include "../../Core/GlobalDef.h"
 #include <iostream>
 #include <cmath>
+
 #include "Boundaries/D2Q9Bc.h"
 #include "../Tools/ContactAngle.h"
 class D2Q9TwoPhases: public SolverTwoPhasesLowOrder2D, public D2Q9Bc, protected D2Q9CommonVar{

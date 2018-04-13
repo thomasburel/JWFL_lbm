@@ -27,6 +27,10 @@ public:
 	void ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct* f_in, unsigned int idxDistribution, double *Rho, double *U, double *V);
 	void ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct* f_in, unsigned int idxDistribution,double const & RhoDef,double const & UDef,double const & VDef);
 
+	void ApplyCornerPreStream(NodeCorner2D& Node, DistriFunct* f_in, unsigned int idxDistribution,double const & RhoDef,double const & UDef,double const & VDef, double *Rho, double *U, double *V);
+	void ApplyCornerWallPreStream(NodeCorner2D& Node, DistriFunct* f_in, unsigned int idxDistribution, double *Rho, double *U, double *V);
+	void ApplyCornerSpecialWallPreStream(NodeWall2D& Node, DistriFunct* f_in, unsigned int idxDistribution, double *Rho, double *U, double *V);
+	void ApplyPreVelSpecialWallPreStream(NodeWall2D& Node, DistriFunct* f_in, unsigned int idxDistribution,double const & RhoDef,double const & UDef,double const & VDef);
 private:
 // initialise specific method
 	void SetHalfWayBounceBack(NodeArrays2D* NodeArrays,unsigned int nbDistributions=1);
@@ -45,23 +49,28 @@ private:
 	template <class T>
 	void ApplyHoChanNoVel(T& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
 
+//Before streaming
+	template <class T>
+	void ApplyHalfWayBounceBackPreStream(T& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
 
 	void FUNC_corner (double & a,double & b,double & c,double & d,double & e,double & f,double & g,double & h,double & i,double & U,double & V,double & Rho);
 	void FUNC_corner_no_vel (double & a,double & b,double & c,double & d,double & e,double & f,double & g,double & h,double & i,double & Rho);
 
 //Function for calculating the density and setting in the global variable
 	//Get the density from the global variable
-	double GetRho(NodeCorner2D& Node, double *Rho);
-	void FixRho(NodeCorner2D& Node, double *Rho);
+	double GetRho(NodeCorner2D& Node, double *Rho,DistriFunct* f_in);
+	void FixRho(NodeCorner2D& Node, double *Rho,DistriFunct* f_in);
 	//Get the density by using the two direct neighbours
-	void ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho);
+	void ExtrapolationAvgRho(NodeCorner2D& Node, double *Rho,DistriFunct* f_in);
+	//Get the density by using the known distribution
+	void LocalRho(NodeCorner2D& Node, double *Rho,DistriFunct* f_in);
 
 // Pointers on function
 ///Simplify notation for pointer on a member function of D2Q9Pressure class for Pressure model used
 	//Corner inside the domain
 	typedef void(D2Q9Corner::*CornerWallMethod)(NodeCorner2D& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
 	typedef void(D2Q9Corner::*CornerWallSpecialWallMethod)(NodeWall2D& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
-	typedef void(D2Q9Corner::*CalculRhoCornerWall)(NodeCorner2D& Node, double *Rho);
+	typedef void(D2Q9Corner::*CalculRhoCornerWall)(NodeCorner2D& Node, double *Rho,DistriFunct* f_in);
 	//Corner in the corner of the domain
 	typedef void(D2Q9Corner::*CornerMethod)(NodeCorner2D& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
 	typedef void(D2Q9Corner::*CornerSpecialWallMethod)(NodeWall2D& Node,int const &BcNormal,int const *Connect, bool concave, DistriFunct* f_in, double Rho, double U, double V, unsigned int idxDistribution);
@@ -70,6 +79,9 @@ private:
 	CornerMethod PtrCornerMethod;
 	CornerWallMethod PtrCornerWallMethod;
 	CornerSpecialWallMethod PtrCornerSpecialWallMethod;
+	CornerMethod PtrPreStreamCornerMethod;
+	CornerWallMethod PtrPreStreamCornerWallMethod;
+	CornerSpecialWallMethod PtrPreStreamCornerSpecialWallMethod;
 	CornerWallSpecialWallMethod PtrCornerWallSpecialWallMethod;
 	CalculRhoCornerWall PtrCalculRhoCornerWall;
 	Extrapolation Extrapol;

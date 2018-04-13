@@ -24,6 +24,7 @@ protected:
 double a,b,epsilon;
 double R,H,L,teta,pi;
 double beta;
+double L_Image,H_Image;
 Parameters *PtrParametersUserMesh;
 };
 
