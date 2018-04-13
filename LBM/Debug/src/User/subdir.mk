@@ -5,6 +5,7 @@
 # Add inputs and outputs from these tool invocations to the build variables 
 CPP_SRCS += \
 ../src/User/UserContactAngle.cpp \
+../src/User/UserConvergence.cpp \
 ../src/User/UserForce.cpp \
 ../src/User/UserInit.cpp \
 ../src/User/UserMesh.cpp \
@@ -13,6 +14,7 @@ CPP_SRCS += \
 
 OBJS += \
 ./src/User/UserContactAngle.o \
+./src/User/UserConvergence.o \
 ./src/User/UserForce.o \
 ./src/User/UserInit.o \
 ./src/User/UserMesh.o \
@@ -21,6 +23,7 @@ OBJS += \
 
 CPP_DEPS += \
 ./src/User/UserContactAngle.d \
+./src/User/UserConvergence.d \
 ./src/User/UserForce.d \
 ./src/User/UserInit.d \
 ./src/User/UserMesh.d \
