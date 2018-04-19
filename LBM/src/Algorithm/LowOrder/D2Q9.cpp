@@ -33,6 +33,7 @@ D2Q9::D2Q9() {
 	F=0;
 	PtrMacro=0;
 	PtrCollision=0;
+	PtrPreStream=0;
 }
 D2Q9::D2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini) {
 	// Init D2Q9
@@ -58,6 +59,11 @@ void D2Q9::Set_PointersOnFunctions(){
 	Set_Collide();
 // Select the macrocospic function for the colour fluid model depending of the output variables and models
 	Set_Macro();
+// Select with or without pre-streaming
+	if(PtrParameters->Get_WallType()==HalfWayBounceBack)
+		PtrPreStream=&D2Q9::ApplyPreStreamBc_on;
+	else
+		PtrPreStream=&D2Q9::ApplyPreStreamBc_off;
 }
 void D2Q9::Set_Collide(){
 
@@ -109,10 +115,15 @@ void D2Q9::Set_Collide(){
 			}
 	}
 	if(PtrParameters->Get_UserForceType()== ModelEnum::BodyForce||PtrParameters->Get_HeleShawBodyForce()!= PorousMediaEnum::no)
-		PtrCollision=&D2Q9::CollideD2Q9_WithBodyForce;
+		//if(PtrParameters->Get_CollisionOnWalls())
+			PtrCollision=&D2Q9::CollideD2Q9_WithBodyForce;
+		//else
+		//	PtrCollision=&D2Q9::CollideD2Q9_ExcludeWalls_WithBodyForce;
 	else
-		PtrCollision=&D2Q9::CollideD2Q9_NoBodyForce;
-
+		//if(PtrParameters->Get_CollisionOnWalls())
+			PtrCollision=&D2Q9::CollideD2Q9_NoBodyForce;
+		//else
+		//	PtrCollision=&D2Q9::CollideD2Q9_ExcludeWalls_NoBodyForce;
 }
 void D2Q9::Set_Macro(){
 /*
@@ -145,6 +156,41 @@ D2Q9::~D2Q9() {
 		delete [] F;
 }
 void D2Q9::InitD2Q9(MultiBlock* MultiBlock__,ParallelManager* parallel__,WriterManager* Writer__, Parameters* Parameters_ ,InitLBM& ini){
+/*	for(int i=1;i<5;i++)
+		BBWC[i]=new int [2];
+	for(int i=5;i<9;i++)
+		BBWC[i]=new int [4];
+
+	BBWC[0]=0;
+	BBWC[1][0]=5;
+	BBWC[1][1]=8;
+	BBWC[2][0]=5;
+	BBWC[2][1]=6;
+	BBWC[3][0]=6;
+	BBWC[3][1]=7;
+	BBWC[4][0]=7;
+	BBWC[4][1]=8;
+
+	BBWC[5][0]=1;
+	BBWC[5][1]=2;
+	BBWC[5][2]=6;
+	BBWC[5][3]=8;
+
+	BBWC[6][0]=2;
+	BBWC[6][1]=3;
+	BBWC[6][2]=5;
+	BBWC[6][3]=7;
+
+	BBWC[7][0]=3;
+	BBWC[7][1]=4;
+	BBWC[7][2]=6;
+	BBWC[7][3]=8;
+
+	BBWC[8][0]=1;
+	BBWC[8][1]=4;
+	BBWC[8][2]=5;
+	BBWC[8][3]=7;*/
+
 	f=new DistriFunct(MultiBlock__->Get_nnodes(),Parameters_->Get_NbVelocities());
 	Set_Solver(MultiBlock__,parallel__,Writer__,Parameters_);
 	ftmp=new double[nbnode];
@@ -552,6 +598,7 @@ void D2Q9::run(){
 	{
 		while(it<NbStep+1)
 		{
+			ApplyPreStreamBc();
 			StreamD2Q9();
 			ApplyBc();
 			UpdateMacroVariables();
@@ -585,7 +632,7 @@ void D2Q9::run(){
 					std::cout<< " Time per iteration: "<<time_run/it<<"s"<<std::endl;
 					std::cout<<"Error is: "<<Get_Error()<<std::endl;
 				}
-				if(Get_Error()<max_error)
+				if(Get_Error()<max_error||boost::math::isnan(Get_Error()))
 				{
 					if(it<NbStep)
 					{
@@ -604,6 +651,8 @@ void D2Q9::run(){
 	{
 		while(it<NbStep+1)
 		{
+
+			ApplyPreStreamBc();
 			StreamD2Q9();
 			ApplyBc();
 			UpdateMacroVariables();
@@ -631,7 +680,7 @@ void D2Q9::run(){
 				std::cout<< " Time per iteration: "<<time_run/it<<"s"<<std::endl;
 				std::cout<<"Error is: "<<Get_Error()<<std::endl;
 
-				if(Get_Error()<max_error)
+				if(Get_Error()<max_error ||boost::math::isnan(Get_Error()))
 				{
 					if(CalPressure&&!CalGradP)
 							UpdatePressure();
@@ -703,10 +752,10 @@ void D2Q9::StreamD2Q9() {
 		}
 		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
-			//if (NodeArrays->NodeWall[j].stream()[i])
-			//{
+		//	if (NodeArrays->NodeWall[j].stream()[i])
+		//	{
 				ftmp[NodeArrays->NodeWall[j].Get_connect()[i]]=f->f[i][NodeArrays->NodeWall[j].Get_index()];
-			//}
+		//	}
 		}
 		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
@@ -739,12 +788,33 @@ void D2Q9::StreamD2Q9() {
 		D2Q9::TmptoDistri(i);
 	}
 
+	if(!PtrParameters->Get_CollisionOnWalls())
+	{
+//Force no slip condition
+		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
+		{
+			if(NodeArrays->NodeWall[j].Get_BcNormal()+Opposite[NodeArrays->NodeWall[j].Get_BcNormal()]==4)
+			{
+				double density_tmp=f->f[2][NodeArrays->NodeWall[j].Get_index()]+f->f[4][NodeArrays->NodeWall[j].Get_index()];
+				density_tmp*=0.5;
+				f->f[2][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
+				f->f[4][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
+			}
+			else
+			{
+				double density_tmp=f->f[1][NodeArrays->NodeWall[j].Get_index()]+f->f[3][NodeArrays->NodeWall[j].Get_index()];
+				density_tmp*=0.5;
+				f->f[1][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
+				f->f[3][NodeArrays->NodeWall[j].Get_index()]=density_tmp;
+			}
+		}
+	}
+
 }
 void D2Q9::CollideD2Q9(){
 	(this->*PtrCollision)();
 }
 void D2Q9::CollideD2Q9_NoBodyForce(){
-//	double wtmp=0;
 	double Fx, Fy;// InvTau_tmp;
 	double *fi_tmp; fi_tmp=new double [nbvelo];
 	double *localforce;localforce=new double [nbvelo];
@@ -761,7 +831,6 @@ void D2Q9::CollideD2Q9_NoBodyForce(){
 				f->f[i][NodeArrays->NodeInterior[j].Get_index()]=fi_tmp[i];
 			}
 		}
-
 		for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
 		{
 			Fx=0;Fy=0;
@@ -769,13 +838,12 @@ void D2Q9::CollideD2Q9_NoBodyForce(){
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeCorner[j].Get_index()];localforce[i]=0;
 			}
-			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeCorner[j].Get_index()], U[0][NodeArrays->NodeCorner[j].Get_index()], U[1][NodeArrays->NodeCorner[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
+			Collide_2D_V2_Wall(fi_tmp,Rho[NodeArrays->NodeCorner[j].Get_index()], U[0][NodeArrays->NodeCorner[j].Get_index()], U[1][NodeArrays->NodeCorner[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
 			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeCorner[j].Get_index()]=fi_tmp[i];
 			}
 		}
-
 		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
 			Fx=0;Fy=0;
@@ -823,10 +891,110 @@ void D2Q9::CollideD2Q9_NoBodyForce(){
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeWall[j].Get_index()];localforce[i]=0;
 			}
-			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeWall[j].Get_index()], U[0][NodeArrays->NodeWall[j].Get_index()], U[1][NodeArrays->NodeWall[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
+			Collide_2D_V2_Wall(fi_tmp,Rho[NodeArrays->NodeWall[j].Get_index()], U[0][NodeArrays->NodeWall[j].Get_index()], U[1][NodeArrays->NodeWall[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
 			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeWall[j].Get_index()]=fi_tmp[i];
+			}
+		}
+
+		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		{
+			Fx=0;Fy=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeSpecialWall[j].Get_index()], U[0][NodeArrays->NodeSpecialWall[j].Get_index()], U[1][NodeArrays->NodeSpecialWall[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()]=fi_tmp[i];
+			}
+		}
+
+		for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+		{
+			Fx=0;Fy=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodeSymmetry[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeSymmetry[j].Get_index()], U[0][NodeArrays->NodeSymmetry[j].Get_index()], U[1][NodeArrays->NodeSymmetry[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodeSymmetry[j].Get_index()]=fi_tmp[i];
+			}
+		}
+		for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		{
+			Fx=0;Fy=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodePeriodic[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodePeriodic[j].Get_index()], U[0][NodeArrays->NodePeriodic[j].Get_index()], U[1][NodeArrays->NodePeriodic[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodePeriodic[j].Get_index()]=fi_tmp[i];
+			}
+		}
+
+}
+/*
+void D2Q9::CollideD2Q9_ExcludeWalls_NoBodyForce(){
+	double Fx, Fy;// InvTau_tmp;
+	double *fi_tmp; fi_tmp=new double [nbvelo];
+	double *localforce;localforce=new double [nbvelo];
+	 		for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
+		{
+			Fx=0;Fy=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodeInterior[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeInterior[j].Get_index()], U[0][NodeArrays->NodeInterior[j].Get_index()], U[1][NodeArrays->NodeInterior[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodeInterior[j].Get_index()]=fi_tmp[i];
+			}
+		}
+		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+		{
+			Fx=0;Fy=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()], U[0][NodeArrays->NodeGlobalCorner[j].Get_index()], U[1][NodeArrays->NodeGlobalCorner[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]=fi_tmp[i];
+			}
+		}
+		for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
+		{
+			Fx=0;Fy=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodeVelocity[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeVelocity[j].Get_index()], U[0][NodeArrays->NodeVelocity[j].Get_index()], U[1][NodeArrays->NodeVelocity[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodeVelocity[j].Get_index()]=fi_tmp[i];
+			}
+		}
+		for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
+		{
+			Fx=0;Fy=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodePressure[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodePressure[j].Get_index()], U[0][NodeArrays->NodePressure[j].Get_index()], U[1][NodeArrays->NodePressure[j].Get_index()],localforce, Fx, Fy, Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodePressure[j].Get_index()]=fi_tmp[i];
 			}
 		}
 		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
@@ -871,9 +1039,8 @@ void D2Q9::CollideD2Q9_NoBodyForce(){
 		}
 
 }
+*/
 void D2Q9::CollideD2Q9_WithBodyForce(){
-//	double wtmp=0;
-	//double InvTau_tmp;
 	double *fi_tmp; fi_tmp=new double [nbvelo];
 	double *localforce;localforce=new double [nbvelo];
 
@@ -899,12 +1066,13 @@ void D2Q9::CollideD2Q9_WithBodyForce(){
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeCorner[j].Get_index()];localforce[i]=0;
 			}
-			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeCorner[j].Get_index()], U[0][NodeArrays->NodeCorner[j].Get_index()], U[1][NodeArrays->NodeCorner[j].Get_index()],localforce, F[0][NodeArrays->NodeCorner[j].Get_index()], F[1][NodeArrays->NodeCorner[j].Get_index()], Get_InvTau(),Get_Mu());
+			Collide_2D_V2_Wall(fi_tmp,Rho[NodeArrays->NodeCorner[j].Get_index()], U[0][NodeArrays->NodeCorner[j].Get_index()], U[1][NodeArrays->NodeCorner[j].Get_index()],localforce, F[0][NodeArrays->NodeCorner[j].Get_index()], F[1][NodeArrays->NodeCorner[j].Get_index()], Get_InvTau(),Get_Mu());
 			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeCorner[j].Get_index()]=fi_tmp[i];
 			}
 		}
+
 		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
 		{
  			F[0][NodeArrays->NodeGlobalCorner[j].Get_index()]=0;
@@ -947,6 +1115,7 @@ void D2Q9::CollideD2Q9_WithBodyForce(){
 				f->f[i][NodeArrays->NodePressure[j].Get_index()]=fi_tmp[i];
 			}
 		}
+
 		for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
 		{
  			F[0][NodeArrays->NodeWall[j].Get_index()]=0;
@@ -955,12 +1124,13 @@ void D2Q9::CollideD2Q9_WithBodyForce(){
 			{
 				fi_tmp[i]=f->f[i][NodeArrays->NodeWall[j].Get_index()];localforce[i]=0;
 			}
-			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeWall[j].Get_index()], U[0][NodeArrays->NodeWall[j].Get_index()], U[1][NodeArrays->NodeWall[j].Get_index()],localforce, F[0][NodeArrays->NodeWall[j].Get_index()], F[1][NodeArrays->NodeWall[j].Get_index()], Get_InvTau(),Get_Mu());
+			Collide_2D_V2_Wall(fi_tmp,Rho[NodeArrays->NodeWall[j].Get_index()], U[0][NodeArrays->NodeWall[j].Get_index()], U[1][NodeArrays->NodeWall[j].Get_index()],localforce, F[0][NodeArrays->NodeWall[j].Get_index()], F[1][NodeArrays->NodeWall[j].Get_index()], Get_InvTau(),Get_Mu());
 			for (unsigned int i=0;i<9;i++)
 			{
 				f->f[i][NodeArrays->NodeWall[j].Get_index()]=fi_tmp[i];
 			}
 		}
+
 		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
 		{
  			F[0][NodeArrays->NodeSpecialWall[j].Get_index()]=0;
@@ -1005,6 +1175,113 @@ void D2Q9::CollideD2Q9_WithBodyForce(){
 		}
 		delete [] fi_tmp;delete [] localforce;
 }
+/*
+void D2Q9::CollideD2Q9_ExcludeWalls_WithBodyForce(){
+	double *fi_tmp; fi_tmp=new double [nbvelo];
+	double *localforce;localforce=new double [nbvelo];
+
+	 		for (unsigned int j=0;j<NodeArrays->NodeInterior.size();j++)
+		{
+	 			F[0][NodeArrays->NodeInterior[j].Get_index()]=0;
+	 			F[1][NodeArrays->NodeInterior[j].Get_index()]=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodeInterior[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeInterior[j].Get_index()], U[0][NodeArrays->NodeInterior[j].Get_index()], U[1][NodeArrays->NodeInterior[j].Get_index()],localforce, F[0][NodeArrays->NodeInterior[j].Get_index()], F[1][NodeArrays->NodeInterior[j].Get_index()], Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodeInterior[j].Get_index()]=fi_tmp[i];
+			}
+		}
+		for (unsigned int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
+		{
+ 			F[0][NodeArrays->NodeGlobalCorner[j].Get_index()]=0;
+ 			F[1][NodeArrays->NodeGlobalCorner[j].Get_index()]=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeGlobalCorner[j].Get_index()], U[0][NodeArrays->NodeGlobalCorner[j].Get_index()], U[1][NodeArrays->NodeGlobalCorner[j].Get_index()],localforce, F[0][NodeArrays->NodeGlobalCorner[j].Get_index()], F[1][NodeArrays->NodeGlobalCorner[j].Get_index()], Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodeGlobalCorner[j].Get_index()]=fi_tmp[i];
+			}
+		}
+		for (unsigned int j=0;j<NodeArrays->NodeVelocity.size();j++)
+		{
+ 			F[0][NodeArrays->NodeVelocity[j].Get_index()]=0;
+ 			F[1][NodeArrays->NodeVelocity[j].Get_index()]=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodeVelocity[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeVelocity[j].Get_index()], U[0][NodeArrays->NodeVelocity[j].Get_index()], U[1][NodeArrays->NodeVelocity[j].Get_index()],localforce, F[0][NodeArrays->NodeVelocity[j].Get_index()], F[1][NodeArrays->NodeVelocity[j].Get_index()], Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodeVelocity[j].Get_index()]=fi_tmp[i];
+			}
+		}
+		for (unsigned int j=0;j<NodeArrays->NodePressure.size();j++)
+		{
+ 			F[0][NodeArrays->NodePressure[j].Get_index()]=0;
+ 			F[1][NodeArrays->NodePressure[j].Get_index()]=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodePressure[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodePressure[j].Get_index()], U[0][NodeArrays->NodePressure[j].Get_index()], U[1][NodeArrays->NodePressure[j].Get_index()],localforce, F[0][NodeArrays->NodePressure[j].Get_index()], F[1][NodeArrays->NodePressure[j].Get_index()], Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodePressure[j].Get_index()]=fi_tmp[i];
+			}
+		}
+
+		for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+		{
+ 			F[0][NodeArrays->NodeSpecialWall[j].Get_index()]=0;
+ 			F[1][NodeArrays->NodeSpecialWall[j].Get_index()]=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeSpecialWall[j].Get_index()], U[0][NodeArrays->NodeSpecialWall[j].Get_index()], U[1][NodeArrays->NodeSpecialWall[j].Get_index()],localforce, F[0][NodeArrays->NodeSpecialWall[j].Get_index()], F[1][NodeArrays->NodeSpecialWall[j].Get_index()], Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodeSpecialWall[j].Get_index()]=fi_tmp[i];
+			}
+		}
+		for (unsigned int j=0;j<NodeArrays->NodeSymmetry.size();j++)
+		{
+ 			F[0][NodeArrays->NodeSymmetry[j].Get_index()]=0;
+ 			F[1][NodeArrays->NodeSymmetry[j].Get_index()]=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodeSymmetry[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodeSymmetry[j].Get_index()], U[0][NodeArrays->NodeSymmetry[j].Get_index()], U[1][NodeArrays->NodeSymmetry[j].Get_index()],localforce, F[0][NodeArrays->NodeSymmetry[j].Get_index()], F[1][NodeArrays->NodeSymmetry[j].Get_index()], Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodeSymmetry[j].Get_index()]=fi_tmp[i];
+			}
+		}
+		for (unsigned int j=0;j<NodeArrays->NodePeriodic.size();j++)
+		{
+ 			F[0][NodeArrays->NodePeriodic[j].Get_index()]=0;
+ 			F[1][NodeArrays->NodePeriodic[j].Get_index()]=0;
+			for (unsigned int i=0;i<9;i++)
+			{
+				fi_tmp[i]=f->f[i][NodeArrays->NodePeriodic[j].Get_index()];localforce[i]=0;
+			}
+			Collide_2D_V2(fi_tmp,Rho[NodeArrays->NodePeriodic[j].Get_index()], U[0][NodeArrays->NodePeriodic[j].Get_index()], U[1][NodeArrays->NodePeriodic[j].Get_index()],localforce, F[0][NodeArrays->NodePeriodic[j].Get_index()], F[1][NodeArrays->NodePeriodic[j].Get_index()], Get_InvTau(),Get_Mu());
+			for (unsigned int i=0;i<9;i++)
+			{
+				f->f[i][NodeArrays->NodePeriodic[j].Get_index()]=fi_tmp[i];
+			}
+		}
+		delete [] fi_tmp;delete [] localforce;
+}
+*/
 void D2Q9::UpdateMacroVariables(){
 	(this->*PtrMacro)();
 }
@@ -1208,6 +1485,118 @@ void D2Q9::Set_PressureType(NodePressure2D& NodeIn){
 	NodeIn.Set_stream(PressureStreaming,nbvelo);
 	NodeIn.Set_RhoDef(Rho[NodeIn.Get_index()]);
 }
+void D2Q9::ApplyPatchVelocityPreStream(VelocityPatchBc& VelPatchBc){
+	SetVelocity(VelPatchBc.Get_VelocityModel(),VelPatchBc.Get_VelocityType());
+	std::vector<int> NodeIdxSpecialWalls=VelPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ApplyVelocityWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+}
+void D2Q9::ApplyPatchPressurePreStream(PressurePatchBc& PresPatchBc){
+	SetPressure(PresPatchBc.Get_PressureModel(),PresPatchBc.Get_PressureType());
+	std::vector<int> NodeIdxSpecialWalls=PresPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ApplyPressureWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+}
+void D2Q9::ApplyPatchSymmetryPreStream(SymmetryPatchBc& SymPatchBc){
+	SetSymmetry(SymPatchBc.Get_SymmetryType());
+	std::vector<int> NodeIdxSpecialWalls=SymPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ApplySymmetryWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+}
+void D2Q9::ApplyPatchPeriodicPreStream(PeriodicPatchBc& PerPatchBc){
+	SetPeriodic(PerPatchBc.Get_PeriodicType());
+	std::vector<int> NodeIdxSpecialWalls=PerPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ApplyPeriodicWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
+	}
+}
+void D2Q9::ApplyPreStreamBc(){
+	(this->*PtrPreStream)();
+}
+void D2Q9::ApplyPreStreamBc_on(){
+		std::vector<SolverEnum::PatchType> PatchType=PatchsBc->Get_PatchTypeInType();
+	std::vector<int> PatchIdInType=PatchsBc->Get_PatchIdInType();
+
+	for (int i=0;i<PatchsBc->Get_NumberOfPatchBc();i++)
+	{
+		switch(PatchType[i])
+		{
+		case SolverEnum::Periodic:
+			ApplyPatchPeriodicPreStream(PatchsBc->Get_PeriodicPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Symmetry:
+			ApplyPatchSymmetryPreStream(PatchsBc->Get_SymmetryPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Pressure:
+			ApplyPatchPressurePreStream(PatchsBc->Get_PressurePatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Velocity:
+			ApplyPatchVelocityPreStream(PatchsBc->Get_VelocityPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Wall:
+			break;
+		}
+	}
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+		ApplyWallPreStream(NodeArrays->NodeWall[j],NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f);
+	}
+	/*for (unsigned int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
+	{
+		ApplySpecialWallPreStream(NodeArrays->NodeSpecialWall[j],NodeArrays->NodeSpecialWall[j].Get_BcNormal(),NodeArrays->NodeSpecialWall[j].Get_connect(),f);
+	}*/
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
+	{
+		ApplyCornerWallPreStream(NodeArrays->NodeCorner[j], f);
+		//ApplyCornerPreStream(NodeArrays->NodeCorner[j],NodeArrays->NodeCorner[j].Get_BcNormal(),NodeArrays->NodeCorner[j].Get_connect(),f);
+	}
+}
+void D2Q9::ApplyBc(){
+	std::vector<SolverEnum::PatchType> PatchType=PatchsBc->Get_PatchTypeInType();
+	std::vector<int> PatchIdInType=PatchsBc->Get_PatchIdInType();
+
+	for (int i=0;i<PatchsBc->Get_NumberOfPatchBc();i++)
+	{
+		switch(PatchType[i])
+		{
+		case SolverEnum::Periodic:
+			ApplyPatchPeriodic(PatchsBc->Get_PeriodicPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Symmetry:
+			ApplyPatchSymmetry(PatchsBc->Get_SymmetryPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Pressure:
+			ApplyPatchPressure(PatchsBc->Get_PressurePatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Velocity:
+			ApplyPatchVelocity(PatchsBc->Get_VelocityPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Wall:
+			break;
+		}
+	}
+
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+
+		ApplyWall(NodeArrays->NodeWall[j],NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f);
+	}
+
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
+	{
+		ApplyCornerWall(NodeArrays->NodeCorner[j], f);
+	}
+
+   parallel->barrier();
+
+}
 void D2Q9::ApplyPatchVelocity(VelocityPatchBc& VelPatchBc){
 	SetVelocity(VelPatchBc.Get_VelocityModel(),VelPatchBc.Get_VelocityType());
 	std::vector<int> NodeIdx=VelPatchBc.Get_NodeIndexByType();
@@ -1277,7 +1666,7 @@ void D2Q9::ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc){
 	std::vector<int> NodeIdxGlobalCorner=PerPatchBc.Get_NodeIndexByTypeGlobalCorner();
 	for (unsigned int j=0;j<NodeIdx.size();j++)
 	{
-			ApplyPeriodic(NodeArrays->NodePeriodic[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_connect(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_UDef(),f,Rho,U[0],U[1]);
+		ApplyPeriodic(NodeArrays->NodePeriodic[NodeIdx[j]].Get_BcNormal(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_connect(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_RhoDef(),NodeArrays->NodePeriodic[NodeIdx[j]].Get_UDef(),f,Rho,U[0],U[1]);
 	}
 	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
 	{
@@ -1287,80 +1676,6 @@ void D2Q9::ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc){
 	{
 		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]],NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_RhoDef(),NodeArrays->NodeGlobalCorner[NodeIdxGlobalCorner[j]].Get_UDef(),NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
 	}
-}
-void D2Q9::ApplyBc(){
-	std::vector<SolverEnum::PatchType> PatchType=PatchsBc->Get_PatchTypeInType();
-	std::vector<int> PatchIdInType=PatchsBc->Get_PatchIdInType();
-
-	for (int i=0;i<PatchsBc->Get_NumberOfPatchBc();i++)
-	{
-		switch(PatchType[i])
-		{
-		case SolverEnum::Periodic:
-			ApplyPatchPeriodic(PatchsBc->Get_PeriodicPatch()[PatchIdInType[i]]);
-			break;
-		case SolverEnum::Symmetry:
-			ApplyPatchSymmetry(PatchsBc->Get_SymmetryPatch()[PatchIdInType[i]]);
-			break;
-		case SolverEnum::Pressure:
-			ApplyPatchPressure(PatchsBc->Get_PressurePatch()[PatchIdInType[i]]);
-			break;
-		case SolverEnum::Velocity:
-			ApplyPatchVelocity(PatchsBc->Get_VelocityPatch()[PatchIdInType[i]]);
-			break;
-		case SolverEnum::Wall:
-			break;
-		}
-	}
-/*
-	for (int j=0;j<NodeArrays->NodeVelocity.size();j++)
-	{
-		ApplyVelocity(NodeArrays->NodeVelocity[j].Get_BcNormal(),NodeArrays->NodeVelocity[j].Get_connect(),NodeArrays->NodeVelocity[j].Get_UDef(), f);
-
-	}
-
-	for (int j=0;j<NodeArrays->NodePressure.size();j++)
-	{
-		ApplyPressure(NodeArrays->NodePressure[j].Get_BcNormal(),NodeArrays->NodePressure[j].Get_connect(),NodeArrays->NodePressure[j].Get_RhoDef(), f);
-	}
-	*/
-	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
-	{
-//Old version save
-		ApplyWall(NodeArrays->NodeWall[j],NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f);
-//		ApplyWall(NodeArrays->NodeWall[j],f);
-	}
-	/*
-	for (int j=0;j<NodeArrays->NodeSpecialWall.size();j++)
-	{
-		ExtrapolationOnCornerConcave(Rho,NodeArrays->NodeSpecialWall[j].Get_connect(),NodeArrays->NodeSpecialWall[j].Get_BcNormal());
-		ApplySpecialWall(NodeArrays->NodeSpecialWall[j],Rho[NodeArrays->NodeSpecialWall[j].Get_index()],U[0][NodeArrays->NodeSpecialWall[j].Get_index()],U[1][NodeArrays->NodeSpecialWall[j].Get_index()],NodeArrays->TypeOfNode,f,Rho,U[0],U[1]);
-
-	}
-	*/
-	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
-	{
-		ApplyCornerWall(NodeArrays->NodeCorner[j], f);
-	}
-/*
-	for (int j=0;j<NodeArrays->NodeSymmetry.size();j++)
-	{
-			ApplySymmetry(NodeArrays->NodeSymmetry[j].Get_BcNormal(),NodeArrays->NodeSymmetry[j].Get_connect(),NodeArrays->NodeSymmetry[j].Get_RhoDef(),NodeArrays->NodeSymmetry[j].Get_UDef(),f);
-	}
-	for (int j=0;j<NodeArrays->NodePeriodic.size();j++)
-	{
-			ApplyPeriodic(NodeArrays->NodePeriodic[j].Get_BcNormal(),NodeArrays->NodePeriodic[j].Get_connect(),NodeArrays->NodePeriodic[j].Get_RhoDef(),NodeArrays->NodePeriodic[j].Get_UDef(),f);
-	}
-	*/
-	/*
-	for (int j=0;j<NodeArrays->NodeGlobalCorner.size();j++)
-	{
-		ApplyGlobalCorner(NodeArrays->NodeGlobalCorner[j],NodeArrays->TypeOfNode,f);
-	}
-*/
-
-   parallel->barrier();
-
 }
 double D2Q9::Cal_RhoCorner(NodeCorner2D& nodeIn){
 
@@ -1524,100 +1839,196 @@ void D2Q9::StreamingOrientation(NodeCorner2D& nodeIn, bool Streaming[9]){
 
 }
 void D2Q9::StreamingOrientation(NodeWall2D& nodeIn, bool Streaming[9]){
-	switch(nodeIn.Get_BcNormal())
-		{
-		case 1:
-			Streaming[0]=false;
-			Streaming[1]=true;
-			Streaming[2]=true;
-			Streaming[3]=false;
-			Streaming[4]=true;
-			Streaming[5]=true;
-			Streaming[6]=false;
-			Streaming[7]=false;
-			Streaming[8]=true;
-			break;
-		case 2:
-			Streaming[0]=false;
-			Streaming[1]=true;
-			Streaming[2]=true;
-			Streaming[3]=true;
-			Streaming[4]=false;
-			Streaming[5]=true;
-			Streaming[6]=true;
-			Streaming[7]=false;
-			Streaming[8]=false;
-			break;
-		case 3:
-			Streaming[0]=false;
-			Streaming[1]=false;
-			Streaming[2]=true;
-			Streaming[3]=true;
-			Streaming[4]=true;
-			Streaming[5]=false;
-			Streaming[6]=true;
-			Streaming[7]=true;
-			Streaming[8]=false;
-			break;
-		case 4:
-			Streaming[0]=false;
-			Streaming[1]=true;
-			Streaming[2]=false;
-			Streaming[3]=true;
-			Streaming[4]=true;
-			Streaming[5]=false;
-			Streaming[6]=false;
-			Streaming[7]=true;
-			Streaming[8]=true;
-			break;
-// For special Walls
-		case 5:
-			Streaming[0]=false;
-			Streaming[1]=true;
-			Streaming[2]=true;
-			Streaming[3]=false;
-			Streaming[4]=false;
-			Streaming[5]=true;
-			Streaming[6]=false;
-			Streaming[7]=false;
-			Streaming[8]=false;
-			break;
-		case 6:
-			Streaming[0]=false;
-			Streaming[1]=false;
-			Streaming[2]=true;
-			Streaming[3]=true;
-			Streaming[4]=false;
-			Streaming[5]=false;
-			Streaming[6]=true;
-			Streaming[7]=false;
-			Streaming[8]=false;
-			break;
-		case 7:
-			Streaming[0]=false;
-			Streaming[1]=false;
-			Streaming[2]=false;
-			Streaming[3]=true;
-			Streaming[4]=true;
-			Streaming[5]=false;
-			Streaming[6]=false;
-			Streaming[7]=true;
-			Streaming[8]=false;
-			break;
-		case 8:
-			Streaming[0]=false;
-			Streaming[1]=true;
-			Streaming[2]=false;
-			Streaming[3]=false;
-			Streaming[4]=true;
-			Streaming[5]=false;
-			Streaming[6]=false;
-			Streaming[7]=false;
-			Streaming[8]=true;
-			break;
-		default:
-			std::cerr<<" Problem in setup streaming; Normal not found."<<std::endl;
-		}
+//	if(PtrParameters->Get_CollisionOnWalls())
+		switch(nodeIn.Get_BcNormal())
+			{
+			case 1:
+				Streaming[0]=false;
+				Streaming[1]=true;
+				Streaming[2]=true;
+				Streaming[3]=false;
+				Streaming[4]=true;
+				Streaming[5]=true;
+				Streaming[6]=false;
+				Streaming[7]=false;
+				Streaming[8]=true;
+				break;
+			case 2:
+				Streaming[0]=false;
+				Streaming[1]=true;
+				Streaming[2]=true;
+				Streaming[3]=true;
+				Streaming[4]=false;
+				Streaming[5]=true;
+				Streaming[6]=true;
+				Streaming[7]=false;
+				Streaming[8]=false;
+				break;
+			case 3:
+				Streaming[0]=false;
+				Streaming[1]=false;
+				Streaming[2]=true;
+				Streaming[3]=true;
+				Streaming[4]=true;
+				Streaming[5]=false;
+				Streaming[6]=true;
+				Streaming[7]=true;
+				Streaming[8]=false;
+				break;
+			case 4:
+				Streaming[0]=false;
+				Streaming[1]=true;
+				Streaming[2]=false;
+				Streaming[3]=true;
+				Streaming[4]=true;
+				Streaming[5]=false;
+				Streaming[6]=false;
+				Streaming[7]=true;
+				Streaming[8]=true;
+				break;
+	// For special Walls
+			case 5:
+				Streaming[0]=false;
+				Streaming[1]=true;
+				Streaming[2]=true;
+				Streaming[3]=false;
+				Streaming[4]=false;
+				Streaming[5]=true;
+				Streaming[6]=false;
+				Streaming[7]=false;
+				Streaming[8]=false;
+				break;
+			case 6:
+				Streaming[0]=false;
+				Streaming[1]=false;
+				Streaming[2]=true;
+				Streaming[3]=true;
+				Streaming[4]=false;
+				Streaming[5]=false;
+				Streaming[6]=true;
+				Streaming[7]=false;
+				Streaming[8]=false;
+				break;
+			case 7:
+				Streaming[0]=false;
+				Streaming[1]=false;
+				Streaming[2]=false;
+				Streaming[3]=true;
+				Streaming[4]=true;
+				Streaming[5]=false;
+				Streaming[6]=false;
+				Streaming[7]=true;
+				Streaming[8]=false;
+				break;
+			case 8:
+				Streaming[0]=false;
+				Streaming[1]=true;
+				Streaming[2]=false;
+				Streaming[3]=false;
+				Streaming[4]=true;
+				Streaming[5]=false;
+				Streaming[6]=false;
+				Streaming[7]=false;
+				Streaming[8]=true;
+				break;
+			default:
+				std::cerr<<" Problem in setup streaming; Normal not found."<<std::endl;
+			}
+/*	else
+		switch(nodeIn.Get_BcNormal())
+			{
+			case 1:
+				Streaming[0]=false;
+				Streaming[1]=true;
+				Streaming[2]=false;
+				Streaming[3]=false;
+				Streaming[4]=false;
+				Streaming[5]=true;
+				Streaming[6]=false;
+				Streaming[7]=false;
+				Streaming[8]=true;
+				break;
+			case 2:
+				Streaming[0]=false;
+				Streaming[1]=false;
+				Streaming[2]=true;
+				Streaming[3]=false;
+				Streaming[4]=false;
+				Streaming[5]=true;
+				Streaming[6]=true;
+				Streaming[7]=false;
+				Streaming[8]=false;
+				break;
+			case 3:
+				Streaming[0]=false;
+				Streaming[1]=false;
+				Streaming[2]=false;
+				Streaming[3]=true;
+				Streaming[4]=false;
+				Streaming[5]=false;
+				Streaming[6]=true;
+				Streaming[7]=true;
+				Streaming[8]=false;
+				break;
+			case 4:
+				Streaming[0]=false;
+				Streaming[1]=false;
+				Streaming[2]=false;
+				Streaming[3]=false;
+				Streaming[4]=true;
+				Streaming[5]=false;
+				Streaming[6]=false;
+				Streaming[7]=true;
+				Streaming[8]=true;
+				break;
+	// For special Walls
+			case 5:
+				Streaming[0]=false;
+				Streaming[1]=true;
+				Streaming[2]=true;
+				Streaming[3]=false;
+				Streaming[4]=false;
+				Streaming[5]=true;
+				Streaming[6]=false;
+				Streaming[7]=false;
+				Streaming[8]=false;
+				break;
+			case 6:
+				Streaming[0]=false;
+				Streaming[1]=false;
+				Streaming[2]=true;
+				Streaming[3]=true;
+				Streaming[4]=false;
+				Streaming[5]=false;
+				Streaming[6]=true;
+				Streaming[7]=false;
+				Streaming[8]=false;
+				break;
+			case 7:
+				Streaming[0]=false;
+				Streaming[1]=false;
+				Streaming[2]=false;
+				Streaming[3]=true;
+				Streaming[4]=true;
+				Streaming[5]=false;
+				Streaming[6]=false;
+				Streaming[7]=true;
+				Streaming[8]=false;
+				break;
+			case 8:
+				Streaming[0]=false;
+				Streaming[1]=true;
+				Streaming[2]=false;
+				Streaming[3]=false;
+				Streaming[4]=true;
+				Streaming[5]=false;
+				Streaming[6]=false;
+				Streaming[7]=false;
+				Streaming[8]=true;
+				break;
+			default:
+				std::cerr<<" Problem in setup streaming; Normal not found."<<std::endl;
+			}*/
 }
 void D2Q9::StreamingOrientation(NodeSymmetry2D& nodeIn, bool Streaming[9]){
 	switch(nodeIn.Get_BcNormal())

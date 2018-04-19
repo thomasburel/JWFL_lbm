@@ -13,6 +13,7 @@
 #include "../../Core/GlobalDef.h"
 #include <iostream>
 #include <cmath>
+
 #include "Boundaries/D2Q9Bc.h"
 #include "../Tools/ContactAngle.h"
 class D2Q9TwoPhases: public SolverTwoPhasesLowOrder2D, public D2Q9Bc, protected D2Q9CommonVar{
@@ -78,6 +79,7 @@ protected:
 
 	//Apply boundary conditions
 
+
 	void ApplyHeZou_U(NodeVelocity2D& Node, int distID, double &U, double &V);
 	void ApplyHeZou_U(NodeCorner2D& Node,int normal, int distID, double &U, double &V);//Use for Global Corners
 	void ApplyHeZou_P(NodePressure2D& Node, int distID, double Mass, double &U, double &V);
@@ -121,6 +123,7 @@ protected:
 //Common variables
 	double* tmpDistribution;// variable to move the temporary distribution function to the distribution function without copy (memory moving)
 	double* f_tmp;// variable to temporary copy the local distribution (for one node)
+
 
 	unsigned int Opposite[9]; //opposite direction in the distribution function
 

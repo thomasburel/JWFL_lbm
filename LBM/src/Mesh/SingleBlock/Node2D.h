@@ -8,6 +8,8 @@
 #ifndef MESH_SINGLEBLOCK_NODE2D_H_
 #define MESH_SINGLEBLOCK_NODE2D_H_
 #include <iostream>
+// include this header to serialize vectors
+#include <boost/serialization/vector.hpp>
 #include <boost/serialization/export.hpp>
 #include <boost/serialization/assume_abstract.hpp>
 #include <boost/serialization/base_object.hpp>

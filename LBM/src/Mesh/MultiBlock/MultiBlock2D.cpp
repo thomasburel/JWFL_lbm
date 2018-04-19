@@ -1234,6 +1234,11 @@ double MultiBlock2D::SumBC(double *value){
 		MPI_Reduce(value,&sum,1, MPI_DOUBLE , MPI_SUM ,0, HorizComm);
 	return sum;
 }
+int MultiBlock2D::SumAllProcessors(int *value){
+	int sum=0;
+	MPI_Allreduce(&value[0],&sum,1, MPI_INT , MPI_SUM ,parallel->getGlobalCommunicator());
+	return sum;
+}
 double MultiBlock2D::SumAllProcessors(double *value){
 	double sum=0;
 	MPI_Allreduce(&value[0],&sum,1, MPI_DOUBLE , MPI_SUM ,parallel->getGlobalCommunicator());

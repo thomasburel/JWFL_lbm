@@ -52,6 +52,27 @@ void CollideLowOrder::Collide_2D_V2(double * &fi,double &rho, double &u, double 
 		(this->*PtrCollide_2D_V2)(i,fi[i],rho,u,v,Fi[i],Fx,Fy,InvTau_tmp);
 	}
 }
+///Collision and add source term on walls
+void CollideLowOrder::Collide_2D_V2_Wall(double * &fi,double &rho, double &u, double &v, double *&Fi,double & Fx, double & Fy, double InvTau_tmp, double KineViscosity){
+	//add Hele-Shaw Body Force
+	(this->*PtrAddHeleShaw)(u, v,KineViscosity,Fx,Fy,0,0);//Need to update for adding the contribution of the interface forces
+	//add user local force
+	for(int i=0;i<Nb_VelocityCollide;i++)
+	{
+		Fi[i]+=(this->*PtrAddUserLocalForce)(i, rho, u, v,0);
+	}
+	//add User body force
+	Fx+=(this->*PtrAddUserBodyForce)(0, rho, u, v,0);
+	Fy+=(this->*PtrAddUserBodyForce)(1, rho, u, v,0);
+
+	//add velocity from body force if needed
+
+	(this->*PtrCorrectVelocity)(u,v,rho,Fx,Fy);
+	for(int i=0;i<Nb_VelocityCollide;i++)
+	{
+		(this->*PtrCollide_2D_V2_Wall)(i,fi[i],rho,u,v,Fi[i],Fx,Fy,InvTau_tmp);
+	}
+}
 void CollideLowOrder::Select_Collide_2D(CollideType type,double Cs2,double referenceDensity,SolverEnum::fluidmodel model){
 	switch (type)
 	{
@@ -92,6 +113,8 @@ void CollideLowOrder::Select_Collide_2D(CollideType type,double Cs2,double refer
 		PtrEquiDistri=&CollideLowOrder::CompressibleEquiDistriFunct2D;
 }
 void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType type,double Cs2,double referenceDensity,SolverEnum::fluidmodel model){
+//	std::cout<<"type: "<<type;
+
 	switch (type)
 	{
 		case Std2D:
@@ -102,6 +125,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&UserForce::LocalForce;
 				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::NoVelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_With_LocalForce_V2;
 			}
 			else if(Param.Get_UserForceType()==ModelEnum::BodyForce)
 			{
@@ -109,6 +134,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&UserForce::BodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::VelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_With_BodyForce_V2;
 			}
 			else
 			{
@@ -116,16 +143,29 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::NoVelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_V2;
 			}
 			break;
 		case Std2DLocal:
 			PtrCollide_2D=&CollideLowOrder::Collide_2D_SinglePhase_With_LocalForce;
-			if(Param.Get_UserForceType()==ModelEnum::BodyForce)
+			if(Param.Get_UserForceType()==ModelEnum::LocalForce)
+			{
+				PtrCollide_2D_V2=&CollideLowOrder::Collide_2D_SinglePhase_With_LocalForce_V2;
+				PtrAddUserLocalForce=&UserForce::LocalForce;
+				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
+				PtrCorrectVelocity=&CollideLowOrder::NoVelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_With_LocalForce_V2;
+			}
+			else if(Param.Get_UserForceType()==ModelEnum::BodyForce)
 			{
 				PtrCollide_2D_V2=&CollideLowOrder::Collide_2D_SinglePhase_With_LocalForceAndBodyForce_V2;
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&UserForce::BodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::VelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_With_LocalForceAndBodyForce_V2;
 			}
 			else
 			{
@@ -133,6 +173,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::NoVelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_With_LocalForce_V2;
 			}
 			break;
 		case Std2DBody:
@@ -143,6 +185,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&UserForce::LocalForce;
 				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::VelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_With_LocalForceAndBodyForce_V2;
 			}
 			else if(Param.Get_UserForceType()==ModelEnum::BodyForce)
 			{
@@ -150,6 +194,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&UserForce::BodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::VelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_With_BodyForce_V2;
 			}
 			else
 			{
@@ -157,6 +203,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::VelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_With_BodyForce_V2;
 			}
 			break;
 		case Std2DNonCstTau:
@@ -167,6 +215,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&UserForce::LocalForce;
 				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::NoVelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce_V2;
 			}
 			else if(Param.Get_UserForceType()==ModelEnum::BodyForce)
 			{
@@ -174,6 +224,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&UserForce::BodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::VelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForce_V2;
 			}
 			else
 			{
@@ -181,16 +233,29 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::NoVelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_V2;
 			}
 			break;
 		case Std2DNonCstTauLocal:
 			PtrCollide_2D=&CollideLowOrder::Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce;
-			if(Param.Get_UserForceType()==ModelEnum::BodyForce)
+			if(Param.Get_UserForceType()==ModelEnum::LocalForce)
+			{
+				PtrCollide_2D_V2=&CollideLowOrder::Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce_V2;
+				PtrAddUserLocalForce=&UserForce::LocalForce;
+				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
+				PtrCorrectVelocity=&CollideLowOrder::NoVelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce_V2;
+			}
+			else if(Param.Get_UserForceType()==ModelEnum::BodyForce)
 			{
 				PtrCollide_2D_V2=&CollideLowOrder::Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForceAndBodyForce_V2;
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&UserForce::BodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::VelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForceAndBodyForce_V2;
 			}
 			else
 			{
@@ -198,6 +263,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::NoVelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce_V2;
 			}
 			break;
 		case Std2DNonCstTauBody:
@@ -208,6 +275,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&UserForce::LocalForce;
 				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::VelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForceAndBodyForce_V2;
 			}
 			else if(Param.Get_UserForceType()==ModelEnum::BodyForce)
 			{
@@ -215,6 +284,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&UserForce::BodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::VelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForce_V2;
 			}
 			else
 			{
@@ -222,6 +293,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 				PtrAddUserLocalForce=&CollideLowOrder::NoUserLocalForce;
 				PtrAddUserBodyForce=&CollideLowOrder::NoUserBodyForce;
 				PtrCorrectVelocity=&CollideLowOrder::VelocityCorrection;
+				if(Param.Get_CollisionOnWalls()) PtrCollide_2D_V2_Wall=PtrCollide_2D_V2;
+				else PtrCollide_2D_V2_Wall=&CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForce_V2;
 			}
 			break;
 		default:
@@ -248,6 +321,8 @@ void CollideLowOrder::Select_Collide_2D_V2(Parameters const &Param,CollideType t
 		PtrEquiDistri=&CollideLowOrder::IncompressibleEquiDistriFunct2D;
 	else
 		PtrEquiDistri=&CollideLowOrder::CompressibleEquiDistriFunct2D;
+
+
 }
 
 ///Standard Collision Single phase step
@@ -293,6 +368,15 @@ void CollideLowOrder::Collide_2D_SinglePhase_With_LocalForceAndUserBodyForce(int
 void CollideLowOrder::Collide_2D_SinglePhase_With_LocalForceAndBodyForce_V2(int & i, double &fi,double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp){
 
 	fi= fi-InvTau*(fi-CollideEquillibrium(rho, u, v,EiCollide[i], omegaCollide[i]))+Fi+Collide_2D_BodyForce(i, u, v, Fx,Fy);
+}
+void CollideLowOrder::No_Collide_2D_SinglePhase_With_LocalForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp){
+	fi= fi+Fi;
+}
+void CollideLowOrder::No_Collide_2D_SinglePhase_With_BodyForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp){
+	fi= fi+Collide_2D_BodyForce(i, u, v, Fx,Fy);
+}
+void CollideLowOrder::No_Collide_2D_SinglePhase_With_LocalForceAndBodyForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp){
+	fi= fi+Fi+Collide_2D_BodyForce(i, u, v, Fx,Fy);
 }
 ///Collision Single phase step with a body force calculated from User force or model or both
 void CollideLowOrder::Collide_2D_SinglePhase_With_BodyForceAndUserBodyForce(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
@@ -350,6 +434,15 @@ void CollideLowOrder::Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForceAnd
 ///Collision Single phase step with a body force calculated from User force or model or both and with a local Tau (relaxation time which is related to viscosity and/or Knudsen)
 void CollideLowOrder::Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForceAndUserBodyForce(int & i, double &fi,double &rho, double &u, double &v, double & Fx, double & Fy, double & InvTau_tmp){
 	fi=fi-InvTau_tmp*(fi-CollideEquillibrium(rho, u, v,EiCollide[i], omegaCollide[i]))+Collide_2D_BodyForce_Non_Constant_Tau(i, u, v, Fx,Fy, InvTau_tmp);
+}
+void CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp){
+	fi=fi+Fi;
+}
+void CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_BodyForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp){
+	fi=fi+Collide_2D_BodyForce_Non_Constant_Tau(i, u, v, Fx,Fy, InvTau_tmp);
+}
+void CollideLowOrder::No_Collide_2D_SinglePhase_Non_Constant_Tau_With_LocalForceAndBodyForce_V2(int & i, double &fi, double &rho, double &u, double &v, double & Fi, double & Fx, double & Fy, double & InvTau_tmp){
+	fi=fi+Fi+Collide_2D_BodyForce_Non_Constant_Tau(i, u, v, Fx,Fy, InvTau_tmp);
 }
 ///Body force function with a local Tau (relaxation time which is related to viscosity and/or Knudsen)
 double CollideLowOrder::Collide_2D_BodyForce_Non_Constant_Tau(int & i, double &u, double &v, double Fx, double Fy, double & InvTau_tmp){

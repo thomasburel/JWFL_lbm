@@ -60,6 +60,7 @@ public:
 	void Remove_SolidInComunicators();
 	virtual int* get_Block_Connect(){return &BlockNeighbour[0];};
 	virtual double SumBC(double *value);
+	virtual int SumAllProcessors(int *value);
 	virtual double SumAllProcessors(double *value);
 	virtual int NumberOfProcessors();
 

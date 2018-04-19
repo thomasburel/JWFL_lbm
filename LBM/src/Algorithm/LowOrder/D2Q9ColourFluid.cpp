@@ -18,6 +18,7 @@ D2Q9ColourFluid::D2Q9ColourFluid() {
 	PtrCollision=0;
 	PtrCollisionBc=0;
 	PtrCollisionCorner=0;
+	PtrPreStream=0;
 //	PtrCalNormal=0;
 //	PtrCalNormalWall=0;
 
@@ -82,6 +83,11 @@ void D2Q9ColourFluid::Set_PointersOnFunctions(){
 	Set_Macro();
 // Select the extrapolations needed
 	Set_Extrapolations();
+// Select with or without pre-streaming
+	if(PtrParameters->Get_WallType()==HalfWayBounceBack)
+		PtrPreStream=&D2Q9ColourFluid::ApplyPreStreamBc_on;
+	else
+		PtrPreStream=&D2Q9ColourFluid::ApplyPreStreamBc_off;
 }
 
 void D2Q9ColourFluid::Select_Colour_Operator(ColourFluidEnum::ColourOperatorType OperatorType_){
@@ -879,6 +885,7 @@ void D2Q9ColourFluid::run(){
 	//Impose_ContactAngleInSolid();
 
 	ColourFluid_Collision();
+	ApplyPreStreamBc();
 	ApplyBc();
 	UpdateMacroVariables();
 	if(CalPressure)
@@ -913,6 +920,7 @@ void D2Q9ColourFluid::run(){
 //		for (int i=1;i<NbStep+1;i++)
 		while(it<NbStep+1)
 		{
+			ApplyPreStreamBc();
 			StreamD2Q9();
 			ApplyBc();
 			UpdateMacroVariables();
@@ -959,7 +967,7 @@ void D2Q9ColourFluid::run(){
 					std::cout<< " Time per iteration: "<<time_run/it<<"s"<<std::endl;
 					std::cout<<"Error is: "<<Get_Error()<<std::endl;
 				}
-				if(Get_Error()<max_error)
+				if(Get_Error()<max_error||boost::math::isnan(Get_Error()))
 				{
 					if(CalPressure&&!CalGradP)
 						UpdatePressure();
@@ -980,6 +988,7 @@ void D2Q9ColourFluid::run(){
 	{
 		while(it<NbStep+1)
 		{
+			ApplyPreStreamBc();
 			StreamD2Q9();
 			ApplyBc();
 			UpdateMacroVariables();
@@ -1014,7 +1023,7 @@ void D2Q9ColourFluid::run(){
 				std::cout<<trunc(time_run)<<"Seconds ";
 				std::cout<< " Time per iteration: "<<time_run/it<<"s"<<std::endl;
 				std::cout<<"Error is: "<<Get_Error()<<std::endl;
-				if(Get_Error()<max_error)
+				if(Get_Error()<max_error||boost::math::isnan(Get_Error()))
 				{
 					if(CalPressure&&!CalGradP)
 						UpdatePressure();
@@ -2140,6 +2149,83 @@ void D2Q9ColourFluid::ApplyBc(){
 	parallel->barrier();
 
 
+}
+void D2Q9ColourFluid::ApplyPatchVelocityPreStream(VelocityPatchBc& VelPatchBc){
+	SetVelocity(VelPatchBc.Get_VelocityModel(),VelPatchBc.Get_VelocityType());
+	std::vector<int> NodeIdxSpecialWalls=VelPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ApplyVelocityWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],0);
+		ApplyVelocityWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],1);
+	}
+}
+void D2Q9ColourFluid::ApplyPatchPressurePreStream(PressurePatchBc& PresPatchBc){
+	SetPressure(PresPatchBc.Get_PressureModel(),PresPatchBc.Get_PressureType());
+	std::vector<int> NodeIdxSpecialWalls=PresPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ApplyPressureWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],0);
+		ApplyPressureWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],1);
+	}
+}
+void D2Q9ColourFluid::ApplyPatchSymmetryPreStream(SymmetryPatchBc& SymPatchBc){
+	SetSymmetry(SymPatchBc.Get_SymmetryType());
+	std::vector<int> NodeIdxSpecialWalls=SymPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ApplySymmetryWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],0);
+		ApplySymmetryWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],1);
+	}
+}
+void D2Q9ColourFluid::ApplyPatchPeriodicPreStream(PeriodicPatchBc& PerPatchBc){
+	SetPeriodic(PerPatchBc.Get_PeriodicType());
+	std::vector<int> NodeIdxSpecialWalls=PerPatchBc.Get_NodeIndexByTypeSpecialWalls();
+	for (unsigned int j=0;j<NodeIdxSpecialWalls.size();j++)
+	{
+		ApplyPeriodicWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[0],Rhor,U[0],U[1],0);
+		ApplyPeriodicWallPreStream(NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]],Rho[NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[0][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],U[1][NodeArrays->NodeSpecialWall[NodeIdxSpecialWalls[j]].Get_index()],NodeArrays->TypeOfNode,f[1],Rhob,U[0],U[1],1);
+	}
+}
+void D2Q9ColourFluid::ApplyPreStreamBc(){
+	(this->*PtrPreStream)();
+}
+void D2Q9ColourFluid::ApplyPreStreamBc_on(){
+//	std::cout<<"Halfway";
+	std::vector<SolverEnum::PatchType> PatchType=PatchsBc->Get_PatchTypeInType();
+	std::vector<int> PatchIdInType=PatchsBc->Get_PatchIdInType();
+
+	for (int i=0;i<PatchsBc->Get_NumberOfPatchBc();i++)
+	{
+		switch(PatchType[i])
+		{
+		case SolverEnum::Periodic:
+			ApplyPatchPeriodicPreStream(PatchsBc->Get_PeriodicPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Symmetry:
+			ApplyPatchSymmetryPreStream(PatchsBc->Get_SymmetryPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Pressure:
+			ApplyPatchPressurePreStream(PatchsBc->Get_PressurePatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Velocity:
+			ApplyPatchVelocityPreStream(PatchsBc->Get_VelocityPatch()[PatchIdInType[i]]);
+			break;
+		case SolverEnum::Wall:
+			break;
+		}
+	}
+	for (unsigned int j=0;j<NodeArrays->NodeWall.size();j++)
+	{
+		ApplyWallPreStream(NodeArrays->NodeWall[j],NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f[0],Rhor,U[0],U[1],0);
+		ApplyWallPreStream(NodeArrays->NodeWall[j],NodeArrays->NodeWall[j].Get_BcNormal(),NodeArrays->NodeWall[j].Get_connect(),f[1],Rhob,U[0],U[1],1);
+	}
+
+	for (unsigned int j=0;j<NodeArrays->NodeCorner.size();j++)
+	{
+		ApplyCornerWallPreStream(NodeArrays->NodeCorner[j], f[0],Rhor,U[0],U[1],0);
+		ApplyCornerWallPreStream(NodeArrays->NodeCorner[j], f[1],Rhob,U[0],U[1],1);
+		//ApplyCornerPreStream(NodeArrays->NodeCorner[j],NodeArrays->NodeCorner[j].Get_BcNormal(),NodeArrays->NodeCorner[j].Get_connect(),f);
+	}
 }
 void D2Q9ColourFluid::ExtrapolDensityInSolid(){
 	//Extrapolation of density or normal density at the first layer in the solid

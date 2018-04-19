@@ -31,6 +31,11 @@ public:
 	void ApplyPressureWall(NodeWall2D& Node, double const Rho_def, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
 	void ApplyVelocityWall(NodeWall2D& Node, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
 
+	void ApplyPeriodicWallPreStream(NodeWall2D& Node, double const Rho_def, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
+	void ApplySymmetryWallPreStream(NodeWall2D& Node, double const Rho_def, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
+	void ApplyPressureWallPreStream(NodeWall2D& Node, double const Rho_def, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
+	void ApplyVelocityWallPreStream(NodeWall2D& Node, double const UDef, double const VDef, std::map<int,NodeType> TypeOfNode_, DistriFunct* f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
+	
 private:
 	void FunctionSpecialWall(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
 	void FunctionPeriodicWall(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
@@ -38,6 +43,11 @@ private:
 	void FunctionPressureWall(NodeWall2D& Node, double const Rho_def, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
 	void FunctionVelocityWall(NodeWall2D& Node, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
 
+	void FunctionSpecialWallPreStream(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
+	void FunctionPeriodicWallPreStream(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
+	void FunctionSymmetryWallPreStream(NodeWall2D& Node, double const Rho_def, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
+	void FunctionPressureWallPreStream(NodeWall2D& Node, double const Rho_def, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
+	void FunctionVelocityWallPreStream(NodeWall2D& Node, double const *UDef, std::map<int,NodeType> &TypeOfNode_, DistriFunct* &f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution=0);
 
 	D2Q9GenericBc* BcMethods;
 	Extrapolation Extrapol;

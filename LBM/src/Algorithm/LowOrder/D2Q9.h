@@ -51,6 +51,7 @@ private:
 	void CollideD2Q9();
 	void CollideD2Q9_NoBodyForce();
 	void CollideD2Q9_WithBodyForce();
+
 	void StreamD2Q9();
 
 	void Set_PointersOnFunctions();
@@ -119,6 +120,14 @@ private:
 	void ApplyPatchVelocity(VelocityPatchBc& VelPatchBc);
 	void ApplyPatchSymmetry(SymmetryPatchBc& SymPatchBc);
 	void ApplyPatchPeriodic(PeriodicPatchBc& PerPatchBc);
+	//Apply conditions before streaming
+	void ApplyPreStreamBc();
+	void ApplyPreStreamBc_on();
+	void ApplyPreStreamBc_off(){};	
+	void ApplyPatchPressurePreStream(PressurePatchBc& PresPatchBc);
+	void ApplyPatchVelocityPreStream(VelocityPatchBc& VelPatchBc);
+	void ApplyPatchSymmetryPreStream(SymmetryPatchBc& SymPatchBc);
+	void ApplyPatchPeriodicPreStream(PeriodicPatchBc& PerPatchBc);
 	unsigned int& Connect (int &NodeNumber,unsigned int& direction);
 	//void Set_Connect(int &NodeNumber,unsigned int& direction);
 	double Cal_RhoCorner(int &normalBc, int &nodenumber);
@@ -159,8 +168,10 @@ private:
 
 	typedef void(D2Q9::*Macro)();
 	typedef void(D2Q9::*Collision)();
+	typedef void(D2Q9::*PreStream)();
 	Macro PtrMacro;///< Macroscopic pointer
 	Collision PtrCollision;///< Collision pointer
+	PreStream PtrPreStream;///< Pre-streaming pointer for applying BC in two times as for half-way bounce-back
 private:
 	friend class boost::serialization::access;
     template<class Archive>

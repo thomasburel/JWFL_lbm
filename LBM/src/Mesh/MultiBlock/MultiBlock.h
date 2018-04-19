@@ -54,6 +54,7 @@ public:
 	virtual NodeArrays2D* Get_NodeArrays2D()=0;
 	virtual int* get_Block_Connect()=0;
 	virtual double SumBC(double *value)=0;
+	virtual int SumAllProcessors(int *value)=0;
 	virtual double SumAllProcessors(double *value)=0;
 	virtual int NumberOfProcessors()=0;
 	bool IsMainProcessor(){return parallel->isMainProcessor();};

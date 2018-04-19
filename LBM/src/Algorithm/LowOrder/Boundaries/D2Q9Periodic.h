@@ -26,12 +26,12 @@ public:
 	void ApplyPeriodic(int const &BcNormal,int const *Connect, double const &Rho_def, double weightDensity, double const *UDef, DistriFunct* f_in, double *Rho, double *U, double *V);
 
 private:
-	void ApplyPeriodicBc(int const &BcNormal,int const *Connect, double const &Rho_def, double & weightDensity, double const *UDef, double *LocalForce, DistriFunct* f_in);
-	void ApplyPeriodicBc_PressureForce(int const &BcNormal,int const *Connect, double const &Rho_def, double & weightDensity, double const *UDef, double *LocalForce, DistriFunct* f_in);
+	void ApplyPeriodicBc(int const &BcNormal,int const *Connect, double const &Rho_def, double & weightDensity, double const *UDef, double *LocalForce, DistriFunct* f_in, double *Rho, double *U, double *V);
+	void ApplyPeriodicBc_PressureForce(int const &BcNormal,int const *Connect, double const &Rho_def, double & weightDensity, double const *UDef, double *LocalForce, DistriFunct* f_in, double *Rho, double *U, double *V);
 
 // Pointers on function
 ///Simplify notation for pointer on a member function of D2Q9Periodic class for Periodic model used
-	typedef void(D2Q9Periodic::*PeriodicMethod)(int const &BcNormal,int const *Connect, double const &Rho_def, double & weightDensity, double const *UDef, double *LocalForce, DistriFunct* f_in);
+	typedef void(D2Q9Periodic::*PeriodicMethod)(int const &BcNormal,int const *Connect, double const &Rho_def, double & weightDensity, double const *UDef, double *LocalForce, DistriFunct* f_in, double *Rho, double *U, double *V);
 //Define name for pointers on functions
 	PeriodicMethod PtrPeriodicMethod;
 	double *LocalForce;

@@ -39,6 +39,8 @@ protected:
 	double SumWeightConvexSE,SumWeightConvexNE,SumWeightConvexNW,SumWeightConvexSW;
 	int *BounceBackWallConnect[9];///Keep the rule of bounce back to avoid a "if" condition
 	int DiffusekWallConnect[9][3];///Keep the rule of diffuse to avoid a "if" condition
+	double invCs2;
+	
 };
 
 #endif /* SRC_ALGORITHM_LOWORDER_BOUNDARIES_D2Q9BCVAR_H_ */

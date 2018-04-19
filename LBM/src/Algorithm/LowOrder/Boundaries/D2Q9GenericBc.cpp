@@ -83,6 +83,20 @@ void D2Q9GenericBc::ApplyWall(NodeCorner2D& Node, int const &BcNormal,int const 
 void D2Q9GenericBc::ApplyWall(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution, double weightDensity){
 	D2Q9WallBc.ApplyWall(Node,BcNormal,Connect,f_in,idxDistribution,Rho,U,V);
 }
+void D2Q9GenericBc::ApplyWallPreStream(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in, unsigned int idxDistribution, double weightDensity){
+	D2Q9WallBc.ApplyWallPreStream(Node,BcNormal,Connect,f_in,idxDistribution,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
+}
+void D2Q9GenericBc::ApplyWallPreStream(NodeWall2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution, double weightDensity){
+	D2Q9WallBc.ApplyWallPreStream(Node,BcNormal,Connect,f_in,idxDistribution,Rho,U,V);
+}
+//Global Corner
+void D2Q9GenericBc::ApplyWallPreStream(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in, unsigned int idxDistribution, double weightDensity){
+	D2Q9WallBc.ApplyWallPreStream(Node,BcNormal,Connect,f_in,idxDistribution,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
+}
+//Global Corner
+void D2Q9GenericBc::ApplyWallPreStream(NodeCorner2D& Node, int const &BcNormal,int const *Connect, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution, double weightDensity){
+	D2Q9WallBc.ApplyWallPreStream(Node,BcNormal,Connect,f_in,idxDistribution,Rho,U,V);
+}
 /*void D2Q9GenericBc::ApplySpecialWall(NodeWall2D& Node, DistriFunct * & f_in, std::map<int,NodeType> TypeOfNode_){
 	D2Q9WallBc.ApplySpecialWall(Node,f_in,TypeOfNode_,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
 }
@@ -101,9 +115,27 @@ void D2Q9GenericBc::ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in, un
 void D2Q9GenericBc::ApplyCornerWall(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution, double weightDensity){
 	D2Q9CornerBc.ApplyCornerWall(Node,f_in,idxDistribution,Rho,U,V);
 }
-void D2Q9GenericBc::ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, unsigned int idxDistribution, double weightDensity){
-	D2Q9CornerBc.ApplyPreVelSpecialWall(Node,f_in, idxDistribution,RhoDef,UDef,VDef);
-}
 void D2Q9GenericBc::ApplyCornerSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution, double weightDensity){
 	D2Q9CornerBc.ApplyCornerSpecialWall(Node,f_in, idxDistribution,Rho,U,V);
 }
+
+void D2Q9GenericBc::ApplyCornerPreStream(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef, unsigned int idxDistribution, double weightDensity){
+	D2Q9CornerBc.ApplyCornerPreStream(Node,f_in,idxDistribution,RhoDef,UDef,VDef,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
+}
+void D2Q9GenericBc::ApplyCornerPreStream(NodeCorner2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, unsigned int idxDistribution, double weightDensity){
+	D2Q9CornerBc.ApplyCornerPreStream(Node,f_in,idxDistribution,RhoDef,UDef,VDef,Rho,U,V);
+}
+void D2Q9GenericBc::ApplyCornerWallPreStream(NodeCorner2D& Node, DistriFunct * & f_in, unsigned int idxDistribution, double weightDensity){
+	D2Q9CornerBc.ApplyCornerWallPreStream(Node,f_in,idxDistribution,PtrD2Q9BcRho,PtrD2Q9BcU,PtrD2Q9BcV);
+}
+void D2Q9GenericBc::ApplyCornerWallPreStream(NodeCorner2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution, double weightDensity){
+	D2Q9CornerBc.ApplyCornerWallPreStream(Node,f_in,idxDistribution,Rho,U,V);
+}
+void D2Q9GenericBc::ApplyCornerSpecialWallPreStream(NodeWall2D& Node, DistriFunct * & f_in,double * & Rho, double * &U, double * &V, unsigned int idxDistribution, double weightDensity){
+	D2Q9CornerBc.ApplyCornerSpecialWallPreStream(Node,f_in, idxDistribution,Rho,U,V);
+}
+
+void D2Q9GenericBc::ApplyPreVelSpecialWall(NodeWall2D& Node, DistriFunct * & f_in,double const & RhoDef,double const & UDef,double const & VDef,double * & Rho, double * &U, double * &V, unsigned int idxDistribution, double weightDensity){
+	D2Q9CornerBc.ApplyPreVelSpecialWall(Node,f_in, idxDistribution,RhoDef,UDef,VDef);
+}
+

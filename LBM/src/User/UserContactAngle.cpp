@@ -15,7 +15,7 @@
 UserContactAngle::UserContactAngle() {
 //Do not changed
 	pi=atan(1.0)*4.0 ;
-	desireCangle=90;
+	desireCangle=90;	
 	convDegreeToRadian=pi/180.0;
 //Can be changed
 	lengthsmooth=10;
@@ -30,7 +30,7 @@ void UserContactAngle::Set_ContactAngle(Parameters& PtrParameters, int elem, int
 	if(pos[0]<lengthsmooth)
 		teta=(-pos[0]*(beginCangle-desireCangle)/lengthsmooth+beginCangle);
 	else
-		teta=desireCangle;
+		teta=desireCangle*convDegreeToRadian;
 
 
 }

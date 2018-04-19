@@ -69,7 +69,7 @@ enum PressureType{FixP,zeroPGrad1st};
 enum VelocityModel{HeZouV,Ladd};
 enum VelocityType{FixV,zeroVGrad1st};
 enum CornerModel{HoChan};
-enum CornerPressureType{FixCP,ExtrapolCP};
+enum CornerPressureType{FixCP,ExtrapolCP,LocalCP};
 enum PeriodicType{Simple,PressureForce};
 
 //Two phases enumeration
@@ -402,6 +402,8 @@ public:
 	double Get_PressureDrop() const {return PressureDropParam;};
 	void Set_PeriodicType(PeriodicType Type){PeriodicTypeParam=Type;};
 	PeriodicType Get_PeriodicType() const {return PeriodicTypeParam;};
+	void Set_CollisionOnWalls(bool collOnWalls){CollisionOnWalls=collOnWalls;};
+	bool Get_CollisionOnWalls() const {return CollisionOnWalls;};
 protected:
 	WallType WallTypeParam;
 	SymmetryType SymmetryTypeParam;
@@ -415,6 +417,7 @@ protected:
 	CornerPressureType CornerPressureTypeParam;
 	PeriodicType PeriodicTypeParam;
 	double PressureDropParam;
+	bool CollisionOnWalls;
 };
 
 class SolverParameters {
@@ -446,7 +449,9 @@ private:
 		   & BOOST_SERIALIZATION_NVP(teta)
 		   & BOOST_SERIALIZATION_NVP(nNodesInterpolInSolid)
 		   & BOOST_SERIALIZATION_NVP(nNodesInterpolInFluid)
-		   & BOOST_SERIALIZATION_NVP(viscosityType);
+		   & BOOST_SERIALIZATION_NVP(viscosityType)
+		   & BOOST_SERIALIZATION_NVP(LpErrorCase)
+		   & BOOST_SERIALIZATION_NVP(L1ErrorCase);
 	}
 
 public:
@@ -505,6 +510,11 @@ public:
 	void Set_deltaX(double deltaX_) { deltaX=deltaX_;};
 	void Set_deltaT(double deltaT_) { deltaT=deltaT_;};
 
+	void SetErrorLpCase(bool Is){LpErrorCase=Is;};
+	bool IsLpErrorCase(){return LpErrorCase;};
+	void SetErrorL1Case(bool Is){L1ErrorCase=Is;};
+	bool IsL1ErrorCase(){return L1ErrorCase;};
+
 protected:
 	SolverEnum::schemetype scheme;
 	SolverEnum::modeltype model;
@@ -528,6 +538,9 @@ protected:
 	double teta;
 	int nNodesInterpolInSolid,nNodesInterpolInFluid;
 	ViscosityType viscosityType;
+
+	bool LpErrorCase;
+	bool L1ErrorCase;
 
 
 
