@@ -23,6 +23,7 @@ D2Q9BcVar::D2Q9BcVar() {
 
 	//Distribution velocity
 	EiBc=0;
+	invCs2=3.0;
 /*	EiBc[0][0]= 0.0;
 	EiBc[0][1]= 0.0;
 	EiBc[1][0]= 1.0;
